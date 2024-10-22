@@ -1,0 +1,59 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "basic-settings",
+            "hidden": true,
+            "cacheVariables": {
+                "VISERA_SETUP_TIME": "2024-10-22 13:07:32.122401",
+                "CMAKE_TOOLCHAIN_FILE": "D:\\Programs\\ViseraEngine\\Visera-Alpha\\Engine\\Packages\\Vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
+            }
+        },
+        {
+            "name": "debug",
+            "hidden": true,
+            "inherits": "basic-settings",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "release",
+            "hidden": true,
+            "inherits": "basic-settings",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "windows",
+            "hidden": true,
+            "cacheVariables": {}
+        },
+        {
+            "name": "windows-debug",
+            "displayName": "Windows x64 (Debug)",
+            "description": "...",
+            "inherits": [
+                "windows",
+                "debug"
+            ],
+            "cacheVariables": {}
+        },
+        {
+            "name": "windows-release",
+            "displayName": "Windows x64 (Release)",
+            "description": "...",
+            "inherits": [
+                "windows",
+                "release"
+            ],
+            "cacheVariables": {}
+        }
+    ]
+}

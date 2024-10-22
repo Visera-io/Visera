@@ -1,0 +1,113 @@
+#pragma once
+
+#include <cassert>
+#include <sstream>
+#include <ostream>
+#include <fstream>
+#include <iostream>
+#include <format>
+#include <chrono>
+#include <algorithm>
+#include <thread>
+#include <memory>
+#include <source_location>
+#include <exception>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <unordered_set>
+#include <variant>
+#include <type_traits>
+
+namespace VE
+{
+	//Asserts
+	inline void Assert(bool expression, const char* prompt = "") { assert(expression && prompt); }
+
+	constexpr bool False   = false;
+	constexpr bool True    = !False;
+	constexpr bool Success = 0;
+	constexpr bool Failure = !Success;
+
+	/* <<  Concepts >>
+       
+    */
+   
+	template <typename T>
+	concept Hashable = requires(T type) {{ std::hash<T>{}(type) } -> std::same_as<std::size_t>;};
+
+    template<typename T>
+	concept UnsignedIntegerol = std::unsigned_integral<T>;
+
+	template<typename T>
+	concept SignedInteger = std::integral<T>;
+
+	template<typename T>
+	concept Integer = std::integral<T> || std::unsigned_integral<T>;
+
+	template<typename T>
+    concept FloatingPoint = std::floating_point<T>;
+
+	template<typename T>
+    concept Number = std::floating_point<T> || std::integral<T>;
+
+    /* <<  Basic Types >>
+       
+    */
+	using Bool		= bool;
+	using Float  	= float;
+	using Double 	= double;
+	using Int32  	= std::int32_t;
+	using UInt32 	= std::uint32_t;
+	using Int64  	= std::int64_t;
+	using UInt64 	= std::uint64_t;
+
+	using String	 = std::string;
+	using StringView = std::string_view;
+
+	using Byte		= unsigned char;
+	using EnumMask	= std::uint16_t;
+	using EnumBit	= std::uint16_t;
+	using ID		= std::uint32_t;
+	using Token		= std::uint64_t;
+	using Address   = void*;
+	using ErrorCode = std::int32_t;
+
+    /* <<  Containers >>
+       1. Array
+       2. Set
+       3. HashMap
+    */
+
+    template<typename T>
+	using Array	   = std::vector<T>;
+
+	template<typename T>
+	using Set	   = std::unordered_set<T>;
+
+	template<Hashable Key, typename Value>
+	using HashMap  = std::unordered_map<Key, Value>;
+
+    /* <<  Pointers >>
+       1. SharedPtr
+       2. WeakPtr
+       3. UniquePtr
+    */
+
+	template<typename T>
+	using Shared   = std::shared_ptr<T>;
+	template<typename T, typename... Args>
+	inline Shared<T>
+	MakeShared(Args &&...args) { return std::make_shared<T>(std::forward<Args>(args)...); }
+
+	template<typename T>
+	using Link= std::weak_ptr<T>;
+
+	template<typename T>
+	using Unique   = std::unique_ptr<T>;
+	template<typename T, typename... Args>
+	inline Unique<T> 
+	MakeUnique(Args &&...args) { return std::make_unique<T>(std::forward<Args>(args)...); }
+
+} // namespace VE

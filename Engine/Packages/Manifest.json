@@ -1,0 +1,14 @@
+{
+    "Windows":
+    {
+        "Manual":
+        {
+            
+        },
+        "Vcpkg":
+        [
+            "spdlog",
+            "eigen3"
+        ]
+    }
+}

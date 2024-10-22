@@ -1,0 +1,14 @@
+#[IDE]
+.vscode/
+
+#[Architecture]
+Apps/*
+Engine/Extern/*
+Python/*
+__pycache__
+
+#[Files]
+CMakeUserPresets.json
+
+#[Exceptions]
+!README.md
