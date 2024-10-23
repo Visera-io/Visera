@@ -31,3 +31,14 @@ if (NOT TARGET Eigen3::Eigen)
     FIND_PACKAGE(Eigen3 REQUIRED)
     target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE Eigen3::Eigen)
 endif()
+# Volk
+if (NOT TARGET Vulkan::Vulkan)
+    FIND_PACKAGE(Vulkan REQUIRED)
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE Vulkan::Vulkan)
+endif()
+
+# Volk
+if (NOT TARGET volk::volk)
+    FIND_PACKAGE(volk CONFIG REQUIRED)
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE volk::volk volk::volk_headers)
+endif()

@@ -5,7 +5,7 @@ module;
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
-export module Visera.Core.Log.Logger;
+export module Visera.Core.Log:Logger;
 
 import Visera.Core.Base;
 import Visera.Internal.Pattern;
@@ -17,41 +17,34 @@ export namespace VE
 	{
 		friend class Singleton<Logger>;
 	public:
-		inline
-		void
+		inline void
 		Info(const std::string& message)
 		{ m_handle->info(message); }
 
 		template<typename... Args>
-		inline
-		void
+		inline void
 		Info(spdlog::format_string_t<Args...> fmt, Args &&...args)
 		{ m_handle->info(fmt, std::forward<Args>(args)...); }
 
-		inline
-		void
+		inline void
 		Warn(const std::string& message)
 		{ m_handle->warn(message); }
 
 		template<typename... Args>
-		inline
-		void
+		inline void
 		Warn(spdlog::format_string_t<Args...> fmt, Args &&...args)
 		{ m_handle->warn(fmt, std::forward<Args>(args)...); }
 
-		inline
-		void
+		inline void
 		Error(const std::string& message)
 		{ m_handle->error(message); }
 
 		template<typename... Args>
-		inline
-		void
+		inline void
 		Error(spdlog::format_string_t<Args...> fmt, Args &&...args)
 		{ m_handle->error(fmt, std::forward<Args>(args)...); }
 
-		inline
-		void
+		inline void
 		Fatal(const std::string& message, const std::source_location& location)
 		{ 
 			m_handle->critical(message);
@@ -59,19 +52,16 @@ export namespace VE
 		}
 
 		template<typename... Args>
-		inline
-		void
+		inline void
 		Fatal(spdlog::format_string_t<Args...> fmt, Args &&...args)
 		{ m_handle->critical(fmt, std::forward<Args>(args)...); }
 
-		inline
-		void
+		inline void
 		Debug(const std::string& message)
 		{ m_handle->debug(message); }
 
 		template<typename... Args>
-		inline
-		void
+		inline void
 		Debug(spdlog::format_string_t<Args...> fmt, Args &&...args)
 		{ m_handle->debug(fmt, std::forward<Args>(args)...); }
 
@@ -99,6 +89,6 @@ export namespace VE
 		}
 
 	protected:
-		Unique<spdlog::logger> m_handle;
+		UniquePtr<spdlog::logger> m_handle;
 	};
 }

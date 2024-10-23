@@ -1,12 +1,11 @@
 module;
 #include <ViseraEngine>
 
-export module Visera.Core.Base.Type;
-
+export module Visera.Internal.Memory;
+export import :Registry;
 
 export namespace VE
-{	
+{
 
-    
 
 } // namespace VE

@@ -24,14 +24,5 @@ def Build(argv) -> int:
         cwd  = VISERA_ROOT_PATH).returncode
     if VISERA_SUCCESS != rc:
         raise RuntimeError(f"Failed to build {app_path}!")
-
-    if VISERA_OS_TYPE == "Windows":
-        #[FIXME] Unexpected Issue...
-        app_bin_path = path.join(app_path, "Binaries", build_type.capitalize())
-        tbb_debug_dll = path.join(app_bin_path, "tbb12_debug.dll")
-        tbb_debug_dll_new = path.join(app_bin_path, "tbb12.dll")
-        if not path.exists(tbb_debug_dll_new):
-            rename(tbb_debug_dll, tbb_debug_dll_new)
-    else: raise RuntimeError(f"Unsupported System!")
     
     return rc

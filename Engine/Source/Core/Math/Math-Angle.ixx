@@ -9,7 +9,7 @@ import :Operation;
 export namespace VE
 {	
 	using AngleAxis   = Eigen::AngleAxisf;
-	constexpr float PI { 3.141592653589793 }; // 180 Degrees
+	constexpr double PI { 3.141592653589793 }; // 180 Degrees
 
 	class Degree;
 	class Radian
@@ -129,18 +129,18 @@ export namespace VE
 		return ACos(static_cast<float>(number));
 	}
 	
-	Degree::Degree(Radian radian):m_degree{(radian / PI) * float(180.0)} {};
+	Degree::Degree(Radian radian):m_degree{(radian / PI) * 180.0f} {};
 	Degree& Degree::operator=(Radian radian) { m_degree = radian.ToDegree(); return *this; }
-	Degree::operator Radian() const { return Radian{ (m_degree / float(180.0)) * PI }; }
+	Degree::operator Radian() const { return Radian{ (m_degree / 180.0f) * float(PI) }; }
 	Radian Degree::ToRadian()				const { return Radian{ m_degree };}
 	Radian Degree::operator*(float target)	const { return m_degree * target; }
 	Radian Degree::operator*(double target)	const { return m_degree * target; }
 	Degree Degree::operator/(float num)		const { return Degree(m_degree / num);	}
 	Degree Degree::operator/(double num)	const { return Degree(m_degree / num);	}
 
-	Radian::Radian(Degree degree) :m_radian{ (degree / float(180.0)) * PI } {}
+	Radian::Radian(Degree degree) :m_radian{ (degree / 180.0f) * float(PI) } {}
 	Radian& Radian::operator=(Degree degree) { m_radian = degree.ToRadian(); return *this; }
-	Radian::operator Degree() const { return Degree{ (m_radian / PI) * float(180.0) }; }
+	Radian::operator Degree() const { return Degree{ float(m_radian / PI) * 180.0f }; }
 	Degree Radian::ToDegree()				const { return Degree{ m_radian };}
 	Radian Radian::operator*(float target)	const { return Radian(m_radian * target); }
 	Radian Radian::operator*(double target)	const { return Radian(m_radian * target); }

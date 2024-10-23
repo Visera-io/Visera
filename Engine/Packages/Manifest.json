@@ -8,7 +8,9 @@
         "Vcpkg":
         [
             "spdlog",
-            "eigen3"
+            "eigen3",
+            "vulkan",
+            "volk"
         ]
     }
 }

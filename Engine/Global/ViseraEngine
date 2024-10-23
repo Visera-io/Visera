@@ -1,5 +1,7 @@
 #pragma once
 
+#define VISERA_RENDER
+
 #include <cassert>
 #include <sstream>
 #include <ostream>
@@ -9,6 +11,7 @@
 #include <chrono>
 #include <algorithm>
 #include <thread>
+#include <ranges>
 #include <memory>
 #include <source_location>
 #include <exception>
@@ -67,8 +70,13 @@ namespace VE
 	using StringView = std::string_view;
 
 	using Byte		= unsigned char;
-	using EnumMask	= std::uint16_t;
-	using EnumBit	= std::uint16_t;
+	using EnumMask	= std::uint32_t;
+	using EnumBit	= std::uint32_t;
+	template<typename T> inline
+	UInt64 BytesOf() { return sizeof(T); }
+	template<typename T> inline
+	UInt64 BitsOf()  { return 8 * BytesOf<T>(); }
+
 	using ID		= std::uint32_t;
 	using Token		= std::uint64_t;
 	using Address   = void*;
@@ -96,18 +104,18 @@ namespace VE
     */
 
 	template<typename T>
-	using Shared   = std::shared_ptr<T>;
+	using SharedPtr   = std::shared_ptr<T>;
 	template<typename T, typename... Args>
-	inline Shared<T>
-	MakeShared(Args &&...args) { return std::make_shared<T>(std::forward<Args>(args)...); }
+	inline SharedPtr<T>
+	CreateSharedPtr(Args &&...args) { return std::make_shared<T>(std::forward<Args>(args)...); }
 
 	template<typename T>
-	using Link= std::weak_ptr<T>;
+	using WeakPtr	  = std::weak_ptr<T>;
 
 	template<typename T>
-	using Unique   = std::unique_ptr<T>;
+	using UniquePtr   = std::unique_ptr<T>;
 	template<typename T, typename... Args>
-	inline Unique<T> 
-	MakeUnique(Args &&...args) { return std::make_unique<T>(std::forward<Args>(args)...); }
+	inline UniquePtr<T> 
+	CreateUniquePtr(Args &&...args) { return std::make_unique<T>(std::forward<Args>(args)...); }
 
 } // namespace VE

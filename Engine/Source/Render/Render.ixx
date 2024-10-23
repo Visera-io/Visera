@@ -1,16 +1,13 @@
 module;
 #include <ViseraEngine>
 
-export module Visera.Core;
-
-export import Visera.Core.Base;
-export import Visera.Core.Log;
-export import Visera.Core.Math;
+export module Visera.Render;
+export import Visera.Render.RHI;
 
 export namespace VE
 {
-
-	class ViseraCore
+	
+	class ViseraRender
 	{
 		friend class Visera;
 	private:
@@ -26,7 +23,8 @@ export namespace VE
 			
 		}
 
-		ViseraCore() noexcept = default;
+		ViseraRender() noexcept = default;
 	};
+	
 
 } // namespace VE
