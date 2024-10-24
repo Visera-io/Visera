@@ -1,7 +1,7 @@
 module;
 #include <ViseraEngine>
 
-export module Visera.Core.Base.Exception:Error;
+export module Visera.Core.Exception:Error;
 
 export namespace VE
 {

@@ -7,6 +7,7 @@ import Visera.Render.RHI.Vulkan;
 
 export namespace VE
 {
+	class ViseraRender;
 
 	class RHI
 	{
@@ -19,14 +20,16 @@ export namespace VE
 		static void
 		Bootstrap()
 		{
-			m_vulkan.Bootstrap();
+			m_Vulkan.Bootstrap();
+			
+			
 		}
 		static void
 		Terminate()
 		{
-			m_vulkan.Terminate();
+			m_Vulkan.Terminate();
 		}
-		static inline Vulkan m_vulkan;
+		static inline Vulkan m_Vulkan;
 	};
 
 } // namespace VE

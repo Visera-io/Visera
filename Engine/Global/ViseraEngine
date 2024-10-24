@@ -1,7 +1,8 @@
 #pragma once
-
+// << Layers >>
 #define VISERA_RENDER
 
+// << STD Modules >>
 #include <cassert>
 #include <sstream>
 #include <ostream>
@@ -23,6 +24,7 @@
 #include <variant>
 #include <type_traits>
 
+// << Global Macros >>
 namespace VE
 {
 	//Asserts

@@ -1,6 +1,6 @@
 module;
 
-export module Visera.Core.Base.Coordinate;
+export module Visera.Render.Coordinate;
 export import :Axis;
 export import :World;
 

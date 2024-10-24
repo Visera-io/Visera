@@ -1,6 +1,6 @@
 module;
 #include <ViseraEngine>
-export module Visera.Core.Base.Time.Clock:TimeZone;
+export module Visera.Core.Time.Clock:TimeZone;
     
 export namespace VE
 {	

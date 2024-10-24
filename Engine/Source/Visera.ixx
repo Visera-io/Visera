@@ -31,7 +31,7 @@ export namespace VE
 			while (Running)
 			{
 				// Layers
-				if ((Running = APP()) != True) Log::Debug("Visera APP are trying to stop Main Loop.");
+				if ((Running = APP()) != True) Log::Warn("Visera APP are trying to stop Main Loop.");
 			}
 		}
 

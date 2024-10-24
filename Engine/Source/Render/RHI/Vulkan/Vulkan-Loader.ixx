@@ -8,30 +8,43 @@ module;
 
 export module Visera.Render.RHI.Vulkan:Loader;
 
-import Visera.Core.Base.Exception;
+import Visera.Core.Log;
 
 export namespace VE
 {
+	class Vulkan;
 
 	class VulkanLoader
 	{
-	public:
-		struct CreateInfo
-		{
-			VkInstance App;
-			VkDevice   Device;
-			Bool IsValid() const { return App != VK_NULL_HANDLE && Device != VK_NULL_HANDLE; }
+		friend class Vulkan;
+	private:
+		VulkanLoader() noexcept = default;
+
+		static inline void
+		Bootstrap()
+		{ 
+			if (!VK_SUCCESS == volkInitialize())
+			{ Log::Fatal("Failed to initialize Volk!"); }
 		};
 
-		VulkanLoader() = delete;
-		VulkanLoader(const CreateInfo& createinfo)
+		static inline void
+		Terminate()
 		{
-			if (VK_SUCCESS != volkInitialize())
-			{ throw RuntimeError("Failed to initialize Volk!"); }
+			volkFinalize();
+		}
+		
+		void
+		LoadInstance(VkInstance instance)
+		{
+			Assert(instance != VK_NULL_HANDLE);
+			volkLoadInstance(instance);
+		}
 
-			Assert(createinfo.IsValid());
-			volkLoadInstance(createinfo.App);
-			volkLoadDevice(createinfo.Device);
+		void
+		LoadDevice(VkDevice device)
+		{
+			Assert(device != VK_NULL_HANDLE);
+			volkLoadDevice(device);
 		}
 
 	};

@@ -1,7 +1,7 @@
 module;
 #include <ViseraEngine>
 
-export module Visera.Core.Base.Exception:RuntimeError;
+export module Visera.Core.Exception:RuntimeError;
 import :Error;
 
 export namespace VE

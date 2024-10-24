@@ -1,7 +1,7 @@
 module;
 #include <ViseraEngine>
 
-export module Visera.Core.Base.Time.Clock;
+export module Visera.Core.Time.Clock;
 export import :Duration;
 export import :TimePoint;
 export import :TimeZone;

@@ -7,7 +7,7 @@ module;
 
 export module Visera.Core.Log:Logger;
 
-import Visera.Core.Base;
+import Visera.Core.Exception;
 import Visera.Internal.Pattern;
 
 export namespace VE

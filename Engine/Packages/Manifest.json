@@ -9,8 +9,8 @@
         [
             "spdlog",
             "eigen3",
-            "vulkan",
-            "volk"
+            "volk",
+            "glfw3"
         ]
     }
 }

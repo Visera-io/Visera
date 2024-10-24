@@ -1,6 +1,6 @@
 module;
 
-export module Visera.Core.Base.Coordinate:Axis;
+export module Visera.Render.Coordinate:Axis;
 import Visera.Core.Math;
 
 export namespace VE

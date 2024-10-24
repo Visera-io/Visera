@@ -3,12 +3,14 @@ module;
 
 export module Visera.Core;
 
-export import Visera.Core.Base;
 export import Visera.Core.Log;
+export import Visera.Core.Exception;
+export import Visera.Core.Time;
 export import Visera.Core.Math;
 
 export namespace VE
 {
+	class Visera;
 
 	class ViseraCore
 	{
