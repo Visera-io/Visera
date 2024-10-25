@@ -66,6 +66,13 @@ export namespace VE
 
 			CreateVulkanInstance();
 		}
+		
+		void Terminate()
+		{
+			DestroyVulkanInstance();
+
+			VulkanLoader::Terminate();
+		}
 
 		void CreateVulkanInstance()
 		{
@@ -90,26 +97,24 @@ export namespace VE
 			{ Instance.Extensions[i] = enabled_extensions[i]; }
 
 			UInt32 instance_layer_property_count = 0;
-			vkEnumerateInstanceLayerProperties(&instance_layer_property_count, nullptr);
-			//VK_CHECK(vkEnumerateInstanceLayerProperties(&instance_layer_property_count, nullptr));
+			VK_CHECK(vkEnumerateInstanceLayerProperties(&instance_layer_property_count, nullptr));
 
-			/*Array<VkLayerProperties> layer_properties(instance_layer_property_count);
+			Array<VkLayerProperties> layer_properties(instance_layer_property_count);
 			vkEnumerateInstanceLayerProperties(&instance_layer_property_count, layer_properties.data());
-			*/
-			//Array<String> available_layers;
-			/*std::transform(layer_properties.begin(), layer_properties.end(),
+			
+			Array<String> available_layers;
+			std::transform(layer_properties.begin(), layer_properties.end(),
 				std::back_inserter(available_layers),
 				[](const VkLayerProperties& properties)
 				{ return properties.layerName; });
 
 			for (const auto& str : available_layers)
-				Log::Info(str);*/
+				Log::Info(str);
 		}
 
-		void Terminate()
+		void DestroyVulkanInstance()
 		{
 
-			VulkanLoader::Terminate();
 		}
 
 		static VKAPI_ATTR VkBool32 VKAPI_CALL
