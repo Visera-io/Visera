@@ -19,13 +19,13 @@ export namespace VE
     {
     public:
         TimePoint() = default;
-        TimePoint(T::time_point timepoint) : m_timepoint{ std::move(timepoint) }{}
+        TimePoint(T::time_point timepoint) : Value{ std::move(timepoint) }{}
 
-        operator T::time_point() const { return m_timepoint; }
-        auto&       operator=(const TimePoint<T>& target) { m_timepoint = target.m_timepoint; return *this; }
-        Duration<T> operator-(TimePoint<T> target) const { return {m_timepoint - target.m_timepoint}; }
+        operator T::time_point() const { return Value; }
+        auto&       operator=(const TimePoint<T>& target) { Value = target.Value; return *this; }
+        Duration<T> operator-(TimePoint<T> target) const { return {Value - target.Value}; }
     private:
-        T::time_point m_timepoint;
+        T::time_point Value;
     };
 
     template<>
@@ -35,17 +35,17 @@ export namespace VE
         //[FIXME] Time Zone issues.
         std::string
         ToString() const
-        { return std::format("UTC(+0) {:%Y-%m-%d %H:%M:%S}", m_timepoint); }
+        { return std::format("UTC(+0) {:%Y-%m-%d %H:%M:%S}", Value); }
 
     public:
         TimePoint() = default; //UNIX Time
-        TimePoint(std::chrono::system_clock::time_point timepoint) : m_timepoint{ std::move(timepoint) }{}
+        TimePoint(std::chrono::system_clock::time_point Value) : Value{ std::move(Value) }{}
         
-        operator std::chrono::system_clock::time_point() const { return m_timepoint; }
-        TimePoint<std::chrono::system_clock>& operator=(const TimePoint<std::chrono::system_clock>& target) { m_timepoint = target.m_timepoint; return *this; }
-        Duration<std::chrono::system_clock> operator-(TimePoint<std::chrono::system_clock> target) const { return {m_timepoint - target.m_timepoint}; }
+        operator std::chrono::system_clock::time_point() const { return Value; }
+        TimePoint<std::chrono::system_clock>& operator=(const TimePoint<std::chrono::system_clock>& NewTimePoint) { Value = NewTimePoint.Value; return *this; }
+        Duration<std::chrono::system_clock> operator-(TimePoint<std::chrono::system_clock> Subtrahend) const { return {Value - Subtrahend.Value}; }
     private:
-        std::chrono::system_clock::time_point m_timepoint;
+        std::chrono::system_clock::time_point Value;
     };
 
 } // namespace VE

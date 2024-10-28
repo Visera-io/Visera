@@ -18,7 +18,7 @@ export namespace VE
 
 	class RHI;
 
-	class Vulkan
+	class VulkanContext
 	{
 		friend class RHI;
 	public:
@@ -58,7 +58,7 @@ export namespace VE
 		const VkAllocationCallbacks* AllocationCallbacks  { nullptr };
 
 	private:
-		Vulkan() noexcept = default;
+		VulkanContext() noexcept = default;
 
 		void Bootstrap()
 		{
@@ -77,24 +77,24 @@ export namespace VE
 		void CreateVulkanInstance()
 		{
 			// Layers
-			Array<const char*> enabled_layers
+			Array<const char*> EnabledLayers
 			{
 				"VK_LAYER_KHRONOS_validation",
 				"VK_LAYER_RENDERDOC_Capture"
 			};
-			Instance.Layers.resize(enabled_layers.size());
+			Instance.Layers.resize(EnabledLayers.size());
 			for (Int32 i = 0; i < Instance.Layers.size(); ++i)
-			{ Instance.Layers[i] = enabled_layers[i]; }
+			{ Instance.Layers[i] = EnabledLayers[i]; }
 
 			// Extensions
-			Array<const char*> enabled_extensions
+			Array<const char*> EnabledExtensions
 			{
 				VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 				VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 			};
-			Instance.Extensions.resize(enabled_extensions.size());
+			Instance.Extensions.resize(EnabledExtensions.size());
 			for (Int32 i = 0; i < Instance.Extensions.size(); ++i)
-			{ Instance.Extensions[i] = enabled_extensions[i]; }
+			{ Instance.Extensions[i] = EnabledExtensions[i]; }
 
 			UInt32 instance_layer_property_count = 0;
 			VK_CHECK(vkEnumerateInstanceLayerProperties(&instance_layer_property_count, nullptr));
@@ -102,14 +102,19 @@ export namespace VE
 			Array<VkLayerProperties> layer_properties(instance_layer_property_count);
 			vkEnumerateInstanceLayerProperties(&instance_layer_property_count, layer_properties.data());
 			
-			Array<String> available_layers;
-			std::transform(layer_properties.begin(), layer_properties.end(),
-				std::back_inserter(available_layers),
+			Array<String> AvailaleLayers;
+			auto res = layer_properties | std::ranges::views::transform(
 				[](const VkLayerProperties& properties)
 				{ return properties.layerName; });
 
-			for (const auto& str : available_layers)
-				Log::Info(str);
+			/*std::transform(layer_properties.begin(), layer_properties.end(),
+				std::back_inserter(AvailaleLayers),
+				[](const VkLayerProperties& properties)
+				{ return properties.layerName; });*/
+
+			/*String LayerNames;
+			for (const auto& Str : res) LayerNames += str + String("\n\n");
+			Log::Info(LayerNames);*/
 		}
 
 		void DestroyVulkanInstance()
@@ -119,26 +124,26 @@ export namespace VE
 
 		static VKAPI_ATTR VkBool32 VKAPI_CALL
 			DefaultMessengerCallback(
-				VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-				VkDebugUtilsMessageTypeFlagsEXT messageType,
-				const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+				VkDebugUtilsMessageSeverityFlagBitsEXT MessageSeverity,
+				VkDebugUtilsMessageTypeFlagsEXT MessageType,
+				const VkDebugUtilsMessengerCallbackDataEXT* CallbackData,
 				void* pUserData)
 		{
-			switch (messageSeverity)
+			switch (MessageSeverity)
 			{
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
 				break;
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-				Log::Debug("[Vulkan]: {}",	pCallbackData->pMessage);
+				Log::Debug("[Vulkan]: {}",	CallbackData->pMessage);
 				break;
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-				Log::Warn("[Vulkan]: {}",	pCallbackData->pMessage);
+				Log::Warn("[Vulkan]: {}",	CallbackData->pMessage);
 				break;
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-				Log::Fatal("[Vulkan]: {}",	pCallbackData->pMessage);
+				Log::Fatal("[Vulkan]: {}",	CallbackData->pMessage);
 				break;
 			default:
-				Log::Error("[Vulkan]: Unknow Message Severity {}", ErrorCode(messageSeverity));
+				Log::Error("[Vulkan]: Unknow Message Severity {}", ErrorCode(MessageSeverity));
 			}
 			return VK_FALSE; // Always return VK_FALSE
 		}

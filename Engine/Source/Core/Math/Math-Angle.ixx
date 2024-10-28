@@ -9,142 +9,144 @@ import :Operation;
 export namespace VE
 {	
 	using AngleAxis   = Eigen::AngleAxisf;
-	constexpr double PI { 3.141592653589793 }; // 180 Degrees
+	constexpr Double PI { 3.141592653589793 }; // 180 Degrees
 
 	class Degree;
 	class Radian
 	{
 	public:
-		constexpr Radian(float radian):m_radian{ radian } {};
+		constexpr Radian(Float Value):Value{ Value } {};
 		explicit  Radian() = default;
-		explicit  Radian(Degree degree);
-		Radian&   operator=(float  number) { m_radian = number; return *this; }
-		Radian&   operator=(Radian radian) { m_radian = radian.m_radian; return *this; }
-		Radian&   operator=(Degree degree);
+		explicit  Radian(Degree TargetDegree);
+		Radian&   operator=(Float  NewValue) { Value = NewValue; return *this; }
+		Radian&   operator=(Radian NewRadian) { Value = NewRadian.Value; return *this; }
+		Radian&   operator=(Degree TargetDegree);
 
-		operator float() const { return m_radian; }
+		operator Float() const { return Value; }
 		operator Degree() const;
 		Degree   ToDegree() const;
 
-		Radian operator*(float target)			const;
-		Radian operator*(double target)			const;
-		Radian operator/(float num)				const;
-		Radian operator/(double num)			const;
+		Radian operator*(Float Multiplicand)	const;
+		Radian operator*(Double Multiplicand)	const;
+		Radian operator/(Float Divisor)			const;
+		Radian operator/(Double Divisor)		const;
 
-		bool   operator==(Radian target)	const { return Equal(  m_radian, float(target));}
-		bool   operator!=(Radian target)	const { return !Equal( m_radian, float(target));}
-		bool   operator<(Radian  target)	const { return m_radian < float(target);}
-		bool   operator>(Radian  target)	const { return m_radian > float(target);}
+		bool   operator==(Radian Rival)	const { return Equal(  Value, Rival.Value);}
+		bool   operator!=(Radian Rival)	const { return !Equal( Value, Rival.Value);}
+		bool   operator<(Radian  Rival)	const { return Value < Rival.Value;}
+		bool   operator>(Radian  Rival)	const { return Value > Rival.Value;}
 
 	private:
-		float m_radian = 0.0;
+		Float Value = 0.0;
 	};
 
 	class Degree
 	{
 	public:
-		constexpr Degree(float degree) :m_degree{ degree } {};
+		constexpr Degree(Float Value) :Value{ Value } {};
 		explicit  Degree() = default;
-		explicit  Degree(Radian radian);
-		Degree& operator=(float  number) { m_degree = number; return *this; }
-		Degree& operator=(Degree degree) { m_degree = degree.m_degree; return *this; }
-		Degree& operator=(Radian radian);
+		explicit  Degree(Radian TargetRadian);
+		Degree& operator=(Float  NewValue) { Value = NewValue; return *this; }
+		Degree& operator=(Degree NewDegree) { Value = NewDegree.Value; return *this; }
+		Degree& operator=(Radian TargetRadian);
 
-		operator float() const { return m_degree; }
+		operator Float() const { return Value; }
 		operator Radian() const;
 		Radian	 ToRadian() const;
 
-		Radian operator*(float target)			const;
-		Radian operator*(double target)			const;
-		Degree operator/(float num)				const;
-		Degree operator/(double num)			const;
-		bool   operator==(Degree target)	const { return Equal(  m_degree, float(target));}
-		bool   operator!=(Degree target)	const { return !Equal( m_degree, float(target));}
-		bool   operator<(Degree  target)	const { return m_degree < float(target);}
-		bool   operator>(Degree  target)	const { return m_degree < float(target);}
+		Radian operator*(Float Multiplicand)	const;
+		Radian operator*(Double Multiplicand)	const;
+		Degree operator/(Float Divisor)			const;
+		Degree operator/(Double Divisor)		const;
+		bool   operator==(Degree Rival)	const { return Equal(  Value, Rival.Value);}
+		bool   operator!=(Degree Rival)	const { return !Equal( Value, Rival.Value);}
+		bool   operator<(Degree  Rival)	const { return Value < Rival.Value;}
+		bool   operator>(Degree  Rival)	const { return Value < Rival.Value;}
 
 	private:
-		float m_degree = 0.0;
+		Float Value = 0.0;
 	};
 
-	float inline Tan(Radian radian)
+	Float inline Tan(Radian Radian)
 	{
-		return std::tan(radian);
+		return std::tan(Radian);
 	}
 
-	float inline Tan(Degree degree)
+	Float inline Tan(Degree Degree)
 	{
-		return Tan(static_cast<Radian>(degree));
+		return Tan(static_cast<Radian>(Degree));
 	}
 
-	Radian inline ATan(float number)
+	Radian inline ATan(Float Value)
 	{
-		return Radian{std::atan(number)};
+		return Radian{std::atan(Value)};
 	}
 
-	Radian inline ATan(double number)
+	Radian inline ATan(Double Value)
 	{
-		return ATan(static_cast<float>(number));
+		return ATan(static_cast<Float>(Value));
 	}
 
-	float inline Sin(Radian radian)
+	Float inline Sin(Radian Radian)
 	{
-		return std::sin(radian);
+		return std::sin(Radian);
 	}
 
-	float inline Sin(Degree degree)
+	Float inline Sin(Degree Degree)
 	{
-		return Sin(static_cast<Radian>(degree));
+		return Sin(static_cast<Radian>(Degree));
 	}
 
-	Radian inline ASin(float number)
+	Radian inline ASin(Float Value)
 	{
-		Assert(number > -1.0f && number < 1.0f);
-		return Radian{ static_cast<float>(std::asin(Clamp(number, -1.0f, 1.0f))) };
+		Assert(Value > -1.0f && Value < 1.0f);
+		Clamp(&Value, -1.0f, 1.0f);
+		return Radian{ static_cast<Float>(std::asin(Value)) };
 	}
 
-	Radian inline ASin(double number)
+	Radian inline ASin(Double Value)
 	{
-		return ASin(static_cast<float>(number));
+		return ASin(static_cast<Float>(Value));
 	}
 
-	float inline Cos(Radian radian)
+	Float inline Cos(Radian radian)
 	{
 		return std::cos(radian);
 	}
 
-	float inline Cos(Degree degree)
+	Float inline Cos(Degree Degree)
 	{
-		return Cos(static_cast<Radian>(degree));
+		return Cos(static_cast<Radian>(Degree));
 	}
 
-	Radian inline ACos(float number)
+	Radian inline ACos(Float Value)
 	{
-		Assert(number > -1.0f && number < 1.0f);
-		return Radian{ static_cast<float>(std::acos(Clamp(number, -1.0f, 1.0f))) };
+		Assert(Value > -1.0f && Value < 1.0f);
+		Clamp(&Value, -1.0f, 1.0f);
+		return Radian{ static_cast<Float>(std::acos(Value)) };
 	}
 
-	Radian inline ACos(double number)
+	Radian inline ACos(Double Value)
 	{
-		return ACos(static_cast<float>(number));
+		return ACos(static_cast<Float>(Value));
 	}
 	
-	Degree::Degree(Radian radian):m_degree{(radian / PI) * 180.0f} {};
-	Degree& Degree::operator=(Radian radian) { m_degree = radian.ToDegree(); return *this; }
-	Degree::operator Radian() const { return Radian{ (m_degree / 180.0f) * float(PI) }; }
-	Radian Degree::ToRadian()				const { return Radian{ m_degree };}
-	Radian Degree::operator*(float target)	const { return m_degree * target; }
-	Radian Degree::operator*(double target)	const { return m_degree * target; }
-	Degree Degree::operator/(float num)		const { return Degree(m_degree / num);	}
-	Degree Degree::operator/(double num)	const { return Degree(m_degree / num);	}
+	Degree::Degree(Radian TargetRadian):Value{(TargetRadian / PI) * 180.0f} {};
+	Degree& Degree::operator=(Radian TargetRadian) { Value = TargetRadian.ToDegree(); return *this; }
+	Degree::operator Radian() const { return Radian{ (Value / 180.0f) * Float(PI) }; }
+	Radian Degree::ToRadian()						const { return Radian{ Value };}
+	Radian Degree::operator*(Float Multiplicand)	const { return Value * Multiplicand; }
+	Radian Degree::operator*(Double Multiplicand)	const { return Value * Multiplicand; }
+	Degree Degree::operator/(Float Divisor)			const { return Degree(Value / Divisor);	}
+	Degree Degree::operator/(Double Divisor)		const { return Degree(Value / Divisor);	}
 
-	Radian::Radian(Degree degree) :m_radian{ (degree / 180.0f) * float(PI) } {}
-	Radian& Radian::operator=(Degree degree) { m_radian = degree.ToRadian(); return *this; }
-	Radian::operator Degree() const { return Degree{ float(m_radian / PI) * 180.0f }; }
-	Degree Radian::ToDegree()				const { return Degree{ m_radian };}
-	Radian Radian::operator*(float target)	const { return Radian(m_radian * target); }
-	Radian Radian::operator*(double target)	const { return Radian(m_radian * target); }
-	Radian Radian::operator/(float num)		const { return Radian(m_radian / num);	}
-	Radian Radian::operator/(double num)	const { return Radian(m_radian / num);	}
+	Radian::Radian(Degree TargetDegree) :Value{ (TargetDegree / 180.0f) * Float(PI) } {}
+	Radian& Radian::operator=(Degree TargetDegree) { Value = TargetDegree.ToRadian(); return *this; }
+	Radian::operator Degree() const { return Degree{ Float(Value / PI) * 180.0f }; }
+	Degree Radian::ToDegree()						const { return Degree{ Value };}
+	Radian Radian::operator*(Float Multiplicand)	const { return Radian(Value * Multiplicand); }
+	Radian Radian::operator*(Double Multiplicand)	const { return Radian(Value * Multiplicand); }
+	Radian Radian::operator/(Float Divisor)			const { return Radian(Value / Divisor);	}
+	Radian Radian::operator/(Double Divisor)		const { return Radian(Value / Divisor);	}
 
 } // namespace VE

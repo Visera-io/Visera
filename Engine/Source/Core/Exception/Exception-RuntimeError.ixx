@@ -11,10 +11,10 @@ export namespace VE
 	{
 	public:
 		explicit RuntimeError(
-			const std::string& message,
-			const std::source_location& location = std::source_location::current())
+			const String& Message,
+			const std::source_location& Location = std::source_location::current())
 			:
-			Error{message, location}
+			Error{Message, Location}
 		{
 
 		}

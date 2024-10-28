@@ -12,11 +12,11 @@ import Visera.Core.Log;
 
 export namespace VE
 {
-	class Vulkan;
+	class VulkanContext;
 
 	class VulkanLoader
 	{
-		friend class Vulkan;
+		friend class VulkanContext;
 	private:
 		VulkanLoader() noexcept = default;
 

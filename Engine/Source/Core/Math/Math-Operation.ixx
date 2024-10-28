@@ -12,16 +12,19 @@ export namespace VE
 	inline auto Epsilon() { return 1; }
 
 	template<Number T>
-	inline auto Infinity() { return std::numeric_limits<T>::infinity(); }
+	inline auto UpperBound() { return std::numeric_limits<T>::max(); }
+
+	template<Number T>
+	inline auto LowerBound() { return std::numeric_limits<T>::min(); }
 
 	template<FloatingPoint T>
-	Bool Equal(T a, T b) { return std::abs(a - b) <= Epsilon<T>(); }
+	Bool Equal(T A, T B) { return std::abs(A - B) <= Epsilon<T>(); }
 
 	template<Number NumT, Number FloorT, Number CeilT>
-	Bool Clamp(NumT number, FloorT floor, CeilT ceil)
+	void Clamp(NumT* Value, FloorT Floor, CeilT Ceil)
 	{
-		if (floor > number) return floor;
-		if (ceil  < number) return ceil;
-		return number;
+		if (Floor > *Value) { *Value = Floor; return; }
+		if (Ceil  < *Value) { *Value = Ceil;  return; }
 	}
+
 } // namespace VE

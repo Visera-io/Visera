@@ -26,28 +26,28 @@ export namespace VE
 
 		inline
         Duration<T>
-		Tick() { auto old_time = m_time; m_time = Now(); Duration<T> delta{ m_time - old_time }; m_duration += delta;  return delta; }
+		Tick() { auto OldTime = CurrentTimePoint; CurrentTimePoint = Now(); Duration<T> delta{ CurrentTimePoint - OldTime }; CurrentDuration += delta;  return delta; }
 
 		inline
         Duration<T>
-		Elapsed() const { return Duration<T>{ Now() - m_time }; }
+		Elapsed() const { return Duration<T>{ Now() - CurrentTimePoint }; }
 
 		inline
         Duration<T>
-		TotalTime() const { return Duration<T>{ Now() - m_time } + m_duration; }
+		GetTotalTime() const { return Duration<T>{ Now() - CurrentTimePoint } + CurrentDuration; }
 
         inline void
-        Set(TimePoint<T> time) { m_time = time; }
+        Set(TimePoint<T> NewTimePoint) { CurrentTimePoint = NewTimePoint; }
 
 		inline void
-		Reset() { m_time = TimePoint<T>{}; m_duration = Duration<T>{};}
+		Reset() { CurrentTimePoint = TimePoint<T>{}; CurrentDuration = Duration<T>{};}
 
     public:
-        Clock() noexcept : m_time{ Now() } {}
+        Clock() noexcept : CurrentTimePoint{ Now() } {}
 
 	protected:
-		TimePoint<T> m_time;
-		Duration<T>  m_duration;
+		TimePoint<T> CurrentTimePoint;
+		Duration<T>  CurrentDuration;
 	};
 
 	class HiResClock : public Clock<std::chrono::high_resolution_clock> {};

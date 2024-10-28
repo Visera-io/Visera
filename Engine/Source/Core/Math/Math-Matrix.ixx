@@ -35,52 +35,52 @@ export namespace VE
 
 	template<MatrixType T> inline
 	Bool
-	IsZero(const T& matrix) { return matrix.isZero(); }
+	IsZero(const T& Matrix) { return Matrix.isZero(); }
 
 	template<MatrixType T> inline
 	Bool
-	IsIdentity(const T& matrix) { return matrix.isIdentity(); }
+	IsIdentity(const T& Matrix) { return Matrix.isIdentity(); }
 
 	StringView
-	Format(const Matrix2x2F& matrix)
+	Format(const Matrix2x2F& Matrix)
 	{
-		static const char* formatter = "{%f, %f,\n %f, %f}";
-		auto& buffer = MemoryRegistry::GetInstance().MemFormatMatrix;
+		static const char* Formatter = "{%f, %f,\n %f, %f}";
+		auto& Buffer = MemoryRegistry::GetInstance().MemFormatMatrix;
 
-		auto cursor = std::snprintf(buffer.data(), 1 + (4 * 32) + (4-1 + 2*1) + 1, formatter,
-			matrix(0,0), matrix(0,1),
-			matrix(1,0), matrix(1,1));
+		auto cursor = std::snprintf(Buffer.data(), 1 + (4 * 32) + (4-1 + 2*1) + 1, Formatter,
+			Matrix(0,0), Matrix(0,1),
+			Matrix(1,0), Matrix(1,1));
 
-		return StringView(buffer.begin(), buffer.begin() + cursor);
+		return StringView(Buffer.begin(), Buffer.begin() + cursor);
 	}
 
 	StringView
-	Format(const Matrix3x3F& matrix)
+	Format(const Matrix3x3F& Matrix)
 	{
-		static const char* formatter = "{%f, %f, %f,\n %f, %f, %f,\n %f, %f, %f}";
-		auto& buffer = MemoryRegistry::GetInstance().MemFormatMatrix;
+		static const char* Formatter = "{%f, %f, %f,\n %f, %f, %f,\n %f, %f, %f}";
+		auto& Buffer = MemoryRegistry::GetInstance().MemFormatMatrix;
 
-		auto cursor = std::snprintf(buffer.data(), 1 + (9 * 32) + (9-1 + 2*2) + 1, formatter,
-			matrix(0,0), matrix(0,1), matrix(0,2),
-			matrix(1,0), matrix(1,1), matrix(1,2),
-			matrix(2,0), matrix(2,1), matrix(2,2));
+		auto cursor = std::snprintf(Buffer.data(), 1 + (9 * 32) + (9-1 + 2*2) + 1, Formatter,
+			Matrix(0,0), Matrix(0,1), Matrix(0,2),
+			Matrix(1,0), Matrix(1,1), Matrix(1,2),
+			Matrix(2,0), Matrix(2,1), Matrix(2,2));
 
-		return StringView(buffer.begin(), buffer.begin() + cursor);
+		return StringView(Buffer.begin(), Buffer.begin() + cursor);
 	}
 
 	StringView
-	Format(const Matrix4x4F& matrix)
+	Format(const Matrix4x4F& Matrix)
 	{
-		static const char* formatter = "{%f, %f, %f, %f\n %f, %f, %f, %f\n %f, %f, %f, %f\n %f, %f, %f, %f}";
-		auto& buffer = MemoryRegistry::GetInstance().MemFormatMatrix;
+		static const char* Formatter = "{%f, %f, %f, %f\n %f, %f, %f, %f\n %f, %f, %f, %f\n %f, %f, %f, %f}";
+		auto& Buffer = MemoryRegistry::GetInstance().MemFormatMatrix;
 
-		auto cursor = std::snprintf(buffer.data(), 1 + (16 * 32) + (16-1 + 2*3) + 1, formatter,
-			matrix(0,0), matrix(0,1), matrix(0,2), matrix(0,3),
-			matrix(1,0), matrix(1,1), matrix(1,2), matrix(1,3),
-			matrix(2,0), matrix(2,1), matrix(2,2), matrix(2,3),
-			matrix(3,0), matrix(3,1), matrix(3,2), matrix(3,3));
+		auto cursor = std::snprintf(Buffer.data(), 1 + (16 * 32) + (16-1 + 2*3) + 1, Formatter,
+			Matrix(0,0), Matrix(0,1), Matrix(0,2), Matrix(0,3),
+			Matrix(1,0), Matrix(1,1), Matrix(1,2), Matrix(1,3),
+			Matrix(2,0), Matrix(2,1), Matrix(2,2), Matrix(2,3),
+			Matrix(3,0), Matrix(3,1), Matrix(3,2), Matrix(3,3));
 
-		return StringView(buffer.begin(), buffer.begin() + cursor);
+		return StringView(Buffer.begin(), Buffer.begin() + cursor);
 	}
 
 } // namespace VE

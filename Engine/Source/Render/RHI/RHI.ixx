@@ -20,16 +20,16 @@ export namespace VE
 		static void
 		Bootstrap()
 		{
-			m_Vulkan.Bootstrap();
+			Vulkan.Bootstrap();
 			
 			
 		}
 		static void
 		Terminate()
 		{
-			m_Vulkan.Terminate();
+			Vulkan.Terminate();
 		}
-		static inline Vulkan m_Vulkan;
+		static inline VulkanContext Vulkan;
 	};
 
 } // namespace VE
