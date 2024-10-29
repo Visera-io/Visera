@@ -18,16 +18,21 @@ export namespace VE
 		friend class ViseraPlatform;
 	public:
 		static inline
-		Bool
-		Tick() { glfwPollEvents(); return !ShouldClose(); }
-
+		GLFWwindow*
+		GetHandle() { return Handle; }
+		
 		static inline
 		Bool
 		ShouldClose() { return glfwWindowShouldClose(Handle); }
 
 		static inline void
 		SetWindowPosition(Int32 X, Int32 Y) { glfwSetWindowPos(Handle, X, Y); }
-		
+
+	private:
+		static inline
+		Bool
+		Tick() { glfwPollEvents(); return !ShouldClose(); }
+
 	private:
 		SIT(String)		 Title		= VISERA_APP_NAME;
 		SIT(UInt32)		 Width		= 1280;
@@ -47,7 +52,7 @@ export namespace VE
 			glfwWindowHint(GLFW_RESIZABLE,	GLFW_TRUE);
 
 			//Create Window
-			Handle = glfwCreateWindow(Width, Height, Title.c_str(),NULL, NULL);
+			Handle = glfwCreateWindow(Width, Height, Title.c_str(), NULL, NULL);
 			if (!Handle) Log::Fatal("Failed to create GLFWwindow!");
 
 			// Set Window Position

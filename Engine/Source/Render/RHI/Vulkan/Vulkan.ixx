@@ -5,6 +5,7 @@ module;
 #include <vulkan/vulkan.h>
 #define VOLK_IMPLEMENTATION
 #include <volk.h>
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 export module Visera.Render.RHI.Vulkan;
@@ -35,14 +36,15 @@ export namespace VE
 			UInt32						APIVersion  = VK_API_VERSION_1_3;
 			Array<RawString>			Layers;
 			Array<RawString>			Extensions;
+			
+			struct {
+				VkDebugUtilsMessengerEXT			 Handle{ VK_NULL_HANDLE };
+				PFN_vkDebugUtilsMessengerCallbackEXT Callback = DefaultMessengerCallback;
+				operator VkDebugUtilsMessengerEXT() const { return Handle; }
+			}Messenger;
+
 			operator VkInstance() const { return Handle; }
 		}Instance;
-
-		struct {
-			VkDebugUtilsMessengerEXT			 Handle;
-			PFN_vkDebugUtilsMessengerCallbackEXT Callback = DefaultMessengerCallback;
-			operator VkDebugUtilsMessengerEXT() const { return Handle; }
-		}Messenger;
 
 		struct
 		{
@@ -51,39 +53,48 @@ export namespace VE
 		}Window;
 
 		struct {
-			VkSurfaceKHR                        Handle{ VK_NULL_HANDLE };
-			std::vector<VkSurfaceFormatKHR>		Formats;
-			std::vector<VkPresentModeKHR>		PresentModes;
+			VkSurfaceKHR                Handle{ VK_NULL_HANDLE };
+			Array<VkSurfaceFormatKHR>	Formats;
+			Array<VkPresentModeKHR>		PresentModes;
 			operator VkSurfaceKHR() const { return Handle; }
 		}Surface{};
+
+		struct {
+			VkDevice			Handle;
+			operator VkDevice() const { return Handle; }
+		}Device;
 
 		const VkAllocationCallbacks* AllocationCallbacks  { nullptr };
 
 	private:
 		UniquePtr<VulkanLoader> Volk;
+		//UniquePtr<VulkanMemoryAllocator> VMA;
 
 	public:
 		VulkanContext()
 		{
 			Volk = CreateUniquePtr<VulkanLoader>();
 
-			CreateVulkanInstance();
+			CreateInstance();
+			CreateSurface();
+			//CreateDevice();
 		}
 
 		~VulkanContext()
 		{
-			DestroyVulkanInstance();
+			//DestroyDevice();
+			DestroySurface();
+			DestroyInstance();
 
 			Volk.reset();
 		}
 
-		void CreateVulkanInstance()
+		void CreateInstance()
 		{
 			// Layers
 			Array<RawString> EnabledLayers
 			{
 				"VK_LAYER_KHRONOS_validation",
-				"VK_LAYER_RENDERDOC_Capture"
 			};
 			Instance.Layers.resize(EnabledLayers.size());
 			for (Int32 i = 0; i < Instance.Layers.size(); ++i)
@@ -95,29 +106,35 @@ export namespace VE
 				VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 				VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 			};
-			Instance.Extensions.resize(EnabledExtensions.size());
-			for (Int32 i = 0; i < Instance.Extensions.size(); ++i)
-			{ Instance.Extensions[i] = EnabledExtensions[i]; }
 
-			UInt32 instance_layer_property_count = 0;
-			VK_CHECK(vkEnumerateInstanceLayerProperties(&instance_layer_property_count, nullptr));
+			// GLFW Necessary Extensions
+			UInt32 GLFWExtensionCount = 0;
+			const char** GLFWExtensions = glfwGetRequiredInstanceExtensions(&GLFWExtensionCount); // Include WSI extensions
 
-			Array<VkLayerProperties> layer_properties(instance_layer_property_count);
-			vkEnumerateInstanceLayerProperties(&instance_layer_property_count, layer_properties.data());
+			UInt32 TotalExtensionCount = GLFWExtensionCount + EnabledExtensions.size();
+			Instance.Extensions.resize(TotalExtensionCount);
+			auto It = Instance.Extensions.begin();
+			for (const auto& Extension : EnabledExtensions)
+			{ *It = Extension; ++It; }
+			for (UInt32 i = 0; i < GLFWExtensionCount; ++i)
+			{ *It = *(GLFWExtensions + i); ++It; }
+
+			UInt32 LayerPropertyCount = 0;
+			VK_CHECK(vkEnumerateInstanceLayerProperties(&LayerPropertyCount, nullptr));
+
+			Array<VkLayerProperties> LayerProperties(LayerPropertyCount);
+			vkEnumerateInstanceLayerProperties(&LayerPropertyCount, LayerProperties.data());
 			
-			Array<String> AvailaleLayers;
-			auto res = layer_properties | std::ranges::views::transform(
-				[](const VkLayerProperties& properties)
-				{ return properties.layerName; });
-
-			/*std::transform(layer_properties.begin(), layer_properties.end(),
-				std::back_inserter(AvailaleLayers),
-				[](const VkLayerProperties& properties)
-				{ return properties.layerName; });*/
-
-			/*String LayerNames;
-			for (const auto& Str : res) LayerNames += str + String("\n\n");
-			Log::Info(LayerNames);*/
+			for (auto RequiredLayer : Instance.Layers)
+			{
+				bool Found = False;
+				for (const auto& AvailableLayer : LayerProperties)
+				{
+					if (strcmp(RequiredLayer, AvailableLayer.layerName) == 0)
+					{ Found = true; break; }
+				}
+				if (!Found) Log::Fatal("Failed to enable the Vulkan Validation Layer {}", RequiredLayer);
+			}
 
 			VkApplicationInfo AppInfo
 			{
@@ -126,21 +143,77 @@ export namespace VE
 				.applicationVersion = Instance.AppVersion,
 				.apiVersion			= Instance.APIVersion,
 			};
+
+			Address Next{ nullptr };
+#ifndef NDEBUG
+			VkDebugUtilsMessengerCreateInfoEXT MessengerCreateInfo
+			{
+				.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+				.messageSeverity=  
+					//VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+					VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT    |
+					VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+					VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+				.messageType    =      
+					//VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT     |
+					VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT  |
+					VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+				.pfnUserCallback= Instance.Messenger.Callback,
+				.pUserData      = nullptr
+			};
+			Next = Address(&MessengerCreateInfo);
+#else
+			
+#endif
 			VkInstanceCreateInfo InstanceCreateInfo
 			{
 				.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+				.pNext = Next,
 				.pApplicationInfo		= &AppInfo,
 				.enabledLayerCount		= UInt32(Instance.Layers.size()),
 				.ppEnabledLayerNames	= Instance.Layers.data(),
 				.enabledExtensionCount	= UInt32(Instance.Extensions.size()),
 				.ppEnabledExtensionNames= Instance.Extensions.data(),
 			};
-			//VK_CHECK(vkCreateInstance(&InstanceCreateInfo, AllocationCallbacks, &Instance.Handle));
+			VK_CHECK(vkCreateInstance(&InstanceCreateInfo, AllocationCallbacks, &Instance.Handle));
+
+			Volk->LoadInstance(Instance);
 		}
 
-		void DestroyVulkanInstance()
+		void DestroyInstance()
+		{
+#ifndef NDEBUG
+			auto LoadedDestroyFunc = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(Instance, "vkDestroyDebugUtilsMessengerEXT");
+			Assert(LoadedDestroyFunc && "Failed to load function: vkDestroyDebugUtilsMessengerEXT");
+			LoadedDestroyFunc(Instance, Instance.Messenger, AllocationCallbacks);
+#endif
+			vkDestroyInstance(Instance, AllocationCallbacks);
+			Instance.Handle = VK_NULL_HANDLE;
+		}
+
+		void CreateDevice()
+		{
+			Volk->LoadDevice(Device);
+		}
+
+		void DestroyDevice()
 		{
 
+		}
+
+		void CreateSurface()
+		{
+			VK_CHECK(glfwCreateWindowSurface(
+				Instance,
+				Window::GetHandle(),
+				AllocationCallbacks,
+				&Surface.Handle));
+		}
+
+		void DestroySurface()
+		{
+			vkDestroySurfaceKHR(Instance, Surface, AllocationCallbacks);
+			Surface.Handle = VK_NULL_HANDLE;
 		}
 
 		static VKAPI_ATTR VkBool32 VKAPI_CALL
