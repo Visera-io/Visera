@@ -11,6 +11,7 @@ export module Visera.Render.RHI.Vulkan;
 import :Loader;
 
 import Visera.Core.Log;
+import Visera.Platform.Window;
 
 export namespace VE
 {
@@ -27,12 +28,13 @@ export namespace VE
 		   2. Messenger
 		*/
 		struct {
-			const char*					AppName		= "Visera";
+			RawString					AppName		= VISERA_ENGINE_NAME;
 			uint32_t					AppVersion	= VK_MAKE_VERSION(1, 0, 0);
-			VkInstance					Handle		{ VK_NULL_HANDLE };	
+			VkInstance					Handle		{ VK_NULL_HANDLE };
 			
-			Array<const char*>			Layers;
-			Array<const char*>			Extensions;
+			UInt32						APIVersion  = VK_API_VERSION_1_3;
+			Array<RawString>			Layers;
+			Array<RawString>			Extensions;
 			operator VkInstance() const { return Handle; }
 		}Instance;
 
@@ -58,26 +60,27 @@ export namespace VE
 		const VkAllocationCallbacks* AllocationCallbacks  { nullptr };
 
 	private:
-		VulkanContext() noexcept = default;
+		UniquePtr<VulkanLoader> Volk;
 
-		void Bootstrap()
+	public:
+		VulkanContext()
 		{
-			VulkanLoader::Bootstrap();
+			Volk = CreateUniquePtr<VulkanLoader>();
 
 			CreateVulkanInstance();
 		}
-		
-		void Terminate()
+
+		~VulkanContext()
 		{
 			DestroyVulkanInstance();
 
-			VulkanLoader::Terminate();
+			Volk.reset();
 		}
 
 		void CreateVulkanInstance()
 		{
 			// Layers
-			Array<const char*> EnabledLayers
+			Array<RawString> EnabledLayers
 			{
 				"VK_LAYER_KHRONOS_validation",
 				"VK_LAYER_RENDERDOC_Capture"
@@ -87,7 +90,7 @@ export namespace VE
 			{ Instance.Layers[i] = EnabledLayers[i]; }
 
 			// Extensions
-			Array<const char*> EnabledExtensions
+			Array<RawString> EnabledExtensions
 			{
 				VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 				VK_EXT_DEBUG_REPORT_EXTENSION_NAME
@@ -115,6 +118,24 @@ export namespace VE
 			/*String LayerNames;
 			for (const auto& Str : res) LayerNames += str + String("\n\n");
 			Log::Info(LayerNames);*/
+
+			VkApplicationInfo AppInfo
+			{
+				.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+				.pApplicationName	= Instance.AppName,
+				.applicationVersion = Instance.AppVersion,
+				.apiVersion			= Instance.APIVersion,
+			};
+			VkInstanceCreateInfo InstanceCreateInfo
+			{
+				.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+				.pApplicationInfo		= &AppInfo,
+				.enabledLayerCount		= UInt32(Instance.Layers.size()),
+				.ppEnabledLayerNames	= Instance.Layers.data(),
+				.enabledExtensionCount	= UInt32(Instance.Extensions.size()),
+				.ppEnabledExtensionNames= Instance.Extensions.data(),
+			};
+			//VK_CHECK(vkCreateInstance(&InstanceCreateInfo, AllocationCallbacks, &Instance.Handle));
 		}
 
 		void DestroyVulkanInstance()

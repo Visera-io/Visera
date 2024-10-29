@@ -8,6 +8,8 @@ export import Visera.Core.Exception;
 export import Visera.Core.Time;
 export import Visera.Core.Math;
 
+import Visera.Internal;
+
 export namespace VE
 {
 	class Visera;
@@ -16,6 +18,15 @@ export namespace VE
 	{
 		friend class Visera;
 	private:
+		static inline void
+		Tick()
+		{
+			if (!ViseraInternal::Context.MainLoop.ShouldStop())
+			{
+				
+			}
+		}
+
 		static inline void
 		Bootstrap()
 		{

@@ -1,44 +1,48 @@
 module;
 #include <ViseraEngine>
 
-export module Visera.Render;
-export import Visera.Render.RHI;
-export import Visera.Render.Coordinate;
+export module Visera.Platform;
+export import Visera.Platform.Window;
 
 import Visera.Internal;
-import Visera.Platform.Window;
 import Visera.Core.Log;
 
 export namespace VE
 {
 	class Visera;
 
-	class ViseraRender
+	class ViseraPlatform
 	{
 		friend class Visera;
 	private:
 		static inline void
 		Tick()
 		{
+			static Bool bContinue = True;
 			if (!ViseraInternal::Context.MainLoop.ShouldStop())
 			{
-				
+				//Window Tick
+				if ((bContinue = Window::Tick()) != True)
+				{ return ViseraInternal::Context.MainLoop.Stop("ViseraPlatform::Window"); }
 			}
 		}
 
 		static inline void
 		Bootstrap()
 		{
-			RHI::Bootstrap();
+			Window::Bootstrap();
 		}
 
 		static inline void
 		Terminate()
 		{
-			RHI::Terminate();
+			Window::Terminate();
 		}
 
-		ViseraRender() noexcept = default;
+		ViseraPlatform() noexcept = default;
+
+	private:
+		
 	};
 	
 

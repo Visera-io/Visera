@@ -12,23 +12,16 @@ import Visera.Core.Log;
 
 export namespace VE
 {
-	class VulkanContext;
-
 	class VulkanLoader
 	{
-		friend class VulkanContext;
-	private:
-		VulkanLoader() noexcept = default;
-
-		static inline void
-		Bootstrap()
-		{ 
+	public:
+		VulkanLoader()
+		{
 			if (!VK_SUCCESS == volkInitialize())
 			{ Log::Fatal("Failed to initialize Volk!"); }
-		};
+		}
 
-		static inline void
-		Terminate()
+		~VulkanLoader()
 		{
 			volkFinalize();
 		}

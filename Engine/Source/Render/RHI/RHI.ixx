@@ -20,16 +20,14 @@ export namespace VE
 		static void
 		Bootstrap()
 		{
-			Vulkan.Bootstrap();
-			
-			
+			Vulkan = CreateUniquePtr<VulkanContext>();
 		}
 		static void
 		Terminate()
 		{
-			Vulkan.Terminate();
+			Vulkan.reset();
 		}
-		static inline VulkanContext Vulkan;
+		static inline UniquePtr<VulkanContext> Vulkan;
 	};
 
 } // namespace VE

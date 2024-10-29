@@ -76,11 +76,9 @@ export namespace VE
  #endif
  			//m_handle->set_pattern("[%^%l%$] [%Y-%m-%d %H:%M:%S] %v");
  			Spdlogger->set_pattern("%^[Visera - %l - %H:%M:%S - Thread:%t]%$\n%v");
- 			Spdlogger->debug("System logger is begin initialized.");
 		}
 		virtual ~Logger() noexcept
 		{
-			Spdlogger->debug("Releasing the system logger...");
 			Spdlogger->flush();
 
 			//Do not call drop_all() in your class!

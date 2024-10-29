@@ -1,6 +1,7 @@
 #pragma once
 // << Layers >>
 #define VISERA_RENDER
+#define VISERA_PLATFORM
 
 // << STD Modules >>
 #include <cassert>
@@ -70,6 +71,7 @@ namespace VE
 
 	using String	 = std::string;
 	using StringView = std::string_view;
+	using RawString  = const char*;
 
 	using Byte		= unsigned char;
 	using EnumMask	= std::uint32_t;
