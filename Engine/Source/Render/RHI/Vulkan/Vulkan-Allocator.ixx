@@ -10,7 +10,8 @@ export namespace VE
 
 	class VulkanAllocator
 	{
-
+	public:
+		static inline const VkAllocationCallbacks* AllocationCallbacks  { nullptr };
 	};
 
 

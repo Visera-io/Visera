@@ -12,34 +12,49 @@ import Visera.Core.Log;
 
 export namespace VE
 {
+
+	class VulkanContext;
+
 	class VulkanLoader
 	{
+		friend class VulkanContext;
+	private:
+		void LoadInstance(VkInstance Instance);
+		void LoadDevice(VkDevice Device);
+
+		void Create();
+		void Destroy();
+
 	public:
-		VulkanLoader()
-		{
-			if (!VK_SUCCESS == volkInitialize())
-			{ Log::Fatal("Failed to initialize Volk!"); }
-		}
-
-		~VulkanLoader()
-		{
-			volkFinalize();
-		}
-		
-		void
-		LoadInstance(VkInstance instance)
-		{
-			Assert(instance != VK_NULL_HANDLE);
-			volkLoadInstance(instance);
-		}
-
-		void
-		LoadDevice(VkDevice device)
-		{
-			Assert(device != VK_NULL_HANDLE);
-			volkLoadDevice(device);
-		}
-
+		VulkanLoader() noexcept = default;
+		~VulkanLoader() noexcept = default;
 	};
+
+	void VulkanLoader::
+	Create()
+	{
+		if (!VK_SUCCESS == volkInitialize())
+		{ Log::Fatal("Failed to initialize Volk!"); }
+	}
+
+	void VulkanLoader::
+	Destroy()
+	{
+		volkFinalize();
+	}
+		
+	void VulkanLoader::
+	LoadInstance(VkInstance Instance)
+	{
+		Assert(Instance != VK_NULL_HANDLE);
+		volkLoadInstance(Instance);
+	}
+
+	void VulkanLoader::
+	LoadDevice(VkDevice Device)
+	{
+		Assert(Device != VK_NULL_HANDLE);
+		volkLoadDevice(Device);
+	}
 
 } // namespace VE

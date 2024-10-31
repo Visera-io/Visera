@@ -38,10 +38,10 @@ export namespace VE
 		static inline void
 		Loop(Bool(*AppTick)(void))
 		{
-			do {
+			try { do {
 				ViseraInternal::Tick();
 				ViseraCore::Tick();
-				if (AppTick() != VE::Success)
+				if (AppTick() != EXIT_SUCCESS)
 				{ ViseraInternal::Context.MainLoop.Stop(VISERA_APP_NAME); }
 #if defined(VISERA_PLATFORM)
 				ViseraPlatform::Tick();
@@ -49,7 +49,11 @@ export namespace VE
 #if defined(VISERA_RENDER)
 				ViseraRender::Tick();
 #endif
-			} while (!ViseraInternal::Context.MainLoop.ShouldStop());
+			} while (!ViseraInternal::Context.MainLoop.ShouldStop()); }
+			catch (const VE::RuntimeError& Error)
+			{
+				return Log::Error("Unsolved Visera runtime error:\n{}{}", Error.What(), Error.Where());
+			}
 		}
 
 		static inline void

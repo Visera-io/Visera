@@ -5,17 +5,17 @@ module;
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
-export module Visera.Core.Log:Logger;
+export module Visera.Core.Log.Logger:SystemLogger;
 
 import Visera.Core.Exception;
 import Visera.Internal.Pattern;
 
 export namespace VE
 {
-	class Logger:
-		public Singleton<Logger>
+	class SystemLogger:
+		public Singleton<SystemLogger>
 	{
-		friend class Singleton<Logger>;
+		friend class Singleton<SystemLogger>;
 	public:
 		inline void
 		Info(const String& message)
@@ -65,7 +65,7 @@ export namespace VE
 		Debug(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
 		{ Spdlogger->debug(Formatter, std::forward<Args>(Arguments)...); }
 
-		Logger() noexcept
+		SystemLogger() noexcept
 		{
 			auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
  			Spdlogger = std::make_unique<spdlog::logger>("Visera Log", console_sink);
@@ -77,7 +77,7 @@ export namespace VE
  			//m_handle->set_pattern("[%^%l%$] [%Y-%m-%d %H:%M:%S] %v");
  			Spdlogger->set_pattern("%^[Visera - %l - %H:%M:%S - Thread:%t]%$\n%v");
 		}
-		virtual ~Logger() noexcept
+		virtual ~SystemLogger() noexcept
 		{
 			Spdlogger->flush();
 

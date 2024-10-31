@@ -12,22 +12,21 @@ export namespace VE
 	class RHI
 	{
 		friend class ViseraRender;
-	public:
-		
+	private:
+		static inline UniquePtr<VulkanContext> Vulkan = CreateUniquePtr<VulkanContext>();
 
 	private:
 		RHI() noexcept = default;
 		static void
 		Bootstrap()
 		{
-			Vulkan = CreateUniquePtr<VulkanContext>();
+			Vulkan->Create();
 		}
 		static void
 		Terminate()
 		{
-			Vulkan.reset();
+			Vulkan->Destroy();
 		}
-		static inline UniquePtr<VulkanContext> Vulkan;
 	};
 
 } // namespace VE

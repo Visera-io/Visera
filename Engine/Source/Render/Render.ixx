@@ -6,7 +6,7 @@ export import Visera.Render.RHI;
 export import Visera.Render.Coordinate;
 
 import Visera.Internal;
-import Visera.Platform.Window;
+import Visera.Platform;
 import Visera.Core.Log;
 
 export namespace VE
@@ -20,15 +20,21 @@ export namespace VE
 		static inline void
 		Tick()
 		{
+			static Bool bContinue = True;
 			if (!ViseraInternal::Context.MainLoop.ShouldStop())
 			{
-				
+				//Window Tick
+				if ((bContinue = !ViseraPlatform::GetWindow().ShouldClose()) != True)
+				{ return ViseraInternal::Context.MainLoop.Stop("ViseraPlatform - Window"); }
+
+				ViseraPlatform::GetWindow().PollEvents();
 			}
 		}
 
 		static inline void
 		Bootstrap()
 		{
+			ViseraPlatform::GetWindow();
 			RHI::Bootstrap();
 		}
 

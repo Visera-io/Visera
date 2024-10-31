@@ -14,6 +14,11 @@ export namespace VE
 	class ViseraPlatform
 	{
 		friend class Visera;
+	public:
+		static inline
+		const Window&
+		GetWindow() { static Window Window{}; return Window; }
+
 	private:
 		static inline void
 		Tick()
@@ -21,22 +26,20 @@ export namespace VE
 			static Bool bContinue = True;
 			if (!ViseraInternal::Context.MainLoop.ShouldStop())
 			{
-				//Window Tick
-				if ((bContinue = Window::Tick()) != True)
-				{ return ViseraInternal::Context.MainLoop.Stop("ViseraPlatform::Window"); }
+				
 			}
 		}
 
 		static inline void
 		Bootstrap()
 		{
-			Window::Bootstrap();
+
 		}
 
 		static inline void
 		Terminate()
 		{
-			Window::Terminate();
+
 		}
 
 		ViseraPlatform() noexcept = default;

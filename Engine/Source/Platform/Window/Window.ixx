@@ -9,7 +9,6 @@ import Visera.Core.Log;
 
 export namespace VE
 {
-	#define SIT(Type) static inline Type
 
 	class ViseraPlatform;
 
@@ -17,33 +16,36 @@ export namespace VE
 	{
 		friend class ViseraPlatform;
 	public:
-		static inline
 		GLFWwindow*
-		GetHandle() { return Handle; }
+		GetHandle() const { return Handle; }
 		
-		static inline
 		Bool
-		ShouldClose() { return glfwWindowShouldClose(Handle); }
+		ShouldClose() const { return glfwWindowShouldClose(Handle); }
 
-		static inline void
-		SetWindowPosition(Int32 X, Int32 Y) { glfwSetWindowPos(Handle, X, Y); }
-
-	private:
-		static inline
-		Bool
-		Tick() { glfwPollEvents(); return !ShouldClose(); }
+		void
+		PollEvents() const { glfwPollEvents(); }
 
 	private:
-		SIT(String)		 Title		= VISERA_APP_NAME;
-		SIT(UInt32)		 Width		= 1280;
-		SIT(UInt32)		 Height		= 800;
-		SIT(Bool)		 bMaximized	= False;
+		void
+		SetPosition(Int32 X, Int32 Y) const { glfwSetWindowPos(Handle, X, Y); }
 
-		SIT(GLFWwindow*) Handle		= nullptr;
+		GLFWmonitor*
+		GetPrimaryMonitor() { return glfwGetPrimaryMonitor(); }
+
+		const GLFWvidmode*
+		GetVideoMode(GLFWmonitor* Monitor) { return glfwGetVideoMode(Monitor); }
+
 
 	private:
-		static inline void
-		Bootstrap()
+		String		 Title		= VISERA_APP_NAME;
+		UInt32		 Width		= 1280;
+		UInt32		 Height		= 800;
+		Bool		 bMaximized	= False;
+
+		GLFWwindow*  Handle		= nullptr;
+
+	private:
+		Window()
 		{
 			Log::Debug("Bootstrapping the System Window...");
 			//Init GLFW
@@ -57,27 +59,18 @@ export namespace VE
 
 			// Set Window Position
 			const GLFWvidmode* VidMode = GetVideoMode(GetPrimaryMonitor());
-			SetWindowPosition(
+			SetPosition(
 				(VidMode->width    -   Width ) >> 1,	// Mid
 				(VidMode->height   -   Height) >> 1);	// Mid
 			if (bMaximized) glfwMaximizeWindow(Handle);
 		}
 
-		static inline void
-		Terminate()
+		~Window()
 		{
 			Log::Debug("Terminating the System Window...");
 			glfwDestroyWindow(Handle);
 			glfwTerminate();
 		}
-
-		static inline
-		GLFWmonitor*
-		GetPrimaryMonitor() { return glfwGetPrimaryMonitor(); }
-
-		static inline
-		const GLFWvidmode*
-		GetVideoMode(GLFWmonitor* Monitor) { return glfwGetVideoMode(Monitor); }
 	};
 
 } // namespace VE
