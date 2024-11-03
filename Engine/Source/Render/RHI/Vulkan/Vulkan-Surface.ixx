@@ -9,6 +9,7 @@ export module Visera.Render.RHI.Vulkan:Surface;
 
 import Visera.Platform;
 import :Allocator;
+import :Instance;
 
 export namespace VE
 {
@@ -19,14 +20,20 @@ export namespace VE
 	class VulkanSurface
 	{
 		friend class VulkanContext;
+	public:
+		auto GetHandle()		const	-> VkSurfaceKHR						{ return Handle; }
+		void SetFormats(Array<VkSurfaceFormatKHR>&&		NewFormats)		{ Formats		= std::move(NewFormats); }
+		void SetPresentModes(Array<VkPresentModeKHR>&&	NewPresentModes){ PresentModes	= std::move(NewPresentModes); }
+		operator VkSurfaceKHR() const { return Handle; }
+
 	private:
 		VkSurfaceKHR                Handle{ VK_NULL_HANDLE };
 		Array<VkSurfaceFormatKHR>	Formats;
 		Array<VkPresentModeKHR>		PresentModes;
-		operator VkSurfaceKHR() const { return Handle; }
 
-		void Create(VkInstance Instance);
-		void Destroy(VkInstance Instance);
+
+		void Create(const VulkanInstance& Instance);
+		void Destroy(const VulkanInstance& Instance);
 
 	public:
 		VulkanSurface() noexcept = default;
@@ -34,7 +41,7 @@ export namespace VE
 	};
 
 	void VulkanSurface::
-	Create(VkInstance Instance)
+	Create(const VulkanInstance& Instance)
 	{
 		VK_CHECK(glfwCreateWindowSurface(
 			Instance,
@@ -44,7 +51,7 @@ export namespace VE
 	}
 
 	void VulkanSurface::
-	Destroy(VkInstance Instance)
+	Destroy(const VulkanInstance& Instance)
 	{
 		vkDestroySurfaceKHR(Instance, Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;

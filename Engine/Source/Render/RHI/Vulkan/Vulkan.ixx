@@ -1,6 +1,8 @@
 module;
 #include <ViseraEngine>
 
+#include <volk.h>
+
 export module Visera.Render.RHI.Vulkan;
 import :Loader;
 export import :Instance;
@@ -18,11 +20,11 @@ export namespace VE
 		friend class RHI;
 	private:
 		/* << Vulkan Objects >>*/
-		UniquePtr<VulkanLoader>   Loader	= CreateUniquePtr<VulkanLoader>();
-		UniquePtr<VulkanInstance> Instance	= CreateUniquePtr<VulkanInstance>();
-		UniquePtr<VulkanSurface>  Surface	= CreateUniquePtr<VulkanSurface>();
-		UniquePtr<VulkanDevice>   Device	= CreateUniquePtr<VulkanDevice>();
-		//UniquePtr<VulkanMemoryAllocator> VMA;
+		VulkanLoader   Loader	{};
+		VulkanInstance Instance	{};
+		VulkanSurface  Surface	{};
+		VulkanDevice   Device	{};
+		//VulkanMemoryAllocator VMA;
 
 	private:
 		void Create();
@@ -36,24 +38,24 @@ export namespace VE
 	void VulkanContext::
 	Create()
 	{
-		Loader->Create();
-		Loader->LoadInstance(Instance->Create());
+		Loader.Create();
+		Loader.LoadInstance(Instance.Create());
 
-		Surface->Create(Instance->Handle);
+		Surface.Create(Instance);
 
-		Device->Create(Instance->Handle);
+		Device.Create(Instance, &Surface);
 	}
 
 	void VulkanContext::
 	Destroy()
 	{
-		Device->Destroy(Instance->Handle);
+		Device.Destroy(Instance);
 
-		Surface->Destroy(Instance->Handle);
+		Surface.Destroy(Instance);
 
-		Instance->Destroy();
+		Instance.Destroy();
 
-		Loader->Destroy();
+		Loader.Destroy();
 	}
 
 } // namespace VE

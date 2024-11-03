@@ -20,6 +20,11 @@ export namespace VE
 	class VulkanInstance
 	{
 		friend class VulkanContext;
+	public:
+		auto GetHandle() const -> VkInstance { return  Handle; }
+		operator VkInstance() const { return Handle; }
+
+	private:
 		RawString					AppName		= VISERA_ENGINE_NAME;
 		uint32_t					AppVersion	= VK_MAKE_VERSION(1, 0, 0);
 		VkInstance					Handle		{ VK_NULL_HANDLE };
@@ -33,8 +38,6 @@ export namespace VE
 			PFN_vkDebugUtilsMessengerCallbackEXT Callback = DefaultMessengerCallback;
 			operator VkDebugUtilsMessengerEXT() const { return Handle; }
 		}Messenger;
-
-		operator VkInstance() const { return Handle; }
 
 		auto Create()	-> VkInstance;
 		void Destroy();

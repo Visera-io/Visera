@@ -43,9 +43,6 @@ export namespace VE
 		}
 
 		ViseraPlatform() noexcept = default;
-
-	private:
-		
 	};
 	
 
