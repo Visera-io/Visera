@@ -25,8 +25,8 @@ export namespace VE { namespace RHI
 		/* << Vulkan Objects >>*/
 		VulkanLoader		Loader		{};
 		VulkanInstance		Instance	{};
-		VulkanSurface		Surface		{};
-		VulkanDevice		Device		{};
+		VulkanSurface		Surface		{Instance};
+		VulkanDevice		Device		{Instance};
 		VulkanSwapchain		Swapchian	{};
 		//VulkanMemoryAllocator VMA;
 
@@ -45,17 +45,17 @@ export namespace VE { namespace RHI
 		Loader.Create();
 		Loader.LoadInstance(Instance.Create());
 
-		Surface.Create(Instance);
+		Surface.Create();
 
-		Device.Create(Instance, &Surface);
+		Device.Create(&Surface);
 	}
 
 	void VulkanContext::
 	Destroy()
 	{
-		Device.Destroy(Instance);
+		Device.Destroy();
 
-		Surface.Destroy(Instance);
+		Surface.Destroy();
 
 		Instance.Destroy();
 

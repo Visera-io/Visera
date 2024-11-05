@@ -20,12 +20,11 @@ export namespace VE
 		static inline void
 		Tick()
 		{
-			static Bool bContinue = True;
 			if (!RuntimeContext::MainLoop.ShouldStop())
 			{
-				//Window Tick
-				if ((bContinue = !PlatformRuntime::GetWindow().ShouldClose()) != True)
-				{ return RuntimeContext::MainLoop.Stop("ViseraPlatform - Window"); }
+				//Check Window State
+				if (PlatformRuntime::GetWindow().ShouldClose())
+				{ return RuntimeContext::MainLoop.Stop(); }
 
 				PlatformRuntime::GetWindow().PollEvents();
 			}

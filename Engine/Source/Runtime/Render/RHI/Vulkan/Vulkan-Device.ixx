@@ -19,41 +19,44 @@ export namespace VE { namespace RHI
 	class VulkanDevice
 	{
 		friend class VulkanContext;
-	private:
-		VkDevice            Handle{ VK_NULL_HANDLE };
-		VulkanGPU			Host{};
-		Array<RawString>	Extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-									    VK_KHR_MAINTENANCE1_EXTENSION_NAME };
+	public:
+		auto GetHandle() const	-> VkDevice	{ return Handle; }
+		operator VkDevice() const	{ return Handle; }
 
+	private:
+		VkDevice				Handle{ VK_NULL_HANDLE };
+		const VulkanInstance&	HostInstance;
+		VulkanGPU				HostGPU{};
+		Array<RawString>		Extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+											VK_KHR_MAINTENANCE1_EXTENSION_NAME };
+	public:
+		enum QueueFamilyType {Graphics, Present, Transfer, Compute, MAX_QUEUE_FAMILY_TYPE};
 		struct QueueFamily
 		{
 			UInt32		   Index = UINT32_MAX;
 			Array<VkQueue> Queues;
-			Array<Float>   QueuePriorities;
+			Array<Float>   QueuePriorities{ 1.0 };
 			Bool IsValid() const { return Index != UINT32_MAX; }
 		};
-		struct
-		{	//Required Queue Families and Their Queues
-			QueueFamily	Graphics { .QueuePriorities{1.0} };
-			QueueFamily	Present	 { .QueuePriorities{1.0} };
-			QueueFamily	Transfer { .QueuePriorities{1.0} };
-			QueueFamily	Compute	 { .QueuePriorities{1.0} };
-		}QueueFamilies;
-		operator VkDevice() const { return Handle; }
+		auto GetQueueFamily(QueueFamilyType Type) const -> const QueueFamily& { return QueueFamilies[Type]; }
 
-		void Create(const VulkanInstance& Instance, VulkanSurface* Surface);
-		void Destroy(const VulkanInstance& Instance);
+	private:
+		Array<QueueFamily> QueueFamilies;
+
+		void Create(VulkanSurface* Surface);
+		void Destroy();
 
 	public:
-		VulkanDevice() noexcept = default;
-		~VulkanDevice() noexcept = default;
+		VulkanDevice(const VulkanInstance& Instance) noexcept : HostInstance{Instance} {};
+		VulkanDevice()	noexcept	= delete;
+		~VulkanDevice() noexcept	= default;
 	};
 
 	void VulkanDevice::
-	Create(const VulkanInstance& Instance, VulkanSurface* Surface)
+	Create(VulkanSurface* Surface)
 	{
 		//Find Suitable Host GPU
-		auto GPUs = VulkanGPU::EnumerateAvailableGPUs(Instance);
+		auto GPUs = VulkanGPU::EnumerateAvailableGPUs(HostInstance);
 
 		for (const auto& GPU : GPUs)
 		{
@@ -64,12 +67,13 @@ export namespace VE { namespace RHI
 			}
 
 			//Queue Families Properties
+			QueueFamilies.resize(MAX_QUEUE_FAMILY_TYPE);
 			{
 				const auto& Properties = GPU.GetQueueFamilyProperties();
-				Set<UInt32> GraphicsQueueFamilies;
-				Set<UInt32> PresentQueueFamilies;
-				Array<UInt32> TransferQueueFamilies;
-				Array<UInt32> ComputeQueueFamilies;
+				Set<UInt32>		GraphicsQueueFamilies;
+				Set<UInt32>		PresentQueueFamilies;
+				Array<UInt32>	TransferQueueFamilies;
+				Array<UInt32>	ComputeQueueFamilies;
 				for (UInt32 Index = 0; Index < Properties.size(); ++Index)
 				{
 					if(VK_QUEUE_GRAPHICS_BIT & Properties[Index].queueFlags)
@@ -97,16 +101,16 @@ export namespace VE { namespace RHI
 				Bool Found = False;
 				for (UInt32 IdxA : GraphicsAndPresentQueueFamilies)
 				{
-					QueueFamilies.Graphics.Index = IdxA;
-					QueueFamilies.Present.Index = IdxA;
+					QueueFamilies[Graphics].Index = IdxA;
+					QueueFamilies[Present].Index = IdxA;
 					for (UInt32 IdxB : TransferQueueFamilies)
 					{
 						if (IdxB == IdxA) continue;
-						QueueFamilies.Transfer.Index = IdxB;
+						QueueFamilies[Transfer].Index = IdxB;
 						for (UInt32 IdxC : ComputeQueueFamilies)
 						{
 							if (IdxC == IdxB) continue;
-							QueueFamilies.Compute.Index = IdxC;
+							QueueFamilies[Compute].Index = IdxC;
 							Found = True;
 						}
 						if (Found) break;
@@ -149,44 +153,44 @@ export namespace VE { namespace RHI
 			}
 			
 			//Found Suitable Host GPU
-			{ Host = std::move(GPU); break; }
+			{ HostGPU = std::move(GPU); break; }
 		}
-		if (Host.GetHandle() == VK_NULL_HANDLE) { Log::Fatal("Failed to find a suitable Physical Device on current computer!"); }
+		if (HostGPU.GetHandle() == VK_NULL_HANDLE) { Log::Fatal("Failed to find a suitable Physical Device on current computer!"); }
 
 		//Create Queues
 		Array<VkDeviceQueueCreateInfo> DeviceQueueCreateInfos(4-1/*Graphics == Present*/);
 		{
-			Assert(QueueFamilies.Graphics.Index == QueueFamilies.Present.Index);
-			QueueFamilies.Graphics.Queues.resize(QueueFamilies.Graphics.QueuePriorities.size());
-			QueueFamilies.Present.Queues.resize(QueueFamilies.Present.QueuePriorities.size());
-			QueueFamilies.Transfer.Queues.resize(QueueFamilies.Transfer.QueuePriorities.size());
-			QueueFamilies.Compute.Queues.resize(QueueFamilies.Compute.QueuePriorities.size());
+			Assert(QueueFamilies[Graphics].Index == QueueFamilies[Present].Index);
+			QueueFamilies[Graphics].Queues.resize(QueueFamilies[Graphics].QueuePriorities.size());
+			QueueFamilies[Present].Queues.resize(QueueFamilies[Present].QueuePriorities.size());
+			QueueFamilies[Transfer].Queues.resize(QueueFamilies[Transfer].QueuePriorities.size());
+			QueueFamilies[Compute].Queues.resize(QueueFamilies[Compute].QueuePriorities.size());
 
 			auto& GraphicsAndPresentQueueCreateInfo = DeviceQueueCreateInfos[0];
 			GraphicsAndPresentQueueCreateInfo = VkDeviceQueueCreateInfo
 			{
 				.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-				.queueFamilyIndex = QueueFamilies.Graphics.Index,
-				.queueCount = UInt32(QueueFamilies.Graphics.Queues.size()),
-				.pQueuePriorities = QueueFamilies.Graphics.QueuePriorities.data()
+				.queueFamilyIndex = QueueFamilies[Graphics].Index,
+				.queueCount = UInt32(QueueFamilies[Graphics].Queues.size()),
+				.pQueuePriorities = QueueFamilies[Graphics].QueuePriorities.data()
 			};
 
 			auto& TransferQueueCreateInfo = DeviceQueueCreateInfos[1];
 			TransferQueueCreateInfo = VkDeviceQueueCreateInfo
 			{
 				.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-				.queueFamilyIndex = QueueFamilies.Transfer.Index,
-				.queueCount = UInt32(QueueFamilies.Transfer.Queues.size()),
-				.pQueuePriorities = QueueFamilies.Transfer.QueuePriorities.data()
+				.queueFamilyIndex = QueueFamilies[Transfer].Index,
+				.queueCount = UInt32(QueueFamilies[Transfer].Queues.size()),
+				.pQueuePriorities = QueueFamilies[Transfer].QueuePriorities.data()
 			};
 
 			auto& ComputeQueueCreateInfo = DeviceQueueCreateInfos[2];
 			ComputeQueueCreateInfo = VkDeviceQueueCreateInfo
 			{
 				.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-				.queueFamilyIndex = QueueFamilies.Compute.Index,
-				.queueCount = UInt32(QueueFamilies.Compute.Queues.size()),
-				.pQueuePriorities = QueueFamilies.Compute.QueuePriorities.data()
+				.queueFamilyIndex = QueueFamilies[Compute].Index,
+				.queueCount = UInt32(QueueFamilies[Compute].Queues.size()),
+				.pQueuePriorities = QueueFamilies[Compute].QueuePriorities.data()
 			};
 		}
 
@@ -200,27 +204,27 @@ export namespace VE { namespace RHI
 			.pQueueCreateInfos		= DeviceQueueCreateInfos.data(),
 			.enabledExtensionCount	= UInt32(Extensions.size()),
 			.ppEnabledExtensionNames= Extensions.data(),
-			.pEnabledFeatures = &Host.GetFeatures()/*m_physical_device_features2.has_value() ? nullptr : &m_physical_device_features*/// (If pNext includes a VkPhysicalDeviceFeatures2, here should be NULL)
+			.pEnabledFeatures = &HostGPU.GetFeatures()/*m_physical_device_features2.has_value() ? nullptr : &m_physical_device_features*/// (If pNext includes a VkPhysicalDeviceFeatures2, here should be NULL)
 		};
-		VK_CHECK(vkCreateDevice(Host, &DeviceCreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
+		VK_CHECK(vkCreateDevice(HostGPU, &DeviceCreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
 
 		//Retrieve Queues
 		{
-			for (UInt32 Idx = 0; Idx < QueueFamilies.Graphics.Queues.size(); ++Idx)
-			{ vkGetDeviceQueue(Handle, QueueFamilies.Graphics.Index, Idx, &QueueFamilies.Graphics.Queues[Idx]); }	
+			for (UInt32 Idx = 0; Idx < QueueFamilies[Graphics].Queues.size(); ++Idx)
+			{ vkGetDeviceQueue(Handle, QueueFamilies[Graphics].Index, Idx, &QueueFamilies[Graphics].Queues[Idx]); }	
 
-			QueueFamilies.Present.Queues.front() = QueueFamilies.Graphics.Queues.front();
+			QueueFamilies[Present].Queues.front() = QueueFamilies[Graphics].Queues.front();
 
-			for (UInt32 Idx = 0; Idx < QueueFamilies.Transfer.Queues.size(); ++Idx)
-			{ vkGetDeviceQueue(Handle, QueueFamilies.Transfer.Index, Idx, &QueueFamilies.Transfer.Queues[Idx]); }	
+			for (UInt32 Idx = 0; Idx < QueueFamilies[Transfer].Queues.size(); ++Idx)
+			{ vkGetDeviceQueue(Handle, QueueFamilies[Transfer].Index, Idx, &QueueFamilies[Transfer].Queues[Idx]); }	
 
-			for (UInt32 Idx = 0; Idx < QueueFamilies.Compute.Queues.size(); ++Idx)
-			{ vkGetDeviceQueue(Handle, QueueFamilies.Compute.Index, Idx, &QueueFamilies.Compute.Queues[Idx]); }	
+			for (UInt32 Idx = 0; Idx < QueueFamilies[Compute].Queues.size(); ++Idx)
+			{ vkGetDeviceQueue(Handle, QueueFamilies[Compute].Index, Idx, &QueueFamilies[Compute].Queues[Idx]); }	
 		}
 	}
 
 	void VulkanDevice::
-	Destroy(const VulkanInstance& Instance)
+	Destroy()
 	{
 		vkDestroyDevice(Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;

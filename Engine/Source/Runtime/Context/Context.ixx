@@ -21,9 +21,18 @@ export namespace VE
 				Stopping = 1 << 0, 
 			};
 			EnumMask States = Running;
-			
-			void Stop(const String& Signature) { States |= Stopping; Log::Warn("{} is stopping Visera Main Loop...", Signature); }
 			Bool ShouldStop() const { return States & Stopping; }
+
+			void Stop(const std::source_location& Location = std::source_location::current())
+			{
+				States |= Stopping;
+				std::stringstream SS;
+				SS  << "[Stop Location]"
+					<< "\n- File: "		<< Location.file_name()
+					<< "\n- Line: "		<< Location.line()
+					<< "\n- Function: "	<< Location.function_name();
+				Log::Warn("Stopping Visera Main Loop...\n{}", SS.str());
+			}
 		}MainLoop;
 
 	private:

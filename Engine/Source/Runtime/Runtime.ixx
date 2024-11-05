@@ -11,6 +11,7 @@ import Visera.Internal;
 
 export namespace VE
 {
+	class Visera;
 
 	class ViseraRuntime
 	{

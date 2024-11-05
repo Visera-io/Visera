@@ -28,32 +28,33 @@ export namespace VE { namespace RHI
 
 	private:
 		VkSurfaceKHR                Handle{ VK_NULL_HANDLE };
+		const VulkanInstance&		HostInstance;
 		Array<VkSurfaceFormatKHR>	Formats;
 		Array<VkPresentModeKHR>		PresentModes;
 
-
-		void Create(const VulkanInstance& Instance);
-		void Destroy(const VulkanInstance& Instance);
+		void Create();
+		void Destroy();
 
 	public:
-		VulkanSurface() noexcept = default;
+		VulkanSurface(const VulkanInstance& Instance) noexcept :HostInstance{ Instance } {};
+		VulkanSurface() noexcept = delete;
 		~VulkanSurface() noexcept = default;
 	};
 
 	void VulkanSurface::
-	Create(const VulkanInstance& Instance)
+	Create()
 	{
 		VK_CHECK(glfwCreateWindowSurface(
-			Instance,
+			HostInstance.GetHandle(),
 			PlatformRuntime::GetWindow().GetHandle(),
 			VulkanAllocator::AllocationCallbacks,
 			&Handle));
 	}
 
 	void VulkanSurface::
-	Destroy(const VulkanInstance& Instance)
+	Destroy()
 	{
-		vkDestroySurfaceKHR(Instance, Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroySurfaceKHR(HostInstance.GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 } } // namespace VE::RHI
