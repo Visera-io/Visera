@@ -1,20 +1,20 @@
 module;
 #include <ViseraEngine>
 
-export module Visera.Core.Exception:RuntimeError;
-import :Error;
+export module Visera.Core.Signal:AppExitSignal;
+import :Common;
 
 export namespace VE
 {
 	
-	class RuntimeError final : public Error
+	class AppExitSignal final : public Signal
 	{
 	public:
-		explicit RuntimeError(
+		explicit AppExitSignal(
 			const String& Message,
 			const std::source_location& Location = std::source_location::current())
 			:
-			Error{Message, Location}
+			Signal{Message, Location}
 		{
 
 		}

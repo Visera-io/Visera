@@ -2,15 +2,14 @@ module;
 #include <ViseraEngine>
 
 #define VK_NO_PROTOTYPES
-#include <vulkan/vulkan.h>
 #define VOLK_IMPLEMENTATION
 #include <volk.h>
 
-export module Visera.Render.RHI.Vulkan:Loader;
+export module Visera.Runtime.Render.RHI.Vulkan:Loader;
 
 import Visera.Core.Log;
 
-export namespace VE
+export namespace VE { namespace RHI
 {
 
 	class VulkanContext;
@@ -57,4 +56,4 @@ export namespace VE
 		volkLoadDevice(Device);
 	}
 
-} // namespace VE
+} } // namespace VE::RHI

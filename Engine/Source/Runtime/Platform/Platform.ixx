@@ -1,19 +1,19 @@
 module;
 #include <ViseraEngine>
 
-export module Visera.Platform;
-export import Visera.Platform.Window;
+export module Visera.Runtime.Platform;
+export import Visera.Runtime.Platform.Window;
 
-import Visera.Internal;
+import Visera.Runtime.Context;
 import Visera.Core.Log;
 
 export namespace VE
 {
-	class Visera;
+	class ViseraRuntime;
 
-	class ViseraPlatform
+	class PlatformRuntime
 	{
-		friend class Visera;
+		friend class ViseraRuntime;
 	public:
 		static inline
 		const Window&
@@ -24,7 +24,7 @@ export namespace VE
 		Tick()
 		{
 			static Bool bContinue = True;
-			if (!ViseraInternal::Context.MainLoop.ShouldStop())
+			if (!RuntimeContext::MainLoop.ShouldStop())
 			{
 				
 			}
@@ -42,7 +42,7 @@ export namespace VE
 
 		}
 
-		ViseraPlatform() noexcept = default;
+		PlatformRuntime() noexcept = default;
 	};
 	
 

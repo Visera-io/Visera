@@ -3,18 +3,18 @@ module;
 
 #include <GLFW/glfw3.h>
 
-export module Visera.Platform.Window;
+export module Visera.Runtime.Platform.Window;
 
 import Visera.Core.Log;
 
 export namespace VE
 {
 
-	class ViseraPlatform;
+	class PlatformRuntime;
 
 	class Window
 	{
-		friend class ViseraPlatform;
+		friend class PlatformRuntime;
 	public:
 		GLFWwindow*
 		GetHandle() const { return Handle; }

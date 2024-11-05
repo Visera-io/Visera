@@ -3,15 +3,20 @@ module;
 
 export module Visera;
 export import Visera.Core;
-#if defined(VISERA_PLATFORM)
-export import Visera.Platform;
+#if defined(VISERA_RUNTIME)
+export import Visera.Runtime;
 #endif
-#if defined(VISERA_RENDER)
-export import Visera.Render;
-#endif
-
 import Visera.Internal;
+namespace VE
+{
+    class Visera;
+    /*1*/   class ViseraCore;
+    /*2*/   class ViseraInternal;
+    /*3*/   class ViseraRuntime;
+    /*3.1*/     class PlatformRuntime;
+    /*3.2*/     class RenderRuntime;
 
+}
 export namespace VE
 {
 
@@ -19,37 +24,16 @@ export namespace VE
 	{
 	public:
 		static inline void
-		Bootstrap()
+		Loop(void(*AppTick)(void))
 		{
-			Log::Debug("Bootstrapping Visera Internal...");
-			ViseraInternal::Bootstrap();
-			Log::Debug("Bootstrapping Visera Core...");
-			ViseraCore::Bootstrap();
-#if defined(VISERA_PLATFORM) || defined(VISERA_RENDER)
-			Log::Debug("Bootstrapping Visera Platform...");
-			ViseraPlatform::Bootstrap();
-#endif
-#if defined(VISERA_RENDER)
-			Log::Debug("Bootstrapping Visera Render...");
-			ViseraRender::Bootstrap();
-#endif
-		}
-
-		static inline void
-		Loop(Bool(*AppTick)(void))
-		{
-			try { do {
-				ViseraInternal::Tick();
-				ViseraCore::Tick();
-				if (AppTick() != EXIT_SUCCESS)
-				{ ViseraInternal::Context.MainLoop.Stop(VISERA_APP_NAME); }
-#if defined(VISERA_PLATFORM)
-				ViseraPlatform::Tick();
-#endif
-#if defined(VISERA_RENDER)
-				ViseraRender::Tick();
-#endif
-			} while (!ViseraInternal::Context.MainLoop.ShouldStop()); }
+			try
+			{
+				do { AppTick(); } while (RuntimeTick());
+			}
+			catch (const VE::AppExitSignal& Signal)
+			{
+				return Log::Info("App (" VISERA_APP_NAME ") Exited:\n{}{}", Signal.What(), Signal.Where());
+			}
 			catch (const VE::RuntimeError& Error)
 			{
 				return Log::Error("Unsolved Visera runtime error:\n{}{}", Error.What(), Error.Where());
@@ -57,15 +41,25 @@ export namespace VE
 		}
 
 		static inline void
+		Bootstrap()
+		{
+			Log::Debug("Bootstrapping Visera Internal...");
+			ViseraInternal::Bootstrap();
+			Log::Debug("Bootstrapping Visera Core...");
+			ViseraCore::Bootstrap();
+#if defined(VISERA_RUNTIME)
+			Log::Debug("Bootstrapping Visera Runtime...");
+			ViseraRuntime::Bootstrap();
+			RuntimeTick = ViseraRuntime::Tick;
+#endif
+		}
+
+		static inline void
 		Terminate()
 		{
-#if defined(VISERA_RENDER)
-			Log::Debug("Terminating Visera Render...");
-			ViseraRender::Terminate();
-#endif
-#if defined(VISERA_PLATFORM) || defined(VISERA_RENDER)
-			Log::Debug("Terminating Visera Platform...");
-			ViseraPlatform::Terminate();
+#if defined(VISERA_RUNTIME)
+			Log::Debug("Terminating Visera Runtime...");
+			ViseraRuntime::Terminate();
 #endif
 			Log::Debug("Terminating Visera Core...");
 			ViseraCore::Terminate();
@@ -74,6 +68,7 @@ export namespace VE
 		}
 	private:
 		Visera() noexcept = default;
+		static inline std::function<Bool()> RuntimeTick = []() -> Bool { return False; };
 	};
 
 } // namespace VE

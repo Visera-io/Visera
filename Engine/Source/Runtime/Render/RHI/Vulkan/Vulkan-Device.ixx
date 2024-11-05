@@ -2,7 +2,7 @@ module;
 #include <ViseraEngine>
 
 #include <volk.h>
-export module Visera.Render.RHI.Vulkan:Device;
+export module Visera.Runtime.Render.RHI.Vulkan:Device;
 
 import Visera.Core.Log;
 import :Allocator;
@@ -10,7 +10,7 @@ import :Instance;
 import :GPU;
 import :Surface;
 
-export namespace VE
+export namespace VE { namespace RHI
 {
 	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
 
@@ -226,4 +226,4 @@ export namespace VE
 		Handle = VK_NULL_HANDLE;
 	}
 
-} // namespace VE
+} } // namespace VE::RHI

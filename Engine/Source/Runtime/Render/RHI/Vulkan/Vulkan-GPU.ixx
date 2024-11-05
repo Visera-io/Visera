@@ -3,16 +3,11 @@ module;
 
 #include <volk.h>
 
-export module Visera.Render.RHI.Vulkan:GPU;
+export module Visera.Runtime.Render.RHI.Vulkan:GPU;
 
 import Visera.Core.Log;
 
-namespace
-{
-	
-}
-
-export namespace VE
+export namespace VE { namespace RHI
 {
 	class VulkanContext;
 
@@ -93,4 +88,4 @@ export namespace VE
 		return GPUs;
 	}
 
-} // namespace VE
+} } // namespace VE::RHI

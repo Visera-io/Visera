@@ -79,7 +79,7 @@ export namespace VISERA_APP_NAMESPACE
  #ifndef NDEBUG
  			Spdlogger->set_level(spdlog::level::debug);
  #else
- 			m_handle->set_level(spdlog::level::warn);
+ 			Spdlogger->set_level(spdlog::level::warn);
  #endif
  			//m_handle->set_pattern("[%^%l%$] [%Y-%m-%d %H:%M:%S] %v
  			Spdlogger->set_pattern("%^[" VISERA_APP_NAME " - %l - %H:%M:%S - Thread:%t]%$\n%v");

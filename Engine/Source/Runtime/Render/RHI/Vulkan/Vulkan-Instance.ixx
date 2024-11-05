@@ -5,13 +5,13 @@ module;
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-export module Visera.Render.RHI.Vulkan:Instance;
+export module Visera.Runtime.Render.RHI.Vulkan:Instance;
 
 import Visera.Core.Log;
 import :Allocator;
 import :Loader;
 
-export namespace VE
+export namespace VE { namespace RHI
 {
 	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
 
@@ -177,4 +177,4 @@ export namespace VE
 		Handle = VK_NULL_HANDLE;
 	}
 
-} // namespace VE
+} } // namespace VE::RHI

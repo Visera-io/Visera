@@ -5,13 +5,13 @@ module;
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-export module Visera.Render.RHI.Vulkan:Surface;
+export module Visera.Runtime.Render.RHI.Vulkan:Surface;
 
-import Visera.Platform;
+import Visera.Runtime.Platform;
 import :Allocator;
 import :Instance;
 
-export namespace VE
+export namespace VE { namespace RHI
 {
 	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
 
@@ -45,7 +45,7 @@ export namespace VE
 	{
 		VK_CHECK(glfwCreateWindowSurface(
 			Instance,
-			ViseraPlatform::GetWindow().GetHandle(),
+			PlatformRuntime::GetWindow().GetHandle(),
 			VulkanAllocator::AllocationCallbacks,
 			&Handle));
 	}
@@ -56,4 +56,4 @@ export namespace VE
 		vkDestroySurfaceKHR(Instance, Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
-} // namespace VE
+} } // namespace VE::RHI

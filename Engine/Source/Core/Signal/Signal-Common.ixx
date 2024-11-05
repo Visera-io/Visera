@@ -1,12 +1,12 @@
 module;
 #include <ViseraEngine>
 
-export module Visera.Core.Exception:Error;
+export module Visera.Core.Signal:Common;
 
 export namespace VE
 {
 
-	class Error : public std::exception
+	class Signal : public std::exception
 	{
 	public:
 		virtual
@@ -19,14 +19,14 @@ export namespace VE
 		Where() const
 		{
 			std::stringstream ss;
-			ss  << "\n[Error Location]"
+			ss  << "\n[Signal Location]"
 				<< "\n- File: "		<< Location.file_name()
 				<< "\n- Line: "		<< Location.line()
 				<< "\n- Function: "	<< Location.function_name();
 			return ss.str();
 		}
 
-		explicit Error(
+		explicit Signal(
 			const String& Message,
 			const std::source_location& Location = std::source_location::current())
 			:
