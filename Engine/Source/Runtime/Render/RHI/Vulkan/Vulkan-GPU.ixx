@@ -7,7 +7,7 @@ export module Visera.Runtime.Render.RHI.Vulkan:GPU;
 
 import Visera.Core.Log;
 
-export namespace VE { namespace RHI
+export namespace VE { namespace Render
 {
 	class VulkanContext;
 
@@ -88,4 +88,4 @@ export namespace VE { namespace RHI
 		return GPUs;
 	}
 
-} } // namespace VE::RHI
+} } // namespace VE::Render

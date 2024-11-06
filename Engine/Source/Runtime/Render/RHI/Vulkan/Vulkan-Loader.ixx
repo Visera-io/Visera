@@ -9,7 +9,7 @@ export module Visera.Runtime.Render.RHI.Vulkan:Loader;
 
 import Visera.Core.Log;
 
-export namespace VE { namespace RHI
+export namespace VE { namespace Render
 {
 
 	class VulkanContext;
@@ -56,4 +56,4 @@ export namespace VE { namespace RHI
 		volkLoadDevice(Device);
 	}
 
-} } // namespace VE::RHI
+} } // namespace VE::Render

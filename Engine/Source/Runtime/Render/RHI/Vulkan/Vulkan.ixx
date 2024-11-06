@@ -12,15 +12,15 @@ export import :Surface;
 export import :Swapchain;
 export import :CommandPool;
 
-export namespace VE { namespace RHI
+export namespace VE { namespace Render
 {
 	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
 
-	class Layer;
+	class RHI;
 
 	class VulkanContext
 	{
-		friend class Layer;
+		friend class RHI;
 	private:
 		/* << Vulkan Objects >>*/
 		VulkanLoader		Loader		{};
@@ -29,6 +29,8 @@ export namespace VE { namespace RHI
 		VulkanDevice		Device		{Instance};
 		VulkanSwapchain		Swapchian	{};
 		//VulkanMemoryAllocator VMA;
+
+		VulkanCommandPool	ResetableGraphicsCommandPool{Device};
 
 	private:
 		void Create();
@@ -48,11 +50,13 @@ export namespace VE { namespace RHI
 		Surface.Create();
 
 		Device.Create(&Surface);
+		ResetableGraphicsCommandPool.Create(VulkanDevice::QueueFamilyType::Graphics, VulkanCommandPool::PoolType::Resetable);
 	}
 
 	void VulkanContext::
 	Destroy()
 	{
+		ResetableGraphicsCommandPool.Destroy();
 		Device.Destroy();
 
 		Surface.Destroy();
@@ -62,4 +66,4 @@ export namespace VE { namespace RHI
 		Loader.Destroy();
 	}
 
-} } // namespace VE::RHI
+} } // namespace VE::Render

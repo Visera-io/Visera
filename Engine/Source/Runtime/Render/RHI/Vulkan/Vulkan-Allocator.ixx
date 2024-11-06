@@ -5,7 +5,7 @@ module;
 
 export module Visera.Runtime.Render.RHI.Vulkan:Allocator;
 
-export namespace VE { namespace RHI
+export namespace VE { namespace Render
 {
 
 	class VulkanAllocator
@@ -15,4 +15,4 @@ export namespace VE { namespace RHI
 	};
 
 
-} } // namespace VE::RHI
+} } // namespace VE::Render

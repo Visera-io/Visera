@@ -5,25 +5,28 @@ module;
 
 export module Visera.Runtime.Render.RHI;
 
-import Visera.Runtime.Render.RHI.Vulkan;
+export import Visera.Runtime.Render.RHI.Vulkan;
 
 namespace VE
 {
 	class RenderRuntime;
 }
 
-export namespace VE { namespace RHI
+export namespace VE { namespace Render
 {
-	
-	class Layer
+	#define INTERFACE static inline auto
+
+	class RHI
 	{
 		friend class RenderRuntime;
+	public:
+		INTERFACE GetDefaultCommandPool() -> VulkanCommandPool& { return Vulkan.ResetableGraphicsCommandPool; }
 
 	private:
 		static inline VulkanContext Vulkan{};
 
 	private:
-		Layer() noexcept = default;
+		RHI() noexcept = default;
 		static void
 		Bootstrap()
 		{
@@ -100,4 +103,4 @@ export namespace VE { namespace RHI
 		ENUM_BIT(MeshShader,					VK_PIPELINE_STAGE_MESH_SHADER_BIT_NV)
 	};
 
-} } // namespace VE::RHI
+} } // namespace VE::Render

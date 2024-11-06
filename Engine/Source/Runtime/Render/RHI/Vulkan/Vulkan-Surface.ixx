@@ -11,7 +11,7 @@ import Visera.Runtime.Platform;
 import :Allocator;
 import :Instance;
 
-export namespace VE { namespace RHI
+export namespace VE { namespace Render
 {
 	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
 
@@ -46,7 +46,7 @@ export namespace VE { namespace RHI
 	{
 		VK_CHECK(glfwCreateWindowSurface(
 			HostInstance.GetHandle(),
-			PlatformRuntime::GetWindow().GetHandle(),
+			Platform::Window::GetInstance().GetHandle(),
 			VulkanAllocator::AllocationCallbacks,
 			&Handle));
 	}
@@ -57,4 +57,4 @@ export namespace VE { namespace RHI
 		vkDestroySurfaceKHR(HostInstance.GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
-} } // namespace VE::RHI
+} } // namespace VE::Render

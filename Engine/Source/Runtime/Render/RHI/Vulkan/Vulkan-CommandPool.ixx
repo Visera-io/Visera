@@ -10,7 +10,7 @@ import :Device;
 
 import Visera.Core.Log;
 
-export namespace VE { namespace RHI
+export namespace VE { namespace Render
 {
 	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
 
@@ -20,26 +20,48 @@ export namespace VE { namespace RHI
 	{
 		friend class VulkanContext;
 	public:
-		enum CommandBufferType
+		enum PoolType
 		{
 			Transient = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
 			Resetable = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
 			Protected = VK_COMMAND_POOL_CREATE_PROTECTED_BIT,
 		};
+
 		class CommandBuffer
 		{
+			friend class VulkanCommandPool;
+		public:
+			enum Level
+			{
+				Primary		= VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+				Secondary	= VK_COMMAND_BUFFER_LEVEL_SECONDARY,
+			};
 		public:
 			Bool IsRecording() const { return bRecording; }
 			void BeginRecording();
 			void StopRecording();
 
 		private:
-			VkCommandBuffer Handle{ VK_NULL_HANDLE };
-			Bool bRecording{ False };
+			VkCommandBuffer				Handle{ VK_NULL_HANDLE };
+			const VulkanCommandPool&	HostCommandPool;
+			Bool						bRecording{ False };
+
+		public:
+			CommandBuffer(const VulkanCommandPool& CommandPool) noexcept;
+			CommandBuffer() noexcept = delete;
+			~CommandBuffer() noexcept;
 		};
+
+		auto Allocate(CommandBuffer::Level Level) const -> SharedPtr<CommandBuffer>;
+		void Free(VkCommandBuffer CommandBuffer)  const;
+
+		auto GetHandle() const { return Handle; }
+		operator VkCommandPool() const { return Handle; }
+
 	private:
-		void Create(VulkanDevice::QueueFamilyType QueueFamilyType, CommandBufferType CommandBufferType);
+		void Create(VulkanDevice::QueueFamilyType QueueFamilyType, PoolType Type);
 		void Destroy();
+		void EmptyRecycleBin();
 
 	public:
 		VulkanCommandPool(const VulkanDevice& Device) noexcept :HostDevice{ Device } {}
@@ -50,19 +72,20 @@ export namespace VE { namespace RHI
 		VkCommandPool						Handle{ VK_NULL_HANDLE };
 		const VulkanDevice&					HostDevice;
 		VkCommandPoolCreateFlags			Type;
-		VulkanDevice::QueueFamilyType		QueueFamilyType;	
+		VulkanDevice::QueueFamilyType		QueueFamilyType;
+		Array<VkCommandBuffer>				RecycleBin;
 	};
 
 	void VulkanCommandPool::
-	Create(VulkanDevice::QueueFamilyType QueueFamilyType, CommandBufferType CommandBufferType)
+	Create(VulkanDevice::QueueFamilyType QueueFamilyType, PoolType Type)
 	{
-		Type = CommandBufferType;
+		this->Type = Type;
 		QueueFamilyType = QueueFamilyType;
 
 		VkCommandPoolCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-			.flags = Type,
+			.flags = this->Type,
 			.queueFamilyIndex = HostDevice.GetQueueFamily(QueueFamilyType).Index,
 		};
 
@@ -72,7 +95,52 @@ export namespace VE { namespace RHI
 	void VulkanCommandPool::
 	Destroy()
 	{
+		EmptyRecycleBin();
 		vkDestroyCommandPool(HostDevice.GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		Handle = VK_NULL_HANDLE;
+	}
+
+	void VulkanCommandPool::
+	EmptyRecycleBin()
+	{
+		if (RecycleBin.empty()) return;
+		vkFreeCommandBuffers(HostDevice.GetHandle(), Handle, RecycleBin.size(), RecycleBin.data());
+	}
+
+	SharedPtr<VulkanCommandPool::CommandBuffer> VulkanCommandPool::
+	Allocate(CommandBuffer::Level Level) const
+	{
+		auto CommandBuffer = CreateSharedPtr<VulkanCommandPool::CommandBuffer>(*this);
+		VkCommandBufferAllocateInfo AllocateInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+			.commandPool = Handle,
+			.level = VkCommandBufferLevel(Level),
+			.commandBufferCount = 1
+		};
+		VK_CHECK(vkAllocateCommandBuffers(HostDevice.GetHandle(), &AllocateInfo, &CommandBuffer->Handle));
+
+		return CommandBuffer;
+	}
+
+	void VulkanCommandPool::
+	Free(VkCommandBuffer CommandBuffer)  const
+	{
+		auto& Bin = const_cast<decltype(RecycleBin)&>(RecycleBin);
+		Bin.emplace_back(CommandBuffer);
+	}
+
+	VulkanCommandPool::CommandBuffer::
+	CommandBuffer(const VulkanCommandPool& CommandPool) noexcept
+		:HostCommandPool{ CommandPool }
+	{
+
+	}
+
+	VulkanCommandPool::CommandBuffer::
+	~CommandBuffer() noexcept
+	{
+		HostCommandPool.Free(Handle);
 		Handle = VK_NULL_HANDLE;
 	}
 
@@ -104,4 +172,4 @@ export namespace VE { namespace RHI
 		bRecording = False;
 	}
 
-} } // namespace VE::RHI
+} } // namespace VE::Render

@@ -23,24 +23,26 @@ export namespace VE
 			if (!RuntimeContext::MainLoop.ShouldStop())
 			{
 				//Check Window State
-				if (PlatformRuntime::GetWindow().ShouldClose())
+				static const auto& Window = Platform::Window::GetInstance();
+				if (Window.ShouldClose())
 				{ return RuntimeContext::MainLoop.Stop(); }
 
-				PlatformRuntime::GetWindow().PollEvents();
+				Window.PollEvents();
 			}
 		}
 
 		static inline void
 		Bootstrap()
 		{
-			PlatformRuntime::GetWindow();
-			RHI::Layer::Bootstrap();
+			if (!RuntimeContext::Render.IsOffScreenRendering())
+			{ Platform::Window::GetInstance(); }
+			Render::RHI::Bootstrap();
 		}
 
 		static inline void
 		Terminate()
 		{
-			RHI::Layer::Terminate();
+			Render::RHI::Terminate();
 		}
 
 		RenderRuntime() noexcept = default;

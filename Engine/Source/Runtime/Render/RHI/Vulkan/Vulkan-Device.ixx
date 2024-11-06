@@ -10,7 +10,7 @@ import :Instance;
 import :GPU;
 import :Surface;
 
-export namespace VE { namespace RHI
+export namespace VE { namespace Render
 {
 	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
 
@@ -33,9 +33,9 @@ export namespace VE { namespace RHI
 		enum QueueFamilyType {Graphics, Present, Transfer, Compute, MAX_QUEUE_FAMILY_TYPE};
 		struct QueueFamily
 		{
-			UInt32		   Index = UINT32_MAX;
-			Array<VkQueue> Queues;
-			Array<Float>   QueuePriorities{ 1.0 };
+			UInt32				Index = UINT32_MAX;
+			Array<VkQueue>		Queues;
+			Array<Float>		QueuePriorities{ 1.0 };
 			Bool IsValid() const { return Index != UINT32_MAX; }
 		};
 		auto GetQueueFamily(QueueFamilyType Type) const -> const QueueFamily& { return QueueFamilies[Type]; }
@@ -230,4 +230,4 @@ export namespace VE { namespace RHI
 		Handle = VK_NULL_HANDLE;
 	}
 
-} } // namespace VE::RHI
+} } // namespace VE::Render

@@ -35,6 +35,11 @@ export namespace VE
 			}
 		}MainLoop;
 
+		static inline struct
+		{
+			Bool IsOffScreenRendering() const { return False; }
+		}Render;
+
 	private:
 		static inline void
 		Bootstrap()

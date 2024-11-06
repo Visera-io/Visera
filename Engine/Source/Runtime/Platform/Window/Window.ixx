@@ -6,15 +6,17 @@ module;
 export module Visera.Runtime.Platform.Window;
 
 import Visera.Core.Log;
+import Visera.Internal.Pattern;
 
-export namespace VE
+export namespace VE { namespace Platform
 {
 
 	class PlatformRuntime;
 
-	class Window
+	class Window : public Singleton<Window>
 	{
 		friend class PlatformRuntime;
+		friend class Singleton<Window>;
 	public:
 		GLFWwindow*
 		GetHandle() const { return Handle; }
@@ -73,4 +75,4 @@ export namespace VE
 		}
 	};
 
-} // namespace VE
+} } // namespace VE::Platform

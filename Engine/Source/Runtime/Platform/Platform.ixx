@@ -14,16 +14,10 @@ export namespace VE
 	class PlatformRuntime
 	{
 		friend class ViseraRuntime;
-	public:
-		static inline
-		const Window&
-		GetWindow() { static Window Window{}; return Window; }
-
 	private:
 		static inline void
 		Tick()
 		{
-			static Bool bContinue = True;
 			if (!RuntimeContext::MainLoop.ShouldStop())
 			{
 				
