@@ -9,16 +9,7 @@ export import Visera.Core.Time;
 export import Visera.Core.Math;
 
 import Visera.Internal;
-namespace VE
-{
-    class Visera;
-    /*1*/   class ViseraCore;
-    /*2*/   class ViseraInternal;
-    /*3*/   class ViseraRuntime;
-    /*3.1*/     class PlatformRuntime;
-    /*3.2*/     class RenderRuntime;
 
-}
 export namespace VE
 {
 

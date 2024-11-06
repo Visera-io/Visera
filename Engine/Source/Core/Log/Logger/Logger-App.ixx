@@ -9,10 +9,8 @@ export module Visera.Core.Log.Logger:AppLogger;
 
 import Visera.Internal.Pattern;
 
-export namespace VISERA_APP_NAMESPACE
+export namespace VE
 {
-	using namespace VE;
-
 	class AppLogger:
 		public Singleton<AppLogger>
 	{
@@ -96,4 +94,4 @@ export namespace VISERA_APP_NAMESPACE
 	protected:
 		UniquePtr<spdlog::logger> Spdlogger;
 	};
-} // namespace VISERA_APP_NAMESPACE
+} // namespace VE

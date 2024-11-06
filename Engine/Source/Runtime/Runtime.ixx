@@ -49,3 +49,15 @@ export namespace VE
 	};
 
 } // namespace VE
+
+export namespace VISERA_APP_NAMESPACE
+{
+
+	enum class DrawCallLevel
+	{ 
+		Primary		= VE::Render::VulkanCommandPool::CommandBuffer::Level::Primary,
+		Secondary	= VE::Render::VulkanCommandPool::CommandBuffer::Level::Secondary,
+	};
+	auto CreateDrawCallBuffer(DrawCallLevel Level) { return VE::Render::RHI::GetDefaultCommandPool().Allocate(VE::Render::VulkanCommandPool::CommandBuffer::Level(Level)); }
+
+} // namespace VISERA_APP_NAMESPACE
