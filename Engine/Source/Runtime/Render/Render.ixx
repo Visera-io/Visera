@@ -1,19 +1,23 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
-export module Visera.Runtime.Render;
-export import Visera.Runtime.Render.RHI;
-//export import Visera.Runtime.Render.Coordinate;
+export module Visera.Engine.Runtime.Render;
+export import Visera.Engine.Runtime.Render.RHI;
+//export import Visera.Engine.Runtime.Render.Coordinate;
 
-import Visera.Runtime.Context;
-import Visera.Runtime.Platform;
-import Visera.Core.Log;
+import Visera.Engine.Runtime.Context;
+import Visera.Engine.Runtime.Platform;
+import Visera.Engine.Core.Log;
 
-export namespace VE
+namespace VE
 {
 	class ViseraRuntime;
+}
 
-	class RenderRuntime
+export namespace VE { namespace Runtime
+{
+	
+	class Render
 	{
 		friend class ViseraRuntime;
 	private:
@@ -23,11 +27,10 @@ export namespace VE
 			if (!RuntimeContext::MainLoop.ShouldStop())
 			{
 				//Check Window State
-				static const auto& Window = Platform::Window::GetInstance();
-				if (Window.ShouldClose())
+				if (Platform::GetWindow().ShouldClose())
 				{ return RuntimeContext::MainLoop.Stop(); }
 
-				Window.PollEvents();
+				Platform::GetWindow().PollEvents();
 			}
 		}
 
@@ -35,18 +38,18 @@ export namespace VE
 		Bootstrap()
 		{
 			if (!RuntimeContext::Render.IsOffScreenRendering())
-			{ Platform::Window::GetInstance(); }
-			Render::RHI::Bootstrap();
+			{ Platform::GetWindow(); }
+			RHI::Bootstrap();
 		}
 
 		static inline void
 		Terminate()
 		{
-			Render::RHI::Terminate();
+			RHI::Terminate();
 		}
 
-		RenderRuntime() noexcept = default;
+		Render() noexcept = default;
 	};
 	
 
-} // namespace VE
+} } // namespace VE::Runtime

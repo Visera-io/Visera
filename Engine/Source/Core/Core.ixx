@@ -1,17 +1,18 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
-export module Visera.Core;
+export module Visera.Engine.Core;
 
-export import Visera.Core.Log;
-export import Visera.Core.Signal;
-export import Visera.Core.Time;
-export import Visera.Core.Math;
+export import Visera.Engine.Core.Log;
+export import Visera.Engine.Core.Signal;
+export import Visera.Engine.Core.Time;
+export import Visera.Engine.Core.Math;
 
-import Visera.Internal;
+import Visera.Engine.Internal;
 
 export namespace VE
 {
+	class Visera;
 
 	class ViseraCore
 	{

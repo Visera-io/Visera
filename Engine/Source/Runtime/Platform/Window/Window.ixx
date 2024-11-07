@@ -1,25 +1,28 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
 #include <GLFW/glfw3.h>
 
-export module Visera.Runtime.Platform.Window;
+export module Visera.Engine.Runtime.Platform.Window;
 
-import Visera.Core.Log;
-import Visera.Internal.Pattern;
+import Visera.Engine.Core.Log;
+import Visera.Engine.Internal.Pattern;
 
-export namespace VE { namespace Platform
+export namespace VE { namespace Runtime
 {
 
-	class PlatformRuntime;
+	class Platform;
 
 	class Window : public Singleton<Window>
 	{
-		friend class PlatformRuntime;
+		friend class Platform;
 		friend class Singleton<Window>;
 	public:
 		GLFWwindow*
 		GetHandle() const { return Handle; }
+
+		StringView
+		GetTitle() const { return Title; }
 		
 		Bool
 		ShouldClose() const { return glfwWindowShouldClose(Handle); }
@@ -75,4 +78,4 @@ export namespace VE { namespace Platform
 		}
 	};
 
-} } // namespace VE::Platform
+} } // namespace VE::Runtime

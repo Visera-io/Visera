@@ -1,15 +1,5 @@
 #pragma once
 // << Layers >>
-namespace VE
-{
-    class Visera;
-    /*1*/   class ViseraCore;
-    /*2*/   class ViseraInternal;
-    /*3*/   class ViseraRuntime;
-    /*3.1*/     class PlatformRuntime;
-    /*3.2*/     class RenderRuntime;
-
-}
 #define VISERA_RUNTIME
 
 // << STD Modules >>
@@ -48,7 +38,6 @@ namespace VE
     /* <<  Concepts >>
        
     */
-   
     template <typename T>
     concept Hashable = requires(T type) {{ std::hash<T>{}(type) } -> std::same_as<std::size_t>;};
 
@@ -66,6 +55,10 @@ namespace VE
 
     template<typename T>
     concept Number = std::floating_point<T> || std::integral<T>;
+
+    template<typename T>
+    concept ClockType = std::is_class_v<std::chrono::system_clock>          ||
+                        std::is_class_v<std::chrono::high_resolution_clock>;
 
     /* <<  Basic Types >>
        

@@ -1,7 +1,7 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
-export module Visera.Core.Math;
+export module Visera.Engine.Core.Math;
 export import :Angle;
 export import :Vector;
 export import :Matrix;

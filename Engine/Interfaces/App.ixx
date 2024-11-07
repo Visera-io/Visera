@@ -1,34 +1,42 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
+
 export module Visera.App;
 export import Visera.App.Base;
 export import Visera.App.Log;
+export import Visera.App.Math;
 
-import Visera;
+import Visera.Engine;
 
 export namespace VISERA_APP_NAMESPACE
 {
+	using AppExitSignal = VE::AppExitSignal;
+
+	using Platform		= VE::Runtime::Platform;
+
+	using HiResClock	= VE::HiResClock;
+	using SystemClock	= VE::SystemClock;
 
 	class ViseraApp
 	{
 	public:
-		void
-		Tick() throw(VE::AppExitSignal)
+		int Run(void(*AppTick)(void)) throw(AppExitSignal)
 		{
-			//YOUR CODES
-			
-			throw VE::AppExitSignal("Main Tick");
+			try
+			{ 
+				return VE::Visera::Loop(AppTick);
+			}
+			catch (const VE::AppExitSignal& Signal)
+			{ 
+				Log::Info(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
+			}
+			return EXIT_SUCCESS;
 		}
 
 		ViseraApp()
         {
 			VE::Visera::Bootstrap();	
-			/*{
-				VE::HiResClock Clock{};
-				VISERA_APP_NAMESPACE::Log::Info("App Started Running");
-				VE::Visera::Loop(Minimal::App::Tick);
-				VISERA_APP_NAMESPACE::Log::Info("App Running Time: {}ms", Clock.GetTotalTime().milliseconds());
-			}*/
+			Log::Info("App Started Running");
 		}
 
 		~ViseraApp()

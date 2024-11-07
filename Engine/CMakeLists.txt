@@ -19,7 +19,7 @@ add_library(${VISERA}
 
 target_sources(${VISERA}
                 PRIVATE
-                "${VISERA_ENGINE_GLOBAL_DIR}/ViseraEngine"
+                "${VISERA_ENGINE_GLOBAL_DIR}/Visera"
                 "TODO.md")
 
 target_include_directories(${VISERA} PUBLIC ${VISERA_ENGINE_GLOBAL_DIR})

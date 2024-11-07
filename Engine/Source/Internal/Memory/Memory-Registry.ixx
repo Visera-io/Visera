@@ -1,9 +1,9 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
-export module Visera.Internal.Memory:Registry;
+export module Visera.Engine.Internal.Memory:Registry;
 
-import Visera.Internal.Pattern;
+import Visera.Engine.Internal.Pattern;
 
 export namespace VE
 {

@@ -1,7 +1,7 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
-export module Visera.Internal.Pattern;
+export module Visera.Engine.Internal.Pattern;
 export import :Singleton;
 
 export namespace VE

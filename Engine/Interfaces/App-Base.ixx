@@ -1,5 +1,5 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
 export module Visera.App.Base;
 
@@ -68,5 +68,23 @@ export namespace VISERA_APP_NAMESPACE
     template<typename T, typename... Args>
     inline UniquePtr<T> 
     CreateUniquePtr(Args &&...args) { return VE::CreateUniquePtr<T>(std::forward<Args>(args)...); }
+
+    template <typename T>
+    concept Hashable = requires(T type) {{ std::hash<T>{}(type) } -> std::same_as<std::size_t>;};
+
+    template<typename T>
+    concept UnsignedIntegerol = std::unsigned_integral<T>;
+
+    template<typename T>
+    concept SignedInteger = std::integral<T>;
+
+    template<typename T>
+    concept Integer = std::integral<T> || std::unsigned_integral<T>;
+
+    template<typename T>
+    concept FloatingPoint = std::floating_point<T>;
+
+    template<typename T>
+    concept Number = std::floating_point<T> || std::integral<T>;
 
 } // namespace VISERA_APP_NAMESPACE

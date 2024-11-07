@@ -1,9 +1,9 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 #include <spdlog/spdlog.h>
 
-export module Visera.Core.Log;
-import Visera.Core.Log.Logger;
+export module Visera.Engine.Core.Log;
+import Visera.Engine.Core.Log.Logger;
 
 export namespace VE
 {

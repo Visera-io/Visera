@@ -1,7 +1,7 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
-export module Visera.Core.Log.Logger;
+export module Visera.Engine.Core.Log.Logger;
 export import :AppLogger;
 export import :SystemLogger;
 

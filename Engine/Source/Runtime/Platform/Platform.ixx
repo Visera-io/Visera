@@ -1,19 +1,27 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
-export module Visera.Runtime.Platform;
-export import Visera.Runtime.Platform.Window;
+export module Visera.Engine.Runtime.Platform;
+export import Visera.Engine.Runtime.Platform.Window;
 
-import Visera.Runtime.Context;
-import Visera.Core.Log;
+import Visera.Engine.Runtime.Context;
+import Visera.Engine.Core.Log;
 
-export namespace VE
+namespace VE
 {
 	class ViseraRuntime;
+}
 
-	class PlatformRuntime
+export namespace VE { namespace Runtime
+{
+
+	class Platform
 	{
 		friend class ViseraRuntime;
+	public:
+		static inline auto
+		GetWindow() -> Window& { return Window::GetInstance(); }
+
 	private:
 		static inline void
 		Tick()
@@ -36,8 +44,8 @@ export namespace VE
 
 		}
 
-		PlatformRuntime() noexcept = default;
+		Platform() noexcept = default;
 	};
 	
 
-} // namespace VE
+} } // namespace VE::Runtime 

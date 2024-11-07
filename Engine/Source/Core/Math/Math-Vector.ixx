@@ -1,11 +1,11 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
 #include <Eigen/Core>
 
-export module Visera.Core.Math:Vector;
+export module Visera.Engine.Core.Math:Vector;
 
-import Visera.Internal.Memory;
+import Visera.Engine.Internal.Memory;
 
 import :Operation;
 

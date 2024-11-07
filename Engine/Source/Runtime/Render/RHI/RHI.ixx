@@ -1,24 +1,20 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
 #include <volk.h>
 
-export module Visera.Runtime.Render.RHI;
+export module Visera.Engine.Runtime.Render.RHI;
+export import Visera.Engine.Runtime.Render.RHI.Vulkan;
 
-export import Visera.Runtime.Render.RHI.Vulkan;
-
-namespace VE
-{
-	class RenderRuntime;
-}
-
-export namespace VE { namespace Render
+export namespace VE { namespace Runtime
 {
 	#define INTERFACE static inline auto
 
+	class Render;
+
 	class RHI
 	{
-		friend class RenderRuntime;
+		friend class Render;
 	public:
 		INTERFACE GetDefaultCommandPool() -> VulkanCommandPool& { return Vulkan.ResetableGraphicsCommandPool; }
 
@@ -103,4 +99,4 @@ export namespace VE { namespace Render
 		ENUM_BIT(MeshShader,					VK_PIPELINE_STAGE_MESH_SHADER_BIT_NV)
 	};
 
-} } // namespace VE::Render
+} } // namespace VE::Runtime

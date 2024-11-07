@@ -1,11 +1,11 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
 #include <volk.h>
 
-export module Visera.Runtime.Render.RHI.Vulkan:Allocator;
+export module Visera.Engine.Runtime.Render.RHI.Vulkan:Allocator;
 
-export namespace VE { namespace Render
+export namespace VE { namespace Runtime
 {
 
 	class VulkanAllocator
@@ -15,4 +15,4 @@ export namespace VE { namespace Render
 	};
 
 
-} } // namespace VE::Render
+} } // namespace VE::Runtime

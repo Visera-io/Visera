@@ -1,43 +1,31 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
-export module Visera;
-export import Visera.Core;
+export module Visera.Engine;
+export import Visera.Engine.Core;
 #if defined(VISERA_RUNTIME)
-export import Visera.Runtime;
+export import Visera.Engine.Runtime;
 #endif
-import Visera.Internal;
-namespace VE
-{
-    class Visera;
-    /*1*/   class ViseraCore;
-    /*2*/   class ViseraInternal;
-    /*3*/   class ViseraRuntime;
-    /*3.1*/     class PlatformRuntime;
-    /*3.2*/     class RenderRuntime;
+import Visera.Engine.Internal;
 
-}
 export namespace VE
 {
-
-	class Visera
+	class Visera final
 	{
 	public:
-		static inline void
+		static inline int
 		Loop(void(*AppTick)(void))
 		{
 			try
 			{
 				do { AppTick(); } while (RuntimeTick());
 			}
-			catch (const VE::AppExitSignal& Signal)
-			{
-				return Log::Info("App (" VISERA_APP_NAME ") Exited:\n{}{}", Signal.What(), Signal.Where());
-			}
 			catch (const VE::RuntimeError& Error)
 			{
-				return Log::Error("Unsolved Visera runtime error:\n{}{}", Error.What(), Error.Where());
+				Log::Error("Unsolved Visera runtime error:\n{}{}", Error.What(), Error.Where());
+				return EXIT_FAILURE;
 			}
+			return EXIT_SUCCESS;
 		}
 
 		static inline void
@@ -67,8 +55,7 @@ export namespace VE
 			ViseraInternal::Terminate();
 		}
 	private:
-		Visera() noexcept = default;
 		static inline std::function<Bool()> RuntimeTick = []() -> Bool { return False; };
 	};
-
+	
 } // namespace VE

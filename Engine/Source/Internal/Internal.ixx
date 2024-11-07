@@ -1,23 +1,15 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
-export module Visera.Internal;
-export import Visera.Internal.Memory;
-export import Visera.Internal.Pattern;
+export module Visera.Engine.Internal;
+export import Visera.Engine.Internal.Memory;
+export import Visera.Engine.Internal.Pattern;
 
-import Visera.Core.Log;
-namespace VE
-{
-    class Visera;
-    /*1*/   class ViseraCore;
-    /*2*/   class ViseraInternal;
-    /*3*/   class ViseraRuntime;
-    /*3.1*/     class PlatformRuntime;
-    /*3.2*/     class RenderRuntime;
+import Visera.Engine.Core.Log;
 
-}
 export namespace VE
 {
+	class Visera;
 
 	class ViseraInternal
 	{

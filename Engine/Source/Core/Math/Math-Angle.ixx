@@ -1,8 +1,8 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 #include <Eigen/Geometry>
 
-export module Visera.Core.Math:Angle;
+export module Visera.Engine.Core.Math:Angle;
 
 import :Operation;
 
@@ -25,6 +25,7 @@ export namespace VE
 		operator Float() const { return Value; }
 		operator Degree() const;
 		Degree   ToDegree() const;
+		String	 ToString() const { return std::format("{} rad", Value); }
 
 		Radian operator*(Float Multiplicand)	const;
 		Radian operator*(Double Multiplicand)	const;
@@ -53,6 +54,7 @@ export namespace VE
 		operator Float() const { return Value; }
 		operator Radian() const;
 		Radian	 ToRadian() const;
+		String	 ToString() const { return std::format("{}°", Value); }
 
 		Radian operator*(Float Multiplicand)	const;
 		Radian operator*(Double Multiplicand)	const;
@@ -67,66 +69,64 @@ export namespace VE
 		Float Value = 0.0;
 	};
 
-	Float inline Tan(Radian Radian)
+	Radian inline Tan(Radian Radian)
 	{
 		return std::tan(Radian);
 	}
 
-	Float inline Tan(Degree Degree)
+	Degree inline Tan(Degree Degree)
 	{
 		return Tan(static_cast<Radian>(Degree));
 	}
 
-	Radian inline ATan(Float Value)
+	Float inline ATan(Float Value)
 	{
 		return Radian{std::atan(Value)};
 	}
 
-	Radian inline ATan(Double Value)
+	Double inline ATan(Double Value)
 	{
 		return ATan(static_cast<Float>(Value));
 	}
 
-	Float inline Sin(Radian Radian)
+	Radian inline Sin(Radian Radian)
 	{
 		return std::sin(Radian);
 	}
 
-	Float inline Sin(Degree Degree)
+	Degree inline Sin(Degree Degree)
 	{
 		return Sin(static_cast<Radian>(Degree));
 	}
 
-	Radian inline ASin(Float Value)
+	Float inline ASin(Float Value)
 	{
-		Assert(Value > -1.0f && Value < 1.0f);
-		Clamp(&Value, -1.0f, 1.0f);
+		Assert(Value >= -1.0f && Value <= 1.0f);
 		return Radian{ static_cast<Float>(std::asin(Value)) };
 	}
 
-	Radian inline ASin(Double Value)
+	Double inline ASin(Double Value)
 	{
 		return ASin(static_cast<Float>(Value));
 	}
 
-	Float inline Cos(Radian radian)
+	Radian inline Cos(Radian Radian)
 	{
-		return std::cos(radian);
+		return std::cos(Radian);
 	}
 
-	Float inline Cos(Degree Degree)
+	Degree inline Cos(Degree Degree)
 	{
 		return Cos(static_cast<Radian>(Degree));
 	}
 
-	Radian inline ACos(Float Value)
+	Float inline ACos(Float Value)
 	{
-		Assert(Value > -1.0f && Value < 1.0f);
-		Clamp(&Value, -1.0f, 1.0f);
+		Assert(Value >= -1.0f && Value <= 1.0f);
 		return Radian{ static_cast<Float>(std::acos(Value)) };
 	}
 
-	Radian inline ACos(Double Value)
+	Double inline ACos(Double Value)
 	{
 		return ACos(static_cast<Float>(Value));
 	}

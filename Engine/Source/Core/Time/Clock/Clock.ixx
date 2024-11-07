@@ -1,7 +1,7 @@
 module;
-#include <ViseraEngine>
+#include <Visera>
 
-export module Visera.Core.Time.Clock;
+export module Visera.Engine.Core.Time.Clock;
 export import :Duration;
 export import :TimePoint;
 export import :TimeZone;
@@ -11,10 +11,6 @@ export namespace VE
 	//[Interface]	Clock
 	//[Class]		HiResClock
 	//[Class]		SystemClock
-
-	template<typename T>
-    concept ClockType = std::is_class_v<std::chrono::system_clock>          ||
-                        std::is_class_v<std::chrono::high_resolution_clock>;
 
 	template<ClockType T>
 	class Clock
