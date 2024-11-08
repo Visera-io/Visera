@@ -10,6 +10,7 @@ export module Visera.Engine.Runtime.Render.RHI.Vulkan:Instance;
 import Visera.Engine.Core.Log;
 import :Allocator;
 import :Loader;
+import :GPU;
 
 export namespace VE { namespace Runtime
 {
@@ -21,7 +22,9 @@ export namespace VE { namespace Runtime
 	{
 		friend class Vulkan;
 	public:
-		auto GetHandle() const -> VkInstance { return  Handle; }
+		auto EnumerateAvailableGPUs() const -> Array<VulkanGPU>;
+	
+		auto GetHandle() const		-> VkInstance { return  Handle; }
 		operator VkInstance() const { return Handle; }
 
 	private:
@@ -176,5 +179,25 @@ export namespace VE { namespace Runtime
 		vkDestroyInstance(Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
+
+	Array<VulkanGPU> VulkanInstance::
+	EnumerateAvailableGPUs() const
+	{
+		/*Find Proper Physical Device(Host)*/
+		UInt32 PhysicalDeviceCount = 0;
+		vkEnumeratePhysicalDevices(Handle, &PhysicalDeviceCount, nullptr);
+		if (!PhysicalDeviceCount) Log::Fatal("Failed to enumerate GPUs with Vulkan support!");
+
+		Array<VkPhysicalDevice> PhysicalDevices(PhysicalDeviceCount);
+		vkEnumeratePhysicalDevices(Handle, &PhysicalDeviceCount, PhysicalDevices.data());
+
+		Array<VulkanGPU> GPUs(PhysicalDevices.size());
+		std::transform(PhysicalDevices.begin(), PhysicalDevices.end(), GPUs.begin(),
+			[](VkPhysicalDevice PhysicalDevice) -> VulkanGPU
+			{ return VulkanGPU{ PhysicalDevice }; });
+
+		return GPUs;
+	}
+
 
 } } // namespace VE::Runtime

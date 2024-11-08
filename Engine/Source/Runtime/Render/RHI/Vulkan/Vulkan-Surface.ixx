@@ -8,8 +8,10 @@ module;
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:Surface;
 
 import Visera.Engine.Runtime.Platform;
+import :Context;
 import :Allocator;
 import :Instance;
+import :GPU;
 
 export namespace VE { namespace Runtime
 {
@@ -21,34 +23,34 @@ export namespace VE { namespace Runtime
 	{
 		friend class Vulkan;
 	public:
-		auto GetHandle()		const	-> VkSurfaceKHR						{ return Handle; }
+		auto GetCapabilities()	const	-> const VkSurfaceCapabilitiesKHR&	{ auto& C = const_cast<VkSurfaceCapabilitiesKHR&>(Capacities); vkGetPhysicalDeviceSurfaceCapabilitiesKHR(GVulkan->GPU->GetHandle(), Handle, &C); return Capacities; }
 		auto GetFormats()		const	-> const Array<VkSurfaceFormatKHR>& { return Formats; }
 		auto GetPresentModes()	const	-> const Array<VkPresentModeKHR>&	{ return PresentModes; }
 		void SetFormats(Array<VkSurfaceFormatKHR>&&		NewFormats)		{ Formats		= std::move(NewFormats); }
 		void SetPresentModes(Array<VkPresentModeKHR>&&	NewPresentModes){ PresentModes	= std::move(NewPresentModes); }
+
+		auto GetHandle()		const	-> VkSurfaceKHR	{ return Handle; }	
 		operator VkSurfaceKHR() const { return Handle; }
 
 	private:
 		VkSurfaceKHR                Handle{ VK_NULL_HANDLE };
-		const VulkanInstance&		HostInstance;
 		Array<VkSurfaceFormatKHR>	Formats;
 		Array<VkPresentModeKHR>		PresentModes;
+		VkSurfaceCapabilitiesKHR	Capacities;
 
 		void Create();
 		void Destroy();
 
 	public:
-		VulkanSurface(const VulkanInstance& Instance) noexcept :HostInstance{ Instance } {};
-		VulkanSurface() noexcept = delete;
+		VulkanSurface()  noexcept = default;
 		~VulkanSurface() noexcept = default;
 	};
 
 	void VulkanSurface::
 	Create()
 	{
-		Assert(HostInstance.GetHandle() != VK_NULL_HANDLE);
 		VK_CHECK(glfwCreateWindowSurface(
-			HostInstance.GetHandle(),
+			GVulkan->Instance->GetHandle(),
 			Platform::GetWindow().GetHandle(),
 			VulkanAllocator::AllocationCallbacks,
 			&Handle));
@@ -57,8 +59,7 @@ export namespace VE { namespace Runtime
 	void VulkanSurface::
 	Destroy()
 	{
-		Assert(HostInstance.GetHandle() != VK_NULL_HANDLE);
-		vkDestroySurfaceKHR(HostInstance.GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroySurfaceKHR(GVulkan->Instance->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 } } // namespace VE::Runtime

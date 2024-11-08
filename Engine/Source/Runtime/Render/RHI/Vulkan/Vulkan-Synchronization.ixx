@@ -7,6 +7,7 @@ module;
 
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:Synchronization;
 
+import :Context;
 import :Allocator;
 import :Device;
 
@@ -23,38 +24,33 @@ export namespace VE { namespace Runtime
 		auto GetHandle()	const	-> VkSemaphore { return Handle; }
 		operator VkSemaphore() const { return Handle; }
 
-		VulkanSemaphore() noexcept = delete;
-		VulkanSemaphore(const VulkanDevice& Device, Bool bSignaled = False);
+		VulkanSemaphore(Bool bSignaled = False);
 		~VulkanSemaphore();
 
 	private:
 		VkSemaphore				Handle{ VK_NULL_HANDLE };
-		const VulkanDevice&		HostDevice;
 	};
 
 	class VulkanFence
 	{
 		friend class Vulkan;
 	public:
-		void Wait(UInt64 Timeout = UINT64_MAX) const { Assert(!IsSignaled()); vkWaitForFences(HostDevice.GetHandle(), 1, &Handle, VK_TRUE, Timeout); }
-		void Reset()		const { Assert(IsSignaled()); vkResetFences(HostDevice.GetHandle(), 1, &Handle); }
-		Bool IsSignaled()	const { return VK_SUCCESS == vkGetFenceStatus(HostDevice.GetHandle(), Handle); }
+		void Wait(UInt64 Timeout = UINT64_MAX) const { Assert(!IsSignaled()); vkWaitForFences(GVulkan->Device->GetHandle(), 1, &Handle, VK_TRUE, Timeout); }
+		void Reset()		const { Assert(IsSignaled()); vkResetFences(GVulkan->Device->GetHandle(), 1, &Handle); }
+		Bool IsSignaled()	const { return VK_SUCCESS == vkGetFenceStatus(GVulkan->Device->GetHandle(), Handle); }
 
 		auto GetHandle()	const -> VkFence { return Handle; }
 		operator VkFence()	const { return Handle; }
 
-		VulkanFence() noexcept = delete;
-		VulkanFence(const VulkanDevice& Device, Bool bSignaled = False);
+		VulkanFence(Bool bSignaled = False);
 		~VulkanFence();
 
 	private:
 		VkFence					Handle{ VK_NULL_HANDLE };
-		const VulkanDevice&		HostDevice;
 	};
 
 	VulkanSemaphore::
-	VulkanSemaphore(const VulkanDevice& Device, Bool bSignaled/* = False*/)
-		:HostDevice{Device}
+	VulkanSemaphore(Bool bSignaled/* = False*/)
 	{
 		VkSemaphoreCreateInfo CreateInfo
 		{
@@ -62,7 +58,7 @@ export namespace VE { namespace Runtime
 			.flags = bSignaled? VK_FENCE_CREATE_SIGNALED_BIT : VkSemaphoreCreateFlags(0),
 		};
 		VK_CHECK(vkCreateSemaphore(
-			HostDevice.GetHandle(),
+			GVulkan->Device->GetHandle(),
 			&CreateInfo,
 			VulkanAllocator::AllocationCallbacks,
 			&Handle));
@@ -71,13 +67,12 @@ export namespace VE { namespace Runtime
 	VulkanSemaphore::
 	~VulkanSemaphore()
 	{
-		vkDestroySemaphore(HostDevice.GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroySemaphore(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 
 	VulkanFence::
-	VulkanFence(const VulkanDevice& Device, Bool bSignaled/* = False*/) 
-		:HostDevice {Device}
+	VulkanFence(Bool bSignaled/* = False*/) 
 	{
 		VkFenceCreateInfo CreateInfo
 		{
@@ -85,7 +80,7 @@ export namespace VE { namespace Runtime
 			.flags = bSignaled? VK_FENCE_CREATE_SIGNALED_BIT : VkFenceCreateFlags(0),
 		};
 		VK_CHECK(vkCreateFence(
-			HostDevice.GetHandle(),
+			GVulkan->Device->GetHandle(),
 			&CreateInfo,
 			VulkanAllocator::AllocationCallbacks,
 			&Handle));
@@ -94,7 +89,7 @@ export namespace VE { namespace Runtime
 	VulkanFence::
 	~VulkanFence()
 	{
-		vkDestroyFence(HostDevice.GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroyFence(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 

@@ -15,8 +15,6 @@ export namespace VE { namespace Runtime
 	{
 		friend class Vulkan;
 	public:
-		static auto EnumerateAvailableGPUs(VkInstance Instance) -> Array<VulkanGPU>;
-
 		auto GetName()					const -> RawString								{ return Properties.deviceName; }
 		auto GetHandle()				const -> VkPhysicalDevice						{ return Handle; }
 		auto GetFeatures()				const -> const VkPhysicalDeviceFeatures&		{ return Features; }
@@ -26,7 +24,6 @@ export namespace VE { namespace Runtime
 		auto GetExtensionProperties()	const -> const Array<VkExtensionProperties>&	{ return ExtensionProperties; }
 
 		auto QueryFormatProperties(VkFormat Format)			const -> VkFormatProperties { VkFormatProperties Properties; vkGetPhysicalDeviceFormatProperties(Handle, Format, &Properties); return Properties; }
-		auto QuerySurfaceCapabilities(VkSurfaceKHR Surface)	const -> VkSurfaceCapabilitiesKHR { VkSurfaceCapabilitiesKHR SurfaceCapabilities; vkGetPhysicalDeviceSurfaceCapabilitiesKHR(Handle, Surface, &SurfaceCapabilities); return SurfaceCapabilities; }
 
 		Bool IsDiscreteGPU() const { return Properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU; }
 
@@ -71,24 +68,5 @@ export namespace VE { namespace Runtime
 			
 		}
 	};
-
-	Array<VulkanGPU> VulkanGPU::
-	EnumerateAvailableGPUs(VkInstance Instance)
-	{
-		/*Find Proper Physical Device(Host)*/
-		UInt32 PhysicalDeviceCount = 0;
-		vkEnumeratePhysicalDevices(Instance, &PhysicalDeviceCount, nullptr);
-		if (!PhysicalDeviceCount) Log::Fatal("Failed to enumerate GPUs with Vulkan support!");
-
-		Array<VkPhysicalDevice> PhysicalDevices(PhysicalDeviceCount);
-		vkEnumeratePhysicalDevices(Instance, &PhysicalDeviceCount, PhysicalDevices.data());
-
-		Array<VulkanGPU> GPUs(PhysicalDevices.size());
-		std::transform(PhysicalDevices.begin(), PhysicalDevices.end(), GPUs.begin(),
-			[](VkPhysicalDevice PhysicalDevice) -> VulkanGPU
-			{ return VulkanGPU{ PhysicalDevice }; });
-
-		return GPUs;
-	}
 
 } } // namespace VE::Runtime

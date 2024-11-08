@@ -5,8 +5,9 @@ module;
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:Device;
 
 import Visera.Engine.Core.Log;
-import :Allocator;
+import :Context;
 import :Instance;
+import :Allocator;
 import :GPU;
 import :Surface;
 
@@ -20,18 +21,11 @@ export namespace VE { namespace Runtime
 	{
 		friend class Vulkan;
 	public:
-		auto QueryFormatProperties(VkFormat Format)	const -> VkFormatProperties { return HostGPU.QueryFormatProperties(Format); }
-		auto QuerySurfaceCapabilities(VkSurfaceKHR Surface)	const -> VkSurfaceCapabilitiesKHR { return HostGPU.QuerySurfaceCapabilities(Surface); }
-
-		Bool IsDiscreteGPU() const { return HostGPU.IsDiscreteGPU(); }
-
 		auto GetHandle() const	-> VkDevice	{ return Handle; }
 		operator VkDevice() const	{ return Handle; }
 
 	private:
 		VkDevice				Handle{ VK_NULL_HANDLE };
-		const VulkanInstance&	HostInstance;
-		VulkanGPU				HostGPU{};
 		Array<RawString>		Extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 											VK_KHR_MAINTENANCE1_EXTENSION_NAME };
 	public:
@@ -48,35 +42,31 @@ export namespace VE { namespace Runtime
 	private:
 		Array<QueueFamily> QueueFamilies;
 
-		void Create(VulkanSurface* Surface);
+		void Create(VulkanGPU* GPU, VulkanSurface* Surface);
 		void Destroy();
 
-	public:
-		VulkanDevice(const VulkanInstance& Instance) noexcept : HostInstance{Instance} {};
-		VulkanDevice()	noexcept	= delete;
+		VulkanDevice()	noexcept	= default;
 		~VulkanDevice() noexcept	= default;
 	};
 
 	void VulkanDevice::
-	Create(VulkanSurface* Surface)
+	Create(VulkanGPU* GPU, VulkanSurface* Surface)
 	{
-		Assert(HostInstance.GetHandle() != VK_NULL_HANDLE);
-
 		//Find Suitable Host GPU
-		auto GPUs = VulkanGPU::EnumerateAvailableGPUs(HostInstance);
+		auto GPUs = GVulkan->Instance->EnumerateAvailableGPUs();
 
-		for (const auto& GPU : GPUs)
+		for (const auto& GPUCandidate : GPUs)
 		{
 			//Features
 			{
-				if (!GPU.IsDiscreteGPU()) continue;
-				if (!GPU.GetFeatures().samplerAnisotropy) continue;
+				if (!GPUCandidate.IsDiscreteGPU()) continue;
+				if (!GPUCandidate.GetFeatures().samplerAnisotropy) continue;
 			}
 
 			//Queue Families Properties
 			QueueFamilies.resize(MAX_QUEUE_FAMILY_TYPE);
 			{
-				const auto& Properties = GPU.GetQueueFamilyProperties();
+				const auto& Properties = GPUCandidate.GetQueueFamilyProperties();
 				Set<UInt32>		GraphicsQueueFamilies;
 				Set<UInt32>		PresentQueueFamilies;
 				Array<UInt32>	TransferQueueFamilies;
@@ -87,7 +77,7 @@ export namespace VE { namespace Runtime
 					{ GraphicsQueueFamilies.emplace(Index); }
 
 					VkBool32 bPresentSupported = VK_FALSE;
-					vkGetPhysicalDeviceSurfaceSupportKHR(GPU, Index, Surface->GetHandle(), &bPresentSupported);
+					vkGetPhysicalDeviceSurfaceSupportKHR(GPUCandidate, Index, Surface->GetHandle(), &bPresentSupported);
 					if (bPresentSupported)
 					{ PresentQueueFamilies.emplace(Index); }
 
@@ -130,7 +120,7 @@ export namespace VE { namespace Runtime
 			//Extension Supports
 			{
 				Set<StringView> HostExtensionNames;
-				std::transform(GPU.GetExtensionProperties().begin(), GPU.GetExtensionProperties().end(),
+				std::transform(GPUCandidate.GetExtensionProperties().begin(), GPUCandidate.GetExtensionProperties().end(),
 							   std::inserter(HostExtensionNames, HostExtensionNames.end()),
 							   [](const VkExtensionProperties& Property) {return Property.extensionName; });
 
@@ -145,24 +135,24 @@ export namespace VE { namespace Runtime
 			//Surface Supports
 			{
 				UInt32 FormatCount = 0;
-				vkGetPhysicalDeviceSurfaceFormatsKHR(GPU, Surface->GetHandle(), &FormatCount, nullptr);
+				vkGetPhysicalDeviceSurfaceFormatsKHR(GPUCandidate, Surface->GetHandle(), &FormatCount, nullptr);
 				if (!FormatCount) continue;
 				Array<VkSurfaceFormatKHR> Formats(FormatCount);
-				vkGetPhysicalDeviceSurfaceFormatsKHR(GPU, Surface->GetHandle(), &FormatCount, Formats.data());
+				vkGetPhysicalDeviceSurfaceFormatsKHR(GPUCandidate, Surface->GetHandle(), &FormatCount, Formats.data());
 
 				UInt32 PresentModeCount = 0;
-				vkGetPhysicalDeviceSurfacePresentModesKHR(GPU, Surface->GetHandle(), &PresentModeCount, nullptr);
+				vkGetPhysicalDeviceSurfacePresentModesKHR(GPUCandidate, Surface->GetHandle(), &PresentModeCount, nullptr);
 				if (!PresentModeCount) continue;
 				Array<VkPresentModeKHR> PresentModes(PresentModeCount);
-				vkGetPhysicalDeviceSurfacePresentModesKHR(GPU, Surface->GetHandle(), &PresentModeCount, PresentModes.data());
+				vkGetPhysicalDeviceSurfacePresentModesKHR(GPUCandidate, Surface->GetHandle(), &PresentModeCount, PresentModes.data());
 				Surface->SetFormats(std::move(Formats));
 				Surface->SetPresentModes(std::move(PresentModes));
 			}
 			
 			//Found Suitable Host GPU
-			{ HostGPU = std::move(GPU); break; }
+			{ *GPU = std::move(GPUCandidate); break; }
 		}
-		if (HostGPU.GetHandle() == VK_NULL_HANDLE) { Log::Fatal("Failed to find a suitable Physical Device on current computer!"); }
+		if (GVulkan->GPU->GetHandle() == VK_NULL_HANDLE) { Log::Fatal("Failed to find a suitable Physical Device on current computer!"); }
 
 		//Create Queues
 		Array<VkDeviceQueueCreateInfo> DeviceQueueCreateInfos(4-1/*Graphics == Present*/);
@@ -211,9 +201,9 @@ export namespace VE { namespace Runtime
 			.pQueueCreateInfos		= DeviceQueueCreateInfos.data(),
 			.enabledExtensionCount	= UInt32(Extensions.size()),
 			.ppEnabledExtensionNames= Extensions.data(),
-			.pEnabledFeatures = &HostGPU.GetFeatures()/*m_physical_device_features2.has_value() ? nullptr : &m_physical_device_features*/// (If pNext includes a VkPhysicalDeviceFeatures2, here should be NULL)
+			.pEnabledFeatures = &GVulkan->GPU->GetFeatures()/*m_physical_device_features2.has_value() ? nullptr : &m_physical_device_features*/// (If pNext includes a VkPhysicalDeviceFeatures2, here should be NULL)
 		};
-		VK_CHECK(vkCreateDevice(HostGPU, &DeviceCreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
+		VK_CHECK(vkCreateDevice(GVulkan->GPU->GetHandle(), &DeviceCreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
 
 		//Retrieve Queues
 		{

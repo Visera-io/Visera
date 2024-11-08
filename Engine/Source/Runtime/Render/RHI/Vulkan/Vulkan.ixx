@@ -6,6 +6,7 @@ module;
 export module Visera.Engine.Runtime.Render.RHI.Vulkan;
 import :Allocator;
 import :Loader;
+import :Context;
 export import :Instance;
 export import :Device;
 export import :Surface;
@@ -27,9 +28,10 @@ export namespace VE { namespace Runtime
 		/* << Vulkan Objects >>*/
 		SI VulkanLoader		Loader		{};
 		SI VulkanInstance	Instance	{};
-		SI VulkanSurface	Surface		{Instance};
-		SI VulkanDevice		Device		{Instance};
-		SI VulkanSwapchain	Swapchain	{Device, Surface};
+		SI VulkanSurface	Surface		{};
+		SI VulkanGPU		GPU			{};
+		SI VulkanDevice		Device		{};
+		SI VulkanSwapchain	Swapchain	{};
 		//VulkanMemoryAllocator VMA;
 
 	private:
@@ -38,14 +40,21 @@ export namespace VE { namespace Runtime
 	};
 
 	void Vulkan::
-	Bootstrap()
+		Bootstrap()
 	{
+		auto* Context = const_cast<VulkanContext* const>(GVulkan);
+		Context->Instance	= &Instance;
+		Context->Surface	= &Surface;
+		Context->GPU		= &GPU;
+		Context->Device		= &Device;
+		Context->Swapchain	= &Swapchain;
+
 		Loader.Create();
 		Loader.LoadInstance(Instance.Create());
 
 		Surface.Create();
 
-		Device.Create(&Surface);
+		Device.Create(&GPU, &Surface);
 
 		Swapchain.Create();
 	}
@@ -62,6 +71,8 @@ export namespace VE { namespace Runtime
 		Instance.Destroy();
 
 		Loader.Destroy();
+
+		delete GVulkan;
 	}
 
 } } // namespace VE::Runtime

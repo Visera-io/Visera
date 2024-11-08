@@ -5,8 +5,10 @@ module;
 
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:CommandPool;
 
+import :Context;
 import :Allocator;
 import :Device;
+import :Synchronization;
 
 import Visera.Engine.Core.Log;
 
@@ -42,6 +44,8 @@ export namespace VE { namespace Runtime
 			Bool IsRecording() const { return bRecording; }
 			void BeginRecording();
 			void StopRecording();
+			auto GetHandle() const -> VkCommandBuffer { return Handle; }
+			operator VkCommandBuffer() const { return Handle; }
 
 		private:
 			VkCommandBuffer				Handle{ VK_NULL_HANDLE };
@@ -56,6 +60,14 @@ export namespace VE { namespace Runtime
 
 		auto Allocate(CommandBuffer::Level Level) const -> SharedPtr<CommandBuffer>;
 		void Free(VkCommandBuffer CommandBuffer)  const;
+		struct SubmitInfo
+		{
+			Array<VkCommandBuffer>		CommandBuffers;
+			Array<VkSemaphore>			WaitSemaphores;
+			Array<VkSemaphore>			SignalSemaphores;
+			VulkanFence					Fence;
+		};
+		void Submit(const SubmitInfo& SubmitInfo) const;
 
 		auto GetHandle() const { return Handle; }
 		operator VkCommandPool() const { return Handle; }
@@ -66,13 +78,11 @@ export namespace VE { namespace Runtime
 		void EmptyRecycleBin();
 
 	public:
-		VulkanCommandPool(const VulkanDevice& Device) noexcept :HostDevice{ Device } {}
-		VulkanCommandPool() noexcept = delete;
+		VulkanCommandPool()  noexcept = default;
 		~VulkanCommandPool() noexcept = default;
 
 	private:
 		VkCommandPool						Handle{ VK_NULL_HANDLE };
-		const VulkanDevice&					HostDevice;
 		VkCommandPoolCreateFlags			Type;
 		VulkanDevice::QueueFamilyType		QueueFamilyType;
 		Array<VkCommandBuffer>				RecycleBin;
@@ -88,17 +98,17 @@ export namespace VE { namespace Runtime
 		{
 			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
 			.flags = this->Type,
-			.queueFamilyIndex = HostDevice.GetQueueFamily(QueueFamilyType).Index,
+			.queueFamilyIndex = GVulkan->Device->GetQueueFamily(QueueFamilyType).Index,
 		};
 
-		VK_CHECK(vkCreateCommandPool(HostDevice.GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
+		VK_CHECK(vkCreateCommandPool(GVulkan->Device->GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
 	}
 
 	void VulkanCommandPool::
 	Destroy()
 	{
 		EmptyRecycleBin();
-		vkDestroyCommandPool(HostDevice.GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroyCommandPool(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 
@@ -106,7 +116,7 @@ export namespace VE { namespace Runtime
 	EmptyRecycleBin()
 	{
 		if (RecycleBin.empty()) return;
-		vkFreeCommandBuffers(HostDevice.GetHandle(), Handle, RecycleBin.size(), RecycleBin.data());
+		vkFreeCommandBuffers(GVulkan->Device->GetHandle(), Handle, RecycleBin.size(), RecycleBin.data());
 	}
 
 	SharedPtr<VulkanCommandPool::CommandBuffer> VulkanCommandPool::
@@ -120,7 +130,7 @@ export namespace VE { namespace Runtime
 			.level = VkCommandBufferLevel(Level),
 			.commandBufferCount = 1
 		};
-		VK_CHECK(vkAllocateCommandBuffers(HostDevice.GetHandle(), &AllocateInfo, &CommandBuffer->Handle));
+		VK_CHECK(vkAllocateCommandBuffers(GVulkan->Device->GetHandle(), &AllocateInfo, &CommandBuffer->Handle));
 
 		return CommandBuffer;
 	}
@@ -130,6 +140,26 @@ export namespace VE { namespace Runtime
 	{
 		auto& Bin = const_cast<decltype(RecycleBin)&>(RecycleBin);
 		Bin.emplace_back(CommandBuffer);
+	}
+
+	void VulkanCommandPool::
+	Submit(const SubmitInfo& SubmitInfo) const
+	{
+		/*VkSubmitInfo SubmitInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+			.waitSemaphoreCount = UInt32(submitinfo.wait_semaphores.size()),
+			.pWaitSemaphores = submitinfo.wait_semaphores.data(),
+			.pWaitDstStageMask = &submitinfo.wait_stages,
+			.commandBufferCount = UInt32(Commands.size()),
+			.pCommandBuffers = Commands.data(),
+			.signalSemaphoreCount = static_cast<uint32_t>(submitinfo.signal_semaphores.size()),
+			.pSignalSemaphores = submitinfo.signal_semaphores.data()
+		};
+		if (SubmitInfo.Fence != VK_NULL_HANDLE)
+		{
+
+		}*/
 	}
 
 	VulkanCommandPool::CommandBuffer::

@@ -20,17 +20,17 @@ export namespace VE { namespace Runtime
 		static inline auto
 		GetTransientGraphicsCommandPool()	-> VulkanCommandPool& { return TransientGraphicsCommandPool; }
 		static inline auto
-		CreateFence()						-> SharedPtr<VulkanFence> { return CreateSharedPtr<VulkanFence>(Vulkan::Device); }
+		CreateFence()						-> SharedPtr<VulkanFence> { return CreateSharedPtr<VulkanFence>(); }
 		static inline auto
-		CreateSignaledFence()				-> SharedPtr<VulkanFence> { return CreateSharedPtr<VulkanFence>(Vulkan::Device, True); }
+		CreateSignaledFence()				-> SharedPtr<VulkanFence> { return CreateSharedPtr<VulkanFence>(True); }
 		static inline auto
-		CreateSemaphore()					-> SharedPtr<VulkanSemaphore> { return CreateSharedPtr<VulkanSemaphore>(Vulkan::Device); }
+		CreateSemaphore()					-> SharedPtr<VulkanSemaphore> { return CreateSharedPtr<VulkanSemaphore>(); }
 		static inline auto
-		CreateSignaledSemaphore()			-> SharedPtr<VulkanSemaphore> { return CreateSharedPtr<VulkanSemaphore>(Vulkan::Device, True); }
+		CreateSignaledSemaphore()			-> SharedPtr<VulkanSemaphore> { return CreateSharedPtr<VulkanSemaphore>(True); }
 
 	private:
-		static inline VulkanCommandPool ResetableGraphicsCommandPool{Vulkan::Device};
-		static inline VulkanCommandPool TransientGraphicsCommandPool{Vulkan::Device};
+		static inline VulkanCommandPool ResetableGraphicsCommandPool{};
+		static inline VulkanCommandPool TransientGraphicsCommandPool{};
 
 	private:
 		RHI() noexcept = default;

@@ -5,10 +5,12 @@ module;
 
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:Swapchain;
 
+import :Context;
 import :Allocator;
 import :GPU;
 import :Device;
 import :Surface;
+import :Synchronization;
 
 import Visera.Engine.Core.Log;
 import Visera.Engine.Runtime.Platform;
@@ -23,13 +25,12 @@ export namespace VE { namespace Runtime
 	{
 		friend class Vulkan;
 	public:
+		auto GetCurrentImage()		const	-> VkImage		  { return Images[Cursor]; }
 		auto GetHandle()			const	-> VkSwapchainKHR { return Handle; }
 		operator VkSwapchainKHR()	const { return Handle; }
 
 	private:
 		VkSwapchainKHR			Handle{ VK_NULL_HANDLE };
-		const VulkanDevice&		HostDevice;
-		const VulkanSurface&	HostSurface;
 				
 		VkPresentModeKHR		PresentMode		= VK_PRESENT_MODE_FIFO_RELAXED_KHR;
 		uint32_t				Cursor{ 0 };	// Current image index for rendering
@@ -46,8 +47,7 @@ export namespace VE { namespace Runtime
 		void Create();
 		void Destroy();
 
-	public:
-		VulkanSwapchain(const VulkanDevice& Device, const VulkanSurface& Suface) noexcept : HostDevice{ Device }, HostSurface{ Suface } {};
+		VulkanSwapchain() noexcept  = default;
 		~VulkanSwapchain() noexcept = default;
 	};
 
@@ -58,8 +58,9 @@ export namespace VE { namespace Runtime
 		if (Handle == VK_NULL_HANDLE)
 		{
 			Bool bImageFormatSupport = False;
+			
 			//Check Image Format Support
-			for(const auto& SurfaceFormat : HostSurface.GetFormats())
+			for(const auto& SurfaceFormat : GVulkan->Surface->GetFormats())
 			{
 				if (SurfaceFormat.format	 != ImageFormat ||
 					SurfaceFormat.colorSpace != ImageColorSpace)
@@ -70,7 +71,7 @@ export namespace VE { namespace Runtime
 
 			Bool bPresentModeSupport = False;
 			//Check Image Format Support
-			for(const auto& SurfacePresentMode : HostSurface.GetPresentModes())
+			for(const auto& SurfacePresentMode : GVulkan->Surface->GetPresentModes())
 			{
 				if (SurfacePresentMode != PresentMode) continue;
 				bPresentModeSupport = True;
@@ -80,7 +81,7 @@ export namespace VE { namespace Runtime
 			Bool bZBufferFormatSupport = False;
 			//Check Depth Buffer (ZBuffer) Format
 			//- 1. Tiling Linear
-			auto ZBufferProperties = HostDevice.QueryFormatProperties(ZBufferFormat);
+			auto ZBufferProperties = GVulkan->GPU->QueryFormatProperties(ZBufferFormat);
 			switch (ZBufferTiling)
 			{
 			case VK_IMAGE_TILING_LINEAR:
@@ -94,7 +95,7 @@ export namespace VE { namespace Runtime
 			if(!bZBufferFormatSupport) Log::Fatal("Failed to create the Swapchain since required ZBuffer Format is unsupported!");
 		}
 		
-		auto SurfaceCapabilities = HostDevice.QuerySurfaceCapabilities(HostSurface);
+		auto& SurfaceCapabilities = GVulkan->Surface->GetCapabilities();
 		UInt32 RequiredImageCount = std::clamp(
 									SurfaceCapabilities.minImageCount + 1,
 									SurfaceCapabilities.minImageCount + 1,
@@ -130,20 +131,20 @@ export namespace VE { namespace Runtime
 				   SurfaceCapabilities.currentExtent.height <= 0)
 				{
 					Platform::GetWindow().PollEvents();
-					SurfaceCapabilities = HostDevice.QuerySurfaceCapabilities(HostSurface);
+					GVulkan->Surface->GetCapabilities();
 				}
 				ImageExtent = SurfaceCapabilities.currentExtent;
 		}
 
 		Array<UInt32> QueuefamilyIndices
 		{
-			HostDevice.GetQueueFamily(HostDevice.Graphics).Index,
-			HostDevice.GetQueueFamily(HostDevice.Present).Index
+			GVulkan->Device->GetQueueFamily(GVulkan->Device->Graphics).Index,
+			GVulkan->Device->GetQueueFamily(GVulkan->Device->Present).Index
 		};
 		VkSwapchainCreateInfoKHR CreateInfo
 		{
 			.sType					= VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-			.surface				= HostSurface.GetHandle(),
+			.surface				= GVulkan->Surface->GetHandle(),
 			.minImageCount			= UInt32(Images.size()), // Note that, this is just a minimum number of images in the swap chain, the implementation could make it more.
 			.imageFormat			= ImageFormat,
 			.imageColorSpace		= ImageColorSpace,
@@ -151,19 +152,19 @@ export namespace VE { namespace Runtime
 			.imageArrayLayers		= 1,
 			.imageUsage				= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
 									  VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-			.imageSharingMode		= HostDevice.IsDiscreteGPU()? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT,
-			.queueFamilyIndexCount	= HostDevice.IsDiscreteGPU()? 0U : 2U,
-			.pQueueFamilyIndices	= HostDevice.IsDiscreteGPU()? nullptr : QueuefamilyIndices.data(),
+			.imageSharingMode		= GVulkan->GPU->IsDiscreteGPU()? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT,
+			.queueFamilyIndexCount	= GVulkan->GPU->IsDiscreteGPU()? 0U : 2U,
+			.pQueueFamilyIndices	= GVulkan->GPU->IsDiscreteGPU()? nullptr : QueuefamilyIndices.data(),
 			.preTransform			= SurfaceCapabilities.currentTransform, // Do not want any pretransformation
 			.compositeAlpha			= VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 			.presentMode			= PresentMode,
 			.clipped				= VK_TRUE, // Means that we do not care about the color of pixels that are obscured for the best performance. (P89)
 			.oldSwapchain			= VK_NULL_HANDLE //[TODO] Add Old Swapchain
 		};
-		VK_CHECK(vkCreateSwapchainKHR(HostDevice.GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
+		VK_CHECK(vkCreateSwapchainKHR(GVulkan->Device->GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
 
 		//Retrieve Swap Chain Images
-		vkGetSwapchainImagesKHR(HostDevice.GetHandle(), Handle, &RequiredImageCount, Images.data());
+		vkGetSwapchainImagesKHR(GVulkan->Device->GetHandle(), Handle, &RequiredImageCount, Images.data());
 
 		// Create Image Views
 		for (size_t Idx = 0; Idx < ImageViews.size(); ++Idx)
@@ -188,7 +189,7 @@ export namespace VE { namespace Runtime
 							.layerCount		= 1
 							}
 			};
-			VK_CHECK(vkCreateImageView(HostDevice.GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks,&ImageViews[Idx]));
+			VK_CHECK(vkCreateImageView(GVulkan->Device->GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks,&ImageViews[Idx]));
 		}
 
 		//Reset Cursor
@@ -200,9 +201,9 @@ export namespace VE { namespace Runtime
 	{
 		for (auto ImageView : ImageViews)
 		{
-			vkDestroyImageView(HostDevice.GetHandle(), ImageView, VulkanAllocator::AllocationCallbacks);
+			vkDestroyImageView(GVulkan->Device->GetHandle(), ImageView, VulkanAllocator::AllocationCallbacks);
 		}
-		vkDestroySwapchainKHR(HostDevice.GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroySwapchainKHR(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 
