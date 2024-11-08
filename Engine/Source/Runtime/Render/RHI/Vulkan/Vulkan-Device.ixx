@@ -20,6 +20,11 @@ export namespace VE { namespace Runtime
 	{
 		friend class Vulkan;
 	public:
+		auto QueryFormatProperties(VkFormat Format)	const -> VkFormatProperties { return HostGPU.QueryFormatProperties(Format); }
+		auto QuerySurfaceCapabilities(VkSurfaceKHR Surface)	const -> VkSurfaceCapabilitiesKHR { return HostGPU.QuerySurfaceCapabilities(Surface); }
+
+		Bool IsDiscreteGPU() const { return HostGPU.IsDiscreteGPU(); }
+
 		auto GetHandle() const	-> VkDevice	{ return Handle; }
 		operator VkDevice() const	{ return Handle; }
 

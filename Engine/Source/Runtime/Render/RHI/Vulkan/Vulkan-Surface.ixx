@@ -22,6 +22,8 @@ export namespace VE { namespace Runtime
 		friend class Vulkan;
 	public:
 		auto GetHandle()		const	-> VkSurfaceKHR						{ return Handle; }
+		auto GetFormats()		const	-> const Array<VkSurfaceFormatKHR>& { return Formats; }
+		auto GetPresentModes()	const	-> const Array<VkPresentModeKHR>&	{ return PresentModes; }
 		void SetFormats(Array<VkSurfaceFormatKHR>&&		NewFormats)		{ Formats		= std::move(NewFormats); }
 		void SetPresentModes(Array<VkPresentModeKHR>&&	NewPresentModes){ PresentModes	= std::move(NewPresentModes); }
 		operator VkSurfaceKHR() const { return Handle; }

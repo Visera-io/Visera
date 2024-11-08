@@ -24,7 +24,10 @@ export namespace VE { namespace Runtime
 		auto GetMemoryProperties()		const -> const VkPhysicalDeviceMemoryProperties&{ return MemoryProperties; }
 		auto GetQueueFamilyProperties() const -> const Array<VkQueueFamilyProperties>&	{ return QueueFamilyProperties; }
 		auto GetExtensionProperties()	const -> const Array<VkExtensionProperties>&	{ return ExtensionProperties; }
-		
+
+		auto QueryFormatProperties(VkFormat Format)			const -> VkFormatProperties { VkFormatProperties Properties; vkGetPhysicalDeviceFormatProperties(Handle, Format, &Properties); return Properties; }
+		auto QuerySurfaceCapabilities(VkSurfaceKHR Surface)	const -> VkSurfaceCapabilitiesKHR { VkSurfaceCapabilitiesKHR SurfaceCapabilities; vkGetPhysicalDeviceSurfaceCapabilitiesKHR(Handle, Surface, &SurfaceCapabilities); return SurfaceCapabilities; }
+
 		Bool IsDiscreteGPU() const { return Properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU; }
 
 		operator VkPhysicalDevice() const { return Handle; }
