@@ -14,7 +14,7 @@ export namespace VE
 	{
 	public:
 		static inline int
-		Loop(void(*AppTick)(void))
+		Loop(void(*AppTick)(void)) throw(AppExitSignal)
 		{
 			try
 			{

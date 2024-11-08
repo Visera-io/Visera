@@ -14,11 +14,13 @@ export namespace VE { namespace Runtime
 {
 	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
 
-	class VulkanContext;
+	class RHI;
+	class Vulkan;
 
 	class VulkanCommandPool
 	{
-		friend class VulkanContext;
+		friend class RHI;
+		friend class Vulkan;
 	public:
 		enum PoolType
 		{

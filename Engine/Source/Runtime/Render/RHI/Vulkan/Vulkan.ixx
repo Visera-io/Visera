@@ -11,38 +11,34 @@ export import :Device;
 export import :Surface;
 export import :Swapchain;
 export import :CommandPool;
+export import :Synchronization;
 
 export namespace VE { namespace Runtime
 {
 	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
+	#define SI static inline
 
 	class RHI;
 
-	class VulkanContext
+	class Vulkan
 	{
 		friend class RHI;
 	private:
 		/* << Vulkan Objects >>*/
-		VulkanLoader		Loader		{};
-		VulkanInstance		Instance	{};
-		VulkanSurface		Surface		{Instance};
-		VulkanDevice		Device		{Instance};
-		VulkanSwapchain		Swapchian	{};
+		SI VulkanLoader		Loader		{};
+		SI VulkanInstance	Instance	{};
+		SI VulkanSurface	Surface		{Instance};
+		SI VulkanDevice		Device		{Instance};
+		SI VulkanSwapchain	Swapchain	{Device, Surface};
 		//VulkanMemoryAllocator VMA;
 
-		VulkanCommandPool	ResetableGraphicsCommandPool{Device};
-
 	private:
-		void Create();
-		void Destroy();
-
-	public:
-		VulkanContext() noexcept = default;
-		~VulkanContext() noexcept = default;
+		static void Bootstrap();
+		static void Terminate();
 	};
 
-	void VulkanContext::
-	Create()
+	void Vulkan::
+	Bootstrap()
 	{
 		Loader.Create();
 		Loader.LoadInstance(Instance.Create());
@@ -50,13 +46,15 @@ export namespace VE { namespace Runtime
 		Surface.Create();
 
 		Device.Create(&Surface);
-		ResetableGraphicsCommandPool.Create(VulkanDevice::QueueFamilyType::Graphics, VulkanCommandPool::PoolType::Resetable);
+
+		Swapchain.Create();
 	}
 
-	void VulkanContext::
-	Destroy()
+	void Vulkan::
+	Terminate()
 	{
-		ResetableGraphicsCommandPool.Destroy();
+		Swapchain.Destroy();
+
 		Device.Destroy();
 
 		Surface.Destroy();

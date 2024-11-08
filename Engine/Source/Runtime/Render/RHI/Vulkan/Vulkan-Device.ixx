@@ -14,11 +14,11 @@ export namespace VE { namespace Runtime
 {
 	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
 
-	class VulkanContext;
+	class Vulkan;
 
 	class VulkanDevice
 	{
-		friend class VulkanContext;
+		friend class Vulkan;
 	public:
 		auto GetHandle() const	-> VkDevice	{ return Handle; }
 		operator VkDevice() const	{ return Handle; }
@@ -55,6 +55,8 @@ export namespace VE { namespace Runtime
 	void VulkanDevice::
 	Create(VulkanSurface* Surface)
 	{
+		Assert(HostInstance.GetHandle() != VK_NULL_HANDLE);
+
 		//Find Suitable Host GPU
 		auto GPUs = VulkanGPU::EnumerateAvailableGPUs(HostInstance);
 

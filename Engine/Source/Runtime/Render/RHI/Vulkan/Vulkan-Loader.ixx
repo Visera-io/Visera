@@ -12,11 +12,11 @@ import Visera.Engine.Core.Log;
 export namespace VE { namespace Runtime
 {
 
-	class VulkanContext;
+	class Vulkan;
 
 	class VulkanLoader
 	{
-		friend class VulkanContext;
+		friend class Vulkan;
 	private:
 		void LoadInstance(VkInstance Instance);
 		void LoadDevice(VkDevice Device);

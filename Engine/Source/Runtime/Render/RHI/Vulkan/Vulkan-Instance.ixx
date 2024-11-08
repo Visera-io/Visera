@@ -15,11 +15,11 @@ export namespace VE { namespace Runtime
 {
 	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
 
-	class VulkanContext;
+	class Vulkan;
 
 	class VulkanInstance
 	{
-		friend class VulkanContext;
+		friend class Vulkan;
 	public:
 		auto GetHandle() const -> VkInstance { return  Handle; }
 		operator VkInstance() const { return Handle; }

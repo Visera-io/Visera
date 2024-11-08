@@ -8,3 +8,4 @@
 
 ## TODO
 - Configuration Files {Vulkan;}.
+- Vulkan Internal Context (Save Mem, e.g., SizeOf(Fence) from 16B to 8B)

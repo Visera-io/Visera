@@ -8,7 +8,6 @@ export import Visera.Engine.Runtime.Render.RHI.Vulkan;
 
 export namespace VE { namespace Runtime
 {
-	#define INTERFACE static inline auto
 
 	class Render;
 
@@ -16,22 +15,38 @@ export namespace VE { namespace Runtime
 	{
 		friend class Render;
 	public:
-		INTERFACE GetDefaultCommandPool() -> VulkanCommandPool& { return Vulkan.ResetableGraphicsCommandPool; }
+		static inline auto
+		GetResetableGraphicsCommandPool()	-> VulkanCommandPool& { return ResetableGraphicsCommandPool; }
+		static inline auto
+		GetTransientGraphicsCommandPool()	-> VulkanCommandPool& { return TransientGraphicsCommandPool; }
+		static inline auto
+		CreateFence()						-> SharedPtr<VulkanFence> { return CreateSharedPtr<VulkanFence>(Vulkan::Device); }
+		static inline auto
+		CreateSignaledFence()				-> SharedPtr<VulkanFence> { return CreateSharedPtr<VulkanFence>(Vulkan::Device, True); }
+		static inline auto
+		CreateSemaphore()					-> SharedPtr<VulkanSemaphore> { return CreateSharedPtr<VulkanSemaphore>(Vulkan::Device); }
+		static inline auto
+		CreateSignaledSemaphore()			-> SharedPtr<VulkanSemaphore> { return CreateSharedPtr<VulkanSemaphore>(Vulkan::Device, True); }
 
 	private:
-		static inline VulkanContext Vulkan{};
+		static inline VulkanCommandPool ResetableGraphicsCommandPool{Vulkan::Device};
+		static inline VulkanCommandPool TransientGraphicsCommandPool{Vulkan::Device};
 
 	private:
 		RHI() noexcept = default;
 		static void
 		Bootstrap()
 		{
-			Vulkan.Create();
+			Vulkan::Bootstrap();
+			ResetableGraphicsCommandPool.Create(VulkanDevice::QueueFamilyType::Graphics, VulkanCommandPool::PoolType::Resetable);
+			TransientGraphicsCommandPool.Create(VulkanDevice::QueueFamilyType::Graphics, VulkanCommandPool::PoolType::Transient);
 		}
 		static void
 		Terminate()
 		{
-			Vulkan.Destroy();
+			TransientGraphicsCommandPool.Destroy();
+			ResetableGraphicsCommandPool.Destroy();
+			Vulkan::Terminate();
 		}
 	};
 

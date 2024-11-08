@@ -15,11 +15,11 @@ export namespace VE { namespace Runtime
 {
 	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
 
-	class VulkanContext;
+	class Vulkan;
 
 	class VulkanSurface
 	{
-		friend class VulkanContext;
+		friend class Vulkan;
 	public:
 		auto GetHandle()		const	-> VkSurfaceKHR						{ return Handle; }
 		void SetFormats(Array<VkSurfaceFormatKHR>&&		NewFormats)		{ Formats		= std::move(NewFormats); }
@@ -44,6 +44,7 @@ export namespace VE { namespace Runtime
 	void VulkanSurface::
 	Create()
 	{
+		Assert(HostInstance.GetHandle() != VK_NULL_HANDLE);
 		VK_CHECK(glfwCreateWindowSurface(
 			HostInstance.GetHandle(),
 			Platform::GetWindow().GetHandle(),
@@ -54,6 +55,7 @@ export namespace VE { namespace Runtime
 	void VulkanSurface::
 	Destroy()
 	{
+		Assert(HostInstance.GetHandle() != VK_NULL_HANDLE);
 		vkDestroySurfaceKHR(HostInstance.GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}

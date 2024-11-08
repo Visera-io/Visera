@@ -66,15 +66,15 @@ export namespace VISERA_APP_NAMESPACE
 
 	Float	inline	ASin(Float Value)	{ return VE::ASin(Value); }
 	Double	inline	ASin(Double Value)	{ return VE::ASin(Value); }
-	Float	inline	ASinSafe(Float Value)	{ Clamp(&Value, -1.0f, 1.0f); return VE::ASin(Value); }
-	Double	inline	ASinSafe(Double Value)	{ Clamp(&Value, -1.0f, 1.0f); return VE::ASin(Value); }
+	Float	inline	ASinSafe(Float Value)	{ Clamp(&Value, -1.0f, 1.0f);	return VE::ASin(Value); }
+	Double	inline	ASinSafe(Double Value)	{ Clamp(&Value, -1.0, 1.0);		return VE::ASin(Value); }
 
 	Radian inline	Cos(Radian Radian)	{ return VE::Cos(Radian); }
 	Degree inline	Cos(Degree Degree)	{ return VE::Cos(Degree); }
 
 	Float	inline	ACos(Float Value)	{ return VE::ACos(Value); }
 	Double	inline	ACos(Double Value)	{ return VE::ACos(Value); }
-	Float	inline	ACosSafe(Float Value)	{ Clamp(&Value, -1.0f, 1.0f); return VE::ACos(Value); }
-	Double	inline	ACosSafe(Double Value)	{ Clamp(&Value, -1.0f, 1.0f); return VE::ACos(Value); }
+	Float	inline	ACosSafe(Float Value)	{ Clamp(&Value, -1.0f, 1.0f);	return VE::ACos(Value); }
+	Double	inline	ACosSafe(Double Value)	{ Clamp(&Value, -1.0, 1.0);		return VE::ACos(Value); }
 	
 } // namespace VISERA_APP_NAMESPACE

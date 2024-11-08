@@ -7,39 +7,42 @@ export module Visera.Engine.Runtime.Render.RHI.Vulkan:Swapchain;
 
 import :Allocator;
 import :Device;
+import :Surface;
 
 export namespace VE { namespace Runtime
 {
 	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
 
-	class VulkanContext;
+	class Vulkan;
 
 	class VulkanSwapchain
 	{
-		friend class VulkanContext;
+		friend class Vulkan;
 	public:
 		auto GetHandle()			const	-> VkSwapchainKHR { return Handle; }
 		operator VkSwapchainKHR()	const { return Handle; }
 
 	private:
-		VkSwapchainKHR      Handle{ VK_NULL_HANDLE };
+		VkSwapchainKHR			Handle{ VK_NULL_HANDLE };
+		const VulkanDevice&		HostDevice;
+		const VulkanSurface&	HostSurface;
 
-		void Create(const VulkanDevice& Device);
-		void Destroy(const VulkanDevice& Device);
+		void Create();
+		void Destroy();
 
 	public:
-		VulkanSwapchain() noexcept = default;
+		VulkanSwapchain(const VulkanDevice& Device, const VulkanSurface& Suface) noexcept : HostDevice{ Device }, HostSurface{ Suface } {};
 		~VulkanSwapchain() noexcept = default;
 	};
 
 	void VulkanSwapchain::
-	Create(const VulkanDevice& Device)
+	Create()
 	{
 		
 	}
 
 	void VulkanSwapchain::
-	Destroy(const VulkanDevice& Device)
+	Destroy()
 	{
 		Handle = VK_NULL_HANDLE;
 	}

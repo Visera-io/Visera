@@ -9,11 +9,11 @@ import Visera.Engine.Core.Log;
 
 export namespace VE { namespace Runtime
 {
-	class VulkanContext;
+	class Vulkan;
 
 	class VulkanGPU
 	{
-		friend class VulkanContext;
+		friend class Vulkan;
 	public:
 		static auto EnumerateAvailableGPUs(VkInstance Instance) -> Array<VulkanGPU>;
 
