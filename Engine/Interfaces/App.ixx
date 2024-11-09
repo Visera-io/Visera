@@ -7,43 +7,23 @@ export import Visera.App.Log;
 export import Visera.App.Math;
 export import Visera.App.Render;
 
-import Visera.Engine;
+import Visera.Engine.Core.Signal;
 
-export namespace VISERA_APP_NAMESPACE
-{
-	using AppExitSignal = VE::AppExitSignal;
-
-	using Platform		= VE::Runtime::Platform;
-
-	using HiResClock	= VE::HiResClock;
-	using SystemClock	= VE::SystemClock;
+export namespace VE
+{  
 
 	class ViseraApp
 	{
 	public:
-		int Run(void(*AppTick)(void)) throw(AppExitSignal)
-		{
-			try
-			{ 
-				return VE::Visera::Loop(AppTick);
-			}
-			catch (const VE::AppExitSignal& Signal)
-			{ 
-				Log::Info(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
-			}
-			return EXIT_SUCCESS;
-		}
+		virtual void
+		Tick() { Exit(); }
+		virtual void
+		RenderTick() {}
+		void
+		Exit() const throw(AppExitSignal) { throw AppExitSignal("Dummy Visera App Exited"); }
 
-		ViseraApp()
-        {
-			VE::Visera::Bootstrap();	
-			Log::Info("App Started Running");
-		}
-
-		~ViseraApp()
-		{
-			VE::Visera::Terminate();
-		}
+		ViseraApp()			 = default;
+		virtual ~ViseraApp() = default;
 	};
 
-} // namespace VISERA_APP_NAMESPACE
+} // namespace VE

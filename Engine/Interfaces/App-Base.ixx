@@ -87,4 +87,5 @@ export namespace VISERA_APP_NAMESPACE
     template<typename T>
     concept Number = std::floating_point<T> || std::integral<T>;
 
+
 } // namespace VISERA_APP_NAMESPACE

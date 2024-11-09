@@ -22,11 +22,11 @@ export namespace VE { namespace Runtime
 		static inline auto
 		CreateFence()						-> SharedPtr<VulkanFence> { return CreateSharedPtr<VulkanFence>(); }
 		static inline auto
-		CreateSignaledFence()				-> SharedPtr<VulkanFence> { return CreateSharedPtr<VulkanFence>(True); }
+		CreateSignaledFence()				-> SharedPtr<VulkanFence> { return CreateSharedPtr<VulkanFence>(true); }
 		static inline auto
 		CreateSemaphore()					-> SharedPtr<VulkanSemaphore> { return CreateSharedPtr<VulkanSemaphore>(); }
 		static inline auto
-		CreateSignaledSemaphore()			-> SharedPtr<VulkanSemaphore> { return CreateSharedPtr<VulkanSemaphore>(True); }
+		CreateSignaledSemaphore()			-> SharedPtr<VulkanSemaphore> { return CreateSharedPtr<VulkanSemaphore>(true); }
 
 	private:
 		static inline VulkanCommandPool ResetableGraphicsCommandPool{};

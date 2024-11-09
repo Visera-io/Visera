@@ -32,9 +32,6 @@ namespace VE
 {
     inline void Assert(bool expression, const char* prompt = "") { assert(expression && prompt); }
 
-    constexpr bool False   = false;
-    constexpr bool True    = !False;
-
     /* <<  Concepts >>
        
     */
@@ -87,6 +84,9 @@ namespace VE
     using Token		= std::uint64_t;
     using Address   = void*;
     using ErrorCode = std::int32_t;
+
+    constexpr Bool False   = false;
+    constexpr Bool True    = !False;
 
     /* <<  Containers >>
         1. Array

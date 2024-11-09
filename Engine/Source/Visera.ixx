@@ -6,26 +6,42 @@ export import Visera.Engine.Core;
 #if defined(VISERA_RUNTIME)
 export import Visera.Engine.Runtime;
 #endif
+import Visera.App;
 import Visera.Engine.Internal;
 
 export namespace VE
 {
+
 	class Visera final
 	{
 	public:
-		static inline int
-		Loop(void(*AppTick)(void)) throw(AppExitSignal)
+		static inline Int32
+		Loop(ViseraApp* App)
 		{
+			Int32 ExitState = EXIT_SUCCESS;
+			Log::Info("App Started Running");
 			try
 			{
-				do { AppTick(); } while (RuntimeTick());
+				Bootstrap();
+				if (App)
+				{
+					do { App->Tick(); } while (RuntimeTick());
+				}
+				else Log::Warn("Visera App is not created");
+				Terminate();
 			}
 			catch (const VE::RuntimeError& Error)
 			{
 				Log::Error("Unsolved Visera runtime error:\n{}{}", Error.What(), Error.Where());
-				return EXIT_FAILURE;
+				ExitState = EXIT_FAILURE;
 			}
-			return EXIT_SUCCESS;
+			catch (const VE::AppExitSignal& Signal)
+			{ 
+				Log::Info(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
+				ExitState = EXIT_FAILURE;
+			}
+			if (App) delete App;
+			return ExitState;
 		}
 
 		static inline void
