@@ -43,6 +43,9 @@ export namespace VISERA_APP_NAMESPACE
     using Array	   = VE::Array<T>;
 
     template<typename T>
+    using List	   = VE::List<T>;
+
+    template<typename T>
     using Set	   = VE::Set<T>;
 
     template<VE::Hashable Key, typename Value>

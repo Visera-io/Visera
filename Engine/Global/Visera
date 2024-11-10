@@ -98,6 +98,9 @@ namespace VE
     using Array	   = std::vector<T>;
 
     template<typename T>
+    using List	   = std::list<T>;
+
+    template<typename T>
     using Set	   = std::unordered_set<T>;
 
     template<Hashable Key, typename Value>

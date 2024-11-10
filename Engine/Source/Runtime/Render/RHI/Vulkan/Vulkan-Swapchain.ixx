@@ -25,15 +25,20 @@ export namespace VE { namespace Runtime
 	{
 		friend class Vulkan;
 	public:
-		auto GetCurrentImage()		const	-> VkImage		  { return Images[Cursor]; }
-		auto GetHandle()			const	-> VkSwapchainKHR { return Handle; }
-		operator VkSwapchainKHR()	const { return Handle; }
+		auto GetCursor()			const   -> UInt32					{ return Cursor; }
+		auto GetExtent()			const	-> const VkExtent2D&		{ return ImageExtent; }
+		auto GetFormat()			const	-> VkFormat					{ return ImageFormat; }
+		auto GetColorSpace()		const	-> VkColorSpaceKHR			{ return ImageColorSpace; }
+		auto GetImages()			const	-> const Array<VkImage>&	{ return Images; }
+		auto GetCurrentImage()		const	-> VkImage					{ return Images[Cursor]; }
+		auto GetHandle()			const	-> VkSwapchainKHR			{ return Handle; }
+		operator VkSwapchainKHR()	const	{ return Handle; }
 
 	private:
 		VkSwapchainKHR			Handle{ VK_NULL_HANDLE };
 				
 		VkPresentModeKHR		PresentMode		= VK_PRESENT_MODE_FIFO_RELAXED_KHR;
-		uint32_t				Cursor{ 0 };	// Current image index for rendering
+		UInt32					Cursor{ 0 };	// Current image index for rendering
 
 		Array<VkImage>			Images;			// Size: Clamp(minImageCount + 1, maxImageCount)
 		Array<VkImageView>		ImageViews;

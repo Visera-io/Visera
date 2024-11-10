@@ -41,19 +41,23 @@ export namespace VE { namespace Runtime
 				Secondary	= VK_COMMAND_BUFFER_LEVEL_SECONDARY,
 			};
 		public:
-			Bool IsRecording() const { return bRecording; }
-			void BeginRecording();
+			Bool IsRecording()	const { return bRecording; }
+			Bool IsPrimary()	const { return Type == VK_COMMAND_BUFFER_LEVEL_PRIMARY; }
+			void StartRecording();
 			void StopRecording();
+			auto GetLevel()		const -> VkCommandBufferLevel { return Type; }
+
 			auto GetHandle() const -> VkCommandBuffer { return Handle; }
 			operator VkCommandBuffer() const { return Handle; }
 
 		private:
 			VkCommandBuffer				Handle{ VK_NULL_HANDLE };
 			const VulkanCommandPool&	HostCommandPool;
+			VkCommandBufferLevel		Type;
 			Bool						bRecording{ False };
 
 		public:
-			CommandBuffer(const VulkanCommandPool& CommandPool) noexcept;
+			CommandBuffer(const VulkanCommandPool& CommandPool, Level Type) noexcept;
 			CommandBuffer() noexcept = delete;
 			~CommandBuffer() noexcept;
 		};
@@ -122,12 +126,12 @@ export namespace VE { namespace Runtime
 	SharedPtr<VulkanCommandPool::CommandBuffer> VulkanCommandPool::
 	Allocate(CommandBuffer::Level Level) const
 	{
-		auto CommandBuffer = CreateSharedPtr<VulkanCommandPool::CommandBuffer>(*this);
+		auto CommandBuffer = CreateSharedPtr<VulkanCommandPool::CommandBuffer>(*this, Level);
 		VkCommandBufferAllocateInfo AllocateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 			.commandPool = Handle,
-			.level = VkCommandBufferLevel(Level),
+			.level = CommandBuffer->GetLevel(),
 			.commandBufferCount = 1
 		};
 		VK_CHECK(vkAllocateCommandBuffers(GVulkan->Device->GetHandle(), &AllocateInfo, &CommandBuffer->Handle));
@@ -145,6 +149,7 @@ export namespace VE { namespace Runtime
 	void VulkanCommandPool::
 	Submit(const SubmitInfo& SubmitInfo) const
 	{
+		//[TODO]
 		/*VkSubmitInfo SubmitInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -163,8 +168,8 @@ export namespace VE { namespace Runtime
 	}
 
 	VulkanCommandPool::CommandBuffer::
-	CommandBuffer(const VulkanCommandPool& CommandPool) noexcept
-		:HostCommandPool{ CommandPool }
+	CommandBuffer(const VulkanCommandPool& CommandPool, Level Type) noexcept
+		:HostCommandPool{ CommandPool }, Type{ VkCommandBufferLevel(Type) }
 	{
 
 	}
@@ -177,7 +182,7 @@ export namespace VE { namespace Runtime
 	}
 
 	void VulkanCommandPool::CommandBuffer::
-	BeginRecording()
+	StartRecording()
 	{
 		Assert(!IsRecording());
 
