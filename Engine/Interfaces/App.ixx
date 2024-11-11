@@ -3,6 +3,7 @@ module;
 
 export module Visera.App;
 export import Visera.App.Base;
+export import Visera.App.IO;
 export import Visera.App.Log;
 export import Visera.App.Math;
 export import Visera.App.Render;

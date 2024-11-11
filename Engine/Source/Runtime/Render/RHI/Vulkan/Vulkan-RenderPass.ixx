@@ -25,17 +25,32 @@ export namespace VE { namespace Runtime
 	public:
 		virtual void Start(SharedPtr<VulkanCommandPool::CommandBuffer> CommandBuffer) const;
 		virtual void Stop(SharedPtr<VulkanCommandPool::CommandBuffer>  CommandBuffer) const;
-		auto GetSubpasses() const -> const Array<Subpass>& { return Subpasses; }
-
+		auto GetSubpasses() const -> const Array<Subpass>&	{ return Subpasses; }
+		auto GetHandle()	const -> VkRenderPass			{ return Handle; }
+		operator VkRenderPass()	const { return Handle; }
+		
 	public:
-		class Subpass
+		class Subpass final
 		{
 		public:
+			void Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders);
+			void Destroy() noexcept;
+
+			auto GetLayout()	const  ->	VkPipelineLayout			{ return Layout; }
 			auto GetViewports() const  ->	const Array<VkViewport>&	{ return Viewports; }
 			auto GetScissors()  const  ->	const Array<VkRect2D>&		{ return Scissors;  }
 			auto GetColorBlendAttachments() const -> const Array<VkPipelineColorBlendAttachmentState>& { return ColorBlendAttachments; }
+			auto GetHandle()		const  ->	VkPipeline { return Handle; }
+			operator VkPipeline()	const  { return Handle; }
 
 		private:
+			VkPipeline				Handle { VK_NULL_HANDLE };
+			VkPipelineLayout		Layout { VK_NULL_HANDLE };
+
+			Array<VkPipelineShaderStageCreateInfo>	ShaderStages;
+			Array<VkViewport>						Viewports;
+			Array<VkRect2D>							Scissors;
+
 			VkPipelineVertexInputStateCreateInfo	VertexInputState;
 			VkPipelineTessellationStateCreateInfo	TessellationState;
 			VkPipelineInputAssemblyStateCreateInfo	InputAssemblyState;
@@ -45,16 +60,11 @@ export namespace VE { namespace Runtime
 			VkPipelineDepthStencilStateCreateInfo	DepthStencilState;
 			VkPipelineColorBlendStateCreateInfo		ColorBlendState;
 			VkPipelineDynamicStateCreateInfo		DynamicState;
-
-			SharedPtr<VulkanShader>				VertexShader;
-			SharedPtr<VulkanShader>				FragmentShader;
-			Array<VkViewport>					Viewports;
-			Array<VkRect2D>						Scissors;
 			Array<VkPipelineColorBlendAttachmentState> ColorBlendAttachments;
 
 		public:
 			Subpass();
-			~Subpass();
+			~Subpass() noexcept { Destroy(); }
 		};
 
 	protected:
@@ -124,40 +134,36 @@ export namespace VE { namespace Runtime
 	}
 
 	VulkanRenderPass::Subpass::
-	Subpass()
-	{
-		VertexInputState = VkPipelineVertexInputStateCreateInfo
+	Subpass():
+		VertexInputState{ VkPipelineVertexInputStateCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 			.vertexBindingDescriptionCount	= 0,
 			.pVertexBindingDescriptions		= nullptr,
 			.vertexAttributeDescriptionCount= 0,
 			.pVertexAttributeDescriptions	= nullptr,
-		};
-
-		TessellationState = VkPipelineTessellationStateCreateInfo
+		} },
+		TessellationState{ VkPipelineTessellationStateCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO,
 			.patchControlPoints = 0, // Disabled
-		};
+		} },
 
-		InputAssemblyState = VkPipelineInputAssemblyStateCreateInfo
+		InputAssemblyState{ VkPipelineInputAssemblyStateCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.primitiveRestartEnable = VK_FALSE,
-		};
-
-		ViewportState = VkPipelineViewportStateCreateInfo
+		} },
+		ViewportState{ VkPipelineViewportStateCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
 			.viewportCount	= UInt32(Viewports.size()),
 			.pViewports		= Viewports.data(),
 			.scissorCount	= UInt32(Scissors.size()),
 			.pScissors		= Scissors.data(),
-		};
-
-		RasterizationState = VkPipelineRasterizationStateCreateInfo
+		}},
+		RasterizationState{ VkPipelineRasterizationStateCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
 			.depthClampEnable		= VK_FALSE, // Fragments that are beyond the near and far planes are clamped to them as opposed to discarding them
@@ -170,9 +176,8 @@ export namespace VE { namespace Runtime
 			.depthBiasClamp			= 0.0f,
 			.depthBiasSlopeFactor	= 0.0f, // This is sometimes used for shadow mapping
 			.lineWidth				= 1.0f // Any line thicker than 1.0f requires you to enable the wideLines GPU feature.			
-		};
-
-		MultisampleState = VkPipelineMultisampleStateCreateInfo
+		} },
+		MultisampleState{ VkPipelineMultisampleStateCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
 			.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
@@ -181,9 +186,8 @@ export namespace VE { namespace Runtime
 			.pSampleMask		  = nullptr,
 			.alphaToCoverageEnable= VK_FALSE,
 			.alphaToOneEnable	  = VK_FALSE,
-		};
-
-		DepthStencilState = VkPipelineDepthStencilStateCreateInfo
+		} },
+		DepthStencilState{ VkPipelineDepthStencilStateCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
 			// Depth Test
@@ -197,9 +201,8 @@ export namespace VE { namespace Runtime
 			.back				= {},
 			.minDepthBounds		= 0.0,
 			.maxDepthBounds		= 1.0,
-		};
-
-		ColorBlendState = VkPipelineColorBlendStateCreateInfo
+		} },
+		ColorBlendState{ VkPipelineColorBlendStateCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
 			.logicOpEnable		= VK_FALSE, // VK_FALSE: Mix Mode | VK_TRUE: Combine Mode
@@ -207,13 +210,69 @@ export namespace VE { namespace Runtime
 			.attachmentCount	= UInt32(ColorBlendAttachments.size()),
 			.pAttachments		= ColorBlendAttachments.data(),
 			.blendConstants		= {0.0f, 0.0f, 0.0f, 0.0f}
-		};
-
-		DynamicState = VkPipelineDynamicStateCreateInfo
+		} },
+		DynamicState{ VkPipelineDynamicStateCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
 			.dynamicStateCount = 0,
+		}}
+	{
+		//!!!Remeber to call Subpass::Create() in Renderpass!!!
+
+		//[TODO][FIXME]: Add SPIR-V Reflection?
+		VkPipelineLayoutCreateInfo LayoutCreateInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+			.setLayoutCount			= 0,
+			.pSetLayouts			= nullptr,
+			.pushConstantRangeCount = 0,
+			.pPushConstantRanges	= nullptr,
 		};
+		VK_CHECK(vkCreatePipelineLayout(GVulkan->Device->GetHandle(), &LayoutCreateInfo, VulkanAllocator::AllocationCallbacks, &Layout));
+	}
+
+	void VulkanRenderPass::Subpass::
+	Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders)
+	{
+		ShaderStages.resize(Shaders.size());
+		for(UInt32 Idx = 0; Idx < ShaderStages.size(); ++Idx)
+		{
+			ShaderStages[Idx] = VkPipelineShaderStageCreateInfo
+			{
+				.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+				.stage  = Shaders[Idx]->GetStage(),
+				.module = Shaders[Idx]->GetHandle(),
+				.pName	= Shaders[Idx]->GetName(),
+			};
+		}
+
+		VkGraphicsPipelineCreateInfo CreateInfo =
+		{
+			.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+			.stageCount				= 2,
+			.pStages				= ShaderStages.data(),
+			.pVertexInputState		= &VertexInputState,
+			.pInputAssemblyState	= &InputAssemblyState,
+			.pViewportState			= &ViewportState,
+			.pRasterizationState	= &RasterizationState,
+			.pMultisampleState		= &MultisampleState,
+			.pDepthStencilState		= &DepthStencilState,	// Optional
+			.pColorBlendState		= &ColorBlendState,
+			.pDynamicState			= &DynamicState,
+			.layout					= Layout,
+			.renderPass				= HostRenderPass.GetHandle(),
+			.basePipelineHandle		= VK_NULL_HANDLE,		// Optional
+			.basePipelineIndex		= -1,					// Optional
+		};
+
+		//vkCreateGraphicsPipelines(GVulkan->Device->GetHandle(), )
+	}
+
+	void VulkanRenderPass::Subpass::
+	Destroy() noexcept
+	{
+		vkDestroyPipeline(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		Handle = VK_NULL_HANDLE;
 	}
 	
 } } // namespace VE::Runtime

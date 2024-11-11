@@ -4,6 +4,7 @@ module;
 export module Visera.Engine.Core;
 
 export import Visera.Engine.Core.Log;
+export import Visera.Engine.Core.IO;
 export import Visera.Engine.Core.Signal;
 export import Visera.Engine.Core.Time;
 export import Visera.Engine.Core.Math;

@@ -19,23 +19,24 @@ export namespace VE { namespace Runtime
 	{
 		friend class Vulkan;
 	public:
-		enum Stage
+		enum ShaderType
 		{
 			Vertex		= VK_SHADER_STAGE_VERTEX_BIT,
 			Fragment	= VK_SHADER_STAGE_FRAGMENT_BIT,
 		};
 
+		auto GetName()	const -> RawString				{ return "main"; }
 		auto GetSize()  const -> VkDeviceSize			{ return Data.size(); }
 		auto GetData()  const -> const Array<Byte>&		{ return Data; }
 		auto GetStage() const -> VkShaderStageFlagBits	{ return Type; }
-		auto GetType()	const -> Stage					{ return Stage(Type); }
+		auto GetType()	const -> ShaderType				{ return ShaderType(Type); }
 				
 		auto GetHandle()			const { return Handle; }
 		operator VkShaderModule()	const { return Handle; }
 
 	public:
 		VulkanShader() noexcept = delete;
-		VulkanShader(Stage ShaderType, const Array<Byte>& ShadingCode);
+		VulkanShader(ShaderType ShaderType, const Array<Byte>& ShadingCode);
 		~VulkanShader() noexcept;
 		
 	private:
@@ -45,7 +46,7 @@ export namespace VE { namespace Runtime
 	};
 
 	VulkanShader::
-	VulkanShader(VulkanShader::Stage ShaderType, const Array<Byte>& ShadingCode)
+	VulkanShader(VulkanShader::ShaderType ShaderType, const Array<Byte>& ShadingCode)
 		:Type{VkShaderStageFlagBits(ShaderType)}, Data{ShadingCode}
 	{
 		VkShaderModuleCreateInfo CreateInfo
