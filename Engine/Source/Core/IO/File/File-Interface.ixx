@@ -13,10 +13,13 @@ export namespace VE
 	class File
 	{
 	public:
-		virtual void SaveAs(StringView FilePath)	throw(RuntimeError) = 0; //Check out the demo below
-		virtual void LoadFrom(StringView FilePath)	throw(RuntimeError) = 0; //Check out the demo below
-		virtual void Save() throw(RuntimeError) { SaveAs(Path); }
-		virtual void Load() throw(RuntimeError) { LoadFrom(Path); }
+		static inline Bool IfExists(StringView FilePath) { return std::filesystem::exists(FilePath); }
+		static inline void CreateIfNotExists(StringView FilePath) throw(RuntimeError);
+
+		virtual void SaveAs(StringView FilePath,   Int32 SaveModes)	throw(RuntimeError) = 0; //Check out the demo below
+		virtual void LoadFrom(StringView FilePath, Int32 LoadModes)	throw(RuntimeError) = 0; //Check out the demo below
+		virtual void Save(Int32 SaveModes = 0x0) throw(RuntimeError) { SaveAs(Path,   SaveModes); }
+		virtual void Load(Int32 LoadModes = 0x0) throw(RuntimeError) { LoadFrom(Path, LoadModes); }
 
 		virtual void WriteAll(Array<Byte>&& NewData) { Data = std::move(NewData); }
 		virtual void WriteAll(const Array<Byte>& NewData) { Data = NewData; }
@@ -26,6 +29,7 @@ export namespace VE
 
 		Bool IsEmpty()  const { return Data.empty(); }
 		Bool IsOpened() const { return IOStream.Address != nullptr; }
+		auto GetSize() const -> size_t { return Data.size(); }
 		auto GetPath() const -> StringView { return Path; }
 		auto GetData() const -> const Array<Byte>& { return Data; }
 
@@ -47,9 +51,10 @@ export namespace VE
 	};
 
 	void File::
-	SaveAs(StringView FilePath)	throw(RuntimeError)
+	SaveAs(StringView FilePath, Int32 SaveModes)	throw(RuntimeError)
 	{
-		if (auto* OutputFile = OpenOStream(0x0))
+		//Tips: Add SaveModes via SaveModes |= NewMode
+		if (auto* OutputFile = OpenOStream(SaveModes))
 		{
 			OutputFile->write(reinterpret_cast<char*>(Data.data()), Data.size());
 
@@ -62,9 +67,10 @@ export namespace VE
 	}
 
 	void File::
-	LoadFrom(StringView FilePath) throw(RuntimeError)
+	LoadFrom(StringView FilePath, Int32 LoadModes) throw(RuntimeError)
 	{
-		if (auto* InputFile = OpenIStream(0x0))
+		//Tips: Add LoadModes via LoadModes |= NewMode
+		if (auto* InputFile = OpenIStream(LoadModes))
 		{
 			Data.resize(GetInputFileSize());
 
@@ -76,6 +82,18 @@ export namespace VE
 			CloseIStream();
 		}
 		else throw RuntimeError(std::format("Failed to open {}", FilePath));
+	}
+
+	void File::
+	CreateIfNotExists(StringView FilePath) throw(RuntimeError)
+	{
+		if (IfExists(FilePath) == False)
+		{
+			Log::Debug("About to create a new file at {}...", FilePath);
+			std::ofstream NewFile(FilePath.data());
+			if (NewFile.is_open()) NewFile.close();
+			else throw RuntimeError(std::format("Failed to create a new file at {}", FilePath));
+		}
 	}
 
 	size_t File::GetInputFileSize() const

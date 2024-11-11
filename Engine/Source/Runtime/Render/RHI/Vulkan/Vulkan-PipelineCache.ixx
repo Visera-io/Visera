@@ -8,6 +8,7 @@ export module Visera.Engine.Runtime.Render.RHI.Vulkan:PipelineCache;
 import :Context;
 import :Allocator;
 import :Device;
+import :GPU;
 
 import Visera.Engine.Core.IO;
 
@@ -41,14 +42,43 @@ export namespace VE { namespace Runtime
 	void VulkanPipelineCache::
 	Create()
 	{
+		IO::File::CreateIfNotExists(Path);
 		auto CacheFile = IO::CreateBinaryFile(Path);
+		CacheFile->Load();
 
+		auto* CacheHeader = (VkPipelineCacheHeaderVersionOne*)(CacheFile->GetData().data());
+		const auto& GPUProperties = GVulkan->GPU->GetProperties();
+
+		bExpired = (CacheFile->IsEmpty() ||
+					CacheHeader->deviceID != GPUProperties.deviceID ||
+					CacheHeader->vendorID != GPUProperties.vendorID ||
+					memcmp(CacheHeader->pipelineCacheUUID, GPUProperties.pipelineCacheUUID, VK_UUID_SIZE));
+		
+		if (IsExpired()) CacheFile->ClearData();
+		VkPipelineCacheCreateInfo CreateInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
+			.initialDataSize	= CacheFile->GetSize(),
+			.pInitialData		= CacheFile->GetData().data(),
+		};
+		VK_CHECK(vkCreatePipelineCache(GVulkan->Device->GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
 	}
 
 	void VulkanPipelineCache::
 	Destroy()
 	{
-
+		if (IsExpired())
+		{
+			auto CacheFile = IO::CreateBinaryFile(Path);
+			UInt64 CacheSize = 0;
+			vkGetPipelineCacheData(GVulkan->Device->GetHandle(), Handle, &CacheSize, nullptr);
+			Array<Byte> CacheDate(CacheSize);
+			vkGetPipelineCacheData(GVulkan->Device->GetHandle(), Handle, &CacheSize, CacheDate.data());
+			CacheFile->WriteAll(std::move(CacheDate));
+			CacheFile->Save();
+		}
+		vkDestroyPipelineCache(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		Handle = VK_NULL_HANDLE;
 	}
 
 } } // namespace VE::Runtime

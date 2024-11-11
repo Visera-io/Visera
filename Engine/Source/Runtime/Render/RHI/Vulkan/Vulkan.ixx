@@ -34,6 +34,8 @@ export namespace VE { namespace Runtime
 		SI VulkanGPU		GPU			{};
 		SI VulkanDevice		Device		{};
 		SI VulkanSwapchain	Swapchain	{};
+		SI VulkanPipelineCache RenderPassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
+		//SI VulkanPipelineCache ComputePassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
 		//VulkanMemoryAllocator VMA;
 
 	private:
@@ -59,11 +61,15 @@ export namespace VE { namespace Runtime
 		Device.Create(&GPU, &Surface);
 
 		Swapchain.Create();
+
+		RenderPassPipelineCache.Create();
 	}
 
 	void Vulkan::
 	Terminate()
 	{
+		RenderPassPipelineCache.Destroy();
+
 		Swapchain.Destroy();
 
 		Device.Destroy();

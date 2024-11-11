@@ -12,17 +12,18 @@ export namespace VE
 	class BinaryFile :public File
 	{
 	public:
-		virtual void SaveAs(StringView FilePath)	 throw(RuntimeError) override;
-		virtual void LoadFrom(StringView FilePath)   throw(RuntimeError) override;
+		virtual void SaveAs(StringView FilePath,   Int32 SaveModes)	throw(RuntimeError) override;
+		virtual void LoadFrom(StringView FilePath, Int32 LoadModes)	throw(RuntimeError) override;
 
 		BinaryFile(const String& FilePath) noexcept : File{ FilePath } {};
 		virtual ~BinaryFile() noexcept = default;
 	};
 
 	void BinaryFile::
-	SaveAs(StringView FilePath) throw(RuntimeError)
+	SaveAs(StringView FilePath, Int32 SaveModes) throw(RuntimeError)
 	{
-		if (auto* OutputFile = OpenOStream(std::ios::binary))
+		SaveModes |= std::ios::binary;
+		if (auto* OutputFile = OpenOStream(SaveModes))
 		{
 			OutputFile->write(reinterpret_cast<char*>(Data.data()), Data.size());
 
@@ -35,9 +36,10 @@ export namespace VE
 	}
 
 	void BinaryFile::
-	LoadFrom(StringView FilePath) throw(RuntimeError)
+	LoadFrom(StringView FilePath, Int32 LoadModes) throw(RuntimeError)
 	{
-		if (auto* InputFile = OpenIStream(std::ios::binary))
+		LoadModes |= std::ios::binary;
+		if (auto* InputFile = OpenIStream(LoadModes))
 		{
 			Data.resize(GetInputFileSize());
 

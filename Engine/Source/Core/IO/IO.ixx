@@ -2,7 +2,7 @@ module;
 #include <Visera>
 
 export module Visera.Engine.Core.IO;
-export import Visera.Engine.Core.IO.File;
+import Visera.Engine.Core.IO.File;
 
 export namespace VE
 {	
@@ -11,6 +11,7 @@ export namespace VE
 	class IO
 	{
 	public:
+		using File = VE::File;
 		INTERFACE CreateBinaryFile(const String& Path) -> SharedPtr<File> { return CreateSharedPtr<BinaryFile>(Path); }
 	};
 

@@ -9,6 +9,6 @@ export namespace VISERA_APP_NAMESPACE
 {
 
 	using IO = VE::IO;
-	using File = VE::File;
+	using File = IO::File;
 	
 } // namespace VISERA_APP_NAMESPACE

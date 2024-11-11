@@ -40,11 +40,13 @@ set(VISERA_CACHE_DIR    "${VISERA_DIR}/Cache")
 set(VISERA_ENGINE_DIR   "${VISERA_DIR}/Engine")
 set(VISERA_SCRIPTS_DIR  "${VISERA_DIR}/Scripts")
 
-#[Engine]
+#[Macros]
 add_compile_definitions(NOMINMAX)
 add_compile_definitions(VISERA_ENGINE_NAME=\"${VISERA}\")
 add_compile_definitions(VISERA_APP_NAME=\"${APP_NAME}\")
 add_compile_definitions(VISERA_APP_NAMESPACE=${APP_NAME})
+add_compile_definitions(VISERA_APP_ASSETS_DIR=\"${VISERA_APP_DIR}/${APP_NAME}/Assets\")
+#[Engine]
 add_subdirectory("${VISERA_ENGINE_DIR}")
 #[App]
 add_subdirectory("${VISERA_APP_DIR}/${APP_NAME}")
