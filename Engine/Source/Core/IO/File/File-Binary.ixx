@@ -12,47 +12,43 @@ export namespace VE
 	class BinaryFile :public File
 	{
 	public:
-		virtual void WriteToDisk()	 throw(RuntimeError) override;
-		virtual void ReadFromDisk()  throw(RuntimeError) override;
+		virtual void SaveAs(StringView FilePath)	 throw(RuntimeError) override;
+		virtual void LoadFrom(StringView FilePath)   throw(RuntimeError) override;
 
 		BinaryFile(const String& FilePath) noexcept : File{ FilePath } {};
 		virtual ~BinaryFile() noexcept = default;
 	};
 
 	void BinaryFile::
-	WriteToDisk() throw(RuntimeError)
+	SaveAs(StringView FilePath) throw(RuntimeError)
 	{
-		std::ofstream OutputFile(Path, std::ios::binary);
-		if (OutputFile.is_open())
+		if (auto* OutputFile = OpenOStream(std::ios::binary))
 		{
-			OutputFile.write(reinterpret_cast<char*>(Data.data()), Data.size());
+			OutputFile->write(reinterpret_cast<char*>(Data.data()), Data.size());
 
-			if (OutputFile.fail())
-			{ throw RuntimeError(std::format("Failed to write to {}", Path)); }
+			if (OutputFile->fail())
+			{ throw RuntimeError(std::format("Failed to write to {}", FilePath)); }
 
-			OutputFile.close();
+			CloseOStream();
 		}
-		else throw RuntimeError(std::format("Failed to open {}", Path));	
+		else throw RuntimeError(std::format("Failed to open {}", FilePath));	
 	}
 
 	void BinaryFile::
-	ReadFromDisk() throw(RuntimeError)
+	LoadFrom(StringView FilePath) throw(RuntimeError)
 	{
-		std::ifstream InputFile(Path, std::ios::binary | std::ios::ate);
-		if (InputFile.is_open())
+		if (auto* InputFile = OpenIStream(std::ios::binary))
 		{
-			InputFile.seekg(0, std::ios_base::end);
-			Data.resize(InputFile.tellg());
-			InputFile.seekg(0, std::ios_base::beg);
+			Data.resize(GetInputFileSize());
 
-			InputFile.read(reinterpret_cast<char*>(Data.data()), Data.size());
+			InputFile->read(reinterpret_cast<char*>(Data.data()), Data.size());
 
-			if (InputFile.fail() || InputFile.gcount() != Data.size())
-			{ throw RuntimeError(std::format("Failed to read from {}", Path)); }
+			if (InputFile->fail() || InputFile->gcount() != Data.size())
+			{ throw RuntimeError(std::format("Failed to read from {}", FilePath)); }
 
-			InputFile.close();
+			CloseIStream();
 		}
-		else throw RuntimeError(std::format("Failed to open {}", Path));
+		else throw RuntimeError(std::format("Failed to open {}", FilePath));
 	}
 
 } // namespace VE

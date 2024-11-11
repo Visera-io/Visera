@@ -14,6 +14,7 @@
 #include <thread>
 #include <ranges>
 #include <memory>
+#include <typeinfo>
 #include <functional>
 #include <source_location>
 #include <exception>
@@ -73,6 +74,10 @@ namespace VE
     using RawString  = const char*;
 
     using Byte		= unsigned char;
+    constexpr Byte    OneByte  = 1;
+    constexpr UInt64  OneKByte = 1024 * OneByte;
+    constexpr UInt64  OneMByte = 1024 * OneKByte;
+    constexpr UInt64  OneGByte = 1024 * OneMByte;
     using EnumMask	= std::uint32_t;
     using EnumBit	= std::uint32_t;
     template<typename T> inline

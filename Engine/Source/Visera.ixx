@@ -18,7 +18,6 @@ export namespace VE
 		static inline Int32
 		Loop(ViseraApp* App)
 		{
-			Int32 ExitState = EXIT_SUCCESS;
 			Log::Info("App Started Running");
 			try
 			{
@@ -33,15 +32,12 @@ export namespace VE
 			catch (const VE::RuntimeError& Error)
 			{
 				Log::Error("Unsolved Visera runtime error:\n{}{}", Error.What(), Error.Where());
-				ExitState = EXIT_FAILURE;
+				return EXIT_FAILURE;
 			}
 			catch (const VE::AppExitSignal& Signal)
-			{ 
-				Log::Info(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
-				ExitState = EXIT_FAILURE;
-			}
+			{ Log::Info(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where()); }
 			if (App) delete App;
-			return ExitState;
+			return EXIT_SUCCESS;
 		}
 
 		static inline void
