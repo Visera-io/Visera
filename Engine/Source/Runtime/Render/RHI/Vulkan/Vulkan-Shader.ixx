@@ -5,6 +5,7 @@ module;
 
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:Shader;
 
+import :Common;
 import :Context;
 import :Allocator;
 import :Device;
@@ -19,36 +20,30 @@ export namespace VE { namespace Runtime
 	{
 		friend class Vulkan;
 	public:
-		enum ShaderType
-		{
-			Vertex		= VK_SHADER_STAGE_VERTEX_BIT,
-			Fragment	= VK_SHADER_STAGE_FRAGMENT_BIT,
-		};
-
 		auto GetName()	const -> RawString				{ return "main"; }
 		auto GetSize()  const -> VkDeviceSize			{ return Data.size(); }
 		auto GetData()  const -> const Array<Byte>&		{ return Data; }
-		auto GetStage() const -> VkShaderStageFlagBits	{ return Type; }
-		auto GetType()	const -> ShaderType				{ return ShaderType(Type); }
-				
+		auto GetStage() const -> VkShaderStageFlagBits	{ return Stage.Flags; }
+
 		auto GetHandle()			const { return Handle; }
 		operator VkShaderModule()	const { return Handle; }
 
 	public:
 		VulkanShader() noexcept = delete;
-		VulkanShader(ShaderType ShaderType, const Array<Byte>& ShadingCode);
+		VulkanShader(VulkanShaderStages ShaderType, const Array<Byte>& ShadingCode);
 		~VulkanShader() noexcept;
 		
 	private:
 		VkShaderModule			Handle{ VK_NULL_HANDLE };
-		VkShaderStageFlagBits	Type;
+		VulkanShaderStages		Stage;
 		Array<Byte>				Data;
 	};
 
 	VulkanShader::
-	VulkanShader(VulkanShader::ShaderType ShaderType, const Array<Byte>& ShadingCode)
-		:Type{VkShaderStageFlagBits(ShaderType)}, Data{ShadingCode}
+	VulkanShader(VulkanShaderStages Stage, const Array<Byte>& ShadingCode)
+		:Stage{Stage}, Data{ShadingCode}
 	{
+		Assert(!Data.empty());
 		VkShaderModuleCreateInfo CreateInfo
 		{
 			.sType		= VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,

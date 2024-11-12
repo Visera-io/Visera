@@ -13,9 +13,8 @@ export namespace VISERA_APP_NAMESPACE
 	using RenderPass = VE::Runtime::RHI::RenderPass;
 
 	using Shader		= VE::Runtime::RHI::Shader;
-	using ShaderStage	= VE::Runtime::RHI::ShaderStage;
 	using ShaderStages	= VE::Runtime::RHI::ShaderStages;
-	CALL CreateShader(ShaderStages Stages, const Array<Byte>& ShadingCode) -> SharedPtr<Shader> { return VE::Runtime::RHI::CreateShader(Stages, ShadingCode); }
+	CALL CreateShader(ShaderStages Stage, const Array<Byte>& ShadingCode) -> SharedPtr<Shader> { return VE::Runtime::RHI::CreateShader(Stage, ShadingCode); }
 
 	using CommandBuffer = VE::Runtime::VulkanCommandPool::CommandBuffer;
 	CALL CreateDrawCalls			(CommandBuffer::Level Level = CommandBuffer::Level::Primary) -> SharedPtr<CommandBuffer> { return VE::Runtime::RHI::GetResetableGraphicsCommandPool().Allocate(Level); }
