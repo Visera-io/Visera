@@ -11,6 +11,7 @@ import :Device;
 import :Shader;
 import :CommandPool;
 import :Swapchain;
+import :PipelineCache;
 
 export namespace VE { namespace Runtime
 {
@@ -25,12 +26,12 @@ export namespace VE { namespace Runtime
 	public:
 		virtual void Start(SharedPtr<VulkanCommandPool::CommandBuffer> CommandBuffer) const;
 		virtual void Stop(SharedPtr<VulkanCommandPool::CommandBuffer>  CommandBuffer) const;
-		auto GetSubpasses() const -> const Array<Subpass>&	{ return Subpasses; }
+		auto GetSubpasses() const -> const Array<UniquePtr<Subpass>>&  { return Subpasses; }
 		auto GetHandle()	const -> VkRenderPass			{ return Handle; }
 		operator VkRenderPass()	const { return Handle; }
 		
 	public:
-		class Subpass final
+		class Subpass
 		{
 		public:
 			void Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders);
@@ -43,7 +44,7 @@ export namespace VE { namespace Runtime
 			auto GetHandle()		const  ->	VkPipeline { return Handle; }
 			operator VkPipeline()	const  { return Handle; }
 
-		private:
+		protected:
 			VkPipeline				Handle { VK_NULL_HANDLE };
 			VkPipelineLayout		Layout { VK_NULL_HANDLE };
 
@@ -81,10 +82,14 @@ export namespace VE { namespace Runtime
 		VkRect2D						RenderArea; //Default: {{0,0}, {Swapchain.Extent}}
 		Array<FrameBuffer>				FrameBuffers;
 		Array<VkAttachmentDescription>  Attachments;
-		Array<Subpass>					Subpasses;
+
+		Array<UniquePtr<Subpass>>		Subpasses;
+		Array<VkSubpassDescription>		SubpassDescriptions;
+		Array<VkSubpassDependency>		SubpassDependencies;
 
 	public:
-		VulkanRenderPass();
+		VulkanRenderPass() noexcept = delete;
+		VulkanRenderPass(UInt32 SubpassCount) noexcept;
 		virtual ~VulkanRenderPass() noexcept;
 	};
 
@@ -118,10 +123,14 @@ export namespace VE { namespace Runtime
 	}
 
 	VulkanRenderPass::
-	VulkanRenderPass()
-		:RenderArea{{0,0}, { GVulkan->Swapchain->GetExtent() }}
+	VulkanRenderPass(UInt32 SubpassCount) noexcept
+		:RenderArea{{0,0}, { GVulkan->Swapchain->GetExtent() }},
+		 Subpasses(SubpassCount),
+		 SubpassDescriptions(SubpassCount),
+		 SubpassDependencies(SubpassCount),
+		 FrameBuffers(GVulkan->Swapchain->GetImages().size())
 	{
-		FrameBuffers.resize(GVulkan->Swapchain->GetImages().size());
+		
 	}
 
 	VulkanRenderPass::
@@ -218,7 +227,11 @@ export namespace VE { namespace Runtime
 		}}
 	{
 		//!!!Remeber to call Subpass::Create() in Renderpass!!!
+	}
 
+	void VulkanRenderPass::Subpass::
+	Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders)
+	{
 		//[TODO][FIXME]: Add SPIR-V Reflection?
 		VkPipelineLayoutCreateInfo LayoutCreateInfo
 		{
@@ -229,11 +242,7 @@ export namespace VE { namespace Runtime
 			.pPushConstantRanges	= nullptr,
 		};
 		VK_CHECK(vkCreatePipelineLayout(GVulkan->Device->GetHandle(), &LayoutCreateInfo, VulkanAllocator::AllocationCallbacks, &Layout));
-	}
 
-	void VulkanRenderPass::Subpass::
-	Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders)
-	{
 		ShaderStages.resize(Shaders.size());
 		for(UInt32 Idx = 0; Idx < ShaderStages.size(); ++Idx)
 		{
@@ -249,7 +258,7 @@ export namespace VE { namespace Runtime
 		VkGraphicsPipelineCreateInfo CreateInfo =
 		{
 			.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-			.stageCount				= 2,
+			.stageCount				= UInt32(ShaderStages.size()),
 			.pStages				= ShaderStages.data(),
 			.pVertexInputState		= &VertexInputState,
 			.pInputAssemblyState	= &InputAssemblyState,
@@ -264,8 +273,8 @@ export namespace VE { namespace Runtime
 			.basePipelineHandle		= VK_NULL_HANDLE,		// Optional
 			.basePipelineIndex		= -1,					// Optional
 		};
-
-		//vkCreateGraphicsPipelines(GVulkan->Device->GetHandle(), )
+		
+		VK_CHECK(vkCreateGraphicsPipelines(GVulkan->Device->GetHandle(), GVulkan->RenderPassPipelineCache->GetHandle(), 1, &CreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
 	}
 
 	void VulkanRenderPass::Subpass::
@@ -273,6 +282,8 @@ export namespace VE { namespace Runtime
 	{
 		vkDestroyPipeline(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
+		vkDestroyPipelineLayout(GVulkan->Device->GetHandle(), Layout, VulkanAllocator::AllocationCallbacks);
+		Layout = VK_NULL_HANDLE;
 	}
 	
 } } // namespace VE::Runtime

@@ -15,6 +15,7 @@ export namespace VE { namespace Runtime
 	class VulkanDevice;
 	class VulkanSurface;
 	class VulkanSwapchain;
+	class VulkanPipelineCache;
 
 	class VulkanContext
 	{
@@ -25,6 +26,7 @@ export namespace VE { namespace Runtime
 		const VulkanDevice*		Device;
 		const VulkanSurface*	Surface;
 		const VulkanSwapchain*	Swapchain;
+		const VulkanPipelineCache* RenderPassPipelineCache;
 
 		VulkanContext() noexcept { Assert(!bCreated); bCreated = true; };
 		VulkanContext(const VulkanContext&) = delete;

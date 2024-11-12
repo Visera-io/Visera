@@ -7,6 +7,7 @@ export module Visera.Engine.Runtime.Render.RHI.Vulkan;
 import :Allocator;
 import :Loader;
 import :Context;
+import :Common;
 import :PipelineCache;
 export import :Instance;
 export import :Device;
@@ -14,6 +15,7 @@ export import :Surface;
 export import :Swapchain;
 export import :CommandPool;
 export import :RenderPass;
+export import :Shader;
 export import :Synchronization;
 
 export namespace VE { namespace Runtime
