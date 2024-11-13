@@ -7,6 +7,7 @@ export module Visera.Engine.Runtime.Render.RHI.Vulkan:RenderPass;
 
 import :Context;
 import :Allocator;
+import :Common;
 import :Device;
 import :Shader;
 import :CommandPool;
@@ -26,6 +27,31 @@ export namespace VE { namespace Runtime
 	public:
 		virtual void Start(SharedPtr<VulkanCommandPool::CommandBuffer> CommandBuffer) const;
 		virtual void Stop(SharedPtr<VulkanCommandPool::CommandBuffer>  CommandBuffer) const;
+		//VkSubpassDependency
+		struct FrameBuffer
+		{
+			using TextureIndex = UInt32;
+			VkFramebuffer		Handle{ VK_NULL_HANDLE };
+			Array<VkImageView>	RenderTargets;
+			Array<VkClearValue>	ClearColors;
+
+			operator VkFramebuffer() const { return Handle; }
+			~FrameBuffer() { vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks); Handle = VK_NULL_HANDLE; }
+		};
+		struct SubpassSettings
+		{
+			struct AttachmentDescription{
+				FrameBuffer::TextureIndex	Location = ~0U; // Index In the FrameBuffer
+				VulkanImageLayouts::Option	Layout;
+			};
+
+			Array<AttachmentDescription>	 InputAttachments;
+			Array<AttachmentDescription>	 ColorAttachments;
+			Segment<AttachmentDescription,1> DepthStencilAttachment;
+
+			Array<AttachmentDescription>	 ResolveAttachments;
+			Array<FrameBuffer::TextureIndex> PreservveAttachments;
+		};
 		auto GetSubpasses() const -> const Array<UniquePtr<Subpass>>&  { return Subpasses; }
 		auto GetHandle()	const -> VkRenderPass			{ return Handle; }
 		operator VkRenderPass()	const { return Handle; }
@@ -34,7 +60,8 @@ export namespace VE { namespace Runtime
 		class Subpass
 		{
 		public:
-			void Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders);
+			//[TODO] UseSubpassCreateInfo
+			void Create(VkRenderPass HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders);
 			void Destroy() noexcept;
 
 			auto GetLayout()	const  ->	VkPipelineLayout			{ return Layout; }
@@ -62,21 +89,12 @@ export namespace VE { namespace Runtime
 			VkPipelineColorBlendStateCreateInfo		ColorBlendState;
 			VkPipelineDynamicStateCreateInfo		DynamicState;
 			Array<VkPipelineColorBlendAttachmentState> ColorBlendAttachments;
-
 		public:
 			Subpass();
 			~Subpass() noexcept { Destroy(); }
 		};
 
 	protected:
-		struct FrameBuffer
-		{
-			VkFramebuffer		Handle{ VK_NULL_HANDLE };
-			Array<VkImageView>	RenderTargets;
-			Array<VkClearValue>	ClearColors;
-			operator VkFramebuffer() const { return Handle; }
-			~FrameBuffer() { vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks); Handle = VK_NULL_HANDLE; }
-		};
 		VkRenderPass					Handle{ VK_NULL_HANDLE };
 		UInt32							Priority { 0 }; // Less is More
 		VkRect2D						RenderArea; //Default: {{0,0}, {Swapchain.Extent}}
@@ -86,6 +104,10 @@ export namespace VE { namespace Runtime
 		Array<UniquePtr<Subpass>>		Subpasses;
 		Array<VkSubpassDescription>		SubpassDescriptions;
 		Array<VkSubpassDependency>		SubpassDependencies;
+
+	protected:
+		void Create();
+		void Destroy();
 
 	public:
 		VulkanRenderPass() noexcept = delete;
@@ -130,14 +152,41 @@ export namespace VE { namespace Runtime
 		 SubpassDependencies(SubpassCount),
 		 FrameBuffers(GVulkan->Swapchain->GetImages().size())
 	{
-		
+		//!!!Remeber to call VulkanRenderPass::Create() in the Derived Renderpass!!!
+		Assert(VK_SUBPASS_EXTERNAL == UInt32(0 - 1));
+		for (UInt32 Idx = 0; Idx < SubpassCount; ++Idx)
+		{
+			SubpassDescriptions[Idx] = VkSubpassDescription
+			{
+				.flags = 0x0,
+				.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+			};
+			SubpassDependencies[Idx] = VkSubpassDependency
+			{
+				.srcSubpass = Idx - 1,
+				.dstSubpass = Idx,
+				.dependencyFlags = 0x0,
+			};
+		}
 	}
 
 	VulkanRenderPass::
 	~VulkanRenderPass() noexcept
 	{
-		Subpasses.clear();
-		FrameBuffers.clear();
+		Destroy();
+	}
+
+	void VulkanRenderPass::
+	Create()
+	{
+		Assert(!Subpasses.empty() &&
+				Subpasses.size() == SubpassDescriptions.size() == SubpassDependencies.size());
+
+	}
+
+	void VulkanRenderPass::
+	Destroy()
+	{
 		vkDestroyRenderPass(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
@@ -230,7 +279,7 @@ export namespace VE { namespace Runtime
 	}
 
 	void VulkanRenderPass::Subpass::
-	Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders)
+	Create(VkRenderPass HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders)
 	{
 		//[TODO][FIXME]: Add SPIR-V Reflection?
 		VkPipelineLayoutCreateInfo LayoutCreateInfo
@@ -269,7 +318,7 @@ export namespace VE { namespace Runtime
 			.pColorBlendState		= &ColorBlendState,
 			.pDynamicState			= &DynamicState,
 			.layout					= Layout,
-			.renderPass				= HostRenderPass.GetHandle(),
+			.renderPass				= HostRenderPass,
 			.basePipelineHandle		= VK_NULL_HANDLE,		// Optional
 			.basePipelineIndex		= -1,					// Optional
 		};

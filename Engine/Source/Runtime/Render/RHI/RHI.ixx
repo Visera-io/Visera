@@ -17,12 +17,10 @@ export namespace VE { namespace Runtime
 		friend class Render;
 	public:
 		using Shader			= VulkanShader;
-		using ShaderStages		= VulkanShaderStages;
+		using ShaderStages		= VulkanShaderStages::Option;
 		using RenderPass		= VulkanRenderPass;
 		using AccessPermission	= VulkanAccessPermissions;
-
-		using ShaderStages	 = VulkanShaderStages;
-		using PipelineStages = VulkanPipelineStages;
+		using PipelineStages	= VulkanPipelineStages;
 	public:
 		static inline auto
 		GetResetableGraphicsCommandPool()	-> VulkanCommandPool& { return ResetableGraphicsCommandPool; }
@@ -37,7 +35,8 @@ export namespace VE { namespace Runtime
 		static inline auto
 		CreateSignaledSemaphore()			-> SharedPtr<VulkanSemaphore> { return CreateSharedPtr<VulkanSemaphore>(true); }
 		static inline auto
-		CreateShader(VulkanShaderStages Stage, const Array<Byte> ShadingCode) { return CreateSharedPtr<VulkanShader>(Stage, ShadingCode); }
+		CreateShader(ShaderStages Stage, const Array<Byte> ShadingCode) { return CreateSharedPtr<VulkanShader>(Stage, ShadingCode);
+	}
 
 	private:
 		static inline VulkanCommandPool ResetableGraphicsCommandPool{};

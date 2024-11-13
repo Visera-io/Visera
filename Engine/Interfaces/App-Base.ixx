@@ -51,6 +51,9 @@ export namespace VISERA_APP_NAMESPACE
     template<VE::Hashable Key, typename Value>
     using HashMap  = VE::HashMap<Key, Value>;
 
+    template<typename T, size_t Length>
+    using Segment  = VE::Segment<T, Length>;
+
     /* <<  Pointers >>
         1. SharedPtr
         2. WeakPtr

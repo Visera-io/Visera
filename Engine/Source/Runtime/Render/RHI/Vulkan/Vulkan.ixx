@@ -54,7 +54,7 @@ export namespace VE { namespace Runtime
 		Context->GPU		= &GPU;
 		Context->Device		= &Device;
 		Context->Swapchain	= &Swapchain;
-
+		
 		Loader.Create();
 		Loader.LoadInstance(Instance.Create());
 

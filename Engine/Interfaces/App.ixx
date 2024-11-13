@@ -21,7 +21,7 @@ export namespace VE
 		virtual void
 		RenderTick() {}
 		void inline
-		Exit(RawString Message = "Visera App Exited Successfully.") const throw(AppExitSignal) { throw AppExitSignal(Message); }
+		Exit(const AppExitSignal& Message = AppExitSignal("Visera App Exited Successfully.")) const throw(AppExitSignal) { throw Message; }
 
 		ViseraApp()			 = default;
 		virtual ~ViseraApp() = default;

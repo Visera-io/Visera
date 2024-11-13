@@ -23,25 +23,25 @@ export namespace VE { namespace Runtime
 		auto GetName()	const -> RawString				{ return "main"; }
 		auto GetSize()  const -> VkDeviceSize			{ return Data.size(); }
 		auto GetData()  const -> const Array<Byte>&		{ return Data; }
-		auto GetStage() const -> VkShaderStageFlagBits	{ return Stage.Flags; }
+		auto GetStage() const -> VkShaderStageFlagBits	{ return Stage; }
 
 		auto GetHandle()			const { return Handle; }
 		operator VkShaderModule()	const { return Handle; }
 
 	public:
 		VulkanShader() noexcept = delete;
-		VulkanShader(VulkanShaderStages ShaderType, const Array<Byte>& ShadingCode);
+		VulkanShader(VulkanShaderStages::Option ShaderType, const Array<Byte>& ShadingCode);
 		~VulkanShader() noexcept;
 		
 	private:
 		VkShaderModule			Handle{ VK_NULL_HANDLE };
-		VulkanShaderStages		Stage;
+		VkShaderStageFlagBits	Stage;
 		Array<Byte>				Data;
 	};
 
 	VulkanShader::
-	VulkanShader(VulkanShaderStages Stage, const Array<Byte>& ShadingCode)
-		:Stage{Stage}, Data{ShadingCode}
+	VulkanShader(VulkanShaderStages::Option ShaderType, const Array<Byte>& ShadingCode)
+		:Stage{VkShaderStageFlagBits(ShaderType)}, Data{ShadingCode}
 	{
 		Assert(!Data.empty());
 		VkShaderModuleCreateInfo CreateInfo

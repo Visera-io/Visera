@@ -17,8 +17,9 @@ export namespace VISERA_APP_NAMESPACE
 	CALL CreateShader(ShaderStages Stage, const Array<Byte>& ShadingCode) -> SharedPtr<Shader> { return VE::Runtime::RHI::CreateShader(Stage, ShadingCode); }
 
 	using CommandBuffer = VE::Runtime::VulkanCommandPool::CommandBuffer;
-	CALL CreateDrawCalls			(CommandBuffer::Level Level = CommandBuffer::Level::Primary) -> SharedPtr<CommandBuffer> { return VE::Runtime::RHI::GetResetableGraphicsCommandPool().Allocate(Level); }
-	CALL CreateOneTimeDrawCalls		(CommandBuffer::Level Level = CommandBuffer::Level::Primary) -> SharedPtr<CommandBuffer> { return VE::Runtime::RHI::GetTransientGraphicsCommandPool().Allocate(Level); }
+	using CommandBufferLevel = CommandBuffer::Level;
+	CALL CreateDrawCalls			(CommandBufferLevel Level = CommandBufferLevel::Primary) -> SharedPtr<CommandBuffer> { return VE::Runtime::RHI::GetResetableGraphicsCommandPool().Allocate(Level); }
+	CALL CreateOneTimeDrawCalls		(CommandBufferLevel Level = CommandBufferLevel::Primary) -> SharedPtr<CommandBuffer> { return VE::Runtime::RHI::GetTransientGraphicsCommandPool().Allocate(Level); }
 	
 	using Fence			= VE::Runtime::VulkanFence;
 	CALL CreateFence				()	-> SharedPtr<Fence>		{ return VE::Runtime::RHI::CreateFence(); }

@@ -16,7 +16,6 @@ export namespace VE { namespace Runtime
 		static void
 		Bootstrap()
 		{
-			
 		}
 		static void
 		Terminate()

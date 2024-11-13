@@ -11,6 +11,7 @@
 #include <format>
 #include <chrono>
 #include <algorithm>
+#include <array>
 #include <thread>
 #include <ranges>
 #include <memory>
@@ -98,6 +99,7 @@ namespace VE
         1. Array
         2. Set
         3. HashMap
+        4. Segment
     */
 
     template<typename T>
@@ -111,6 +113,9 @@ namespace VE
 
     template<Hashable Key, typename Value>
     using HashMap  = std::unordered_map<Key, Value>;
+
+    template<typename T, size_t Length>
+    using Segment  = std::array<T, Length>;
 
     /* <<  Pointers >>
         1. SharedPtr

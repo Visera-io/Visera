@@ -10,7 +10,8 @@
             "spdlog",
             "eigen3",
             "volk",
-            "glfw3"
+            "glfw3",
+            "directx-dxc"
         ]
     }
 }
