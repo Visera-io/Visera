@@ -16,6 +16,7 @@ export namespace VE { namespace Runtime
 
     struct VulkanAccessPermissions
     {
+		enum Option : VkFlags {};
         struct Read { enum Option : VkFlags
         {
 			None					= VK_ACCESS_NONE,
@@ -42,9 +43,6 @@ export namespace VE { namespace Runtime
             Host					= VK_ACCESS_HOST_WRITE_BIT,
             Memory					= VK_ACCESS_MEMORY_WRITE_BIT,
         }; };
-
-		VkAccessFlagBits Flags;
-		VulkanAccessPermissions(VkFlags Flags) : Flags{ VkAccessFlagBits(Flags) } {}
     };
 
     struct VulkanShaderStages

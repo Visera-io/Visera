@@ -38,20 +38,7 @@ export namespace VE { namespace Runtime
 			operator VkFramebuffer() const { return Handle; }
 			~FrameBuffer() { vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks); Handle = VK_NULL_HANDLE; }
 		};
-		struct SubpassSettings
-		{
-			struct AttachmentDescription{
-				FrameBuffer::TextureIndex	Location = ~0U; // Index In the FrameBuffer
-				VulkanImageLayouts::Option	Layout;
-			};
 
-			Array<AttachmentDescription>	 InputAttachments;
-			Array<AttachmentDescription>	 ColorAttachments;
-			Segment<AttachmentDescription,1> DepthStencilAttachment;
-
-			Array<AttachmentDescription>	 ResolveAttachments;
-			Array<FrameBuffer::TextureIndex> PreservveAttachments;
-		};
 		auto GetSubpasses() const -> const Array<UniquePtr<Subpass>>&  { return Subpasses; }
 		auto GetHandle()	const -> VkRenderPass			{ return Handle; }
 		operator VkRenderPass()	const { return Handle; }
@@ -59,9 +46,10 @@ export namespace VE { namespace Runtime
 	public:
 		class Subpass
 		{
+			friend class VulkanRenderPass;
 		public:
 			//[TODO] UseSubpassCreateInfo
-			void Create(VkRenderPass HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders);
+			void Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders);
 			void Destroy() noexcept;
 
 			auto GetLayout()	const  ->	VkPipelineLayout			{ return Layout; }
@@ -79,6 +67,7 @@ export namespace VE { namespace Runtime
 			Array<VkViewport>						Viewports;
 			Array<VkRect2D>							Scissors;
 
+			//[TODO]: Add Builders to subsitute CreateInfo
 			VkPipelineVertexInputStateCreateInfo	VertexInputState;
 			VkPipelineTessellationStateCreateInfo	TessellationState;
 			VkPipelineInputAssemblyStateCreateInfo	InputAssemblyState;
@@ -87,8 +76,8 @@ export namespace VE { namespace Runtime
 			VkPipelineMultisampleStateCreateInfo	MultisampleState;
 			VkPipelineDepthStencilStateCreateInfo	DepthStencilState;
 			VkPipelineColorBlendStateCreateInfo		ColorBlendState;
-			VkPipelineDynamicStateCreateInfo		DynamicState;
 			Array<VkPipelineColorBlendAttachmentState> ColorBlendAttachments;
+			Array<VkDynamicState>					DynamicStates{VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
 		public:
 			Subpass();
 			~Subpass() noexcept { Destroy(); }
@@ -101,9 +90,31 @@ export namespace VE { namespace Runtime
 		Array<FrameBuffer>				FrameBuffers;
 		Array<VkAttachmentDescription>  Attachments;
 
+		struct SubpassDescription
+		{
+			struct AttachmentReference{ // === VkAttachmentReference
+				FrameBuffer::TextureIndex	Location = ~0U; // Index In the FrameBuffer
+				VulkanImageLayouts::Option	Layout;
+			};
+
+			Array<AttachmentReference>		InputAttachments;
+			Array<AttachmentReference>		ColorAttachments;
+			Segment<AttachmentReference,1>	DepthStencilAttachment;
+
+			Array<AttachmentReference>		 ResolveAttachments;
+			Array<FrameBuffer::TextureIndex> PreservveAttachments;
+		};
+
+		struct SubpassDependency
+		{
+			VulkanPipelineStages::Option	SourceStage;
+			VulkanAccessPermissions::Option SourceStageAccessPermissions;
+			VulkanPipelineStages::Option	DestinationStage;
+			VulkanAccessPermissions::Option DestinationStageAccessPermissions;
+		};
 		Array<UniquePtr<Subpass>>		Subpasses;
-		Array<VkSubpassDescription>		SubpassDescriptions;
-		Array<VkSubpassDependency>		SubpassDependencies;
+		Array<SubpassDescription>		SubpassDescriptions;
+		Array<SubpassDependency>		SubpassDependencies;
 
 	protected:
 		void Create();
@@ -153,21 +164,6 @@ export namespace VE { namespace Runtime
 		 FrameBuffers(GVulkan->Swapchain->GetImages().size())
 	{
 		//!!!Remeber to call VulkanRenderPass::Create() in the Derived Renderpass!!!
-		Assert(VK_SUBPASS_EXTERNAL == UInt32(0 - 1));
-		for (UInt32 Idx = 0; Idx < SubpassCount; ++Idx)
-		{
-			SubpassDescriptions[Idx] = VkSubpassDescription
-			{
-				.flags = 0x0,
-				.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
-			};
-			SubpassDependencies[Idx] = VkSubpassDependency
-			{
-				.srcSubpass = Idx - 1,
-				.dstSubpass = Idx,
-				.dependencyFlags = 0x0,
-			};
-		}
 	}
 
 	VulkanRenderPass::
@@ -181,7 +177,52 @@ export namespace VE { namespace Runtime
 	{
 		Assert(!Subpasses.empty() &&
 				Subpasses.size() == SubpassDescriptions.size() == SubpassDependencies.size());
+		
+		Array<VkSubpassDescription> SubpassDescriptionInfos(Subpasses.size());
+		Array<VkSubpassDependency>  SubpassDependencyInfos(Subpasses.size());
 
+		for (UInt32 Idx = 0; Idx < Subpasses.size(); ++Idx)
+		{
+			auto& Description = SubpassDescriptions[Idx];
+			SubpassDescriptionInfos[Idx] = VkSubpassDescription
+			{
+				.flags					= 0x0,
+				.pipelineBindPoint		= VK_PIPELINE_BIND_POINT_GRAPHICS,
+				.inputAttachmentCount	= UInt32(Description.InputAttachments.size()),
+				.pInputAttachments		= reinterpret_cast<VkAttachmentReference*>(Description.InputAttachments.data()),
+				.colorAttachmentCount	= UInt32(Description.ColorAttachments.size()),
+				.pColorAttachments		= reinterpret_cast<VkAttachmentReference*>(Description.ColorAttachments.data()),
+				.pResolveAttachments	= reinterpret_cast<VkAttachmentReference*>(Description.ResolveAttachments.data()),
+				.pDepthStencilAttachment= Description.DepthStencilAttachment[0].Location == ~0U? 
+										  VK_NULL_HANDLE : reinterpret_cast<VkAttachmentReference*>(Description.DepthStencilAttachment.data()),
+				.preserveAttachmentCount= UInt32(Description.PreservveAttachments.size()),
+				.pPreserveAttachments	= Description.PreservveAttachments.data(),
+			};
+
+			auto& Dependency = SubpassDependencies[Idx];
+			Assert(VK_SUBPASS_EXTERNAL == UInt32(0 - 1));
+			SubpassDependencyInfos[Idx] = VkSubpassDependency
+			{
+				.srcSubpass = Idx - 1,
+				.dstSubpass = Idx,
+				.srcStageMask = Dependency.SourceStage,
+				.dstStageMask = Dependency.DestinationStage,
+				.srcAccessMask = Dependency.SourceStageAccessPermissions,
+				.dstAccessMask = Dependency.DestinationStageAccessPermissions,
+				.dependencyFlags = 0x0,
+			};
+		}
+
+		VkRenderPassCreateInfo CreateInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+			.attachmentCount = UInt32(Attachments.size()),
+			.subpassCount	 = UInt32(SubpassDescriptionInfos.size()),
+			.pSubpasses		 = SubpassDescriptionInfos.data(),
+			.dependencyCount = UInt32(SubpassDependencyInfos.size()),
+			.pDependencies	 = SubpassDependencyInfos.data(),
+		};
+		VK_CHECK(vkCreateRenderPass(GVulkan->Device->GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
 	}
 
 	void VulkanRenderPass::
@@ -206,7 +247,6 @@ export namespace VE { namespace Runtime
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO,
 			.patchControlPoints = 0, // Disabled
 		} },
-
 		InputAssemblyState{ VkPipelineInputAssemblyStateCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
@@ -268,18 +308,13 @@ export namespace VE { namespace Runtime
 			.attachmentCount	= UInt32(ColorBlendAttachments.size()),
 			.pAttachments		= ColorBlendAttachments.data(),
 			.blendConstants		= {0.0f, 0.0f, 0.0f, 0.0f}
-		} },
-		DynamicState{ VkPipelineDynamicStateCreateInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-			.dynamicStateCount = 0,
-		}}
+		} }
 	{
 		//!!!Remeber to call Subpass::Create() in Renderpass!!!
 	}
 
 	void VulkanRenderPass::Subpass::
-	Create(VkRenderPass HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders)
+	Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders)
 	{
 		//[TODO][FIXME]: Add SPIR-V Reflection?
 		VkPipelineLayoutCreateInfo LayoutCreateInfo
@@ -304,6 +339,15 @@ export namespace VE { namespace Runtime
 			};
 		}
 
+		VkPipelineDynamicStateCreateInfo DyncmicStateCreateInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+			.dynamicStateCount = UInt32(DynamicStates.size()),
+			.pDynamicStates = DynamicStates.data()
+		};
+
+		//!!!Call Subpass::Create() in the RenderPass::Create()!!!
+		Assert(HostRenderPass.GetHandle() != VK_NULL_HANDLE);
 		VkGraphicsPipelineCreateInfo CreateInfo =
 		{
 			.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -316,9 +360,9 @@ export namespace VE { namespace Runtime
 			.pMultisampleState		= &MultisampleState,
 			.pDepthStencilState		= &DepthStencilState,	// Optional
 			.pColorBlendState		= &ColorBlendState,
-			.pDynamicState			= &DynamicState,
+			.pDynamicState			= &DyncmicStateCreateInfo,
 			.layout					= Layout,
-			.renderPass				= HostRenderPass,
+			.renderPass				= HostRenderPass.GetHandle(),
 			.basePipelineHandle		= VK_NULL_HANDLE,		// Optional
 			.basePipelineIndex		= -1,					// Optional
 		};
