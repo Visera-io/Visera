@@ -22,13 +22,25 @@ export namespace VE { namespace Runtime
 		friend class ViseraRuntime;
 	private:
 		static inline void
-		Tick()
+		Tick(SharedPtr<RHI::CommandBuffer> AppDrawCalls)
 		{
 			if (!RuntimeContext::MainLoop.ShouldStop())
 			{
 				//Check Window State
 				if (Platform::GetWindow().ShouldClose())
 				{ return RuntimeContext::MainLoop.Stop(); }
+
+				auto& CurrentFrame = RHI::WaitForSwapchain();
+				
+				RHI::CommandPool::SubmitInfo Submit
+				{
+					.Deadlines = {RHI::PipelineStages::ColorAttachmentOutput},
+					.CommandBuffers = {AppDrawCalls->GetHandle()},
+					.WaitSemaphores = { CurrentFrame.Semaphore_ReadyToRender },
+					.SignalSemaphores = { CurrentFrame.Semaphore_ReadyToPresent },
+				};
+				RHI::GetResetableGraphicsCommandPool().Submit(Submit);
+				RHI::PresentSwapchain(CurrentFrame.Semaphore_ReadyToPresent);
 
 				Platform::GetWindow().PollEvents();
 			}
@@ -38,7 +50,7 @@ export namespace VE { namespace Runtime
 		Bootstrap()
 		{
 			if (!RuntimeContext::Render.IsOffScreenRendering())
-			{ Platform::GetWindow(); }
+			{ Platform::GetWindow(); } // Create Window
 			RHI::Bootstrap();
 		}
 

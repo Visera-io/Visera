@@ -41,10 +41,11 @@ export namespace VE { namespace Runtime
 				Secondary	= VK_COMMAND_BUFFER_LEVEL_SECONDARY,
 			};
 		public:
-			Bool IsRecording()	const { return bRecording; }
-			Bool IsPrimary()	const { return Type == VK_COMMAND_BUFFER_LEVEL_PRIMARY; }
 			void StartRecording();
 			void StopRecording();
+
+			Bool IsRecording()	const { return bRecording; }
+			Bool IsPrimary()	const { return Type == VK_COMMAND_BUFFER_LEVEL_PRIMARY; }
 			auto GetLevel()		const -> VkCommandBufferLevel { return Type; }
 
 			auto GetHandle() const -> VkCommandBuffer { return Handle; }
@@ -62,14 +63,16 @@ export namespace VE { namespace Runtime
 			~CommandBuffer() noexcept;
 		};
 
+		auto GetType() const -> PoolType { return PoolType(Type); }
 		auto Allocate(CommandBuffer::Level Level) const -> SharedPtr<CommandBuffer>;
 		void Free(VkCommandBuffer CommandBuffer)  const;
 		struct SubmitInfo
 		{
+			Array<VkPipelineStageFlags> Deadlines;
 			Array<VkCommandBuffer>		CommandBuffers;
 			Array<VkSemaphore>			WaitSemaphores;
 			Array<VkSemaphore>			SignalSemaphores;
-			VulkanFence					Fence;
+			SharedPtr<VulkanFence>		Fence;
 		};
 		void Submit(const SubmitInfo& SubmitInfo) const;
 
@@ -149,22 +152,22 @@ export namespace VE { namespace Runtime
 	void VulkanCommandPool::
 	Submit(const SubmitInfo& SubmitInfo) const
 	{
-		//[TODO]
-		/*VkSubmitInfo SubmitInfo
+		VkSubmitInfo FinalSubmitInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-			.waitSemaphoreCount = UInt32(submitinfo.wait_semaphores.size()),
-			.pWaitSemaphores = submitinfo.wait_semaphores.data(),
-			.pWaitDstStageMask = &submitinfo.wait_stages,
-			.commandBufferCount = UInt32(Commands.size()),
-			.pCommandBuffers = Commands.data(),
-			.signalSemaphoreCount = static_cast<uint32_t>(submitinfo.signal_semaphores.size()),
-			.pSignalSemaphores = submitinfo.signal_semaphores.data()
+			.waitSemaphoreCount = UInt32(SubmitInfo.WaitSemaphores.size()),
+			.pWaitSemaphores	= SubmitInfo.WaitSemaphores.data(),
+			.pWaitDstStageMask  = SubmitInfo.Deadlines.data(),
+			.commandBufferCount = UInt32(SubmitInfo.CommandBuffers.size()),
+			.pCommandBuffers	= SubmitInfo.CommandBuffers.data(),
+			.signalSemaphoreCount = UInt32(SubmitInfo.SignalSemaphores.size()),
+			.pSignalSemaphores	= SubmitInfo.SignalSemaphores.data()
 		};
-		if (SubmitInfo.Fence != VK_NULL_HANDLE)
-		{
-
-		}*/
+		
+		VkQueue Queue = GVulkan->Device->GetQueueFamily(QueueFamilyType).Queues.front();
+		//[FIXME]: Revise the last parameter.
+		if (VK_SUCCESS != vkQueueSubmit(Queue, 1, &FinalSubmitInfo, SubmitInfo.Fence ? SubmitInfo.Fence->GetHandle() : VK_NULL_HANDLE));
+		{ Log::Fatal("Failed to submit current commandbuffers!"); }
 	}
 
 	VulkanCommandPool::CommandBuffer::
@@ -185,6 +188,9 @@ export namespace VE { namespace Runtime
 	StartRecording()
 	{
 		Assert(!IsRecording());
+
+		if(VulkanCommandPool::PoolType::Resetable ==  HostCommandPool.GetType())
+		{ vkResetCommandBuffer(Handle, 0x0); }
 
 		VkCommandBufferBeginInfo BeginInfo
 		{

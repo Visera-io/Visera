@@ -9,10 +9,10 @@ export import Visera.Engine.Runtime;
 import Visera.App;
 import Visera.Engine.Internal;
 
-export namespace VE
+namespace VE
 {
 
-	class Visera final
+	export class Visera final
 	{
 	public:
 		static inline Int32
@@ -21,27 +21,31 @@ export namespace VE
 			Log::Info("App Started Running");
 			try
 			{
-				Bootstrap();
 				if (App)
 				{
-					do { App->Tick(); } while (RuntimeTick());
+					do { App->Tick(); } while (RuntimeTick(App));
 				}
 				else Log::Warn("Visera App is not created");
-				Terminate();
+			}
+			catch (const VE::AppExitSignal& Signal)
+			{
+				Log::Info(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
 			}
 			catch (const VE::RuntimeError& Error)
 			{
 				Log::Error("Unsolved Visera runtime error:\n{}{}", Error.What(), Error.Where());
 				return EXIT_FAILURE;
 			}
-			catch (const VE::AppExitSignal& Signal)
-			{ Log::Info(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where()); }
+			catch (const std::exception& Error)
+			{ 
+				Log::Error("Unexcepted Error:\n{}", Error.what());
+				return EXIT_FAILURE;
+			}
 			if (App) delete App;
 			return EXIT_SUCCESS;
 		}
 
-		static inline void
-		Bootstrap()
+		Visera()
 		{
 			Log::Debug("Bootstrapping Visera Internal...");
 			ViseraInternal::Bootstrap();
@@ -54,8 +58,7 @@ export namespace VE
 #endif
 		}
 
-		static inline void
-		Terminate()
+		~Visera()
 		{
 #if defined(VISERA_RUNTIME)
 			Log::Debug("Terminating Visera Runtime...");
@@ -67,7 +70,9 @@ export namespace VE
 			ViseraInternal::Terminate();
 		}
 	private:
-		static inline std::function<Bool()> RuntimeTick = []() -> Bool { return False; };
+		static inline std::function<Bool(ViseraApp* App)> RuntimeTick = [](ViseraApp* App) -> Bool { return False; };
 	};
+
+	static const inline Visera ViseraEngine{};
 	
 } // namespace VE

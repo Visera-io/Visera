@@ -16,31 +16,48 @@ export namespace VE { namespace Runtime
 	{
 		friend class Render;
 	public:
+		using Semaphore			= VulkanSemaphore;
+		using CommandPool		= VulkanCommandPool;
+		using CommandBuffer		= CommandPool::CommandBuffer;
+		using Fence				= VulkanFence;
 		using Shader			= VulkanShader;
 		using ShaderStages		= VulkanShaderStages::Option;
 		using RenderPass		= VulkanRenderPass;
-		using AccessPermission	= VulkanAccessPermissions;
+		using AccessPermissions	= VulkanAccessPermissions;
 		using PipelineStages	= VulkanPipelineStages;
+		using ImageLayouts		= VulkanImageLayouts;
+		using PipelineStages	= VulkanPipelineStages;
+		using AttachmentIO		= VulkanAttachmentIO;
+
 	public:
 		static inline auto
-		GetResetableGraphicsCommandPool()	-> VulkanCommandPool& { return ResetableGraphicsCommandPool; }
+		GetResetableGraphicsCommandPool()	-> CommandPool& { return ResetableGraphicsCommandPool; }
 		static inline auto
-		GetTransientGraphicsCommandPool()	-> VulkanCommandPool& { return TransientGraphicsCommandPool; }
+		GetTransientGraphicsCommandPool()	-> CommandPool& { return TransientGraphicsCommandPool; }
 		static inline auto
-		CreateFence()						-> SharedPtr<VulkanFence> { return CreateSharedPtr<VulkanFence>(); }
+		GetSwapchain()						-> const VulkanSwapchain& { return Vulkan::Swapchain; }
 		static inline auto
-		CreateSignaledFence()				-> SharedPtr<VulkanFence> { return CreateSharedPtr<VulkanFence>(true); }
+		CreateFence()						-> SharedPtr<Fence> { return CreateSharedPtr<Fence>(); }
 		static inline auto
-		CreateSemaphore()					-> SharedPtr<VulkanSemaphore> { return CreateSharedPtr<VulkanSemaphore>(); }
+		CreateSignaledFence()				-> SharedPtr<Fence> { return CreateSharedPtr<Fence>(true); }
 		static inline auto
-		CreateSignaledSemaphore()			-> SharedPtr<VulkanSemaphore> { return CreateSharedPtr<VulkanSemaphore>(true); }
+		CreateSemaphore()					-> SharedPtr<Semaphore> { return CreateSharedPtr<Semaphore>(); }
 		static inline auto
-		CreateShader(ShaderStages Stage, const Array<Byte> ShadingCode) { return CreateSharedPtr<VulkanShader>(Stage, ShadingCode);
-	}
+		CreateSignaledSemaphore()			-> SharedPtr<Semaphore> { Assert(False, "Not Supported by Vulkan"); return CreateSharedPtr<Semaphore>(true); }
+		static inline auto
+		CreateShader(ShaderStages Stage, const Array<Byte>& ShadingCode) { return CreateSharedPtr<VulkanShader>(Stage, ShadingCode);}
 
 	private:
-		static inline VulkanCommandPool ResetableGraphicsCommandPool{};
-		static inline VulkanCommandPool TransientGraphicsCommandPool{};
+		static inline
+		const VulkanSwapchain::Frame&
+		WaitForSwapchain() throw(VulkanSwapchain::RecreateSignal) { return Vulkan::Swapchain.WaitForNextFrame(); }
+
+		static inline void
+		PresentSwapchain(const Semaphore& ExternalCommandBuffer) throw(VulkanSwapchain::RecreateSignal) {  Vulkan::Swapchain.Present(ExternalCommandBuffer); }
+
+	private:
+		static inline CommandPool ResetableGraphicsCommandPool{};
+		static inline CommandPool TransientGraphicsCommandPool{};
 
 	private:
 		RHI() noexcept = default;

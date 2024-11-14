@@ -6,6 +6,7 @@ module;
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:Swapchain;
 
 import :Context;
+import :Common;
 import :Allocator;
 import :GPU;
 import :Device;
@@ -25,20 +26,36 @@ export namespace VE { namespace Runtime
 	{
 		friend class Vulkan;
 	public:
+		struct Frame
+		{
+			VulkanSemaphore Semaphore_ReadyToRender;
+			VulkanSemaphore Semaphore_ReadyToPresent;
+			VulkanFence		Fence_ReadyToRender{ True };
+		};
+		class RecreateSignal : public std::exception { public: RecreateSignal() noexcept = default; };
+		auto WaitForNextFrame(VkFence SignalFence = VK_NULL_HANDLE) throw(RecreateSignal) -> const VulkanSwapchain::Frame&;
+		void Present(VkSemaphore RenderSemaphore) throw(RecreateSignal);
+
 		auto GetCursor()			const   -> UInt32					{ return Cursor; }
 		auto GetExtent()			const	-> const VkExtent2D&		{ return ImageExtent; }
 		auto GetFormat()			const	-> VkFormat					{ return ImageFormat; }
 		auto GetColorSpace()		const	-> VkColorSpaceKHR			{ return ImageColorSpace; }
 		auto GetImages()			const	-> const Array<VkImage>&	{ return Images; }
-		auto GetCurrentImage()		const	-> VkImage					{ return Images[Cursor]; }
+		auto GetImageViews()		const	-> const Array<VkImageView> { return ImageViews; }
 		auto GetHandle()			const	-> VkSwapchainKHR			{ return Handle; }
 		operator VkSwapchainKHR()	const	{ return Handle; }
 
 	private:
+		auto GetCurrentFrame() -> Frame& { return Frames[Cursor]; }
+		void MoveCursor(UInt32 Stride) { Cursor = (Cursor + Stride) % Images.size(); }
+
+	private:
 		VkSwapchainKHR			Handle{ VK_NULL_HANDLE };
-				
+		
 		VkPresentModeKHR		PresentMode		= VK_PRESENT_MODE_FIFO_RELAXED_KHR;
-		UInt32					Cursor{ 0 };	// Current image index for rendering
+		
+		Array<Frame>			Frames;
+		UInt32					Cursor{ 0 };	// Current Frame Index
 
 		Array<VkImage>			Images;			// Size: Clamp(minImageCount + 1, maxImageCount)
 		Array<VkImageView>		ImageViews;
@@ -155,8 +172,8 @@ export namespace VE { namespace Runtime
 			.imageColorSpace		= ImageColorSpace,
 			.imageExtent			= ImageExtent,
 			.imageArrayLayers		= 1,
-			.imageUsage				= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
-									  VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+			.imageUsage				= VulkanImageUsages::ColorAttachment |
+									  VulkanImageUsages::TransferDestination,
 			.imageSharingMode		= GVulkan->GPU->IsDiscreteGPU()? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT,
 			.queueFamilyIndexCount	= GVulkan->GPU->IsDiscreteGPU()? 0U : 2U,
 			.pQueueFamilyIndices	= GVulkan->GPU->IsDiscreteGPU()? nullptr : QueuefamilyIndices.data(),
@@ -186,6 +203,7 @@ export namespace VE { namespace Runtime
 							.b = VK_COMPONENT_SWIZZLE_IDENTITY,
 							.a = VK_COMPONENT_SWIZZLE_IDENTITY
 							},
+
 				.subresourceRange{
 							.aspectMask		= VK_IMAGE_ASPECT_COLOR_BIT,
 							.baseMipLevel	= 0,
@@ -197,8 +215,9 @@ export namespace VE { namespace Runtime
 			VK_CHECK(vkCreateImageView(GVulkan->Device->GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks,&ImageViews[Idx]));
 		}
 
-		//Reset Cursor
+		//Init Frames
 		Cursor = 0;
+		Frames.resize(Images.size());
 	}
 
 	void VulkanSwapchain::
@@ -208,8 +227,65 @@ export namespace VE { namespace Runtime
 		{
 			vkDestroyImageView(GVulkan->Device->GetHandle(), ImageView, VulkanAllocator::AllocationCallbacks);
 		}
+		Frames.clear();
+
 		vkDestroySwapchainKHR(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
+	}
+
+	const VulkanSwapchain::Frame& VulkanSwapchain::
+	WaitForNextFrame(VkFence SignalFence/* = VK_NULL_HANDLE*/)
+	throw(RecreateSignal)
+	{
+		MoveCursor(1);
+
+		auto& CurrentFrame = GetCurrentFrame();
+		CurrentFrame.Fence_ReadyToRender.Wait();
+		{
+			auto Result = vkAcquireNextImageKHR(GVulkan->Device->GetHandle(),
+												Handle,
+												UINT64_MAX,
+									/*Signal*/  CurrentFrame.Semaphore_ReadyToRender,
+									/*Signal*/  SignalFence,
+												&Cursor);
+			if (VK_ERROR_OUT_OF_DATE_KHR == Result ||
+				VK_SUBOPTIMAL_KHR		 == Result)
+			{
+				//recreate_swapchain();
+				throw RecreateSignal{};
+			}
+			if (Result != VK_SUCCESS) Log::Fatal("Failed to retrive the next image from the Vulkan Swapchain!");	
+		}
+		CurrentFrame.Fence_ReadyToRender.Reset();
+
+		return CurrentFrame;
+	}
+
+	void VulkanSwapchain::
+	Present(VkSemaphore Semaphore_RenderCompleted)
+	throw(RecreateSignal)
+	{
+		auto& CurrentFrame = GetCurrentFrame();
+
+		VkPresentInfoKHR PresentInfo
+		{
+			.sType				= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+			.waitSemaphoreCount = 1,
+			.pWaitSemaphores	= &Semaphore_RenderCompleted,
+			.swapchainCount		= 1,
+			.pSwapchains		= &Handle,
+			.pImageIndices		= &Cursor,
+			.pResults			= nullptr // It is not necessary if you are only using a single swap chain
+		};
+		auto Result = vkQueuePresentKHR(GVulkan->Device->GetQueueFamily(VulkanDevice::QueueFamilyType::Present).Queues.front(), &PresentInfo);
+
+		if (VK_ERROR_OUT_OF_DATE_KHR == Result ||
+			VK_SUBOPTIMAL_KHR		 == Result)
+		{
+			//recreate_swapchain();
+			throw RecreateSignal{};
+		}
+		if (Result != VK_SUCCESS) Log::Fatal("Failed to present the Vulkan Swapchain! (Cursor:{})", Cursor);
 	}
 
 } } // namespace VE::Runtime

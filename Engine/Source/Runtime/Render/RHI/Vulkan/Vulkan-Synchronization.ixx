@@ -35,7 +35,8 @@ export namespace VE { namespace Runtime
 	{
 		friend class Vulkan;
 	public:
-		void Wait(UInt64 Timeout = UINT64_MAX) const { Assert(!IsSignaled()); vkWaitForFences(GVulkan->Device->GetHandle(), 1, &Handle, VK_TRUE, Timeout); }
+		enum WaitTime : UInt64 { Forever = UINT64_MAX };
+		void Wait(WaitTime Timeout = Forever) const { vkWaitForFences(GVulkan->Device->GetHandle(), 1, &Handle, VK_TRUE, Timeout); }
 		void Reset()		const { Assert(IsSignaled()); vkResetFences(GVulkan->Device->GetHandle(), 1, &Handle); }
 		Bool IsSignaled()	const { return VK_SUCCESS == vkGetFenceStatus(GVulkan->Device->GetHandle(), Handle); }
 

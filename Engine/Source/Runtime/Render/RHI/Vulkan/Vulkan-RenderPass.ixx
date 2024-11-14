@@ -26,6 +26,7 @@ export namespace VE { namespace Runtime
 		class Subpass;
 	public:
 		virtual void Start(SharedPtr<VulkanCommandPool::CommandBuffer> CommandBuffer) const;
+		virtual void Render(SharedPtr<VulkanCommandPool::CommandBuffer> CommandBuffer) = 0;
 		virtual void Stop(SharedPtr<VulkanCommandPool::CommandBuffer>  CommandBuffer) const;
 		//VkSubpassDependency
 		struct FrameBuffer
@@ -64,20 +65,17 @@ export namespace VE { namespace Runtime
 			VkPipelineLayout		Layout { VK_NULL_HANDLE };
 
 			Array<VkPipelineShaderStageCreateInfo>	ShaderStages;
-			Array<VkViewport>						Viewports;
-			Array<VkRect2D>							Scissors;
-
 			//[TODO]: Add Builders to subsitute CreateInfo
-			VkPipelineVertexInputStateCreateInfo	VertexInputState;
-			VkPipelineTessellationStateCreateInfo	TessellationState;
-			VkPipelineInputAssemblyStateCreateInfo	InputAssemblyState;
-			VkPipelineViewportStateCreateInfo		ViewportState;
-			VkPipelineRasterizationStateCreateInfo	RasterizationState;
-			VkPipelineMultisampleStateCreateInfo	MultisampleState;
-			VkPipelineDepthStencilStateCreateInfo	DepthStencilState;
-			VkPipelineColorBlendStateCreateInfo		ColorBlendState;
-			Array<VkPipelineColorBlendAttachmentState> ColorBlendAttachments;
-			Array<VkDynamicState>					DynamicStates{VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+			/*1*/VkPipelineVertexInputStateCreateInfo	VertexInputState;
+			/*2*/VkPipelineTessellationStateCreateInfo	TessellationState;
+			/*3*/VkPipelineInputAssemblyStateCreateInfo	InputAssemblyState;
+			/*4*/Array<VkViewport>						Viewports;    //Default(1)
+				 Array<VkRect2D>						Scissors;     //Default(1)
+			/*5*/VkPipelineRasterizationStateCreateInfo	RasterizationState;
+			/*6*/VkPipelineMultisampleStateCreateInfo	MultisampleState;
+			/*7*/VkPipelineDepthStencilStateCreateInfo	DepthStencilState;
+			/*8*/Array<VkPipelineColorBlendAttachmentState> ColorBlendAttachments; //Default(1)
+			/*9*/Array<VkDynamicState>					DynamicStates{/*VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR*/};
 		public:
 			Subpass();
 			~Subpass() noexcept { Destroy(); }
@@ -116,7 +114,7 @@ export namespace VE { namespace Runtime
 		Array<SubpassDescription>		SubpassDescriptions;
 		Array<SubpassDependency>		SubpassDependencies;
 
-	protected:
+	public:
 		void Create();
 		void Destroy();
 
@@ -213,16 +211,35 @@ export namespace VE { namespace Runtime
 			};
 		}
 
+		Assert(!Attachments.empty());
 		VkRenderPassCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
 			.attachmentCount = UInt32(Attachments.size()),
+			.pAttachments	 = Attachments.data(),
 			.subpassCount	 = UInt32(SubpassDescriptionInfos.size()),
 			.pSubpasses		 = SubpassDescriptionInfos.data(),
 			.dependencyCount = UInt32(SubpassDependencyInfos.size()),
 			.pDependencies	 = SubpassDependencyInfos.data(),
 		};
 		VK_CHECK(vkCreateRenderPass(GVulkan->Device->GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
+	
+		//Create FrameBuffers
+		for (auto& FrameBuffer : FrameBuffers)
+		{
+			Assert(!FrameBuffer.RenderTargets.empty());
+			VkFramebufferCreateInfo FrameBufferCreateInfo
+			{
+				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+				.renderPass			= Handle,
+				.attachmentCount	= UInt32(FrameBuffer.RenderTargets.size()),
+				.pAttachments		= FrameBuffer.RenderTargets.data(),
+				.width  = RenderArea.extent.width,
+				.height = RenderArea.extent.height,
+				.layers = 1
+			};
+			VK_CHECK(vkCreateFramebuffer(GVulkan->Device->GetHandle(), &FrameBufferCreateInfo, VulkanAllocator::AllocationCallbacks, &FrameBuffer.Handle));
+		}
 	}
 
 	void VulkanRenderPass::
@@ -253,13 +270,16 @@ export namespace VE { namespace Runtime
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.primitiveRestartEnable = VK_FALSE,
 		} },
-		ViewportState{ VkPipelineViewportStateCreateInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-			.viewportCount	= UInt32(Viewports.size()),
-			.pViewports		= Viewports.data(),
-			.scissorCount	= UInt32(Scissors.size()),
-			.pScissors		= Scissors.data(),
+		Viewports{ {
+			.x		= 0.0f, 
+			.y		=	Float(GVulkan->Swapchain->GetExtent().height),
+			.width	=	Float(GVulkan->Swapchain->GetExtent().width),
+			.height	= - Float(GVulkan->Swapchain->GetExtent().height),
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f,} },
+		Scissors{{
+			.offset = { 0, 0 },
+			.extent = GVulkan->Swapchain->GetExtent(),
 		}},
 		RasterizationState{ VkPipelineRasterizationStateCreateInfo
 		{
@@ -300,14 +320,18 @@ export namespace VE { namespace Runtime
 			.minDepthBounds		= 0.0,
 			.maxDepthBounds		= 1.0,
 		} },
-		ColorBlendState{ VkPipelineColorBlendStateCreateInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-			.logicOpEnable		= VK_FALSE, // VK_FALSE: Mix Mode | VK_TRUE: Combine Mode
-			.logicOp			= VK_LOGIC_OP_COPY,
-			.attachmentCount	= UInt32(ColorBlendAttachments.size()),
-			.pAttachments		= ColorBlendAttachments.data(),
-			.blendConstants		= {0.0f, 0.0f, 0.0f, 0.0f}
+		ColorBlendAttachments{ {
+			.blendEnable			= VK_TRUE,
+			.srcColorBlendFactor	= VK_BLEND_FACTOR_SRC_ALPHA,
+			.dstColorBlendFactor	= VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+			.colorBlendOp			= VK_BLEND_OP_ADD,
+			.srcAlphaBlendFactor	= VK_BLEND_FACTOR_ONE,
+			.dstAlphaBlendFactor	= VK_BLEND_FACTOR_ZERO,
+			.alphaBlendOp			= VK_BLEND_OP_ADD,
+			.colorWriteMask			= VK_COLOR_COMPONENT_R_BIT |
+									  VK_COLOR_COMPONENT_G_BIT | 
+									  VK_COLOR_COMPONENT_B_BIT | 
+									  VK_COLOR_COMPONENT_A_BIT,
 		} }
 	{
 		//!!!Remeber to call Subpass::Create() in Renderpass!!!
@@ -344,6 +368,25 @@ export namespace VE { namespace Runtime
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
 			.dynamicStateCount = UInt32(DynamicStates.size()),
 			.pDynamicStates = DynamicStates.data()
+		};
+
+		auto ViewportState = VkPipelineViewportStateCreateInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+			.viewportCount	= UInt32(Viewports.size()),
+			.pViewports		= Viewports.data(),
+			.scissorCount	= UInt32(Scissors.size()),
+			.pScissors		= Scissors.data(),
+		};
+
+		auto ColorBlendState = VkPipelineColorBlendStateCreateInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+			.logicOpEnable		= VK_FALSE, // VK_FALSE: Mix Mode | VK_TRUE: Combine Mode
+			.logicOp			= VK_LOGIC_OP_COPY,
+			.attachmentCount	= UInt32(ColorBlendAttachments.size()),
+			.pAttachments		= ColorBlendAttachments.data(),
+			.blendConstants		= {0.0f, 0.0f, 0.0f, 0.0f}
 		};
 
 		//!!!Call Subpass::Create() in the RenderPass::Create()!!!

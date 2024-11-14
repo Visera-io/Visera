@@ -9,6 +9,8 @@ import Visera.Engine.Runtime.Context;
 import Visera.Engine.Core.Log;
 import Visera.Engine.Internal;
 
+import Visera.App;
+
 export namespace VE
 {
 	class Visera;
@@ -18,12 +20,14 @@ export namespace VE
 		friend class Visera;
 	private:
 		static inline Bool
-		Tick()
+		Tick(ViseraApp* App)
 		{
 			if (!Runtime::RuntimeContext::MainLoop.ShouldStop())
 			{
 				Runtime::Platform::Tick();
-				Runtime::Render::Tick();
+
+				Runtime::Render::Tick(App->RenderTick());
+
 				return True;
 			}
 			return False;

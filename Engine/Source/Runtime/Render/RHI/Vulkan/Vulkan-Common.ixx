@@ -13,36 +13,41 @@ export namespace VE { namespace Runtime
 	struct VulkanShaderStages;
 	struct VulkanPipelineStages;
 	struct VulkanImageLayouts;
+	struct VulkanImageUsages;
+	struct VulkanAttachmentIO;
 
     struct VulkanAccessPermissions
     {
-		enum Option : VkFlags {};
-        struct Read { enum Option : VkFlags
-        {
+		enum Option : VkFlags
+		{
 			None					= VK_ACCESS_NONE,
-            IndirectCommand			= VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
-            Index					= VK_ACCESS_INDEX_READ_BIT,
-            VertexAttribute			= VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT,
-            Uniform					= VK_ACCESS_UNIFORM_READ_BIT,
-            InputAttachment			= VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
-            Shader					= VK_ACCESS_SHADER_READ_BIT,
-            ColorAttachment			= VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
-            DepthStencilAttachment	= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
-            Transfer				= VK_ACCESS_TRANSFER_READ_BIT,
-            Host					= VK_ACCESS_HOST_READ_BIT,
-            Memory					= VK_ACCESS_MEMORY_READ_BIT,
-        }; };
 
-        struct Write { enum Option : VkFlags
-        {
-			None					= VK_ACCESS_NONE,
-            Shader					= VK_ACCESS_SHADER_WRITE_BIT,
-            ColorAttachment			= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-            DepthStencilAttachment	= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-            Transfer				= VK_ACCESS_TRANSFER_WRITE_BIT,
-            Host					= VK_ACCESS_HOST_WRITE_BIT,
-            Memory					= VK_ACCESS_MEMORY_WRITE_BIT,
-        }; };
+            R_IndirectCommand		= VK_ACCESS_INDIRECT_COMMAND_READ_BIT,
+            R_Index					= VK_ACCESS_INDEX_READ_BIT,
+            R_VertexAttribute		= VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT,
+            R_Uniform				= VK_ACCESS_UNIFORM_READ_BIT,
+            R_InputAttachment		= VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
+            R_Shader				= VK_ACCESS_SHADER_READ_BIT,
+            R_ColorAttachment		= VK_ACCESS_COLOR_ATTACHMENT_READ_BIT,
+            R_DepthStencilAttachment= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
+            R_Transfer				= VK_ACCESS_TRANSFER_READ_BIT,
+            R_Host					= VK_ACCESS_HOST_READ_BIT,
+            R_Memory				= VK_ACCESS_MEMORY_READ_BIT,
+
+            W_Shader				= VK_ACCESS_SHADER_WRITE_BIT,
+            W_ColorAttachment		= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+            W_DepthStencilAttachment= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            W_Transfer				= VK_ACCESS_TRANSFER_WRITE_BIT,
+            W_Host					= VK_ACCESS_HOST_WRITE_BIT,
+            W_Memory				= VK_ACCESS_MEMORY_WRITE_BIT,
+
+			X_Shader				= R_Shader					| W_Shader,
+			X_ColorAttachment		= R_ColorAttachment			| W_ColorAttachment,
+			X_DepthStencilAttachment= R_DepthStencilAttachment	| W_DepthStencilAttachment,
+			X_Transfer				= R_Transfer				| W_Transfer,
+			X_Host					= R_Host					| W_Host,
+			X_Memory				= R_Memory					| W_Memory,
+		};
     };
 
     struct VulkanShaderStages
@@ -110,7 +115,7 @@ export namespace VE { namespace Runtime
 
 	struct VulkanImageLayouts
 	{
-		enum Option
+		enum Option : VkFlags
 		{
 			Undefined 						= VK_IMAGE_LAYOUT_UNDEFINED,
 			General 						= VK_IMAGE_LAYOUT_GENERAL,
@@ -129,6 +134,54 @@ export namespace VE { namespace Runtime
 			StencilReadOnly					= VK_IMAGE_LAYOUT_STENCIL_READ_ONLY_OPTIMAL,
 			ReadOnly						= VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL,
 			Attachment						= VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+
+			Present							= VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+		};
+	};
+
+	struct VulkanImageUsages
+	{
+		enum Option : VkFlags
+		{
+			None	= 0x0,
+			All		= VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM,
+
+			TransferSource			= VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+			TransferDestination		= VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+			Sampled					= VK_IMAGE_USAGE_SAMPLED_BIT,
+			Storage					= VK_IMAGE_USAGE_STORAGE_BIT,
+			ColorAttachment			= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+			DepthStencilAttachment	= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+			TransientAttachment		= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
+			InputAttachment			= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
+			//VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR,
+			//VK_IMAGE_USAGE_VIDEO_DECODE_SRC_BIT_KHR,
+			//VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR,
+			/*VK_IMAGE_USAGE_FRAGMENT_DENSITY_MAP_BIT_EXT,
+			VK_IMAGE_USAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR,
+			VK_IMAGE_USAGE_HOST_TRANSFER_BIT_EXT,
+			VK_IMAGE_USAGE_VIDEO_ENCODE_DST_BIT_KHR,
+			VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR,
+			VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR,
+			VK_IMAGE_USAGE_ATTACHMENT_FEEDBACK_LOOP_BIT_EXT,
+			VK_IMAGE_USAGE_INVOCATION_MASK_BIT_HUAWEI,
+			VK_IMAGE_USAGE_SAMPLE_WEIGHT_BIT_QCOM,
+			VK_IMAGE_USAGE_SAMPLE_BLOCK_MATCH_BIT_QCOM,
+			VK_IMAGE_USAGE_SHADING_RATE_IMAGE_BIT_NV,*/
+		};
+	};
+
+	struct VulkanAttachmentIO //VkAttachmentStoreOp;
+	{
+		enum Option : VkFlags
+		{
+			I_Keep	 = VK_ATTACHMENT_LOAD_OP_LOAD,
+			I_Clear	 = VK_ATTACHMENT_LOAD_OP_CLEAR,
+			I_Whatever = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+
+			O_Store	 = VK_ATTACHMENT_STORE_OP_STORE,
+			O_None	 = VK_ATTACHMENT_STORE_OP_NONE,
+			O_Whatever = VK_ATTACHMENT_STORE_OP_DONT_CARE,
 		};
 	};
 

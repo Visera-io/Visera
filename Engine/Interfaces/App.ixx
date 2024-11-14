@@ -16,10 +16,9 @@ export namespace VE
 	class ViseraApp
 	{
 	public:
-		virtual void
-		Tick() { Exit(); }
-		virtual void
-		RenderTick() {}
+		virtual void Tick() = 0;
+		virtual auto RenderTick() -> VISERA_APP_NAMESPACE::CommandBuffer = 0;
+		
 		void inline
 		Exit(const AppExitSignal& Message = AppExitSignal("Visera App Exited Successfully.")) const throw(AppExitSignal) { throw Message; }
 
