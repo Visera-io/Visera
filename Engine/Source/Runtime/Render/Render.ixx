@@ -22,7 +22,7 @@ export namespace VE { namespace Runtime
 		friend class ViseraRuntime;
 	private:
 		static inline void
-		Tick(SharedPtr<RHI::CommandBuffer> AppDrawCalls)
+		Tick()
 		{
 			if (!RuntimeContext::MainLoop.ShouldStop())
 			{
@@ -32,19 +32,26 @@ export namespace VE { namespace Runtime
 
 				try
 				{
-					/*RHI::WaitForCurrentFrame();
-					auto& CurrentFrame = RHI::GetCurrentFrame();
-
-					RHI::CommandPool::SubmitInfo Submit
+					RHI::WaitForCurrentFrame();
 					{
-						.Deadlines = {RHI::PipelineStages::ColorAttachmentOutput},
-						.CommandBuffers = {AppDrawCalls->GetHandle()},
-						.WaitSemaphores = { CurrentFrame.Semaphore_ReadyToRender },
-						.SignalSemaphores = { CurrentFrame.Semaphore_ReadyToPresent },
-					};
-					RHI::GetResetableGraphicsCommandPool().Submit(Submit);
+						auto& CurrentFrame = RHI::GetCurrentFrame();
 
-					RHI::PresentCurrentFrame();*/
+						Array<RHI::CommandPool::SubmitInfo> SubmitInfos;
+
+						for (const auto& [Name,CommandContext] : CurrentFrame.CommandContexts)
+						{
+							SubmitInfos.emplace_back(RHI::CommandPool::SubmitInfo
+							{
+								.Deadlines = {RHI::PipelineStages::ColorAttachmentOutput},
+								.CommandBuffers = {CommandContext->Commands->GetHandle()},
+								.WaitSemaphores = {CurrentFrame.Semaphore_ReadyToRender},//[FIXME] Temp
+								.SignalSemaphores = { /*TEST*/ CurrentFrame.Semaphore_ReadyToPresent },
+							});
+						}
+						Assert(SubmitInfos.size() == 1, "TESTING");
+						RHI::ResetableGraphicsCommandPool.Submit(SubmitInfos.front());
+					}
+					RHI::PresentCurrentFrame();
 				}
 				catch (const RHI::Swapchain::RecreateSignal&)
 				{

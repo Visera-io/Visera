@@ -35,40 +35,36 @@ export namespace VE { namespace Runtime
 		class CommandContext;
 
 	public:
-		CALL RegisterCommandContext(String Name, PipelineStages::Option Deadline)	-> SharedPtr<CommandContext>;
-		CALL SearchCommandContext(StringView Name)									-> SharedPtr<CommandContext>;
+		CALL RegisterCommandContext(const String& Name, PipelineStages::Option Deadline) -> void;
+		CALL SearchCommandContext(StringView Name)	-> SharedPtr<CommandContext>;
+
 		CALL CreateFence()						-> SharedPtr<Fence> { return CreateSharedPtr<Fence>(); }
 		CALL CreateSignaledFence()				-> SharedPtr<Fence> { return CreateSharedPtr<Fence>(true); }
 		CALL CreateSemaphore()					-> SharedPtr<Semaphore> { return CreateSharedPtr<Semaphore>(); }
 		CALL CreateSignaledSemaphore()			-> SharedPtr<Semaphore> { Assert(False, "Not Supported by Vulkan"); return CreateSharedPtr<Semaphore>(true); }
 		CALL CreateShader(ShaderStages Stage, const Array<Byte>& ShadingCode) -> SharedPtr<Shader> { return CreateSharedPtr<VulkanShader>(Stage, ShadingCode);}
 
+		CALL GetSwapchain() -> const Swapchain& { return Vulkan::Swapchain; }
 	public:
 		class CommandContext
 		{
 			friend class RHI;
+			friend class Render; //[TODO] Remove
 		public:
-			void StartRecording() const { Commands->StartRecording(); }
-			void StopRecording()  const { Commands->StopRecording();  }
-
-			auto AddDependency(SharedPtr<CommandContext> NewDependency) -> CommandContext* { Dependencies.emplace_back(std::move(NewDependency)); return this; }
-			void SetSignalFence(SharedPtr<Fence> Fence) { Assert(Fence_Compeleted == nullptr); Fence_Compeleted = std::move(Fence); }
-
-			CommandContext()  noexcept = default;
-			~CommandContext() noexcept { Destroy(); }
+			StringView						 Name;
+			SharedPtr<CommandBuffer>		 Commands;
 
 		private:
 			void Create(StringView Name, PipelineStages::Option Deadline, SharedPtr<Fence> SignalFence);
-			void Destroy() noexcept { Log::Debug("Destroying Command Context ({})", Name); }
+			void Destroy() noexcept {};
 
 		private:
-			StringView						 Name;
-			SharedPtr<CommandBuffer>		 Commands;
 			PipelineStages::Option			 Deadline;
 			Array<SharedPtr<CommandContext>> Dependencies;
 			Semaphore						 Semaphore_Compeleted;
 			SharedPtr<Fence>				 Fence_Compeleted;
 		};
+
 
 	private:
 		struct Frame
@@ -86,7 +82,7 @@ export namespace VE { namespace Runtime
 		WaitForCurrentFrame() throw(Swapchain::RecreateSignal)
 		{
 			auto& CurrentFrame = GetCurrentFrame();
-			CurrentFrame.Fence_ReadyToRender.Wait();
+			//CurrentFrame.Fence_ReadyToRender.Wait();
 			Vulkan::Swapchain.WaitForCurrentImage(CurrentFrame.Semaphore_ReadyToRender);
 		}
 		static inline void
@@ -95,6 +91,7 @@ export namespace VE { namespace Runtime
 			auto& CurrentFrame = GetCurrentFrame();
 			Vulkan::Swapchain.PresentCurrentImage(CurrentFrame.Semaphore_ReadyToPresent);
 			CurrentFrame.Fence_ReadyToRender.Reset(); //Reset to Signaled
+			GetCurrentFrame().Fence_ReadyToRender.Wait();//[FIXME]
 		}
 
 	private:
@@ -109,10 +106,12 @@ export namespace VE { namespace Runtime
 			Vulkan::Bootstrap();
 			ResetableGraphicsCommandPool.Create(VulkanDevice::QueueFamilyType::Graphics, VulkanCommandPool::PoolType::Resetable);
 			TransientGraphicsCommandPool.Create(VulkanDevice::QueueFamilyType::Graphics, VulkanCommandPool::PoolType::Transient);
+			Frames.resize(Vulkan::Swapchain.GetSize());
 		}
 		static void
 		Terminate()
 		{
+			Frames.clear();
 			TransientGraphicsCommandPool.Destroy();
 			ResetableGraphicsCommandPool.Destroy();
 			Vulkan::Terminate();
@@ -129,15 +128,19 @@ export namespace VE { namespace Runtime
 		this->Fence_Compeleted	= std::move(SignalFence);
 	}
 
-	SharedPtr<RHI::CommandContext> RHI::
-	RegisterCommandContext(String Name, PipelineStages::Option Deadline)
+	void RHI::
+	RegisterCommandContext(const String& Name, PipelineStages::Option Deadline)
 	{
+		for (auto& Frame : Frames)
+		{
+			Assert(!Frame.CommandContexts.count(Name));
+			auto& NewCommandContext = Frame.CommandContexts[Name];
+			NewCommandContext = CreateSharedPtr<CommandContext>();
+			NewCommandContext->Create(Name, Deadline, nullptr);
+			//[FIXME]: Create Buffer based on Create(X_para)
+			NewCommandContext->Commands = ResetableGraphicsCommandPool.Allocate(CommandBuffer::Level::Primary);
+		}
 		auto& CurrentFrame = GetCurrentFrame();
-		Assert(!CurrentFrame.CommandContexts.count(Name));
-
-		auto& NewCommandContext = CurrentFrame.CommandContexts[std::move(Name)];
-		NewCommandContext = CreateSharedPtr<CommandContext>();
-		NewCommandContext->Create(Name, Deadline, nullptr);
 	}
 
 	SharedPtr<RHI::CommandContext> RHI::

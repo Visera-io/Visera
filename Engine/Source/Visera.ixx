@@ -16,7 +16,7 @@ namespace VE
 	{
 	public:
 		Int32 inline
-		Run()
+		Run(ViseraApp* App)
 		{
 			try
 			{
@@ -45,8 +45,7 @@ namespace VE
 			return EXIT_SUCCESS;
 		}
 
-		Visera() noexcept = delete;
-		Visera(ViseraApp* App) : App {App}
+		Visera()
 		{
 			Log::Debug("Bootstrapping Visera Internal...");
 			ViseraInternal::Bootstrap();
@@ -71,7 +70,6 @@ namespace VE
 			ViseraInternal::Terminate();
 		}
 	private:
-		ViseraApp* const App = nullptr;
 		static inline std::function<Bool(ViseraApp* App)> RuntimeTick = [](ViseraApp* App) -> Bool { return False; };
 	};
 

@@ -26,7 +26,8 @@ export namespace VE
 			{
 				Runtime::Platform::Tick();
 
-				Runtime::Render::Tick(App->RenderTick());
+				App->RenderTick();
+				Runtime::Render::Tick();
 
 				return True;
 			}

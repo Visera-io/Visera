@@ -43,6 +43,7 @@ export namespace VE { namespace Runtime
 		public:
 			void StartRecording();
 			void StopRecording();
+			void Reset() { Assert(!IsRecording() && HostCommandPool.IsResetable()); vkResetCommandBuffer(Handle, 0x0); }
 
 			Bool IsRecording()	const { return bRecording; }
 			Bool IsPrimary()	const { return Type == VK_COMMAND_BUFFER_LEVEL_PRIMARY; }
@@ -64,6 +65,7 @@ export namespace VE { namespace Runtime
 		};
 
 		auto GetType() const -> PoolType { return PoolType(Type); }
+		Bool IsResetable() const { return Type == PoolType::Resetable; }
 		auto Allocate(CommandBuffer::Level Level) const -> SharedPtr<CommandBuffer>;
 		void Free(VkCommandBuffer CommandBuffer)  const;
 		struct SubmitInfo
@@ -166,8 +168,8 @@ export namespace VE { namespace Runtime
 		
 		VkQueue Queue = GVulkan->Device->GetQueueFamily(QueueFamilyType).Queues.front();
 		//[FIXME]: Revise the last parameter.
-		if (VK_SUCCESS != vkQueueSubmit(Queue, 1, &FinalSubmitInfo, SubmitInfo.Fence ? SubmitInfo.Fence->GetHandle() : VK_NULL_HANDLE));
-		{ Log::Fatal("Failed to submit current commandbuffers!"); }
+		vkQueueSubmit(Queue, 1, &FinalSubmitInfo, SubmitInfo.Fence ? SubmitInfo.Fence->GetHandle() : VK_NULL_HANDLE);
+		//{ Log::Fatal("Failed to submit current commandbuffers!"); }
 	}
 
 	VulkanCommandPool::CommandBuffer::
