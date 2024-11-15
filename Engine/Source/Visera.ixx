@@ -15,14 +15,14 @@ namespace VE
 	export class Visera final
 	{
 	public:
-		static inline Int32
-		Loop(ViseraApp* App)
+		Int32 inline
+		Run()
 		{
-			Log::Info("App Started Running");
 			try
 			{
 				if (App)
 				{
+					Log::Info("App Started Running");
 					do { App->Tick(); } while (RuntimeTick(App));
 				}
 				else Log::Warn("Visera App is not created");
@@ -45,7 +45,8 @@ namespace VE
 			return EXIT_SUCCESS;
 		}
 
-		Visera()
+		Visera() noexcept = delete;
+		Visera(ViseraApp* App) : App {App}
 		{
 			Log::Debug("Bootstrapping Visera Internal...");
 			ViseraInternal::Bootstrap();
@@ -70,9 +71,8 @@ namespace VE
 			ViseraInternal::Terminate();
 		}
 	private:
+		ViseraApp* const App = nullptr;
 		static inline std::function<Bool(ViseraApp* App)> RuntimeTick = [](ViseraApp* App) -> Bool { return False; };
 	};
 
-	static const inline Visera ViseraEngine{};
-	
 } // namespace VE

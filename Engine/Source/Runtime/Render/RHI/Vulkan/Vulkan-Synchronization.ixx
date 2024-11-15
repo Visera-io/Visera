@@ -21,8 +21,8 @@ export namespace VE { namespace Runtime
 	{
 		friend class Vulkan;
 	public:
-		auto GetHandle()	const	-> VkSemaphore { return Handle; }
-		operator VkSemaphore() const { return Handle; }
+		auto GetHandle()		const	-> VkSemaphore { return Handle; }
+		operator VkSemaphore()	const { return Handle; }
 
 		VulkanSemaphore(Bool bSignaled = False);
 		~VulkanSemaphore();

@@ -42,14 +42,14 @@ export namespace VE { namespace Runtime
 	private:
 		Array<QueueFamily> QueueFamilies;
 
-		void Create(VulkanGPU* GPU, VulkanSurface* Surface);
+		auto Create(VulkanGPU* GPU, VulkanSurface* Surface) -> VkDevice;
 		void Destroy();
 
 		VulkanDevice()	noexcept	= default;
 		~VulkanDevice() noexcept	= default;
 	};
 
-	void VulkanDevice::
+	VkDevice VulkanDevice::
 	Create(VulkanGPU* GPU, VulkanSurface* Surface)
 	{
 		//Find Suitable Host GPU
@@ -218,6 +218,8 @@ export namespace VE { namespace Runtime
 			for (UInt32 Idx = 0; Idx < QueueFamilies[Compute].Queues.size(); ++Idx)
 			{ vkGetDeviceQueue(Handle, QueueFamilies[Compute].Index, Idx, &QueueFamilies[Compute].Queues[Idx]); }	
 		}
+
+		return Handle;
 	}
 
 	void VulkanDevice::

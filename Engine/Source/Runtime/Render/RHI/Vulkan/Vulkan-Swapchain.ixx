@@ -26,17 +26,12 @@ export namespace VE { namespace Runtime
 	{
 		friend class Vulkan;
 	public:
-		struct Frame
-		{
-			VulkanSemaphore Semaphore_ReadyToRender;
-			VulkanSemaphore Semaphore_ReadyToPresent;
-			VulkanFence		Fence_ReadyToRender{ True };
-		};
 		class RecreateSignal : public std::exception { public: RecreateSignal() noexcept = default; };
-		auto WaitForNextFrame(VkFence SignalFence = VK_NULL_HANDLE) throw(RecreateSignal) -> const VulkanSwapchain::Frame&;
-		void Present(VkSemaphore RenderSemaphore) throw(RecreateSignal);
+		void WaitForCurrentImage(VkSemaphore SignalSemaphore, VkFence SignalFence = VK_NULL_HANDLE) throw(RecreateSignal);
+		void PresentCurrentImage(VkSemaphore WaitSemaphore, Bool bMoveCursor = True) throw(RecreateSignal);
 
 		auto GetCursor()			const   -> UInt32					{ return Cursor; }
+		auto GetSize()				const	-> size_t					{ return Images.size(); }
 		auto GetExtent()			const	-> const VkExtent2D&		{ return ImageExtent; }
 		auto GetFormat()			const	-> VkFormat					{ return ImageFormat; }
 		auto GetColorSpace()		const	-> VkColorSpaceKHR			{ return ImageColorSpace; }
@@ -46,16 +41,12 @@ export namespace VE { namespace Runtime
 		operator VkSwapchainKHR()	const	{ return Handle; }
 
 	private:
-		auto GetCurrentFrame() -> Frame& { return Frames[Cursor]; }
-		void MoveCursor(UInt32 Stride) { Cursor = (Cursor + Stride) % Images.size(); }
-
-	private:
 		VkSwapchainKHR			Handle{ VK_NULL_HANDLE };
 		
 		VkPresentModeKHR		PresentMode		= VK_PRESENT_MODE_FIFO_RELAXED_KHR;
-		
-		Array<Frame>			Frames;
+
 		UInt32					Cursor{ 0 };	// Current Frame Index
+		void MoveCursor(UInt32 Stride) { Cursor = (Cursor + Stride) % Images.size(); }
 
 		Array<VkImage>			Images;			// Size: Clamp(minImageCount + 1, maxImageCount)
 		Array<VkImageView>		ImageViews;
@@ -217,7 +208,6 @@ export namespace VE { namespace Runtime
 
 		//Init Frames
 		Cursor = 0;
-		Frames.resize(Images.size());
 	}
 
 	void VulkanSwapchain::
@@ -227,57 +217,47 @@ export namespace VE { namespace Runtime
 		{
 			vkDestroyImageView(GVulkan->Device->GetHandle(), ImageView, VulkanAllocator::AllocationCallbacks);
 		}
-		Frames.clear();
 
 		vkDestroySwapchainKHR(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 
-	const VulkanSwapchain::Frame& VulkanSwapchain::
-	WaitForNextFrame(VkFence SignalFence/* = VK_NULL_HANDLE*/)
+	void VulkanSwapchain::
+	WaitForCurrentImage(VkSemaphore SignalSemaphore, VkFence SignalFence/* = VK_NULL_HANDLE*/)
 	throw(RecreateSignal)
 	{
-		MoveCursor(1);
+		auto Result = vkAcquireNextImageKHR(GVulkan->Device->GetHandle(),
+											Handle,
+											UINT64_MAX,
+								/*Signal*/  SignalSemaphore,
+								/*Signal*/  SignalFence,
+											&Cursor);
 
-		auto& CurrentFrame = GetCurrentFrame();
-		CurrentFrame.Fence_ReadyToRender.Wait();
+		if (VK_ERROR_OUT_OF_DATE_KHR == Result ||
+			VK_SUBOPTIMAL_KHR		 == Result)
 		{
-			auto Result = vkAcquireNextImageKHR(GVulkan->Device->GetHandle(),
-												Handle,
-												UINT64_MAX,
-									/*Signal*/  CurrentFrame.Semaphore_ReadyToRender,
-									/*Signal*/  SignalFence,
-												&Cursor);
-			if (VK_ERROR_OUT_OF_DATE_KHR == Result ||
-				VK_SUBOPTIMAL_KHR		 == Result)
-			{
-				//recreate_swapchain();
-				throw RecreateSignal{};
-			}
-			if (Result != VK_SUCCESS) Log::Fatal("Failed to retrive the next image from the Vulkan Swapchain!");	
+			//recreate_swapchain();
+			throw RecreateSignal{};
 		}
-		CurrentFrame.Fence_ReadyToRender.Reset();
-
-		return CurrentFrame;
+		if (Result != VK_SUCCESS) Log::Fatal("Failed to retrive the next image from the Vulkan Swapchain!");
 	}
 
 	void VulkanSwapchain::
-	Present(VkSemaphore Semaphore_RenderCompleted)
+	PresentCurrentImage(VkSemaphore WaitSemaphore, Bool bMoveCursor/* = True*/)
 	throw(RecreateSignal)
 	{
-		auto& CurrentFrame = GetCurrentFrame();
-
 		VkPresentInfoKHR PresentInfo
 		{
 			.sType				= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 			.waitSemaphoreCount = 1,
-			.pWaitSemaphores	= &Semaphore_RenderCompleted,
+			.pWaitSemaphores	= &WaitSemaphore,
 			.swapchainCount		= 1,
 			.pSwapchains		= &Handle,
 			.pImageIndices		= &Cursor,
 			.pResults			= nullptr // It is not necessary if you are only using a single swap chain
 		};
-		auto Result = vkQueuePresentKHR(GVulkan->Device->GetQueueFamily(VulkanDevice::QueueFamilyType::Present).Queues.front(), &PresentInfo);
+		VkQueue PresentQueue = GVulkan->Device->GetQueueFamily(VulkanDevice::QueueFamilyType::Present).Queues.front();
+		auto Result = vkQueuePresentKHR(PresentQueue, &PresentInfo);
 
 		if (VK_ERROR_OUT_OF_DATE_KHR == Result ||
 			VK_SUBOPTIMAL_KHR		 == Result)
@@ -286,6 +266,8 @@ export namespace VE { namespace Runtime
 			throw RecreateSignal{};
 		}
 		if (Result != VK_SUCCESS) Log::Fatal("Failed to present the Vulkan Swapchain! (Cursor:{})", Cursor);
+
+		if (bMoveCursor) MoveCursor(1);
 	}
 
 } } // namespace VE::Runtime

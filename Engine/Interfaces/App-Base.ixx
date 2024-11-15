@@ -75,6 +75,9 @@ export namespace VISERA_APP_NAMESPACE
     inline UniquePtr<T> 
     CreateUniquePtr(Args &&...args) { return VE::CreateUniquePtr<T>(std::forward<Args>(args)...); }
 
+    template<typename T>
+    using Optional	  = VE::Optional<T>;
+
     template <typename T>
     concept Hashable = requires(T type) {{ std::hash<T>{}(type) } -> std::same_as<std::size_t>;};
 

@@ -1,7 +1,6 @@
 module;
 #include <Visera>
 
-#define VK_NO_PROTOTYPES
 #define VOLK_IMPLEMENTATION
 #include <volk.h>
 
@@ -32,7 +31,7 @@ export namespace VE { namespace Runtime
 	void VulkanLoader::
 	Create()
 	{
-		if (!VK_SUCCESS == volkInitialize())
+		if (VK_SUCCESS != volkInitialize())
 		{ Log::Fatal("Failed to initialize Volk!"); }
 	}
 

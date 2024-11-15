@@ -27,22 +27,29 @@ export namespace VE { namespace Runtime
 			if (!RuntimeContext::MainLoop.ShouldStop())
 			{
 				//Check Window State
-				if (Platform::GetWindow().ShouldClose())
-				{ return RuntimeContext::MainLoop.Stop(); }
+				if  (Platform::GetWindow().ShouldClose()) return RuntimeContext::MainLoop.Stop();
+				else Platform::GetWindow().PollEvents();
 
-				auto& CurrentFrame = RHI::WaitForSwapchain();
-				
-				RHI::CommandPool::SubmitInfo Submit
+				try
 				{
-					.Deadlines = {RHI::PipelineStages::ColorAttachmentOutput},
-					.CommandBuffers = {AppDrawCalls->GetHandle()},
-					.WaitSemaphores = { CurrentFrame.Semaphore_ReadyToRender },
-					.SignalSemaphores = { CurrentFrame.Semaphore_ReadyToPresent },
-				};
-				RHI::GetResetableGraphicsCommandPool().Submit(Submit);
-				RHI::PresentSwapchain(CurrentFrame.Semaphore_ReadyToPresent);
+					/*RHI::WaitForCurrentFrame();
+					auto& CurrentFrame = RHI::GetCurrentFrame();
 
-				Platform::GetWindow().PollEvents();
+					RHI::CommandPool::SubmitInfo Submit
+					{
+						.Deadlines = {RHI::PipelineStages::ColorAttachmentOutput},
+						.CommandBuffers = {AppDrawCalls->GetHandle()},
+						.WaitSemaphores = { CurrentFrame.Semaphore_ReadyToRender },
+						.SignalSemaphores = { CurrentFrame.Semaphore_ReadyToPresent },
+					};
+					RHI::GetResetableGraphicsCommandPool().Submit(Submit);
+
+					RHI::PresentCurrentFrame();*/
+				}
+				catch (const RHI::Swapchain::RecreateSignal&)
+				{
+					Log::Fatal("Not support Swapchain recreation right now.");
+				}
 			}
 		}
 

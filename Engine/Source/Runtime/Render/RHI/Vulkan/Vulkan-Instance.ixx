@@ -1,9 +1,11 @@
 module;
 #include <Visera>
 
+#define VK_NO_PROTOTYPES
 #include <volk.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+
 
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:Instance;
 
@@ -28,13 +30,13 @@ export namespace VE { namespace Runtime
 		operator VkInstance() const { return Handle; }
 
 	private:
-		RawString					AppName		= VISERA_ENGINE_NAME;
-		uint32_t					AppVersion	= VK_MAKE_VERSION(1, 0, 0);
-		VkInstance					Handle		{ VK_NULL_HANDLE };
+		RawString				AppName		= VISERA_ENGINE_NAME;
+		UInt32					AppVersion	= VK_MAKE_VERSION(1, 0, 0);
+		VkInstance				Handle		{ VK_NULL_HANDLE };
 			
-		UInt32						APIVersion  = VK_API_VERSION_1_3;
-		Array<RawString>			Layers;
-		Array<RawString>			Extensions;
+		UInt32					APIVersion  = VK_API_VERSION_1_3;
+		Array<RawString>		Layers;
+		Array<RawString>		Extensions;
 			
 		struct {
 			VkDebugUtilsMessengerEXT			 Handle{ VK_NULL_HANDLE };
@@ -79,6 +81,7 @@ export namespace VE { namespace Runtime
 	VkInstance VulkanInstance::
 	Create()
 	{
+		Assert(VK_API_VERSION_1_3 != 0);
 		// Layers
 		Array<RawString> EnabledLayers
 		{
@@ -100,12 +103,9 @@ export namespace VE { namespace Runtime
 		const char** GLFWExtensions = glfwGetRequiredInstanceExtensions(&GLFWExtensionCount); // Include WSI extensions
 
 		UInt32 TotalExtensionCount = GLFWExtensionCount + EnabledExtensions.size();
-		Extensions.resize(TotalExtensionCount);
-		auto It = Extensions.begin();
-		for (const auto& Extension : EnabledExtensions)
-		{ *It = Extension; ++It; }
-		for (UInt32 i = 0; i < GLFWExtensionCount; ++i)
-		{ *It = *(GLFWExtensions + i); ++It; }
+
+		for (const auto& Extension : EnabledExtensions) { Extensions.emplace_back(Extension); }
+		for (UInt32 i = 0; i < GLFWExtensionCount; ++i) { Extensions.emplace_back(*(GLFWExtensions + i)); }
 
 		UInt32 LayerPropertyCount = 0;
 		VK_CHECK(vkEnumerateInstanceLayerProperties(&LayerPropertyCount, nullptr));
@@ -124,7 +124,7 @@ export namespace VE { namespace Runtime
 			if (!Found) Log::Fatal("Failed to enable the Vulkan Validation Layer {}", RequiredLayer);
 		}
 
-		VkApplicationInfo AppInfo
+		const VkApplicationInfo AppInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
 			.pApplicationName	= AppName,

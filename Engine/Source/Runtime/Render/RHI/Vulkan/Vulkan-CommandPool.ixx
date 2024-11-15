@@ -189,9 +189,6 @@ export namespace VE { namespace Runtime
 	{
 		Assert(!IsRecording());
 
-		if(VulkanCommandPool::PoolType::Resetable ==  HostCommandPool.GetType())
-		{ vkResetCommandBuffer(Handle, 0x0); }
-
 		VkCommandBufferBeginInfo BeginInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,

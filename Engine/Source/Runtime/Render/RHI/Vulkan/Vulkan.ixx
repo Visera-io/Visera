@@ -60,8 +60,8 @@ export namespace VE { namespace Runtime
 		Loader.LoadInstance(Instance.Create());
 
 		Surface.Create();
-
-		Device.Create(&GPU, &Surface);
+		
+		Loader.LoadDevice(Device.Create(&GPU, &Surface));
 
 		Swapchain.Create();
 
