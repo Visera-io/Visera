@@ -37,8 +37,8 @@ export namespace VE { namespace Runtime
 	public:
 		enum WaitTime : UInt64 { Forever = UINT64_MAX };
 		void Wait(WaitTime Timeout = Forever) const { vkWaitForFences(GVulkan->Device->GetHandle(), 1, &Handle, VK_TRUE, Timeout); }
-		void Reset()		const { Assert(IsSignaled()); vkResetFences(GVulkan->Device->GetHandle(), 1, &Handle); }
-		Bool IsSignaled()	const { return VK_SUCCESS == vkGetFenceStatus(GVulkan->Device->GetHandle(), Handle); }
+		void Lock()		const { Assert(!IsLocked()); vkResetFences(GVulkan->Device->GetHandle(), 1, &Handle); }
+		Bool IsLocked()	const { return VK_SUCCESS != vkGetFenceStatus(GVulkan->Device->GetHandle(), Handle); }
 
 		auto GetHandle()	const -> VkFence { return Handle; }
 		operator VkFence()	const { return Handle; }

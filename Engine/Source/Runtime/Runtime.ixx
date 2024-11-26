@@ -21,13 +21,13 @@ export namespace VE
 	private:
 		static inline Bool
 		Tick(ViseraApp* App)
-		{
+		{	
 			if (!Runtime::RuntimeContext::MainLoop.ShouldStop())
 			{
 				Runtime::Platform::Tick();
 
-				App->RenderTick();
-				Runtime::Render::Tick();
+				static const auto AppRenderTick = std::bind(&ViseraApp::RenderTick, App);
+				Runtime::Render::Tick(AppRenderTick);
 
 				return True;
 			}

@@ -27,7 +27,7 @@ export namespace VE { namespace Runtime
 		friend class Vulkan;
 	public:
 		class RecreateSignal : public std::exception { public: RecreateSignal() noexcept = default; };
-		void WaitForCurrentImage(VkSemaphore SignalSemaphore, VkFence SignalFence = VK_NULL_HANDLE) throw(RecreateSignal);
+		void WaitForCurrentImage(VkSemaphore SignalSemaphore, VkFence SignalFence) throw(RecreateSignal);
 		void PresentCurrentImage(VkSemaphore WaitSemaphore, Bool bMoveCursor = True) throw(RecreateSignal);
 
 		auto GetCursor()			const   -> UInt32					{ return Cursor; }
@@ -223,7 +223,7 @@ export namespace VE { namespace Runtime
 	}
 
 	void VulkanSwapchain::
-	WaitForCurrentImage(VkSemaphore SignalSemaphore, VkFence SignalFence/* = VK_NULL_HANDLE*/)
+	WaitForCurrentImage(VkSemaphore SignalSemaphore, VkFence SignalFence)
 	throw(RecreateSignal)
 	{
 		auto Result = vkAcquireNextImageKHR(GVulkan->Device->GetHandle(),

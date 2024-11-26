@@ -21,6 +21,7 @@ export namespace VE { namespace Runtime
 	{
 		friend class Vulkan;
 	public:
+		void WaitIdle() const { vkDeviceWaitIdle(Handle); }
 		auto GetHandle() const	-> VkDevice	{ return Handle; }
 		operator VkDevice() const	{ return Handle; }
 

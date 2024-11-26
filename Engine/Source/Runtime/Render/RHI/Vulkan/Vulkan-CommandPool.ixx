@@ -74,7 +74,7 @@ export namespace VE { namespace Runtime
 			Array<VkCommandBuffer>		CommandBuffers;
 			Array<VkSemaphore>			WaitSemaphores;
 			Array<VkSemaphore>			SignalSemaphores;
-			SharedPtr<VulkanFence>		Fence;
+			VkFence						Fence = VK_NULL_HANDLE;
 		};
 		void Submit(const SubmitInfo& SubmitInfo) const;
 
@@ -168,7 +168,7 @@ export namespace VE { namespace Runtime
 		
 		VkQueue Queue = GVulkan->Device->GetQueueFamily(QueueFamilyType).Queues.front();
 		//[FIXME]: Revise the last parameter.
-		vkQueueSubmit(Queue, 1, &FinalSubmitInfo, SubmitInfo.Fence ? SubmitInfo.Fence->GetHandle() : VK_NULL_HANDLE);
+		vkQueueSubmit(Queue, 1, &FinalSubmitInfo, SubmitInfo.Fence);
 		//{ Log::Fatal("Failed to submit current commandbuffers!"); }
 	}
 

@@ -36,7 +36,7 @@ export namespace VE { namespace Runtime
 
 	public:
 		CALL RegisterCommandContext(const String& Name, PipelineStages::Option Deadline) -> void;
-		CALL SearchCommandContext(StringView Name)	-> SharedPtr<CommandContext>;
+		CALL SearchCommandContext(StringView Name)	-> WeakPtr<CommandContext>;
 
 		CALL CreateFence()						-> SharedPtr<Fence> { return CreateSharedPtr<Fence>(); }
 		CALL CreateSignaledFence()				-> SharedPtr<Fence> { return CreateSharedPtr<Fence>(true); }
@@ -45,6 +45,8 @@ export namespace VE { namespace Runtime
 		CALL CreateShader(ShaderStages Stage, const Array<Byte>& ShadingCode) -> SharedPtr<Shader> { return CreateSharedPtr<VulkanShader>(Stage, ShadingCode);}
 
 		CALL GetSwapchain() -> const Swapchain& { return Vulkan::Swapchain; }
+
+		CALL WaitIdle() -> void { Vulkan::Device.WaitIdle(); }
 	public:
 		class CommandContext
 		{
@@ -62,14 +64,14 @@ export namespace VE { namespace Runtime
 			PipelineStages::Option			 Deadline;
 			Array<SharedPtr<CommandContext>> Dependencies;
 			Semaphore						 Semaphore_Compeleted;
-			SharedPtr<Fence>				 Fence_Compeleted;
+			SharedPtr<Fence>				 Fence_Executing;
 		};
 
 
 	private:
 		struct Frame
 		{
-			Fence		Fence_ReadyToRender{ True };
+			Fence		Fence_Rendering{ True };
 			Semaphore	Semaphore_ReadyToRender;
 			Semaphore	Semaphore_ReadyToPresent;
 			HashMap<String, SharedPtr<CommandContext>> CommandContexts;
@@ -82,16 +84,16 @@ export namespace VE { namespace Runtime
 		WaitForCurrentFrame() throw(Swapchain::RecreateSignal)
 		{
 			auto& CurrentFrame = GetCurrentFrame();
-			//CurrentFrame.Fence_ReadyToRender.Wait();
-			Vulkan::Swapchain.WaitForCurrentImage(CurrentFrame.Semaphore_ReadyToRender);
+			CurrentFrame.Fence_Rendering.Wait();
+			Vulkan::Swapchain.WaitForCurrentImage(CurrentFrame.Semaphore_ReadyToRender, VK_NULL_HANDLE);
+			CurrentFrame.Fence_Rendering.Lock(); //Reset to Unsignaled (Lock)
 		}
+
 		static inline void
 		PresentCurrentFrame()	throw(Swapchain::RecreateSignal)
 		{
 			auto& CurrentFrame = GetCurrentFrame();
 			Vulkan::Swapchain.PresentCurrentImage(CurrentFrame.Semaphore_ReadyToPresent);
-			CurrentFrame.Fence_ReadyToRender.Reset(); //Reset to Signaled
-			GetCurrentFrame().Fence_ReadyToRender.Wait();//[FIXME]
 		}
 
 	private:
@@ -111,6 +113,7 @@ export namespace VE { namespace Runtime
 		static void
 		Terminate()
 		{
+			WaitIdle();
 			Frames.clear();
 			TransientGraphicsCommandPool.Destroy();
 			ResetableGraphicsCommandPool.Destroy();
@@ -125,7 +128,7 @@ export namespace VE { namespace Runtime
 	{
 		this->Name				= std::move(Name);
 		this->Deadline			= Deadline;
-		this->Fence_Compeleted	= std::move(SignalFence);
+		this->Fence_Executing	= std::move(SignalFence);
 	}
 
 	void RHI::
@@ -143,7 +146,7 @@ export namespace VE { namespace Runtime
 		auto& CurrentFrame = GetCurrentFrame();
 	}
 
-	SharedPtr<RHI::CommandContext> RHI::
+	WeakPtr<RHI::CommandContext> RHI::
 	SearchCommandContext(StringView Name)
 	{
 		auto& CurrentFrame = GetCurrentFrame();

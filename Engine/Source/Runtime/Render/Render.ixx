@@ -22,7 +22,7 @@ export namespace VE { namespace Runtime
 		friend class ViseraRuntime;
 	private:
 		static inline void
-		Tick()
+		Tick(const std::function<void()>& AppRenderTick)
 		{
 			if (!RuntimeContext::MainLoop.ShouldStop())
 			{
@@ -35,6 +35,7 @@ export namespace VE { namespace Runtime
 					RHI::WaitForCurrentFrame();
 					{
 						auto& CurrentFrame = RHI::GetCurrentFrame();
+						AppRenderTick();
 
 						Array<RHI::CommandPool::SubmitInfo> SubmitInfos;
 
@@ -46,10 +47,11 @@ export namespace VE { namespace Runtime
 								.CommandBuffers = {CommandContext->Commands->GetHandle()},
 								.WaitSemaphores = {CurrentFrame.Semaphore_ReadyToRender},//[FIXME] Temp
 								.SignalSemaphores = { /*TEST*/ CurrentFrame.Semaphore_ReadyToPresent },
+								.Fence = CurrentFrame.Fence_Rendering
 							});
 						}
-						Assert(SubmitInfos.size() == 1, "TESTING");
-						RHI::ResetableGraphicsCommandPool.Submit(SubmitInfos.front());
+						Assert(SubmitInfos.size() == 1, "TESTING"); //Visera Render is controled by a singlton cmd
+						RHI::ResetableGraphicsCommandPool.Submit(SubmitInfos[0]);
 					}
 					RHI::PresentCurrentFrame();
 				}

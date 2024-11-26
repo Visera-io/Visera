@@ -16,14 +16,16 @@ export namespace VE
 	class ViseraApp
 	{
 	public:
+		virtual void Bootstrap() = 0;
+		virtual void Terminate() = 0;
 		virtual void Tick() = 0;
 		virtual void RenderTick() = 0;
 		
 		void inline
 		Exit(const AppExitSignal& Message = AppExitSignal("Visera App Exited Successfully.")) const throw(AppExitSignal) { throw Message; }
 
-		ViseraApp()			 = default;
-		virtual ~ViseraApp() = default;
+		ViseraApp()	 noexcept = default;
+		~ViseraApp() noexcept = default;
 	};
 
 } // namespace VE

@@ -245,6 +245,7 @@ export namespace VE { namespace Runtime
 	void VulkanRenderPass::
 	Destroy()
 	{
+		for (auto& Subpass : Subpasses) { Subpass->Destroy(); }
 		vkDestroyRenderPass(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
