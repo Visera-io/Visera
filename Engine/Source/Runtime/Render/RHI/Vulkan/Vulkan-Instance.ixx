@@ -10,7 +10,7 @@ module;
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:Instance;
 
 import Visera.Engine.Core.Log;
-import :Allocator;
+import :Context;
 import :Loader;
 import :GPU;
 
@@ -25,7 +25,8 @@ export namespace VE { namespace Runtime
 		friend class Vulkan;
 	public:
 		auto EnumerateAvailableGPUs() const -> Array<VulkanGPU>;
-	
+		auto GetVulkanAPIVersion() const -> UInt32 { return AppVersion; }
+
 		auto GetHandle() const		-> VkInstance { return  Handle; }
 		operator VkInstance() const { return Handle; }
 
@@ -163,7 +164,7 @@ export namespace VE { namespace Runtime
 			.enabledExtensionCount	= UInt32(Extensions.size()),
 			.ppEnabledExtensionNames= Extensions.data(),
 		};
-		VK_CHECK(vkCreateInstance(&InstanceCreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
+		VK_CHECK(vkCreateInstance(&InstanceCreateInfo, GVulkan->AllocationCallbacks, &Handle));
 
 		return Handle;
 	}
@@ -174,9 +175,9 @@ export namespace VE { namespace Runtime
 #ifndef NDEBUG
 		auto LoadedDestroyFunc = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(Handle, "vkDestroyDebugUtilsMessengerEXT");
 		Assert(LoadedDestroyFunc && "Failed to load function: vkDestroyDebugUtilsMessengerEXT");
-		LoadedDestroyFunc(Handle, Messenger, VulkanAllocator::AllocationCallbacks);
+		LoadedDestroyFunc(Handle, Messenger, GVulkan->AllocationCallbacks);
 #endif
-		vkDestroyInstance(Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroyInstance(Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 

@@ -7,7 +7,6 @@ export module Visera.Engine.Runtime.Render.RHI.Vulkan:Swapchain;
 
 import :Context;
 import :Common;
-import :Allocator;
 import :GPU;
 import :Device;
 import :Surface;
@@ -174,7 +173,7 @@ export namespace VE { namespace Runtime
 			.clipped				= VK_TRUE, // Means that we do not care about the color of pixels that are obscured for the best performance. (P89)
 			.oldSwapchain			= VK_NULL_HANDLE //[TODO] Add Old Swapchain
 		};
-		VK_CHECK(vkCreateSwapchainKHR(GVulkan->Device->GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
+		VK_CHECK(vkCreateSwapchainKHR(GVulkan->Device->GetHandle(), &CreateInfo, GVulkan->AllocationCallbacks, &Handle));
 
 		//Retrieve Swap Chain Images
 		vkGetSwapchainImagesKHR(GVulkan->Device->GetHandle(), Handle, &RequiredImageCount, Images.data());
@@ -203,7 +202,7 @@ export namespace VE { namespace Runtime
 							.layerCount		= 1
 							}
 			};
-			VK_CHECK(vkCreateImageView(GVulkan->Device->GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks,&ImageViews[Idx]));
+			VK_CHECK(vkCreateImageView(GVulkan->Device->GetHandle(), &CreateInfo, GVulkan->AllocationCallbacks,&ImageViews[Idx]));
 		}
 
 		//Init Frames
@@ -215,10 +214,10 @@ export namespace VE { namespace Runtime
 	{
 		for (auto ImageView : ImageViews)
 		{
-			vkDestroyImageView(GVulkan->Device->GetHandle(), ImageView, VulkanAllocator::AllocationCallbacks);
+			vkDestroyImageView(GVulkan->Device->GetHandle(), ImageView, GVulkan->AllocationCallbacks);
 		}
 
-		vkDestroySwapchainKHR(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroySwapchainKHR(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 

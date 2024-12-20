@@ -7,7 +7,6 @@ export module Visera.Engine.Runtime.Render.RHI.Vulkan:Shader;
 
 import :Common;
 import :Context;
-import :Allocator;
 import :Device;
 
 export namespace VE { namespace Runtime
@@ -50,13 +49,13 @@ export namespace VE { namespace Runtime
 			.codeSize	= Data.size(),
 			.pCode		= reinterpret_cast<const uint32_t*>(Data.data())
 		};
-		VK_CHECK(vkCreateShaderModule(GVulkan->Device->GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
+		VK_CHECK(vkCreateShaderModule(GVulkan->Device->GetHandle(), &CreateInfo, GVulkan->AllocationCallbacks, &Handle));
 	}
 
 	VulkanShader::
 	~VulkanShader() noexcept
 	{
-		vkDestroyShaderModule(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroyShaderModule(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 

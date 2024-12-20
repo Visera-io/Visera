@@ -9,7 +9,6 @@ export module Visera.Engine.Runtime.Render.RHI.Vulkan:Surface;
 
 import Visera.Engine.Runtime.Platform;
 import :Context;
-import :Allocator;
 import :Instance;
 import :GPU;
 
@@ -52,14 +51,14 @@ export namespace VE { namespace Runtime
 		VK_CHECK(glfwCreateWindowSurface(
 			GVulkan->Instance->GetHandle(),
 			Platform::GetWindow().GetHandle(),
-			VulkanAllocator::AllocationCallbacks,
+			GVulkan->AllocationCallbacks,
 			&Handle));
 	}
 
 	void VulkanSurface::
 	Destroy()
 	{
-		vkDestroySurfaceKHR(GVulkan->Instance->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroySurfaceKHR(GVulkan->Instance->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 } } // namespace VE::Runtime

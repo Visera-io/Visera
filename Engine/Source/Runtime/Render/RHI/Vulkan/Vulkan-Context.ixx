@@ -27,6 +27,7 @@ export namespace VE { namespace Runtime
 		const VulkanSurface*	Surface;
 		const VulkanSwapchain*	Swapchain;
 		const VulkanPipelineCache* RenderPassPipelineCache;
+		const VkAllocationCallbacks* AllocationCallbacks = nullptr;
 
 		VulkanContext() noexcept { Assert(!bCreated); bCreated = true; };
 		VulkanContext(const VulkanContext&) = delete;

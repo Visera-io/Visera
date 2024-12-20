@@ -6,7 +6,7 @@ module;
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:PipelineCache;
 
 import :Context;
-import :Allocator;
+import :Context;
 import :Device;
 import :GPU;
 
@@ -61,7 +61,7 @@ export namespace VE { namespace Runtime
 			.initialDataSize	= CacheFile->GetSize(),
 			.pInitialData		= CacheFile->GetData().data(),
 		};
-		VK_CHECK(vkCreatePipelineCache(GVulkan->Device->GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
+		VK_CHECK(vkCreatePipelineCache(GVulkan->Device->GetHandle(), &CreateInfo, GVulkan->AllocationCallbacks, &Handle));
 	}
 
 	void VulkanPipelineCache::
@@ -77,7 +77,7 @@ export namespace VE { namespace Runtime
 			CacheFile->WriteAll(std::move(CacheDate));
 			CacheFile->Save();
 		}
-		vkDestroyPipelineCache(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroyPipelineCache(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 

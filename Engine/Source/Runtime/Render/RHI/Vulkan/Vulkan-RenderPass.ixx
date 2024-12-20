@@ -6,7 +6,6 @@ module;
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:RenderPass;
 
 import :Context;
-import :Allocator;
 import :Common;
 import :Device;
 import :Shader;
@@ -37,7 +36,7 @@ export namespace VE { namespace Runtime
 			Array<VkClearValue>	ClearColors;
 
 			operator VkFramebuffer() const { return Handle; }
-			~FrameBuffer() { vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks); Handle = VK_NULL_HANDLE; }
+			~FrameBuffer() { vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks); Handle = VK_NULL_HANDLE; }
 		};
 
 		auto GetSubpasses() const -> const Array<UniquePtr<Subpass>>&  { return Subpasses; }
@@ -222,7 +221,7 @@ export namespace VE { namespace Runtime
 			.dependencyCount = UInt32(SubpassDependencyInfos.size()),
 			.pDependencies	 = SubpassDependencyInfos.data(),
 		};
-		VK_CHECK(vkCreateRenderPass(GVulkan->Device->GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
+		VK_CHECK(vkCreateRenderPass(GVulkan->Device->GetHandle(), &CreateInfo, GVulkan->AllocationCallbacks, &Handle));
 	
 		//Create FrameBuffers
 		for (auto& FrameBuffer : FrameBuffers)
@@ -238,7 +237,7 @@ export namespace VE { namespace Runtime
 				.height = RenderArea.extent.height,
 				.layers = 1
 			};
-			VK_CHECK(vkCreateFramebuffer(GVulkan->Device->GetHandle(), &FrameBufferCreateInfo, VulkanAllocator::AllocationCallbacks, &FrameBuffer.Handle));
+			VK_CHECK(vkCreateFramebuffer(GVulkan->Device->GetHandle(), &FrameBufferCreateInfo, GVulkan->AllocationCallbacks, &FrameBuffer.Handle));
 		}
 	}
 
@@ -246,7 +245,7 @@ export namespace VE { namespace Runtime
 	Destroy()
 	{
 		for (auto& Subpass : Subpasses) { Subpass->Destroy(); }
-		vkDestroyRenderPass(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroyRenderPass(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 
@@ -342,15 +341,21 @@ export namespace VE { namespace Runtime
 	Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders)
 	{
 		//[TODO][FIXME]: Add SPIR-V Reflection?
+		VkPushConstantRange PCRange //[FIXME]: Test Data
+		{
+			.stageFlags = VulkanShaderStages::Fragment,
+			.offset = 0,
+			.size = sizeof(float)
+		};
 		VkPipelineLayoutCreateInfo LayoutCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 			.setLayoutCount			= 0,
 			.pSetLayouts			= nullptr,
-			.pushConstantRangeCount = 0,
-			.pPushConstantRanges	= nullptr,
+			.pushConstantRangeCount = 1,
+			.pPushConstantRanges	= &PCRange,
 		};
-		VK_CHECK(vkCreatePipelineLayout(GVulkan->Device->GetHandle(), &LayoutCreateInfo, VulkanAllocator::AllocationCallbacks, &Layout));
+		VK_CHECK(vkCreatePipelineLayout(GVulkan->Device->GetHandle(), &LayoutCreateInfo, GVulkan->AllocationCallbacks, &Layout));
 
 		ShaderStages.resize(Shaders.size());
 		for(UInt32 Idx = 0; Idx < ShaderStages.size(); ++Idx)
@@ -411,15 +416,15 @@ export namespace VE { namespace Runtime
 			.basePipelineIndex		= -1,					// Optional
 		};
 		
-		VK_CHECK(vkCreateGraphicsPipelines(GVulkan->Device->GetHandle(), GVulkan->RenderPassPipelineCache->GetHandle(), 1, &CreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
+		VK_CHECK(vkCreateGraphicsPipelines(GVulkan->Device->GetHandle(), GVulkan->RenderPassPipelineCache->GetHandle(), 1, &CreateInfo, GVulkan->AllocationCallbacks, &Handle));
 	}
 
 	void VulkanRenderPass::Subpass::
 	Destroy() noexcept
 	{
-		vkDestroyPipeline(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroyPipeline(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
-		vkDestroyPipelineLayout(GVulkan->Device->GetHandle(), Layout, VulkanAllocator::AllocationCallbacks);
+		vkDestroyPipelineLayout(GVulkan->Device->GetHandle(), Layout, GVulkan->AllocationCallbacks);
 		Layout = VK_NULL_HANDLE;
 	}
 	

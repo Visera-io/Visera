@@ -10,7 +10,7 @@
             "name": "basic-settings",
             "hidden": true,
             "cacheVariables": {
-                "VISERA_SETUP_TIME": "2024-11-13 17:16:05.320220",
+                "VISERA_SETUP_TIME": "2024-12-20 16:01:55.572637",
                 "CMAKE_TOOLCHAIN_FILE": "D:\\Programs\\ViseraEngine\\Visera-Alpha\\Engine\\Packages\\Vcpkg\\scripts\\buildsystems\\vcpkg.cmake"
             }
         },

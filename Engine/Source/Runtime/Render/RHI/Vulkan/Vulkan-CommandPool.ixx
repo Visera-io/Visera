@@ -6,7 +6,6 @@ module;
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:CommandPool;
 
 import :Context;
-import :Allocator;
 import :Device;
 import :Synchronization;
 
@@ -110,14 +109,14 @@ export namespace VE { namespace Runtime
 			.queueFamilyIndex = GVulkan->Device->GetQueueFamily(QueueFamilyType).Index,
 		};
 
-		VK_CHECK(vkCreateCommandPool(GVulkan->Device->GetHandle(), &CreateInfo, VulkanAllocator::AllocationCallbacks, &Handle));
+		VK_CHECK(vkCreateCommandPool(GVulkan->Device->GetHandle(), &CreateInfo, GVulkan->AllocationCallbacks, &Handle));
 	}
 
 	void VulkanCommandPool::
 	Destroy()
 	{
 		EmptyRecycleBin();
-		vkDestroyCommandPool(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroyCommandPool(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 

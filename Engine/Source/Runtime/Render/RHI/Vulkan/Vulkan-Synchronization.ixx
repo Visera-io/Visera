@@ -8,7 +8,6 @@ module;
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:Synchronization;
 
 import :Context;
-import :Allocator;
 import :Device;
 
 export namespace VE { namespace Runtime
@@ -61,14 +60,14 @@ export namespace VE { namespace Runtime
 		VK_CHECK(vkCreateSemaphore(
 			GVulkan->Device->GetHandle(),
 			&CreateInfo,
-			VulkanAllocator::AllocationCallbacks,
+			GVulkan->AllocationCallbacks,
 			&Handle));
 	}
 
 	VulkanSemaphore::
 	~VulkanSemaphore()
 	{
-		vkDestroySemaphore(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroySemaphore(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 
@@ -83,14 +82,14 @@ export namespace VE { namespace Runtime
 		VK_CHECK(vkCreateFence(
 			GVulkan->Device->GetHandle(),
 			&CreateInfo,
-			VulkanAllocator::AllocationCallbacks,
+			GVulkan->AllocationCallbacks,
 			&Handle));
 	}
 
 	VulkanFence::
 	~VulkanFence()
 	{
-		vkDestroyFence(GVulkan->Device->GetHandle(), Handle, VulkanAllocator::AllocationCallbacks);
+		vkDestroyFence(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
 

@@ -4,7 +4,6 @@ module;
 #include <volk.h>
 
 export module Visera.Engine.Runtime.Render.RHI.Vulkan;
-import :Allocator;
 import :Loader;
 import :Context;
 import :PipelineCache;

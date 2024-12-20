@@ -46,6 +46,13 @@ if (NOT TARGET volk::volk)
     target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE volk::volk_headers)
 endif()
 
+#VMA
+if (NOT TARGET GPUOpen::VulkanMemoryAllocator)
+    message(STATUS "\nLoading VMA (GPUOpen::VulkanMemoryAllocator)")
+    FIND_PACKAGE(VulkanMemoryAllocator CONFIG REQUIRED)
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE GPUOpen::VulkanMemoryAllocator)
+endif()
+
 # GLFW3
 if (NOT TARGET glfw)
     message(STATUS "\nLoading GLFW3 (glfw)")
