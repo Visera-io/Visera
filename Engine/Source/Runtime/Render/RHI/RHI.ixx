@@ -28,6 +28,7 @@ export namespace VE { namespace Runtime
 		using RenderPass		= VulkanRenderPass;
 		using AccessPermissions	= VulkanAccessPermissions;
 		using PipelineStages	= VulkanPipelineStages;
+		using MemoryUsages		= VulkanMemoryUsages;
 		using ImageLayouts		= VulkanImageLayouts;
 		using PipelineStages	= VulkanPipelineStages;
 		using AttachmentIO		= VulkanAttachmentIO;
