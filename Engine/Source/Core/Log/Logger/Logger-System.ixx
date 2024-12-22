@@ -45,16 +45,12 @@ export namespace VE
 		{ Spdlogger->error(Formatter, std::forward<Args>(Arguments)...); }
 
 		inline void
-		Fatal(const String& message, const std::source_location& location)
+		Fatal(const String& message, const std::source_location& location = std::source_location::current())
 		{ 
-			Spdlogger->critical(message);
-			throw RuntimeError("(Automatically thrown by Log::Fatal)", location);
+			RuntimeError Error{ message, location };
+			Spdlogger->critical("{}{}", Error.What(), Error.Where());
+			std::exit(VISERA_ENGINE_ERROR);
 		}
-
-		template<typename... Args>
-		inline void
-		Fatal(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{ Spdlogger->critical(Formatter, std::forward<Args>(Arguments)...); }
 
 		inline void
 		Debug(const String& message)

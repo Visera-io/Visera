@@ -70,7 +70,7 @@ export namespace VE { namespace Runtime
 				Log::Warn("[Vulkan]: {}",	CallbackData->pMessage);
 				break;
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-				Log::Fatal("[Vulkan]: {}",	CallbackData->pMessage);
+				Log::Fatal(std::format("[Vulkan]: {}",	CallbackData->pMessage));
 				break;
 			default:
 				Log::Error("[Vulkan]: Unknow Message Severity {}", ErrorCode(MessageSeverity));
@@ -122,7 +122,7 @@ export namespace VE { namespace Runtime
 				if (strcmp(RequiredLayer, AvailableLayer.layerName) == 0)
 				{ Found = true; break; }
 			}
-			if (!Found) Log::Fatal("Failed to enable the Vulkan Validation Layer {}", RequiredLayer);
+			if (!Found) Log::Fatal(std::format("Failed to enable the Vulkan Validation Layer {}", RequiredLayer));
 		}
 
 		const VkApplicationInfo AppInfo

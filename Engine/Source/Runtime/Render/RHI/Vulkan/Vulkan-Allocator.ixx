@@ -7,6 +7,8 @@ module;
 
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:Allocator;
 
+import Visera.Engine.Core.Log;
+
 import :Context;
 import :Common;
 import :Instance;
@@ -88,6 +90,8 @@ export namespace VE { namespace Runtime
 	VulkanAllocator::
 	CreateBuffer(const Buffer::CreateInfo& _CreateInfo)
 	{
+		Assert(_CreateInfo.Size > 0);
+
 		auto NewBuffer = CreateSharedPtr<Buffer>();
 		VkBufferCreateInfo CreateInfo
 		{

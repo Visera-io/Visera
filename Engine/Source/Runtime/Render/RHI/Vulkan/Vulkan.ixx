@@ -39,7 +39,6 @@ export namespace VE { namespace Runtime
 		SI VulkanSwapchain	Swapchain	{};
 		SI VulkanPipelineCache RenderPassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
 		//SI VulkanPipelineCache ComputePassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
-		//VulkanMemoryAllocator VMA;
 
 	private:
 		static void Bootstrap();
@@ -54,6 +53,7 @@ export namespace VE { namespace Runtime
 		Context->Surface	= &Surface;
 		Context->GPU		= &GPU;
 		Context->Device		= &Device;
+		Context->Allocator	= &Allocator;
 		Context->Swapchain	= &Swapchain;
 		Context->RenderPassPipelineCache = &RenderPassPipelineCache;
 		

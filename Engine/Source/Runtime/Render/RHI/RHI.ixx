@@ -29,6 +29,8 @@ export namespace VE { namespace Runtime
 		using AccessPermissions	= VulkanAccessPermissions;
 		using PipelineStages	= VulkanPipelineStages;
 		using MemoryUsages		= VulkanMemoryUsages;
+		using Buffer			= VulkanAllocator::Buffer;
+		using BufferUsages		= VulkanBufferUsages::Option;
 		using ImageLayouts		= VulkanImageLayouts;
 		using PipelineStages	= VulkanPipelineStages;
 		using AttachmentIO		= VulkanAttachmentIO;
@@ -39,6 +41,7 @@ export namespace VE { namespace Runtime
 		CALL RegisterCommandContext(const String& Name, PipelineStages::Option Deadline) -> void;
 		CALL SearchCommandContext(StringView Name)	-> WeakPtr<CommandContext>;
 
+		CALL CreateBuffer(const Buffer::CreateInfo& _CreateInfo) -> SharedPtr<Buffer> { return Vulkan::Allocator.CreateBuffer(_CreateInfo); }
 		CALL CreateFence()						-> SharedPtr<Fence> { return CreateSharedPtr<Fence>(); }
 		CALL CreateSignaledFence()				-> SharedPtr<Fence> { return CreateSharedPtr<Fence>(true); }
 		CALL CreateSemaphore()					-> SharedPtr<Semaphore> { return CreateSharedPtr<Semaphore>(); }
@@ -154,7 +157,7 @@ export namespace VE { namespace Runtime
 		auto Result = CurrentFrame.CommandContexts.find(Name.data());
 
 		if(Result == CurrentFrame.CommandContexts.end())
-		{ Log::Fatal("Failed to search Command Context ({})", Name); }
+		{ Log::Fatal(std::format("Failed to search Command Context ({})", Name)); }
 
 		return Result->second;
 	}

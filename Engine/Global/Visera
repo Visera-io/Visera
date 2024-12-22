@@ -29,6 +29,8 @@
 #include <type_traits>
 
 // << Global Macros >>
+#define VISERA_ENGINE_ERROR -100
+#define VISERA_APP_ERROR    -200
 
 //Asserts
 namespace VE

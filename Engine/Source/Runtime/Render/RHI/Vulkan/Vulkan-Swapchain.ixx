@@ -264,7 +264,7 @@ export namespace VE { namespace Runtime
 			//recreate_swapchain();
 			throw RecreateSignal{};
 		}
-		if (Result != VK_SUCCESS) Log::Fatal("Failed to present the Vulkan Swapchain! (Cursor:{})", Cursor);
+		if (Result != VK_SUCCESS) Log::Fatal(std::format("Failed to present the Vulkan Swapchain! (Cursor:{})", Cursor));
 
 		if (bMoveCursor) MoveCursor(1);
 	}

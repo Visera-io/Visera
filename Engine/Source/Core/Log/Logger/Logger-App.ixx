@@ -46,14 +46,15 @@ export namespace VE
 		inline void
 		Fatal(const String& message, const std::source_location& Location)
 		{ 
-			Spdlogger->critical(message);
 			std::stringstream SS;
 			SS  << "\n[Error Location]"
 				<< "\n- File: "		<< Location.file_name()
 				<< "\n- Line: "		<< Location.line()
 				<< "\n- Function: "	<< Location.function_name();
 			String ErrorInfo = SS.str();
-			throw std::runtime_error(ErrorInfo);
+
+			Spdlogger->critical("{}{}", message, ErrorInfo);
+			std::exit(VISERA_APP_ERROR);
 		}
 
 		template<typename... Args>
