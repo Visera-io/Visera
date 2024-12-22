@@ -2,8 +2,6 @@ module;
 #include <Visera>
 
 #include <volk.h>
-#define VMA_IMPLEMENTATION
-#include <vma/vk_mem_alloc.h>
 export module Visera.Engine.Runtime.Render.RHI.Vulkan:Device;
 
 import Visera.Engine.Core.Log;
@@ -28,7 +26,6 @@ export namespace VE { namespace Runtime
 
 	private:
 		VkDevice				Handle{ VK_NULL_HANDLE };
-		VmaAllocator			Allocator{ VK_NULL_HANDLE };
 		Array<RawString>		Extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 											VK_KHR_MAINTENANCE1_EXTENSION_NAME };
 	public:
@@ -221,25 +218,6 @@ export namespace VE { namespace Runtime
 			for (UInt32 Idx = 0; Idx < QueueFamilies[Compute].Queues.size(); ++Idx)
 			{ vkGetDeviceQueue(Handle, QueueFamilies[Compute].Index, Idx, &QueueFamilies[Compute].Queues[Idx]); }	
 		}
-
-		//Create Allocator
-		VmaVulkanFunctions VulkanFunctions
-		{
-			.vkGetInstanceProcAddr = vkGetInstanceProcAddr,
-			.vkGetDeviceProcAddr = vkGetDeviceProcAddr,
-			.vkGetDeviceBufferMemoryRequirements = vkGetDeviceBufferMemoryRequirements,
-			.vkGetDeviceImageMemoryRequirements = vkGetDeviceImageMemoryRequirements
-		};
-
-		VmaAllocatorCreateInfo CreateInfo
-		{
-			.physicalDevice = GVulkan->GPU->GetHandle(),
-			.device = GVulkan->Device->GetHandle(),
-			.pVulkanFunctions = &VulkanFunctions,
-			.instance = GVulkan->Instance->GetHandle(),
-			.vulkanApiVersion = GVulkan->Instance->GetVulkanAPIVersion()
-		};
-		VK_CHECK(vmaCreateAllocator(&CreateInfo, &Allocator));
 
 		return Handle;
 	}

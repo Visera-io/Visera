@@ -10,6 +10,7 @@ import :PipelineCache;
 export import :Common;
 export import :Instance;
 export import :Device;
+export import :Allocator;
 export import :Surface;
 export import :Swapchain;
 export import :CommandPool;
@@ -34,6 +35,7 @@ export namespace VE { namespace Runtime
 		SI VulkanSurface	Surface		{};
 		SI VulkanGPU		GPU			{};
 		SI VulkanDevice		Device		{};
+		SI VulkanAllocator  Allocator	{};
 		SI VulkanSwapchain	Swapchain	{};
 		SI VulkanPipelineCache RenderPassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
 		//SI VulkanPipelineCache ComputePassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
@@ -61,6 +63,8 @@ export namespace VE { namespace Runtime
 		Surface.Create();
 		
 		Loader.LoadDevice(Device.Create(&GPU, &Surface));
+		
+		Allocator.Create();
 
 		Swapchain.Create();
 
@@ -73,6 +77,8 @@ export namespace VE { namespace Runtime
 		RenderPassPipelineCache.Destroy();
 
 		Swapchain.Destroy();
+
+		Allocator.Destory();
 
 		Device.Destroy();
 

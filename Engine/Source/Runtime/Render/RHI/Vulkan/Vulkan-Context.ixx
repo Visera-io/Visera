@@ -13,6 +13,7 @@ export namespace VE { namespace Runtime
 	class VulkanInstance;
 	class VulkanGPU;
 	class VulkanDevice;
+	class VulkanAllocator;
 	class VulkanSurface;
 	class VulkanSwapchain;
 	class VulkanPipelineCache;
@@ -24,6 +25,7 @@ export namespace VE { namespace Runtime
 		const VulkanInstance*	Instance;
 		const VulkanGPU*		GPU;
 		const VulkanDevice*		Device;
+		const VulkanAllocator*  Allocator;
 		const VulkanSurface*	Surface;
 		const VulkanSwapchain*	Swapchain;
 		const VulkanPipelineCache* RenderPassPipelineCache;
