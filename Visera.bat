@@ -9,19 +9,20 @@ if "%1"=="" (
     set VISERA_PYTHON_VERSION="3.10.15"
     if not exist %VISERA_PYTHON_DIR%\python.bat (
         @REM Download CPython
+        mkdir %VISERA_CACHE_DIR%\
+        mkdir %VISERA_CACHE_DIR%\Downloads\
         if not exist %VISERA_CACHE_DIR%\Downloads\Python.tar.xz (
             @REM Check cache to accelerate reinstallation.
             call curl -o %VISERA_CACHE_DIR%\Downloads\Python.tar.xz https://www.python.org/ftp/python/%VISERA_PYTHON_VERSION%/Python-%VISERA_PYTHON_VERSION%.tar.xz
             call tar -xf %VISERA_CACHE_DIR%\Downloads\Python.tar.xz -C %VISERA_ROOT_DIR%
+
+            :: Remove read-only attribute if set
+            attrib -r %VISERA_ROOT_DIR%Python-%VISERA_PYTHON_VERSION%
+            ren %VISERA_ROOT_DIR%Python-%VISERA_PYTHON_VERSION% "Python"
         )
-        ren %VISERA_ROOT_DIR%Python-%VISERA_PYTHON_VERSION% "Python"
 
         @REM Install CPython
         call %VISERA_PYTHON_DIR%\PCBuild\build.bat
-        if %ERRORLEVEL% NEQ 0 (
-            echo Failed to install CPython! - try to run 'setup' again to solve this issue.
-            exit /b %ERRORLEVEL%
-        )
         
         @REM Install Pip
         call %VISERA_PYTHON_DIR%\python -m ensurepip --upgrade
@@ -31,6 +32,7 @@ if "%1"=="" (
         call %VISERA_PYTHON_DIR%\python -m pip install requests
 
         @REM Clean Cache
+        attrib -r %VISERA_CACHE_DIR%\Downloads\Python.tar.xz
         del %VISERA_CACHE_DIR%\Downloads\Python.tar.xz
     )
     call %VISERA_PYTHON_DIR%\python %VISERA_SCRIPTS_DIR%\python_CLI.py
