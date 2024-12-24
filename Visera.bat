@@ -35,6 +35,7 @@ if "%1"=="" (
         attrib -r %VISERA_CACHE_DIR%\Downloads\Python.tar.xz
         del %VISERA_CACHE_DIR%\Downloads\Python.tar.xz
     )
+    echo %VISERA_PYTHON_DIR%\python
     call %VISERA_PYTHON_DIR%\python %VISERA_SCRIPTS_DIR%\python_CLI.py
 ) else (
     @REM Transfer all arguments to Python CLI

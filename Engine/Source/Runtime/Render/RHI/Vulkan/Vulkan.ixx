@@ -37,6 +37,7 @@ export namespace VE { namespace Runtime
 		SI VulkanDevice		Device		{};
 		SI VulkanAllocator  Allocator	{};
 		SI VulkanSwapchain	Swapchain	{};
+		
 		SI VulkanPipelineCache RenderPassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
 		//SI VulkanPipelineCache ComputePassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
 

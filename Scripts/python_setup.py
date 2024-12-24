@@ -20,8 +20,7 @@ def Setup(argv) -> int:
 
     vars = cmake_presets["configurePresets"][0]["cacheVariables"]
     vars["VISERA_SETUP_TIME"] = f"{datetime.now()}"
-    vars["CMAKE_TOOLCHAIN_FILE"] = path.join(path_vcpkg, "scripts", "buildsystems", "vcpkg.cmake")
-    
+
     with open(cmake_preset_path, 'w') as sink:
         json.dump(cmake_presets, sink, indent = 4)
     del cmake_presets
