@@ -83,7 +83,7 @@ export namespace VE { namespace Runtime
 		}
 
 	private:
-		VmaAllocator	Handle{ VMA_NULL };?
+		VmaAllocator	Handle{ VMA_NULL };
 	};
 
 	SharedPtr<VulkanAllocator::Buffer>
