@@ -1,7 +1,7 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
-export module Visera.Engine.Core.Signal:RuntimeError;
+export module Visera.Core.Signal:RuntimeError;
 import :Common;
 
 export namespace VE

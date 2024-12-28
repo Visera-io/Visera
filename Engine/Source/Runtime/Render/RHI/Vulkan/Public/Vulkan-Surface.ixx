@@ -1,23 +1,13 @@
 module;
-#include <Visera>
+#include "../VulkanPC.h"
+export module Visera.Runtime.Render.RHI.Vulkan:Surface;
 
-#include <volk.h>
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-export module Visera.Engine.Runtime.Render.RHI.Vulkan:Surface;
-
-import Visera.Engine.Runtime.Platform;
-import :Context;
+import Visera.Runtime.Platform;
 import :Instance;
 import :GPU;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
-
-	class Vulkan;
-
 	class VulkanSurface
 	{
 		friend class Vulkan;
@@ -61,4 +51,4 @@ export namespace VE { namespace Runtime
 		vkDestroySurfaceKHR(GVulkan->Instance->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
-} } // namespace VE::Runtime
+} // namespace VE

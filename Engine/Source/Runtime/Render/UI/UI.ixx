@@ -1,9 +1,9 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
-export module Visera.Engine.Runtime.Render.UI;
+export module Visera.Runtime.Render.UI;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class Layer
@@ -24,4 +24,4 @@ export namespace VE { namespace Runtime
 		}
 	};
 
-} } // namespace VE::Runtime
+} // namespace VE

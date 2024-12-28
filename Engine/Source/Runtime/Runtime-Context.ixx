@@ -1,16 +1,16 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
-export module Visera.Engine.Runtime.Context;
+export module Visera.Runtime.Context;
 
-import Visera.Engine.Core.Log;
+import Visera.Core.Log;
 
 namespace VE
 {
 	class ViseraRuntime;
 }
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class RuntimeContext
@@ -57,4 +57,4 @@ export namespace VE { namespace Runtime
 
 		}
 	};
-} } // namespace VE::Runtime
+} // namespace VE

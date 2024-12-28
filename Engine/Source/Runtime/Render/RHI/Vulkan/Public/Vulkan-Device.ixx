@@ -1,21 +1,14 @@
 module;
-#include <Visera>
+#include "../VulkanPC.h"
+export module Visera.Runtime.Render.RHI.Vulkan:Device;
 
-#include <volk.h>
-export module Visera.Engine.Runtime.Render.RHI.Vulkan:Device;
-
-import Visera.Engine.Core.Log;
-import :Context;
+import Visera.Core.Log;
 import :Instance;
 import :GPU;
 import :Surface;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
-
-	class Vulkan;
-
 	class VulkanDevice
 	{
 		friend class Vulkan;
@@ -157,7 +150,7 @@ export namespace VE { namespace Runtime
 		//Create Queues
 		Array<VkDeviceQueueCreateInfo> DeviceQueueCreateInfos(4-1/*Graphics == Present*/);
 		{
-			Assert(QueueFamilies[Graphics].Index == QueueFamilies[Present].Index);
+			VE_ASSERT(QueueFamilies[Graphics].Index == QueueFamilies[Present].Index);
 			QueueFamilies[Graphics].Queues.resize(QueueFamilies[Graphics].QueuePriorities.size());
 			QueueFamilies[Present].Queues.resize(QueueFamilies[Present].QueuePriorities.size());
 			QueueFamilies[Transfer].Queues.resize(QueueFamilies[Transfer].QueuePriorities.size());
@@ -229,4 +222,4 @@ export namespace VE { namespace Runtime
 		Handle = VK_NULL_HANDLE;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

@@ -1,13 +1,25 @@
-module;
-#include <Visera>
+#pragma once
 
+#include <Visera.h>
+#define VK_NO_PROTOTYPES
 #include <volk.h>
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 #include <vma/vk_mem_alloc.h>
 
-export module Visera.Engine.Runtime.Render.RHI.Vulkan:Common;
+#define VK_CHECK(Func) { if (VK_SUCCESS != Func) VE_ASSERT(False); }
 
-export namespace VE { namespace Runtime
+namespace VE
 {
+	class RHI;
+	class Vulkan;
+	class VulkanInstance;
+	class VulkanGPU;
+	class VulkanDevice;
+	class VulkanAllocator;
+	class VulkanSurface;
+	class VulkanSwapchain;
+	class VulkanPipelineCache;
 
 	struct VulkanAccessPermissions;
 	struct VulkanShaderStages;
@@ -17,6 +29,30 @@ export namespace VE { namespace Runtime
 	struct VulkanImageUsages;
 	struct VulkanBufferUsages;
 	struct VulkanAttachmentIO;
+
+	class VulkanContext
+	{
+		friend class Vulkan;
+	public:
+		const VulkanInstance*	Instance;
+		const VulkanGPU*		GPU;
+		const VulkanDevice*		Device;
+		const VulkanAllocator*  Allocator;
+		const VulkanSurface*	Surface;
+		const VulkanSwapchain*	Swapchain;
+		const VulkanPipelineCache* RenderPassPipelineCache;
+		const VkAllocationCallbacks* AllocationCallbacks = nullptr;
+
+		VulkanContext() noexcept { VE_ASSERT(!bCreated); bCreated = true; };
+		VulkanContext(const VulkanContext&) = delete;
+		VulkanContext(VulkanContext&&) = delete;
+		VulkanContext& operator=(const VulkanContext&) = delete;
+		VulkanContext& operator=(VulkanContext&&) = delete;
+	private:
+		static inline bool bCreated = False;
+		~VulkanContext() noexcept = default;
+	};
+	inline const VulkanContext* const GVulkan = new VulkanContext();
 
     struct VulkanAccessPermissions
     {
@@ -245,4 +281,4 @@ export namespace VE { namespace Runtime
 		};
 	};
 
-} } // namespace VE::Runtime
+} // namespace VE

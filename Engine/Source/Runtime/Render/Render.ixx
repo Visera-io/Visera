@@ -1,20 +1,20 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
-export module Visera.Engine.Runtime.Render;
-export import Visera.Engine.Runtime.Render.RHI;
-//export import Visera.Engine.Runtime.Render.Coordinate;
+export module Visera.Runtime.Render;
+export import Visera.Runtime.Render.RHI;
+//export import Visera.Runtime.Render.Coordinate;
 
-import Visera.Engine.Runtime.Context;
-import Visera.Engine.Runtime.Platform;
-import Visera.Engine.Core.Log;
+import Visera.Runtime.Context;
+import Visera.Runtime.Platform;
+import Visera.Core.Log;
 
 namespace VE
 {
 	class ViseraRuntime;
 }
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	
 	class Render
@@ -50,7 +50,7 @@ export namespace VE { namespace Runtime
 								.Fence = CurrentFrame.Fence_Rendering
 							});
 						}
-						Assert(SubmitInfos.size() == 1, "TESTING"); //Visera Render is controled by a singlton cmd
+						VE_ASSERT(SubmitInfos.size() == 1, "TESTING"); //Visera Render is controled by a singlton cmd
 						RHI::ResetableGraphicsCommandPool.Submit(SubmitInfos[0]);
 					}
 					RHI::PresentCurrentFrame();
@@ -80,4 +80,4 @@ export namespace VE { namespace Runtime
 	};
 	
 
-} } // namespace VE::Runtime
+} // namespace VE

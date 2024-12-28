@@ -1,14 +1,14 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
-export module Visera.Engine.Core.Log.Logger:SystemLogger;
+export module Visera.Core.Log.Logger:SystemLogger;
 
-import Visera.Engine.Core.Signal;
-import Visera.Engine.Internal.Pattern;
+import Visera.Core.Signal;
+import Visera.Internal.Pattern;
 
 export namespace VE
 {

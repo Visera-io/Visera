@@ -1,12 +1,10 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
 export module Visera.App.Base;
 
 export namespace VISERA_APP_NAMESPACE
 {
-	inline void Assert(bool expression, const char* prompt = "") { assert(expression && prompt); }
-
     constexpr bool False   = false;
     constexpr bool True    = !False;
 

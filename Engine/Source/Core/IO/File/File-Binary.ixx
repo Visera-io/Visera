@@ -1,10 +1,10 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
-export module Visera.Engine.Core.IO.File:Binary;
+export module Visera.Core.IO.File:Binary;
 import :Interface;
 
-import Visera.Engine.Core.Signal;
+import Visera.Core.Signal;
 
 export namespace VE
 {	

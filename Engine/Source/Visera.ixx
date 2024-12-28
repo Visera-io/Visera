@@ -1,13 +1,13 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
 export module Visera.Engine;
-export import Visera.Engine.Core;
+export import Visera.Core;
 #if defined(VISERA_RUNTIME)
-export import Visera.Engine.Runtime;
+export import Visera.Runtime;
 #endif
 import Visera.App;
-import Visera.Engine.Internal;
+import Visera.Internal;
 
 namespace VE
 {

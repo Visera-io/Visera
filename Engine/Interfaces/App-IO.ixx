@@ -1,9 +1,9 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
 export module Visera.App.IO;
 
-import Visera.Engine.Core.IO;
+import Visera.Core.IO;
 
 export namespace VISERA_APP_NAMESPACE
 {

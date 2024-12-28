@@ -1,11 +1,11 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
-export module Visera.Engine.Internal;
-export import Visera.Engine.Internal.Memory;
-export import Visera.Engine.Internal.Pattern;
+export module Visera.Internal;
+export import Visera.Internal.Memory;
+export import Visera.Internal.Pattern;
 
-import Visera.Engine.Core.Log;
+import Visera.Core.Log;
 
 export namespace VE
 {

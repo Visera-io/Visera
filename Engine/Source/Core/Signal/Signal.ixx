@@ -1,6 +1,6 @@
 module;
 
-export module Visera.Engine.Core.Signal;
+export module Visera.Core.Signal;
 export import :RuntimeError;
 export import :AppExitSignal;
 

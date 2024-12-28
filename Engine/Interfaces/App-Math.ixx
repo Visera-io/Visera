@@ -3,7 +3,7 @@ module;
 export module Visera.App.Math;
 import Visera.App.Base;
 
-import Visera.Engine.Core.Math;
+import Visera.Core.Math;
 
 export namespace VISERA_APP_NAMESPACE
 {

@@ -1,11 +1,11 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
-export module Visera.Engine.Core.IO.File:Interface;
+export module Visera.Core.IO.File:Interface;
 
-export import Visera.Engine.Core.Signal;
+export import Visera.Core.Signal;
 
-import Visera.Engine.Core.Log;
+import Visera.Core.Log;
 
 export namespace VE
 {	
@@ -98,7 +98,7 @@ export namespace VE
 
 	size_t File::GetInputFileSize() const
 	{
-		Assert(IsOpened());
+		VE_ASSERT(IsOpened());
 		IOStream.IStream->seekg(0, std::ios_base::end);
 
 		auto FileSize = static_cast<size_t>(IOStream.IStream->tellg());
@@ -122,7 +122,7 @@ export namespace VE
 	void File::
 	CloseIStream()
 	{
-		Assert(IOStream.IStream != nullptr);
+		VE_ASSERT(IOStream.IStream != nullptr);
 		IOStream.IStream->close();
 		delete IOStream.IStream;
 		IOStream.IStream = nullptr;
@@ -140,7 +140,7 @@ export namespace VE
 	void File::
 	CloseOStream()
 	{
-		Assert(IOStream.OStream != nullptr);
+		VE_ASSERT(IOStream.OStream != nullptr);
 		IOStream.OStream->close();
 		delete IOStream.OStream;
 		IOStream.OStream = nullptr;

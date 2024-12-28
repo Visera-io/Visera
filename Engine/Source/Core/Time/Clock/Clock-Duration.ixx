@@ -1,7 +1,7 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
-export module Visera.Engine.Core.Time.Clock:Duration;
+export module Visera.Core.Time.Clock:Duration;
 
 export namespace VE
 {	

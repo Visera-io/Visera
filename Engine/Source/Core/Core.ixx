@@ -1,15 +1,15 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
-export module Visera.Engine.Core;
+export module Visera.Core;
 
-export import Visera.Engine.Core.Log;
-export import Visera.Engine.Core.IO;
-export import Visera.Engine.Core.Signal;
-export import Visera.Engine.Core.Time;
-export import Visera.Engine.Core.Math;
+export import Visera.Core.Log;
+export import Visera.Core.IO;
+export import Visera.Core.Signal;
+export import Visera.Core.Time;
+export import Visera.Core.Math;
 
-import Visera.Engine.Internal;
+import Visera.Internal;
 
 export namespace VE
 {

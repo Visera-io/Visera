@@ -1,44 +1,11 @@
 #pragma once
-// << Layers >>
-#define VISERA_RUNTIME
 
-// << STD Modules >>
-#include <cassert>
-#include <sstream>
-#include <ostream>
-#include <fstream>
-#include <iostream>
-#include <format>
-#include <chrono>
-#include <algorithm>
-#include <array>
-#include <thread>
-#include <ranges>
-#include <memory>
-#include <typeinfo>
-#include <filesystem>
-#include <functional>
-#include <source_location>
-#include <exception>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <unordered_map>
-#include <unordered_set>
-#include <variant>
-#include <type_traits>
+#include "Visera-STD.h"
 
-// << Global Macros >>
-#define VISERA_ENGINE_ERROR -100
-#define VISERA_APP_ERROR    -200
-
-//Asserts
 namespace VE
 {
-    inline void Assert(bool expression, const char* prompt = "") { assert(expression && prompt); }
-
     /* <<  Concepts >>
-       
+        
     */
     template <typename T>
     concept Hashable = requires(T type) {{ std::hash<T>{}(type) } -> std::same_as<std::size_t>;};
@@ -63,7 +30,7 @@ namespace VE
                         std::is_class_v<std::chrono::high_resolution_clock>;
 
     /* <<  Basic Types >>
-       
+        
     */
     using Bool		= bool;
     using Float  	= float;
@@ -142,4 +109,5 @@ namespace VE
 
     template<typename T>
     using Optional	  = std::optional<T>;
-}
+    
+} // namespace VE

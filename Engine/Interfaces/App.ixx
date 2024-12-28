@@ -1,5 +1,5 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
 export module Visera.App;
 export import Visera.App.Base;
@@ -8,7 +8,7 @@ export import Visera.App.Log;
 export import Visera.App.Math;
 export import Visera.App.Render;
 
-import Visera.Engine.Core.Signal;
+import Visera.Core.Signal;
 
 export namespace VE
 {  

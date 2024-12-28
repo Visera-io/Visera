@@ -1,13 +1,11 @@
 module;
-#include <Visera>
+#include <Visera.h>
+#include "Vulkan/VulkanPC.h"
+export module Visera.Runtime.Render.RHI;
+import Visera.Runtime.Render.RHI.Vulkan;
+import Visera.Core.Log;
 
-#include <volk.h>
-
-export module Visera.Engine.Runtime.Render.RHI;
-import Visera.Engine.Runtime.Render.RHI.Vulkan;
-import Visera.Engine.Core.Log;
-
-export namespace VE { namespace Runtime
+export namespace VE
 {	
 	#define ENUM_BIT(Flag, Bit) static constexpr VkFlags Flag = Bit;
 	#define CALL static inline auto
@@ -45,7 +43,7 @@ export namespace VE { namespace Runtime
 		CALL CreateFence()						-> SharedPtr<Fence> { return CreateSharedPtr<Fence>(); }
 		CALL CreateSignaledFence()				-> SharedPtr<Fence> { return CreateSharedPtr<Fence>(true); }
 		CALL CreateSemaphore()					-> SharedPtr<Semaphore> { return CreateSharedPtr<Semaphore>(); }
-		CALL CreateSignaledSemaphore()			-> SharedPtr<Semaphore> { Assert(False, "Not Supported by Vulkan"); return CreateSharedPtr<Semaphore>(true); }
+		CALL CreateSignaledSemaphore()			-> SharedPtr<Semaphore> { VE_ASSERT(False, "Not Supported by Vulkan"); return CreateSharedPtr<Semaphore>(true); }
 		CALL CreateShader(ShaderStages Stage, const Array<Byte>& ShadingCode) -> SharedPtr<Shader> { return CreateSharedPtr<VulkanShader>(Stage, ShadingCode);}
 
 		CALL GetSwapchain() -> const Swapchain& { return Vulkan::Swapchain; }
@@ -140,7 +138,7 @@ export namespace VE { namespace Runtime
 	{
 		for (auto& Frame : Frames)
 		{
-			Assert(!Frame.CommandContexts.count(Name));
+			VE_ASSERT(!Frame.CommandContexts.count(Name));
 			auto& NewCommandContext = Frame.CommandContexts[Name];
 			NewCommandContext = CreateSharedPtr<CommandContext>();
 			NewCommandContext->Create(Name, Deadline, nullptr);
@@ -162,4 +160,4 @@ export namespace VE { namespace Runtime
 		return Result->second;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

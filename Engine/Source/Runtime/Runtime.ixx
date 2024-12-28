@@ -1,13 +1,13 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
-export module Visera.Engine.Runtime;
-export import Visera.Engine.Runtime.Platform;
-export import Visera.Engine.Runtime.Render;
-import Visera.Engine.Runtime.Context;
+export module Visera.Runtime;
+export import Visera.Runtime.Platform;
+export import Visera.Runtime.Render;
+import Visera.Runtime.Context;
 
-import Visera.Engine.Core.Log;
-import Visera.Engine.Internal;
+import Visera.Core.Log;
+import Visera.Internal;
 
 import Visera.App;
 
@@ -22,12 +22,12 @@ export namespace VE
 		static inline Bool
 		Tick(ViseraApp* App)
 		{	
-			if (!Runtime::RuntimeContext::MainLoop.ShouldStop())
+			if (!RuntimeContext::MainLoop.ShouldStop())
 			{
-				Runtime::Platform::Tick();
+				Platform::Tick();
 
 				static const auto AppRenderTick = std::bind(&ViseraApp::RenderTick, App);
-				Runtime::Render::Tick(AppRenderTick);
+				Render::Tick(AppRenderTick);
 
 				return True;
 			}
@@ -37,17 +37,17 @@ export namespace VE
 		static inline void
 		Bootstrap()
 		{
-			Runtime::RuntimeContext::Bootstrap();
-			Runtime::Platform::Bootstrap();
-			Runtime::Render::Bootstrap();
+			RuntimeContext::Bootstrap();
+			Platform::Bootstrap();
+			Render::Bootstrap();
 		}
 
 		static inline void
 		Terminate()
 		{
-			Runtime::Render::Terminate();
-			Runtime::Platform::Terminate();
-			Runtime::RuntimeContext::Terminate();
+			Render::Terminate();
+			Platform::Terminate();
+			RuntimeContext::Terminate();
 		}
 
 		ViseraRuntime() noexcept = default;

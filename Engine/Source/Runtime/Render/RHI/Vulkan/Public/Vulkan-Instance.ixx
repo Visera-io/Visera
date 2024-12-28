@@ -1,25 +1,13 @@
 module;
-#include <Visera>
+#include "../VulkanPC.h"
+export module Visera.Runtime.Render.RHI.Vulkan:Instance;
 
-#define VK_NO_PROTOTYPES
-#include <volk.h>
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-
-export module Visera.Engine.Runtime.Render.RHI.Vulkan:Instance;
-
-import Visera.Engine.Core.Log;
-import :Context;
+import Visera.Core.Log;
 import :Loader;
 import :GPU;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
-
-	class Vulkan;
-
 	class VulkanInstance
 	{
 		friend class Vulkan;
@@ -82,7 +70,7 @@ export namespace VE { namespace Runtime
 	VkInstance VulkanInstance::
 	Create()
 	{
-		Assert(VK_API_VERSION_1_3 != 0);
+		VE_ASSERT(VK_API_VERSION_1_3 != 0);
 		// Layers
 		Array<RawString> EnabledLayers
 		{
@@ -174,7 +162,7 @@ export namespace VE { namespace Runtime
 	{
 #ifndef NDEBUG
 		auto LoadedDestroyFunc = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(Handle, "vkDestroyDebugUtilsMessengerEXT");
-		Assert(LoadedDestroyFunc && "Failed to load function: vkDestroyDebugUtilsMessengerEXT");
+		VE_ASSERT(LoadedDestroyFunc && "Failed to load function: vkDestroyDebugUtilsMessengerEXT");
 		LoadedDestroyFunc(Handle, Messenger, GVulkan->AllocationCallbacks);
 #endif
 		vkDestroyInstance(Handle, GVulkan->AllocationCallbacks);
@@ -201,4 +189,4 @@ export namespace VE { namespace Runtime
 	}
 
 
-} } // namespace VE::Runtime
+} // namespace VE

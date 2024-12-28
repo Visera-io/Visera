@@ -1,17 +1,12 @@
 module;
-#include <Visera>
+#include "../VulkanPC.h"
+export module Visera.Runtime.Render.RHI.Vulkan:Shader;
 
-#include <volk.h>
-
-export module Visera.Engine.Runtime.Render.RHI.Vulkan:Shader;
-
-import :Common;
-import :Context;
 import :Device;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
+	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) VE_ASSERT(False); }
 
 	class Vulkan;
 
@@ -42,7 +37,7 @@ export namespace VE { namespace Runtime
 	VulkanShader(VulkanShaderStages::Option ShaderType, const Array<Byte>& ShadingCode)
 		:Stage{VkShaderStageFlagBits(ShaderType)}, Data{ShadingCode}
 	{
-		Assert(!Data.empty());
+		VE_ASSERT(!Data.empty());
 		VkShaderModuleCreateInfo CreateInfo
 		{
 			.sType		= VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -59,4 +54,4 @@ export namespace VE { namespace Runtime
 		Handle = VK_NULL_HANDLE;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

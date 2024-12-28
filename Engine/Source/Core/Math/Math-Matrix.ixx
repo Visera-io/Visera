@@ -1,12 +1,12 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-export module Visera.Engine.Core.Math:Matrix;
+export module Visera.Core.Math:Matrix;
 
-import Visera.Engine.Internal.Memory;
+import Visera.Internal.Memory;
 
 export namespace VE
 {

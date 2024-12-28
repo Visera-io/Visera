@@ -1,23 +1,14 @@
 module;
-#include <Visera>
+#include "../VulkanPC.h"
+export module Visera.Runtime.Render.RHI.Vulkan:PipelineCache;
 
-#include <volk.h>
-
-export module Visera.Engine.Runtime.Render.RHI.Vulkan:PipelineCache;
-
-import :Context;
-import :Context;
 import :Device;
 import :GPU;
 
-import Visera.Engine.Core.IO;
+import Visera.Core.IO;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
-
-	class Vulkan;
-
 	class VulkanPipelineCache
 	{
 		friend class Vulkan;
@@ -81,4 +72,4 @@ export namespace VE { namespace Runtime
 		Handle = VK_NULL_HANDLE;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

@@ -1,22 +1,14 @@
 module;
-#include <Visera>
+#include "../VulkanPC.h"
+export module Visera.Runtime.Render.RHI.Vulkan:CommandPool;
 
-#include <volk.h>
-
-export module Visera.Engine.Runtime.Render.RHI.Vulkan:CommandPool;
-
-import :Context;
 import :Device;
 import :Synchronization;
 
-import Visera.Engine.Core.Log;
+import Visera.Core.Log;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
-
-	class RHI;
-	class Vulkan;
 
 	class VulkanCommandPool
 	{
@@ -42,7 +34,7 @@ export namespace VE { namespace Runtime
 		public:
 			void StartRecording();
 			void StopRecording();
-			void Reset() { Assert(!IsRecording() && HostCommandPool.IsResetable()); vkResetCommandBuffer(Handle, 0x0); }
+			void Reset() { VE_ASSERT(!IsRecording() && HostCommandPool.IsResetable()); vkResetCommandBuffer(Handle, 0x0); }
 
 			Bool IsRecording()	const { return bRecording; }
 			Bool IsPrimary()	const { return Type == VK_COMMAND_BUFFER_LEVEL_PRIMARY; }
@@ -188,7 +180,7 @@ export namespace VE { namespace Runtime
 	void VulkanCommandPool::CommandBuffer::
 	StartRecording()
 	{
-		Assert(!IsRecording());
+		VE_ASSERT(!IsRecording());
 
 		VkCommandBufferBeginInfo BeginInfo
 		{
@@ -205,7 +197,7 @@ export namespace VE { namespace Runtime
 	void VulkanCommandPool::CommandBuffer::
 	StopRecording()
 	{
-		Assert(IsRecording());
+		VE_ASSERT(IsRecording());
 
 		if (VK_SUCCESS != vkEndCommandBuffer(Handle))
 		{ Log::Fatal("Failed to stop recording Vulkan Command Buffer!"); }
@@ -213,4 +205,4 @@ export namespace VE { namespace Runtime
 		bRecording = False;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

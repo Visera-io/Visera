@@ -1,24 +1,15 @@
 module;
-#include <Visera>
+#include "../VulkanPC.h"
+export module Visera.Runtime.Render.RHI.Vulkan:RenderPass;
 
-#include <volk.h>
-
-export module Visera.Engine.Runtime.Render.RHI.Vulkan:RenderPass;
-
-import :Context;
-import :Common;
 import :Device;
 import :Shader;
 import :CommandPool;
 import :Swapchain;
 import :PipelineCache;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
-
-	class Vulkan;
-
 	class VulkanRenderPass
 	{
 		friend class Vulkan;
@@ -126,7 +117,7 @@ export namespace VE { namespace Runtime
 	void VulkanRenderPass::
 	Start(SharedPtr<VulkanCommandPool::CommandBuffer> CommandBuffer) const
 	{
-		Assert(CommandBuffer->IsRecording());
+		VE_ASSERT(CommandBuffer->IsRecording());
 
 		auto& CurrentFrameBuffer = FrameBuffers[GVulkan->Swapchain->GetCursor()];
 		VkRenderPassBeginInfo BeginInfo
@@ -148,7 +139,7 @@ export namespace VE { namespace Runtime
 	void VulkanRenderPass::
 	Stop(SharedPtr<VulkanCommandPool::CommandBuffer> CommandBuffer) const
 	{
-		Assert(CommandBuffer->IsRecording());
+		VE_ASSERT(CommandBuffer->IsRecording());
 		vkCmdEndRenderPass(CommandBuffer->GetHandle());
 	}
 
@@ -172,7 +163,7 @@ export namespace VE { namespace Runtime
 	void VulkanRenderPass::
 	Create()
 	{
-		Assert(!Subpasses.empty() &&
+		VE_ASSERT(!Subpasses.empty() &&
 				Subpasses.size() == SubpassDescriptions.size() == SubpassDependencies.size());
 		
 		Array<VkSubpassDescription> SubpassDescriptionInfos(Subpasses.size());
@@ -197,7 +188,7 @@ export namespace VE { namespace Runtime
 			};
 
 			auto& Dependency = SubpassDependencies[Idx];
-			Assert(VK_SUBPASS_EXTERNAL == UInt32(0 - 1));
+			VE_ASSERT(VK_SUBPASS_EXTERNAL == UInt32(0 - 1));
 			SubpassDependencyInfos[Idx] = VkSubpassDependency
 			{
 				.srcSubpass = Idx - 1,
@@ -210,7 +201,7 @@ export namespace VE { namespace Runtime
 			};
 		}
 
-		Assert(!Attachments.empty());
+		VE_ASSERT(!Attachments.empty());
 		VkRenderPassCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
@@ -226,7 +217,7 @@ export namespace VE { namespace Runtime
 		//Create FrameBuffers
 		for (auto& FrameBuffer : FrameBuffers)
 		{
-			Assert(!FrameBuffer.RenderTargets.empty());
+			VE_ASSERT(!FrameBuffer.RenderTargets.empty());
 			VkFramebufferCreateInfo FrameBufferCreateInfo
 			{
 				.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
@@ -396,7 +387,7 @@ export namespace VE { namespace Runtime
 		};
 
 		//!!!Call Subpass::Create() in the RenderPass::Create()!!!
-		Assert(HostRenderPass.GetHandle() != VK_NULL_HANDLE);
+		VE_ASSERT(HostRenderPass.GetHandle() != VK_NULL_HANDLE);
 		VkGraphicsPipelineCreateInfo CreateInfo =
 		{
 			.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -428,4 +419,4 @@ export namespace VE { namespace Runtime
 		Layout = VK_NULL_HANDLE;
 	}
 	
-} } // namespace VE::Runtime
+} // namespace VE

@@ -1,18 +1,12 @@
 module;
-#include <Visera>
-
 #define VOLK_IMPLEMENTATION
-#include <volk.h>
+#include "../VulkanPC.h"
+export module Visera.Runtime.Render.RHI.Vulkan:Loader;
 
-export module Visera.Engine.Runtime.Render.RHI.Vulkan:Loader;
+import Visera.Core.Log;
 
-import Visera.Engine.Core.Log;
-
-export namespace VE { namespace Runtime
+export namespace VE
 {
-
-	class Vulkan;
-
 	class VulkanLoader
 	{
 		friend class Vulkan;
@@ -44,15 +38,15 @@ export namespace VE { namespace Runtime
 	void VulkanLoader::
 	LoadInstance(VkInstance Instance)
 	{
-		Assert(Instance != VK_NULL_HANDLE);
+		VE_ASSERT(Instance != VK_NULL_HANDLE);
 		volkLoadInstance(Instance);
 	}
 
 	void VulkanLoader::
 	LoadDevice(VkDevice Device)
 	{
-		Assert(Device != VK_NULL_HANDLE);
+		VE_ASSERT(Device != VK_NULL_HANDLE);
 		volkLoadDevice(Device);
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

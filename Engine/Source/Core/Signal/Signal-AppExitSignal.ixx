@@ -1,7 +1,7 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
-export module Visera.Engine.Core.Signal:AppExitSignal;
+export module Visera.Core.Signal:AppExitSignal;
 import :Common;
 
 export namespace VE

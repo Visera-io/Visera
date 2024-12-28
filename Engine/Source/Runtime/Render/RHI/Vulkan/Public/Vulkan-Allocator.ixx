@@ -1,24 +1,15 @@
 module;
-#include <Visera>
-
-#include <volk.h>
 #define VMA_IMPLEMENTATION
-#include <vma/vk_mem_alloc.h>
+#include "../VulkanPC.h"
+export module Visera.Runtime.Render.RHI.Vulkan:Allocator;
 
-export module Visera.Engine.Runtime.Render.RHI.Vulkan:Allocator;
+import Visera.Core.Log;
 
-import Visera.Engine.Core.Log;
-
-import :Context;
-import :Common;
 import :Instance;
 import :Device;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
-
-	class Vulkan;
 
 	class VulkanAllocator
 	{
@@ -90,7 +81,7 @@ export namespace VE { namespace Runtime
 	VulkanAllocator::
 	CreateBuffer(const Buffer::CreateInfo& _CreateInfo)
 	{
-		Assert(_CreateInfo.Size > 0);
+		VE_ASSERT(_CreateInfo.Size > 0);
 
 		auto NewBuffer = CreateSharedPtr<Buffer>();
 		VkBufferCreateInfo CreateInfo
@@ -128,4 +119,4 @@ export namespace VE { namespace Runtime
 		vmaDestroyBuffer(GVulkan->Allocator->GetHandle(), Handle, Allocation);
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

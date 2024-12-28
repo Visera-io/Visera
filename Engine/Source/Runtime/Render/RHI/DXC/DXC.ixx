@@ -1,13 +1,13 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
 #include <Windows.h>
 #include <directx-dxc/dxcapi.h>
 
-export module Visera.Engine.Runtime.Render.DXC;
+export module Visera.Runtime.Render.DXC;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
     inline IDxcUtils* pLib{ nullptr };
 
-} } // namespace VE::Runtime
+} // namespace VE

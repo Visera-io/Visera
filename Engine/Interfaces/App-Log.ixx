@@ -1,12 +1,12 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
 #include <spdlog/spdlog.h>
 
 export module Visera.App.Log;
 import Visera.App.Base;
 
-import Visera.Engine.Core.Log.Logger;
+import Visera.Core.Log.Logger;
 
 export namespace VISERA_APP_NAMESPACE
 {

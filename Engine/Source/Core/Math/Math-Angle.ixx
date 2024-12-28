@@ -1,8 +1,8 @@
 module;
-#include <Visera>
+#include <Visera.h>
 #include <Eigen/Geometry>
 
-export module Visera.Engine.Core.Math:Angle;
+export module Visera.Core.Math:Angle;
 
 import :Operation;
 
@@ -54,7 +54,7 @@ export namespace VE
 		operator Float() const { return Value; }
 		operator Radian() const;
 		Radian	 ToRadian() const;
-		String	 ToString() const { return std::format("{}°", Value); }
+		String	 ToString() const { return std::format("{}ï¿½", Value); }
 
 		Radian operator*(Float Multiplicand)	const;
 		Radian operator*(Double Multiplicand)	const;
@@ -101,7 +101,7 @@ export namespace VE
 
 	Float inline ASin(Float Value)
 	{
-		Assert(Value >= -1.0f && Value <= 1.0f);
+		VE_ASSERT(Value >= -1.0f && Value <= 1.0f);
 		return Radian{ static_cast<Float>(std::asin(Value)) };
 	}
 
@@ -122,7 +122,7 @@ export namespace VE
 
 	Float inline ACos(Float Value)
 	{
-		Assert(Value >= -1.0f && Value <= 1.0f);
+		VE_ASSERT(Value >= -1.0f && Value <= 1.0f);
 		return Radian{ static_cast<Float>(std::acos(Value)) };
 	}
 

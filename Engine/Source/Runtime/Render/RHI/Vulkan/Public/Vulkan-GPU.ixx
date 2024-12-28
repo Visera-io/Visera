@@ -1,16 +1,11 @@
 module;
-#include <Visera>
+#include "../VulkanPC.h"
+export module Visera.Runtime.Render.RHI.Vulkan:GPU;
 
-#include <volk.h>
+import Visera.Core.Log;
 
-export module Visera.Engine.Runtime.Render.RHI.Vulkan:GPU;
-
-import Visera.Engine.Core.Log;
-
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	class Vulkan;
-
 	class VulkanGPU
 	{
 		friend class Vulkan;
@@ -51,14 +46,14 @@ export namespace VE { namespace Runtime
 			//Queue Families
 			UInt32 QueueFamilyCount = 0;
 			vkGetPhysicalDeviceQueueFamilyProperties(Handle, &QueueFamilyCount, nullptr);
-			Assert(QueueFamilyCount != 0);
+			VE_ASSERT(QueueFamilyCount != 0);
 			QueueFamilyProperties.resize(QueueFamilyCount);
 			vkGetPhysicalDeviceQueueFamilyProperties(Handle, &QueueFamilyCount, QueueFamilyProperties.data());
 
 			//Extensions
 			UInt32 ExtensionCount = 0;
 			vkEnumerateDeviceExtensionProperties(Handle, nullptr, &ExtensionCount, nullptr);
-			Assert(ExtensionCount != 0);
+			VE_ASSERT(ExtensionCount != 0);
 			ExtensionProperties.resize(ExtensionCount);
 			vkEnumerateDeviceExtensionProperties(Handle, nullptr, &ExtensionCount, ExtensionProperties.data());
 		}
@@ -69,4 +64,4 @@ export namespace VE { namespace Runtime
 		}
 	};
 
-} } // namespace VE::Runtime
+} // namespace VE

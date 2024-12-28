@@ -1,26 +1,17 @@
 module;
-#include <Visera>
+#include "../VulkanPC.h"
+export module Visera.Runtime.Render.RHI.Vulkan:Swapchain;
 
-#include <volk.h>
-
-export module Visera.Engine.Runtime.Render.RHI.Vulkan:Swapchain;
-
-import :Context;
-import :Common;
 import :GPU;
 import :Device;
 import :Surface;
 import :Synchronization;
 
-import Visera.Engine.Core.Log;
-import Visera.Engine.Runtime.Platform;
+import Visera.Core.Log;
+import Visera.Runtime.Platform;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
-
-	class Vulkan;
-
 	class VulkanSwapchain
 	{
 		friend class Vulkan;
@@ -269,4 +260,4 @@ export namespace VE { namespace Runtime
 		if (bMoveCursor) MoveCursor(1);
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

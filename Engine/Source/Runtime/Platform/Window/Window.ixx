@@ -1,14 +1,14 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
 #include <GLFW/glfw3.h>
 
-export module Visera.Engine.Runtime.Platform.Window;
+export module Visera.Runtime.Platform.Window;
 
-import Visera.Engine.Core.Log;
-import Visera.Engine.Internal.Pattern;
+import Visera.Core.Log;
+import Visera.Internal.Pattern;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class Platform;
@@ -83,4 +83,4 @@ export namespace VE { namespace Runtime
 		}
 	};
 
-} } // namespace VE::Runtime
+} // namespace VE

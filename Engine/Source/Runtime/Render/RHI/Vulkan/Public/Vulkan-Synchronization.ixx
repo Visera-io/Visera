@@ -1,21 +1,11 @@
 module;
-#include <Visera>
+#include "../VulkanPC.h"
+export module Visera.Runtime.Render.RHI.Vulkan:Synchronization;
 
-#include <volk.h>
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-export module Visera.Engine.Runtime.Render.RHI.Vulkan:Synchronization;
-
-import :Context;
 import :Device;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
-
-	class Vulkan;
-
 	class VulkanSemaphore
 	{
 		friend class Vulkan;
@@ -36,7 +26,7 @@ export namespace VE { namespace Runtime
 	public:
 		enum WaitTime : UInt64 { Forever = UINT64_MAX };
 		void Wait(WaitTime Timeout = Forever) const { vkWaitForFences(GVulkan->Device->GetHandle(), 1, &Handle, VK_TRUE, Timeout); }
-		void Lock()		const { Assert(!IsLocked()); vkResetFences(GVulkan->Device->GetHandle(), 1, &Handle); }
+		void Lock()		const { VE_ASSERT(!IsLocked()); vkResetFences(GVulkan->Device->GetHandle(), 1, &Handle); }
 		Bool IsLocked()	const { return VK_SUCCESS != vkGetFenceStatus(GVulkan->Device->GetHandle(), Handle); }
 
 		auto GetHandle()	const -> VkFence { return Handle; }
@@ -93,4 +83,4 @@ export namespace VE { namespace Runtime
 		Handle = VK_NULL_HANDLE;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

@@ -11,7 +11,9 @@ set(VISERA_ENGINE_SOURCE_DIR    "${VISERA_ENGINE_DIR}/Source")
 list(APPEND CMAKE_MODULE_PATH   "${VISERA_ENGINE_SCRIPTS_DIR}")
 
 #[Engine]
-file(GLOB_RECURSE VISERA_ENGINE_MODULES     "${VISERA_ENGINE_SOURCE_DIR}/*.ixx")
+file(GLOB_RECURSE VISERA_ENGINE_MODULES
+    "${VISERA_ENGINE_SOURCE_DIR}/*.h"
+    "${VISERA_ENGINE_SOURCE_DIR}/*.ixx")
 file(GLOB_RECURSE VISERA_ENGINE_INTERFACES  "${VISERA_ENGINE_INTERFACE_DIR}/*.ixx")
 add_library(${VISERA}
             ${VISERA_ENGINE_MODULES}
@@ -19,7 +21,7 @@ add_library(${VISERA}
 
 target_sources(${VISERA}
                 PRIVATE
-                "${VISERA_ENGINE_GLOBAL_DIR}/Visera"
+                "${VISERA_ENGINE_GLOBAL_DIR}/Visera.h"
                 "TODO.md")
 
 target_include_directories(${VISERA} PUBLIC ${VISERA_ENGINE_GLOBAL_DIR})

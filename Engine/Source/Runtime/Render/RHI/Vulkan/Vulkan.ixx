@@ -1,13 +1,9 @@
 module;
-#include <Visera>
+#include "VulkanPC.h"
+export module Visera.Runtime.Render.RHI.Vulkan;
 
-#include <volk.h>
-
-export module Visera.Engine.Runtime.Render.RHI.Vulkan;
 import :Loader;
-import :Context;
 import :PipelineCache;
-export import :Common;
 export import :Instance;
 export import :Device;
 export import :Allocator;
@@ -18,12 +14,9 @@ export import :RenderPass;
 export import :Shader;
 export import :Synchronization;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	#define VK_CHECK(Func) { if (VK_SUCCESS != Func) Assert(False); }
 	#define SI static inline
-
-	class RHI;
 
 	class Vulkan
 	{
@@ -92,4 +85,4 @@ export namespace VE { namespace Runtime
 		delete GVulkan;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

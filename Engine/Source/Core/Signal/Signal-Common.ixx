@@ -1,7 +1,7 @@
 module;
-#include <Visera>
+#include <Visera.h>
 
-export module Visera.Engine.Core.Signal:Common;
+export module Visera.Core.Signal:Common;
 
 export namespace VE
 {
