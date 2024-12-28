@@ -18,7 +18,7 @@ class Render
 	friend class ViseraRuntime;
 private:
 	static inline void
-	Tick(const std::function<void()>& AppRenderTick)
+	Tick()
 	{
 		if (RuntimeContext::MainLoop.ShouldStop()) return;
 
@@ -31,7 +31,6 @@ private:
 			RHI::WaitForCurrentFrame();
 			{
 				auto& CurrentFrame = RHI::GetCurrentFrame();
-				AppRenderTick();
 
 				Array<RHI::CommandPool::SubmitInfo> SubmitInfos;
 
@@ -46,6 +45,7 @@ private:
 						.Fence = CurrentFrame.Fence_Rendering
 					});
 				}
+				std::exit(VISERA_APP_ERROR);
 				VE_ASSERT(SubmitInfos.size() == 1, "TESTING"); //Visera Render is controled by a singlton cmd
 				RHI::ResetableGraphicsCommandPool.Submit(SubmitInfos[0]);
 			}

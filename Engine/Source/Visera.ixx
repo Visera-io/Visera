@@ -1,15 +1,29 @@
 module;
 #include <Visera.h>
 
-export module Visera.Engine;
+export module Visera;
 export import Visera.Core;
 #if defined(VISERA_RUNTIME)
 export import Visera.Runtime;
 #endif
-import Visera.App;
 import Visera.Internal;
 
 VISERA_PUBLIC_MODULE
+class ViseraApp
+{
+public:
+	virtual void Bootstrap() = 0;
+	virtual void Terminate() = 0;
+	virtual void Tick() = 0;
+	virtual void RenderTick() = 0;
+
+	void inline
+	Exit(const AppExitSignal& Message = AppExitSignal("Visera App Exited Successfully.")) const throw(AppExitSignal) { throw Message; }
+
+	ViseraApp()	 noexcept = default;
+	~ViseraApp() noexcept = default;
+};
+
 class Visera final
 {
 public:
@@ -21,7 +35,7 @@ public:
 			if (App)
 			{
 				Log::Info("App Started Running");
-				do { App->Tick(); } while (RuntimeTick(App));
+				do { App->Tick(); } while (RuntimeTick());
 			}
 			else Log::Warn("Visera App is not created");
 		}
@@ -70,7 +84,7 @@ public:
 	}
 private:
 	ViseraApp* const App = nullptr;
-	static inline std::function<Bool(ViseraApp* App)> RuntimeTick = [](ViseraApp* App) -> Bool { return False; };
+	static inline std::function<Bool()> RuntimeTick = []() -> Bool { return False; };
 };
 
 VISERA_MODULE_END

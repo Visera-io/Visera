@@ -10,79 +10,78 @@ export module Visera.Core.Log.Logger:SystemLogger;
 import Visera.Core.Signal;
 import Visera.Internal.Pattern;
 
-export namespace VE
+VISERA_PUBLIC_MODULE
+class SystemLogger:
+	public Singleton<SystemLogger>
 {
-	class SystemLogger:
-		public Singleton<SystemLogger>
+	friend class Singleton<SystemLogger>;
+public:
+	inline void
+	Info(const String& message)
+	{ Spdlogger->info(message); }
+
+	template<typename... Args>
+	inline void
+	Info(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
+	{ Spdlogger->info(Formatter, std::forward<Args>(Arguments)...); }
+
+	inline void
+	Warn(const String& message)
+	{ Spdlogger->warn(message); }
+
+	template<typename... Args>
+	inline void
+	Warn(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
+	{ Spdlogger->warn(Formatter, std::forward<Args>(Arguments)...); }
+
+	inline void
+	Error(const String& message)
+	{ Spdlogger->error(message); }
+
+	template<typename... Args>
+	inline void
+	Error(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
+	{ Spdlogger->error(Formatter, std::forward<Args>(Arguments)...); }
+
+	inline void
+	Fatal(const String& message, const std::source_location& location = std::source_location::current())
+	{ 
+		RuntimeError Error{ message, location };
+		Spdlogger->critical("{}{}", Error.What(), Error.Where());
+		std::exit(VISERA_ENGINE_ERROR);
+	}
+
+	inline void
+	Debug(const String& message)
+	{ Spdlogger->debug(message); }
+
+	template<typename... Args>
+	inline void
+	Debug(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
+	{ Spdlogger->debug(Formatter, std::forward<Args>(Arguments)...); }
+
+	SystemLogger() noexcept
 	{
-		friend class Singleton<SystemLogger>;
-	public:
-		inline void
-		Info(const String& message)
-		{ Spdlogger->info(message); }
+		auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+		Spdlogger = std::make_unique<spdlog::logger>("Visera Log", console_sink);
+#ifndef NDEBUG
+		Spdlogger->set_level(spdlog::level::debug);
+#else
+		Spdlogger->set_level(spdlog::level::warn);
+#endif
+		//m_handle->set_pattern("[%^%l%$] [%Y-%m-%d %H:%M:%S] %v");
+		Spdlogger->set_pattern("%^[Visera - %l - %H:%M:%S - Thread:%t]%$\n%v");
+	}
+	virtual ~SystemLogger() noexcept
+	{
+		Spdlogger->flush();
 
-		template<typename... Args>
-		inline void
-		Info(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{ Spdlogger->info(Formatter, std::forward<Args>(Arguments)...); }
+		//Do not call drop_all() in your class!
+		spdlog::drop_all();
+		Spdlogger.reset();
+	}
 
-		inline void
-		Warn(const String& message)
-		{ Spdlogger->warn(message); }
-
-		template<typename... Args>
-		inline void
-		Warn(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{ Spdlogger->warn(Formatter, std::forward<Args>(Arguments)...); }
-
-		inline void
-		Error(const String& message)
-		{ Spdlogger->error(message); }
-
-		template<typename... Args>
-		inline void
-		Error(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{ Spdlogger->error(Formatter, std::forward<Args>(Arguments)...); }
-
-		inline void
-		Fatal(const String& message, const std::source_location& location = std::source_location::current())
-		{ 
-			RuntimeError Error{ message, location };
-			Spdlogger->critical("{}{}", Error.What(), Error.Where());
-			std::exit(VISERA_ENGINE_ERROR);
-		}
-
-		inline void
-		Debug(const String& message)
-		{ Spdlogger->debug(message); }
-
-		template<typename... Args>
-		inline void
-		Debug(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{ Spdlogger->debug(Formatter, std::forward<Args>(Arguments)...); }
-
-		SystemLogger() noexcept
-		{
-			auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
- 			Spdlogger = std::make_unique<spdlog::logger>("Visera Log", console_sink);
- #ifndef NDEBUG
- 			Spdlogger->set_level(spdlog::level::debug);
- #else
- 			Spdlogger->set_level(spdlog::level::warn);
- #endif
- 			//m_handle->set_pattern("[%^%l%$] [%Y-%m-%d %H:%M:%S] %v");
- 			Spdlogger->set_pattern("%^[Visera - %l - %H:%M:%S - Thread:%t]%$\n%v");
-		}
-		virtual ~SystemLogger() noexcept
-		{
-			Spdlogger->flush();
-
-			//Do not call drop_all() in your class!
-			spdlog::drop_all();
-			Spdlogger.reset();
-		}
-
-	protected:
-		UniquePtr<spdlog::logger> Spdlogger;
-	};
-}
+protected:
+	UniquePtr<spdlog::logger> Spdlogger;
+};
+VISERA_MODULE_END

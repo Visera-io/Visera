@@ -9,47 +9,43 @@ import Visera.Runtime.Context;
 import Visera.Core.Log;
 import Visera.Internal;
 
-import Visera.App;
-
 VISERA_PUBLIC_MODULE
-	class Visera;
+class Visera;
 
-	class ViseraRuntime
+class ViseraRuntime
+{
+	friend class Visera;
+private:
+	static inline Bool
+	Tick()
+	{	
+		if (!RuntimeContext::MainLoop.ShouldStop())
+		{
+			Platform::Tick();
+			Render::Tick();
+
+			return True;
+		}
+		return False;
+	}
+
+	static inline void
+	Bootstrap()
 	{
-		friend class Visera;
-	private:
-		static inline Bool
-		Tick(ViseraApp* App)
-		{	
-			if (!RuntimeContext::MainLoop.ShouldStop())
-			{
-				Platform::Tick();
+		RuntimeContext::Bootstrap();
+		Platform::Bootstrap();
+		Render::Bootstrap();
+	}
 
-				static const auto AppRenderTick = std::bind(&ViseraApp::RenderTick, App);
-				Render::Tick(AppRenderTick);
+	static inline void
+	Terminate()
+	{
+		Render::Terminate();
+		Platform::Terminate();
+		RuntimeContext::Terminate();
+	}
 
-				return True;
-			}
-			return False;
-		}
-
-		static inline void
-		Bootstrap()
-		{
-			RuntimeContext::Bootstrap();
-			Platform::Bootstrap();
-			Render::Bootstrap();
-		}
-
-		static inline void
-		Terminate()
-		{
-			Render::Terminate();
-			Platform::Terminate();
-			RuntimeContext::Terminate();
-		}
-
-		ViseraRuntime() noexcept = default;
-	};
+	ViseraRuntime() noexcept = default;
+};
 
 VISERA_MODULE_END

@@ -8,48 +8,48 @@ import Visera.Core.Signal;
 
 VISERA_PUBLIC_MODULE	
 
-	class BinaryFile :public File
+class BinaryFile :public File
+{
+public:
+	virtual void SaveAs(StringView FilePath,   Int32 SaveModes)	throw(RuntimeError) override;
+	virtual void LoadFrom(StringView FilePath, Int32 LoadModes)	throw(RuntimeError) override;
+
+	BinaryFile(const String& FilePath) noexcept : File{ FilePath } {};
+	virtual ~BinaryFile() noexcept = default;
+};
+
+void BinaryFile::
+SaveAs(StringView FilePath, Int32 SaveModes) throw(RuntimeError)
+{
+	SaveModes |= std::ios::binary;
+	if (auto* OutputFile = OpenOStream(SaveModes))
 	{
-	public:
-		virtual void SaveAs(StringView FilePath,   Int32 SaveModes)	throw(RuntimeError) override;
-		virtual void LoadFrom(StringView FilePath, Int32 LoadModes)	throw(RuntimeError) override;
+		OutputFile->write(reinterpret_cast<char*>(Data.data()), Data.size());
 
-		BinaryFile(const String& FilePath) noexcept : File{ FilePath } {};
-		virtual ~BinaryFile() noexcept = default;
-	};
+		if (OutputFile->fail())
+		{ throw RuntimeError(Text("Failed to write to {}", FilePath)); }
 
-	void BinaryFile::
-	SaveAs(StringView FilePath, Int32 SaveModes) throw(RuntimeError)
-	{
-		SaveModes |= std::ios::binary;
-		if (auto* OutputFile = OpenOStream(SaveModes))
-		{
-			OutputFile->write(reinterpret_cast<char*>(Data.data()), Data.size());
-
-			if (OutputFile->fail())
-			{ throw RuntimeError(Text("Failed to write to {}", FilePath)); }
-
-			CloseOStream();
-		}
-		else throw RuntimeError(Text("Failed to open {}", FilePath));	
+		CloseOStream();
 	}
+	else throw RuntimeError(Text("Failed to open {}", FilePath));	
+}
 
-	void BinaryFile::
-	LoadFrom(StringView FilePath, Int32 LoadModes) throw(RuntimeError)
+void BinaryFile::
+LoadFrom(StringView FilePath, Int32 LoadModes) throw(RuntimeError)
+{
+	LoadModes |= std::ios::binary;
+	if (auto* InputFile = OpenIStream(LoadModes))
 	{
-		LoadModes |= std::ios::binary;
-		if (auto* InputFile = OpenIStream(LoadModes))
-		{
-			Data.resize(GetInputFileSize());
+		Data.resize(GetInputFileSize());
 
-			InputFile->read(reinterpret_cast<char*>(Data.data()), Data.size());
+		InputFile->read(reinterpret_cast<char*>(Data.data()), Data.size());
 
-			if (InputFile->fail() || InputFile->gcount() != Data.size())
-			{ throw RuntimeError(Text("Failed to read from {}", FilePath)); }
+		if (InputFile->fail() || InputFile->gcount() != Data.size())
+		{ throw RuntimeError(Text("Failed to read from {}", FilePath)); }
 
-			CloseIStream();
-		}
-		else throw RuntimeError(Text("Failed to open {}", FilePath));
+		CloseIStream();
 	}
+	else throw RuntimeError(Text("Failed to open {}", FilePath));
+}
 
 VISERA_MODULE_END

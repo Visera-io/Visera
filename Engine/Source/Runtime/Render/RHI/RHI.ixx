@@ -24,7 +24,7 @@ public:
 	using Buffer			= VulkanAllocator::Buffer;
 
 	using EShaderStage		= Vulkan::EShaderStage;
-	using EAccessPermission	= Vulkan::EAccessibility;
+	using EAccessibility	= Vulkan::EAccessibility;
 	using EPipelineStage	= Vulkan::EPipelineStage;
 	using EMemoryUsage		= Vulkan::EMemoryUsage;
 	using EBufferUsage		= Vulkan::EBufferUsage;
