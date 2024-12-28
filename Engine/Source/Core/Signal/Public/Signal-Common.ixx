@@ -41,4 +41,4 @@ export namespace VE
 		std::source_location Location;
 	};
 
-} // namespace VE
+VISERA_MODULE_END

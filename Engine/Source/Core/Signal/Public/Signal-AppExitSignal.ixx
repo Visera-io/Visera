@@ -20,4 +20,4 @@ export namespace VE
 		}
 	};
 
-} // namespace VE
+VISERA_MODULE_END

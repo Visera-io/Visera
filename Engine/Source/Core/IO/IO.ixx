@@ -15,4 +15,4 @@ export namespace VE
 		INTERFACE CreateBinaryFile(const String& Path) -> SharedPtr<File> { return CreateSharedPtr<BinaryFile>(Path); }
 	};
 
-} // namespace VE
+VISERA_MODULE_END

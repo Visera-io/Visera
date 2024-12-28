@@ -10,8 +10,7 @@ export import Visera.App.Render;
 
 import Visera.Core.Signal;
 
-export namespace VE
-{  
+VISERA_PUBLIC_MODULE  
 
 	class ViseraApp
 	{
@@ -28,4 +27,4 @@ export namespace VE
 		~ViseraApp() noexcept = default;
 	};
 
-} // namespace VE
+VISERA_MODULE_END

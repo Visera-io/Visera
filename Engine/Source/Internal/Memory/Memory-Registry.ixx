@@ -5,8 +5,7 @@ export module Visera.Internal.Memory:Registry;
 
 import Visera.Internal.Pattern;
 
-export namespace VE
-{
+VISERA_PUBLIC_MODULE
 
     class MemoryRegistry :
         public Singleton<MemoryRegistry>
@@ -27,4 +26,4 @@ export namespace VE
         }
     };
     
-} // namespace VE
+VISERA_MODULE_END

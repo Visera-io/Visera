@@ -53,4 +53,4 @@ export namespace VE
 		Debug(const String& Message)
 		{SystemLogger::GetInstance().Debug(Message);}
 	};
-} // namespace VE
+VISERA_MODULE_END

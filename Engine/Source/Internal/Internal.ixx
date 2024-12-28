@@ -30,4 +30,4 @@ export namespace VE
 		ViseraInternal() noexcept = default;
 	};
 
-} // namespace VE
+VISERA_MODULE_END

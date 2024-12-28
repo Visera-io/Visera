@@ -2,112 +2,116 @@
 
 #include "Visera-STD.h"
 
-namespace VE
-{
-    /* <<  Concepts >>
+namespace VE {
+/* <<  Concepts >>
         
-    */
-    template <typename T>
-    concept Hashable = requires(T type) {{ std::hash<T>{}(type) } -> std::same_as<std::size_t>;};
+*/
+template <typename T>
+concept Hashable = requires(T type) {{ std::hash<T>{}(type) } -> std::same_as<std::size_t>;};
 
-    template<typename T>
-    concept UnsignedIntegerol = std::unsigned_integral<T>;
+template<typename T>
+concept UnsignedIntegerol = std::unsigned_integral<T>;
 
-    template<typename T>
-    concept SignedInteger = std::integral<T>;
+template<typename T>
+concept SignedInteger = std::integral<T>;
 
-    template<typename T>
-    concept Integer = std::integral<T> || std::unsigned_integral<T>;
+template<typename T>
+concept Integer = std::integral<T> || std::unsigned_integral<T>;
 
-    template<typename T>
-    concept FloatingPoint = std::floating_point<T>;
+template<typename T>
+concept FloatingPoint = std::floating_point<T>;
 
-    template<typename T>
-    concept Number = std::floating_point<T> || std::integral<T>;
+template<typename T>
+concept Number = std::floating_point<T> || std::integral<T>;
 
-    template<typename T>
-    concept ClockType = std::is_class_v<std::chrono::system_clock>          ||
-                        std::is_class_v<std::chrono::high_resolution_clock>;
+template<typename T>
+concept ClockType = std::is_class_v<std::chrono::system_clock>          ||
+                    std::is_class_v<std::chrono::high_resolution_clock>;
 
-    /* <<  Basic Types >>
+/* <<  Basic Types >>
         
-    */
-    using Bool		= bool;
-    using Float  	= float;
-    using Double 	= double;
-    using Int32  	= std::int32_t;
-    using UInt32 	= std::uint32_t;
-    using Int64  	= std::int64_t;
-    using UInt64 	= std::uint64_t;
+*/
+using Bool		= bool;
+using Float  	= float;
+using Double 	= double;
+using Int32  	= std::int32_t;
+using UInt32 	= std::uint32_t;
+using Int64  	= std::int64_t;
+using UInt64 	= std::uint64_t;
 
-    using String	 = std::string;
-    using StringView = std::string_view;
-    using RawString  = const char*;
+using String	 = std::string;
+using StringView = std::string_view;
+using RawString  = const char*;
 
-    using Byte		= unsigned char;
-    constexpr Byte    OneByte  = 1;
-    constexpr UInt64  OneKByte = 1024 * OneByte;
-    constexpr UInt64  OneMByte = 1024 * OneKByte;
-    constexpr UInt64  OneGByte = 1024 * OneMByte;
-    using EnumMask	= std::uint32_t;
-    using EnumBit	= std::uint32_t;
-    template<typename T> inline
-    UInt64 BytesOf() { return sizeof(T); }
-    template<typename T> inline
-    UInt64 BitsOf()  { return 8 * BytesOf<T>(); }
+template <class... _Types> inline
+std::string
+Text(const std::format_string<_Types...> _Fmt, _Types&&... _Args)
+{ return std::format(_Fmt, std::forward<_Types>(_Args)...); }
 
-    using ID		= std::uint32_t;
-    using Token		= std::uint64_t;
-    using Address   = void*;
-    using ErrorCode = std::int32_t;
+using Byte		= unsigned char;
+constexpr Byte    OneByte  = 1;
+constexpr UInt64  OneKByte = 1024 * OneByte;
+constexpr UInt64  OneMByte = 1024 * OneKByte;
+constexpr UInt64  OneGByte = 1024 * OneMByte;
+using EnumMask	= std::uint32_t;
+using EnumBit	= std::uint32_t;
+template<typename T> inline
+UInt64 BytesOf() { return sizeof(T); }
+template<typename T> inline
+UInt64 BitsOf()  { return 8 * BytesOf<T>(); }
 
-    constexpr Bool False   = false;
-    constexpr Bool True    = !False;
+using ID		= std::uint32_t;
+using Token		= std::uint64_t;
+using Address   = void*;
+using ErrorCode = std::int32_t;
 
-    /* <<  Containers >>
-        1. Array
-        2. Set
-        3. HashMap
-        4. Segment
-    */
+constexpr Bool False   = false;
+constexpr Bool True    = !False;
 
-    template<typename T>
-    using Array	   = std::vector<T>;
+/* <<  Containers >>
+    1. Array
+    2. Set
+    3. HashMap
+    4. Segment
+*/
 
-    template<typename T>
-    using List	   = std::list<T>;
+template<typename T>
+using Array	   = std::vector<T>;
 
-    template<typename T>
-    using Set	   = std::unordered_set<T>;
+template<typename T>
+using List	   = std::list<T>;
 
-    template<Hashable Key, typename Value>
-    using HashMap  = std::unordered_map<Key, Value>;
+template<typename T>
+using Set	   = std::unordered_set<T>;
 
-    template<typename T, size_t Length>
-    using Segment  = std::array<T, Length>;
+template<Hashable Key, typename Value>
+using HashMap  = std::unordered_map<Key, Value>;
 
-    /* <<  Pointers >>
-        1. SharedPtr
-        2. WeakPtr
-        3. UniquePtr
-    */
+template<typename T, size_t Length>
+using Segment  = std::array<T, Length>;
 
-    template<typename T>
-    using SharedPtr   = std::shared_ptr<T>;
-    template<typename T, typename... Args>
-    inline SharedPtr<T>
-    CreateSharedPtr(Args &&...args) { return std::make_shared<T>(std::forward<Args>(args)...); }
+/* <<  Pointers >>
+    1. SharedPtr
+    2. WeakPtr
+    3. UniquePtr
+*/
 
-    template<typename T>
-    using WeakPtr	  = std::weak_ptr<T>;
+template<typename T>
+using SharedPtr   = std::shared_ptr<T>;
+template<typename T, typename... Args>
+inline SharedPtr<T>
+CreateSharedPtr(Args &&...args) { return std::make_shared<T>(std::forward<Args>(args)...); }
 
-    template<typename T>
-    using UniquePtr   = std::unique_ptr<T>;
-    template<typename T, typename... Args>
-    inline UniquePtr<T> 
-    CreateUniquePtr(Args &&...args) { return std::make_unique<T>(std::forward<Args>(args)...); }
+template<typename T>
+using WeakPtr	  = std::weak_ptr<T>;
 
-    template<typename T>
-    using Optional	  = std::optional<T>;
+template<typename T>
+using UniquePtr   = std::unique_ptr<T>;
+template<typename T, typename... Args>
+inline UniquePtr<T> 
+CreateUniquePtr(Args &&...args) { return std::make_unique<T>(std::forward<Args>(args)...); }
+
+template<typename T>
+using Optional	  = std::optional<T>;
     
 } // namespace VE

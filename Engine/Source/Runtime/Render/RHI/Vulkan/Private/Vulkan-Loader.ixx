@@ -5,48 +5,48 @@ export module Visera.Runtime.Render.RHI.Vulkan:Loader;
 
 import Visera.Core.Log;
 
-export namespace VE
+VISERA_PUBLIC_MODULE
+
+class VulkanLoader
 {
-	class VulkanLoader
-	{
-		friend class Vulkan;
-	private:
-		void LoadInstance(VkInstance Instance);
-		void LoadDevice(VkDevice Device);
+	friend class Vulkan;
+private:
+	void LoadInstance(VkInstance Instance);
+	void LoadDevice(VkDevice Device);
 
-		void Create();
-		void Destroy();
+	void Create();
+	void Destroy();
 
-	public:
-		VulkanLoader() noexcept = default;
-		~VulkanLoader() noexcept = default;
-	};
+public:
+	VulkanLoader() noexcept = default;
+	~VulkanLoader() noexcept = default;
+};
 
-	void VulkanLoader::
-	Create()
-	{
-		if (VK_SUCCESS != volkInitialize())
-		{ Log::Fatal("Failed to initialize Volk!"); }
-	}
+void VulkanLoader::
+Create()
+{
+	if (VK_SUCCESS != volkInitialize())
+	{ Log::Fatal("Failed to initialize Volk!"); }
+}
 
-	void VulkanLoader::
-	Destroy()
-	{
-		volkFinalize();
-	}
+void VulkanLoader::
+Destroy()
+{
+	volkFinalize();
+}
 		
-	void VulkanLoader::
-	LoadInstance(VkInstance Instance)
-	{
-		VE_ASSERT(Instance != VK_NULL_HANDLE);
-		volkLoadInstance(Instance);
-	}
+void VulkanLoader::
+LoadInstance(VkInstance Instance)
+{
+	VE_ASSERT(Instance != VK_NULL_HANDLE);
+	volkLoadInstance(Instance);
+}
 
-	void VulkanLoader::
-	LoadDevice(VkDevice Device)
-	{
-		VE_ASSERT(Device != VK_NULL_HANDLE);
-		volkLoadDevice(Device);
-	}
+void VulkanLoader::
+LoadDevice(VkDevice Device)
+{
+	VE_ASSERT(Device != VK_NULL_HANDLE);
+	volkLoadDevice(Device);
+}
 
-} // namespace VE
+VISERA_MODULE_END

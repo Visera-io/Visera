@@ -11,8 +11,7 @@ export import Visera.Core.Math;
 
 import Visera.Internal;
 
-export namespace VE
-{
+VISERA_PUBLIC_MODULE
 	class Visera;
 
 	class ViseraCore
@@ -34,4 +33,4 @@ export namespace VE
 		ViseraCore() noexcept = default;
 	};
 
-} // namespace VE
+VISERA_MODULE_END

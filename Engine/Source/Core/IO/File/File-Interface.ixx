@@ -59,11 +59,11 @@ export namespace VE
 			OutputFile->write(reinterpret_cast<char*>(Data.data()), Data.size());
 
 			if (OutputFile->fail())
-			{ throw RuntimeError(std::format("Failed to write to {}", FilePath)); }
+			{ throw RuntimeError(Text("Failed to write to {}", FilePath)); }
 
 			CloseOStream();
 		}
-		else throw RuntimeError(std::format("Failed to open {}", FilePath));	
+		else throw RuntimeError(Text("Failed to open {}", FilePath));	
 	}
 
 	void File::
@@ -77,11 +77,11 @@ export namespace VE
 			InputFile->read(reinterpret_cast<char*>(Data.data()), Data.size());
 
 			if (InputFile->fail() || InputFile->gcount() != Data.size())
-			{ throw RuntimeError(std::format("Failed to read from {}", FilePath)); }
+			{ throw RuntimeError(Text("Failed to read from {}", FilePath)); }
 
 			CloseIStream();
 		}
-		else throw RuntimeError(std::format("Failed to open {}", FilePath));
+		else throw RuntimeError(Text("Failed to open {}", FilePath));
 	}
 
 	void File::
@@ -92,7 +92,7 @@ export namespace VE
 			Log::Debug("About to create a new file at {}...", FilePath);
 			std::ofstream NewFile(FilePath.data());
 			if (NewFile.is_open()) NewFile.close();
-			else throw RuntimeError(std::format("Failed to create a new file at {}", FilePath));
+			else throw RuntimeError(Text("Failed to create a new file at {}", FilePath));
 		}
 	}
 
@@ -146,4 +146,4 @@ export namespace VE
 		IOStream.OStream = nullptr;
 	}
 
-} // namespace VE
+VISERA_MODULE_END

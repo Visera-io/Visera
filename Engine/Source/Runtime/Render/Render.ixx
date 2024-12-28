@@ -9,75 +9,69 @@ import Visera.Runtime.Context;
 import Visera.Runtime.Platform;
 import Visera.Core.Log;
 
-namespace VE
-{
-	class ViseraRuntime;
-}
+VISERA_PUBLIC_MODULE
 
-export namespace VE
-{
+class ViseraRuntime;
 	
-	class Render
+class Render
+{
+	friend class ViseraRuntime;
+private:
+	static inline void
+	Tick(const std::function<void()>& AppRenderTick)
 	{
-		friend class ViseraRuntime;
-	private:
-		static inline void
-		Tick(const std::function<void()>& AppRenderTick)
+		if (RuntimeContext::MainLoop.ShouldStop()) return;
+
+		//Check Window State
+		if  (Platform::GetWindow().ShouldClose()) return RuntimeContext::MainLoop.Stop();
+		else Platform::GetWindow().PollEvents();
+
+		try
 		{
-			if (!RuntimeContext::MainLoop.ShouldStop())
+			RHI::WaitForCurrentFrame();
 			{
-				//Check Window State
-				if  (Platform::GetWindow().ShouldClose()) return RuntimeContext::MainLoop.Stop();
-				else Platform::GetWindow().PollEvents();
+				auto& CurrentFrame = RHI::GetCurrentFrame();
+				AppRenderTick();
 
-				try
+				Array<RHI::CommandPool::SubmitInfo> SubmitInfos;
+
+				for (const auto& [Name,CommandContext] : CurrentFrame.CommandContexts)
 				{
-					RHI::WaitForCurrentFrame();
+					SubmitInfos.emplace_back(RHI::CommandPool::SubmitInfo
 					{
-						auto& CurrentFrame = RHI::GetCurrentFrame();
-						AppRenderTick();
-
-						Array<RHI::CommandPool::SubmitInfo> SubmitInfos;
-
-						for (const auto& [Name,CommandContext] : CurrentFrame.CommandContexts)
-						{
-							SubmitInfos.emplace_back(RHI::CommandPool::SubmitInfo
-							{
-								.Deadlines = {RHI::PipelineStages::ColorAttachmentOutput},
-								.CommandBuffers = {CommandContext->Commands->GetHandle()},
-								.WaitSemaphores = {CurrentFrame.Semaphore_ReadyToRender},//[FIXME] Temp
-								.SignalSemaphores = { /*TEST*/ CurrentFrame.Semaphore_ReadyToPresent },
-								.Fence = CurrentFrame.Fence_Rendering
-							});
-						}
-						VE_ASSERT(SubmitInfos.size() == 1, "TESTING"); //Visera Render is controled by a singlton cmd
-						RHI::ResetableGraphicsCommandPool.Submit(SubmitInfos[0]);
-					}
-					RHI::PresentCurrentFrame();
+						.Deadlines = {AutoCast(RHI::EPipelineStage::ColorAttachmentOutput)},
+						.CommandBuffers = {CommandContext->Commands->GetHandle()},
+						.WaitSemaphores = {CurrentFrame.Semaphore_ReadyToRender},//[FIXME] Temp
+						.SignalSemaphores = { /*TEST*/ CurrentFrame.Semaphore_ReadyToPresent },
+						.Fence = CurrentFrame.Fence_Rendering
+					});
 				}
-				catch (const RHI::Swapchain::RecreateSignal&)
-				{
-					Log::Fatal("Not support Swapchain recreation right now.");
-				}
+				VE_ASSERT(SubmitInfos.size() == 1, "TESTING"); //Visera Render is controled by a singlton cmd
+				RHI::ResetableGraphicsCommandPool.Submit(SubmitInfos[0]);
 			}
+			RHI::PresentCurrentFrame();
 		}
-
-		static inline void
-		Bootstrap()
+		catch (const RHI::SwapchainRecreateSignal&)
 		{
-			if (!RuntimeContext::Render.IsOffScreenRendering())
-			{ Platform::GetWindow(); } // Create Window
-			RHI::Bootstrap();
+			Log::Fatal("Not support Swapchain recreation right now.");
 		}
+	}
 
-		static inline void
-		Terminate()
-		{
-			RHI::Terminate();
-		}
+	static inline void
+	Bootstrap()
+	{
+		if (!RuntimeContext::Render.IsOffScreenRendering())
+		{ Platform::GetWindow(); } // Create Window
+		RHI::Bootstrap();
+	}
 
-		Render() noexcept = default;
-	};
-	
+	static inline void
+	Terminate()
+	{
+		RHI::Terminate();
+	}
 
-} // namespace VE
+	Render() noexcept = default;
+};
+
+VISERA_MODULE_END

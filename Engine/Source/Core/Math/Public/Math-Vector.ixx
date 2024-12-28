@@ -9,8 +9,7 @@ import Visera.Internal.Memory;
 
 import :Operation;
 
-export namespace VE
-{
+VISERA_PUBLIC_MODULE
 	using VectorXF = Eigen::VectorX<Float>;
 	using Vector2F = Eigen::Vector2<Float>;
 	using Vector3F = Eigen::Vector3<Float>;
@@ -80,4 +79,4 @@ export namespace VE
 		auto cursor = std::snprintf(buffer.data(), 32 * 4 + (1 + 2*3 + 1), formatter, Vector[0], Vector[1], Vector[2], Vector[3]);
 		return StringView(buffer.begin(), buffer.begin() + cursor);
 	}
-} // namespace VE
+VISERA_MODULE_END

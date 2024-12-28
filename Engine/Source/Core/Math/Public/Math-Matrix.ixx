@@ -83,4 +83,4 @@ export namespace VE
 		return StringView(Buffer.begin(), Buffer.begin() + cursor);
 	}
 
-} // namespace VE
+VISERA_MODULE_END

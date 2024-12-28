@@ -49,4 +49,4 @@ export namespace VE
 	class HiResClock : public Clock<std::chrono::high_resolution_clock> {};
 	class SystemClock : public Clock<std::chrono::system_clock> {};
 
-} // namespace VE
+VISERA_MODULE_END

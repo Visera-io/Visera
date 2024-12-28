@@ -25,7 +25,7 @@ export namespace VE
 		operator Float() const { return Value; }
 		operator Degree() const;
 		Degree   ToDegree() const;
-		String	 ToString() const { return std::format("{} rad", Value); }
+		String	 ToString() const { return Text("{} rad", Value); }
 
 		Radian operator*(Float Multiplicand)	const;
 		Radian operator*(Double Multiplicand)	const;
@@ -54,7 +54,7 @@ export namespace VE
 		operator Float() const { return Value; }
 		operator Radian() const;
 		Radian	 ToRadian() const;
-		String	 ToString() const { return std::format("{}�", Value); }
+		String	 ToString() const { return Text("{}�", Value); }
 
 		Radian operator*(Float Multiplicand)	const;
 		Radian operator*(Double Multiplicand)	const;
@@ -149,4 +149,4 @@ export namespace VE
 	Radian Radian::operator/(Float Divisor)			const { return Radian(Value / Divisor);	}
 	Radian Radian::operator/(Double Divisor)		const { return Radian(Value / Divisor);	}
 
-} // namespace VE
+VISERA_MODULE_END

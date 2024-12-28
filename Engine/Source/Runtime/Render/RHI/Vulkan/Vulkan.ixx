@@ -2,87 +2,104 @@ module;
 #include "VulkanPC.h"
 export module Visera.Runtime.Render.RHI.Vulkan;
 
-import :Loader;
-import :PipelineCache;
-export import :Instance;
-export import :Device;
-export import :Allocator;
-export import :Surface;
-export import :Swapchain;
 export import :CommandPool;
-export import :RenderPass;
 export import :Shader;
+export import :RenderPass;
 export import :Synchronization;
 
-export namespace VE
+import :Enums;
+import :Loader;
+import :Allocator;
+import :PipelineCache;
+import :Instance;
+import :Device;
+import :Surface;
+import :Swapchain;
+
+VISERA_PUBLIC_MODULE
+
+class Vulkan
 {
-	#define SI static inline
-
-	class Vulkan
-	{
-		friend class RHI;
-	private:
-		/* << Vulkan Objects >>*/
-		SI VulkanLoader		Loader		{};
-		SI VulkanInstance	Instance	{};
-		SI VulkanSurface	Surface		{};
-		SI VulkanGPU		GPU			{};
-		SI VulkanDevice		Device		{};
-		SI VulkanAllocator  Allocator	{};
-		SI VulkanSwapchain	Swapchain	{};
+	friend class RHI;
+private:
+	/* << Vulkan Objects >>*/
+	VulkanLoader	Loader		{};
+	VulkanInstance	Instance	{};
+	VulkanSurface	Surface		{};
+	VulkanGPU		GPU			{};
+	VulkanDevice	Device		{};
+	VulkanAllocator Allocator	{};
+	VulkanSwapchain	Swapchain	{};
 		
-		SI VulkanPipelineCache RenderPassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
-		//SI VulkanPipelineCache ComputePassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
+	VulkanPipelineCache RenderPassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
+	//VulkanPipelineCache ComputePassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
 
-	private:
-		static void Bootstrap();
-		static void Terminate();
-	};
+	using Fence				=VulkanFence;
+	using Semaphore			=VulkanSemaphore;
+	using CommandPool		=VulkanCommandPool;
+	using CommandBuffer		=VulkanCommandPool::CommandBuffer;
+	using Shader			=VulkanShader;
+	using RenderPass		=VulkanRenderPass;
 
-	void Vulkan::
-		Bootstrap()
-	{
-		auto* Context = const_cast<VulkanContext* const>(GVulkan);
-		Context->Instance	= &Instance;
-		Context->Surface	= &Surface;
-		Context->GPU		= &GPU;
-		Context->Device		= &Device;
-		Context->Allocator	= &Allocator;
-		Context->Swapchain	= &Swapchain;
-		Context->RenderPassPipelineCache = &RenderPassPipelineCache;
+	using EShaderStage		=EShaderStage;
+	using EAccessibility	=EAccessibility;
+	using EPipelineStage	=EPipelineStage;
+	using EMemoryUsage		=EMemoryUsage;
+	using EBufferUsage		=EBufferUsage;
+	using EImageLayout		=EImageLayout;
+	using EPipelineStage	=EPipelineStage;
+	using EAttachmentIO		=EAttachmentIO;
+
+private:
+	void Bootstrap();
+	void Terminate();
+};
+
+void Vulkan::
+Bootstrap()
+{
+	GVulkan = new VulkanContext();
+	auto* Context = const_cast<VulkanContext* const>(GVulkan);
+	Context->Instance	= &Instance;
+	Context->Surface	= &Surface;
+	Context->GPU		= &GPU;
+	Context->Device		= &Device;
+	Context->Allocator	= &Allocator;
+	Context->Swapchain	= &Swapchain;
+	Context->RenderPassPipelineCache = &RenderPassPipelineCache;
 		
-		Loader.Create();
-		Loader.LoadInstance(Instance.Create());
+	Loader.Create();
+	Loader.LoadInstance(Instance.Create());
 
-		Surface.Create();
+	Surface.Create();
 		
-		Loader.LoadDevice(Device.Create(&GPU, &Surface));
+	Loader.LoadDevice(Device.Create(&GPU, &Surface));
 		
-		Allocator.Create();
+	Allocator.Create();
 
-		Swapchain.Create();
+	Swapchain.Create();
 
-		RenderPassPipelineCache.Create();
-	}
+	RenderPassPipelineCache.Create();
+}
 
-	void Vulkan::
-	Terminate()
-	{
-		RenderPassPipelineCache.Destroy();
+void Vulkan::
+Terminate()
+{
+	RenderPassPipelineCache.Destroy();
 
-		Swapchain.Destroy();
+	Swapchain.Destroy();
 
-		Allocator.Destory();
+	Allocator.Destory();
 
-		Device.Destroy();
+	Device.Destroy();
 
-		Surface.Destroy();
+	Surface.Destroy();
 
-		Instance.Destroy();
+	Instance.Destroy();
 
-		Loader.Destroy();
+	Loader.Destroy();
 
-		delete GVulkan;
-	}
+	delete GVulkan;
+}
 
-} // namespace VE
+VISERA_MODULE_END

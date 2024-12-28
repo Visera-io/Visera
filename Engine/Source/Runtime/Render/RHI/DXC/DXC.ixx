@@ -10,4 +10,4 @@ export namespace VE
 {
     inline IDxcUtils* pLib{ nullptr };
 
-} // namespace VE
+VISERA_MODULE_END

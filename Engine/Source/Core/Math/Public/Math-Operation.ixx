@@ -27,4 +27,4 @@ export namespace VE
 		if (Ceil  < *Value) { *Value = Ceil;  return; }
 	}
 
-} // namespace VE
+VISERA_MODULE_END

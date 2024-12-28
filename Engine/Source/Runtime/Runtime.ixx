@@ -11,8 +11,7 @@ import Visera.Internal;
 
 import Visera.App;
 
-export namespace VE
-{
+VISERA_PUBLIC_MODULE
 	class Visera;
 
 	class ViseraRuntime
@@ -53,4 +52,4 @@ export namespace VE
 		ViseraRuntime() noexcept = default;
 	};
 
-} // namespace VE
+VISERA_MODULE_END

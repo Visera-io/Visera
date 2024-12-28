@@ -32,4 +32,4 @@ export namespace VE
         Singleton& operator=(const Singleton&)  = delete;
         Singleton& operator=(Singleton&&)       = delete;
     };
-} // namespace VE
+VISERA_MODULE_END

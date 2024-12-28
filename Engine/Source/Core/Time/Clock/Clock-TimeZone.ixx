@@ -5,4 +5,4 @@ export module Visera.Core.Time.Clock:TimeZone;
 export namespace VE
 {	
 
-} // namespace VE
+VISERA_MODULE_END

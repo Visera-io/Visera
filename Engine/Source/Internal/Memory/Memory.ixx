@@ -4,8 +4,7 @@ module;
 export module Visera.Internal.Memory;
 export import :Registry;
 
-export namespace VE
-{
+VISERA_PUBLIC_MODULE
 
 
-} // namespace VE
+VISERA_MODULE_END

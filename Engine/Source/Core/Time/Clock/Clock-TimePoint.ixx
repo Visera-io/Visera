@@ -28,7 +28,7 @@ export namespace VE
         //[FIXME] Time Zone issues.
         std::string
         ToString() const
-        { return std::format("UTC(+0) {:%Y-%m-%d %H:%M:%S}", Value); }
+        { return Text("UTC(+0) {:%Y-%m-%d %H:%M:%S}", Value); }
 
     public:
         TimePoint() = default; //UNIX Time
@@ -41,4 +41,4 @@ export namespace VE
         std::chrono::system_clock::time_point Value;
     };
 
-} // namespace VE
+VISERA_MODULE_END

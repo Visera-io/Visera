@@ -95,4 +95,4 @@ export namespace VE
 	protected:
 		UniquePtr<spdlog::logger> Spdlogger;
 	};
-} // namespace VE
+VISERA_MODULE_END

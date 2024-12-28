@@ -6,8 +6,7 @@ import :Interface;
 
 import Visera.Core.Signal;
 
-export namespace VE
-{	
+VISERA_PUBLIC_MODULE	
 
 	class BinaryFile :public File
 	{
@@ -28,11 +27,11 @@ export namespace VE
 			OutputFile->write(reinterpret_cast<char*>(Data.data()), Data.size());
 
 			if (OutputFile->fail())
-			{ throw RuntimeError(std::format("Failed to write to {}", FilePath)); }
+			{ throw RuntimeError(Text("Failed to write to {}", FilePath)); }
 
 			CloseOStream();
 		}
-		else throw RuntimeError(std::format("Failed to open {}", FilePath));	
+		else throw RuntimeError(Text("Failed to open {}", FilePath));	
 	}
 
 	void BinaryFile::
@@ -46,11 +45,11 @@ export namespace VE
 			InputFile->read(reinterpret_cast<char*>(Data.data()), Data.size());
 
 			if (InputFile->fail() || InputFile->gcount() != Data.size())
-			{ throw RuntimeError(std::format("Failed to read from {}", FilePath)); }
+			{ throw RuntimeError(Text("Failed to read from {}", FilePath)); }
 
 			CloseIStream();
 		}
-		else throw RuntimeError(std::format("Failed to open {}", FilePath));
+		else throw RuntimeError(Text("Failed to open {}", FilePath));
 	}
 
-} // namespace VE
+VISERA_MODULE_END
