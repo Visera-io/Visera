@@ -16,6 +16,13 @@ class ViseraRuntime;
 class Render
 {
 	friend class ViseraRuntime;
+public:
+	static inline void SubmitDrawCall(std::function<void()> _DrawCall)
+	{ Drawcalls.push_back(_DrawCall); }
+
+private:
+	static inline Array<std::function<void()>> Drawcalls;
+
 private:
 	static inline void
 	Tick()
@@ -31,6 +38,12 @@ private:
 			RHI::WaitForCurrentFrame();
 			{
 				auto& CurrentFrame = RHI::GetCurrentFrame();
+				VE_ASSERT(Drawcalls.size() > 0);
+				//[TODO]: CommandList is submitted via App;
+				auto& DrawCall = Drawcalls.front();
+				DrawCall();
+				Drawcalls.clear();
+				std::exit(VISERA_APP_ERROR); // TEST
 
 				Array<RHI::CommandPool::SubmitInfo> SubmitInfos;
 
@@ -45,7 +58,6 @@ private:
 						.Fence = CurrentFrame.Fence_Rendering
 					});
 				}
-				std::exit(VISERA_APP_ERROR);
 				VE_ASSERT(SubmitInfos.size() == 1, "TESTING"); //Visera Render is controled by a singlton cmd
 				RHI::ResetableGraphicsCommandPool.Submit(SubmitInfos[0]);
 			}
