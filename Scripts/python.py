@@ -14,7 +14,6 @@ VISERA_OS_TYPE      =   system()
 VISERA_SUCCESS      =   0
 VISERA_FAILED       =   not VISERA_SUCCESS
 
-
 class Logger:
     LOG_LEVEL_TRIVIAL_BIT   = 0b000001
     LOG_LEVEL_INFO_BIT      = 0b000010

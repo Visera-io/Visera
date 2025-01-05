@@ -1,5 +1,6 @@
 
 from python import *
+import python_create
 import python_generate
 import python_build
 import python_setup
@@ -8,6 +9,7 @@ import python_run
 #Global Registry
 registry = {}
 registry["setup"]    = python_setup.Setup
+registry["create"]    = python_create.Create
 registry["generate"] = python_generate.Generate
 registry["build"] = python_build.Build
 registry["run"] = python_run.Run
