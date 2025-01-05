@@ -11,8 +11,7 @@
             "eigen3",
             "volk",
             "glfw3",
-            "vulkan-memory-allocator",
-            "directx-dxc"
+            "vulkan-memory-allocator"
         ]
     }
 }

@@ -15,11 +15,10 @@ if "%1"=="" (
             @REM Check cache to accelerate reinstallation.
             call curl -o %VISERA_CACHE_DIR%\Downloads\Python.tar.xz https://www.python.org/ftp/python/%VISERA_PYTHON_VERSION%/Python-%VISERA_PYTHON_VERSION%.tar.xz
             call tar -xf %VISERA_CACHE_DIR%\Downloads\Python.tar.xz -C %VISERA_ROOT_DIR%
-
-            :: Remove read-only attribute if set
-            attrib -r %VISERA_ROOT_DIR%Python-%VISERA_PYTHON_VERSION%
-            ren %VISERA_ROOT_DIR%Python-%VISERA_PYTHON_VERSION% "Python"
         )
+        :: Remove read-only attribute if set
+        attrib -r %VISERA_ROOT_DIR%Python-%VISERA_PYTHON_VERSION%
+        ren %VISERA_ROOT_DIR%Python-%VISERA_PYTHON_VERSION% "Python"
 
         @REM Install CPython
         call %VISERA_PYTHON_DIR%\PCBuild\build.bat

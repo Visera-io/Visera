@@ -67,25 +67,25 @@ if (NOT TARGET glfw)
     )
 endif()
 
-# DXC
-if (NOT TARGET Microsoft::DirectXShaderCompiler)
-    message(STATUS "\nLoading DXC (Microsoft::DirectXShaderCompiler)")
-    FIND_PACKAGE(directx-dxc CONFIG REQUIRED)
-    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE Microsoft::DirectXShaderCompiler)
-    add_custom_command(
-        TARGET VISERA_RULER
-        POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:Microsoft::DirectXShaderCompiler>
-        $<TARGET_FILE_DIR:${APP_NAME}>
-    )
-    # << DXIL used in DX12 API : https://docs.vulkan.org/guide/latest/hlsl.html>>
-    # target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE Microsoft::DXIL)
-    # add_custom_command(
-    #     TARGET VISERA_RULER
-    #     POST_BUILD
-    #     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    #     $<TARGET_FILE:Microsoft::DXIL>
-    #     $<TARGET_FILE_DIR:${APP_NAME}>
-    # )
-endif()
+# # DXC
+# if (NOT TARGET Microsoft::DirectXShaderCompiler)
+#     message(STATUS "\nLoading DXC (Microsoft::DirectXShaderCompiler)")
+#     FIND_PACKAGE(directx-dxc CONFIG REQUIRED)
+#     target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE Microsoft::DirectXShaderCompiler)
+#     add_custom_command(
+#         TARGET VISERA_RULER
+#         POST_BUILD
+#         COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#         $<TARGET_FILE:Microsoft::DirectXShaderCompiler>
+#         $<TARGET_FILE_DIR:${APP_NAME}>
+#     )
+#     # << DXIL used in DX12 API : https://docs.vulkan.org/guide/latest/hlsl.html>>
+#     # target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE Microsoft::DXIL)
+#     # add_custom_command(
+#     #     TARGET VISERA_RULER
+#     #     POST_BUILD
+#     #     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#     #     $<TARGET_FILE:Microsoft::DXIL>
+#     #     $<TARGET_FILE_DIR:${APP_NAME}>
+#     # )
+# endif()
