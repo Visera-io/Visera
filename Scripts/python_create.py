@@ -19,7 +19,7 @@ def Create(argv) -> int:
     makedirs(path.join(app_path, "Binaries"), exist_ok=True)
     makedirs(path.join(app_path, "Binaries", "Debug"), exist_ok=True)
     makedirs(path.join(app_path, "Binaries", "Release"), exist_ok=True)
-    makedirs(path.join(app_path, "Extern"), exist_ok=True)
+    makedirs(path.join(app_path, "Packages"), exist_ok=True)
     makedirs(path.join(app_path, "Project"), exist_ok=True)
     makedirs(path.join(app_path, "Source"), exist_ok=True)
     

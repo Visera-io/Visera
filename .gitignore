@@ -2,8 +2,11 @@
 .vscode/
 
 #[Architecture]
-Apps/*
-Engine/Extern/*
+Apps/*/Binaries/Release/*
+Apps/*/Binaries/Debug/*
+Apps/*/Project/*
+Apps/*/Externals/*
+Engine/Externals/*
 Python/*
 __pycache__
 
