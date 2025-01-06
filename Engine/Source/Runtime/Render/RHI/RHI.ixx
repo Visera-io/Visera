@@ -44,7 +44,6 @@ public:
 	CALL CreateFence()						-> SharedPtr<Fence> { return CreateSharedPtr<Fence>(); }
 	CALL CreateSignaledFence()				-> SharedPtr<Fence> { return CreateSharedPtr<Fence>(true); }
 	CALL CreateSemaphore()					-> SharedPtr<Semaphore> { return CreateSharedPtr<Semaphore>(); }
-	CALL CreateSignaledSemaphore()			-> SharedPtr<Semaphore> { VE_ASSERT(False, "Not Supported by Vulkan"); return CreateSharedPtr<Semaphore>(true); }
 	CALL CreateShader(EShaderStage Stage, const Array<Byte>& ShadingCode) -> SharedPtr<Shader> { return CreateSharedPtr<VulkanShader>(Stage, ShadingCode);}
 
 	CALL WaitIdle() -> void { VulkanAPI.Device.WaitIdle(); }
