@@ -1,4 +1,4 @@
-from python import *
+from __MODULE__ import *
 
 import subprocess
 from os import path, rename

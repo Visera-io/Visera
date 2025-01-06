@@ -31,7 +31,7 @@ private:
 	VulkanAllocator Allocator	{};
 	VulkanSwapchain	Swapchain	{};
 		
-	VulkanPipelineCache RenderPassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
+	VulkanPipelineCache RenderPassPipelineCache	{VISERA_APP_CACHE_DIR "/.RenderPassCache.bin"};
 	//VulkanPipelineCache ComputePassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
 
 	using Fence				=VulkanFence;

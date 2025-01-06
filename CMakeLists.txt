@@ -46,6 +46,7 @@ add_compile_definitions(VISERA_ENGINE_NAME=\"${VISERA}\")
 add_compile_definitions(VISERA_APP_NAME=\"${APP_NAME}\")
 add_compile_definitions(VISERA_APP_NAMESPACE=${APP_NAME})
 add_compile_definitions(VISERA_APP_ASSETS_DIR=\"${VISERA_APP_DIR}/${APP_NAME}/Assets\")
+add_compile_definitions(VISERA_APP_CACHE_DIR=\"${VISERA_APP_DIR}/${APP_NAME}/Cache\")
 #[Engine]
 add_subdirectory("${VISERA_ENGINE_DIR}")
 #[App]

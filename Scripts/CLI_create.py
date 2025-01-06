@@ -1,4 +1,4 @@
-from python import *
+from __MODULE__ import *
 
 from os import makedirs
 
@@ -19,6 +19,7 @@ def Create(argv) -> int:
     makedirs(path.join(app_path, "Binaries"), exist_ok=True)
     makedirs(path.join(app_path, "Binaries", "Debug"), exist_ok=True)
     makedirs(path.join(app_path, "Binaries", "Release"), exist_ok=True)
+    makedirs(path.join(app_path, "Cache"), exist_ok=True)
     makedirs(path.join(app_path, "Packages"), exist_ok=True)
     makedirs(path.join(app_path, "Project"), exist_ok=True)
     makedirs(path.join(app_path, "Source"), exist_ok=True)

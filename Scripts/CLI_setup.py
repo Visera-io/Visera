@@ -1,4 +1,4 @@
-from python import *
+from __MODULE__ import *
 
 import json
 import requests
