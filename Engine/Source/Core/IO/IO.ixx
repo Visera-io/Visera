@@ -2,10 +2,10 @@ module;
 #include <Visera.h>
 
 export module Visera.Core.IO;
-import Visera.Core.IO.File;
+import :File;
+import :BinaryFile;
 
-export namespace VE
-{	
+VISERA_PUBLIC_MODULE
 #define INTERFACE static inline auto
 
 class IO

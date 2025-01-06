@@ -7,10 +7,5 @@ export import :Vector;
 export import :Matrix;
 export import :Operation;
 
-export namespace VE
-{	
-
-	
-
-
+VISERA_PUBLIC_MODULE
 VISERA_MODULE_END

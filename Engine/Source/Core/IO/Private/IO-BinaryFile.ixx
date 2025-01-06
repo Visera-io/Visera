@@ -1,8 +1,8 @@
 module;
 #include <Visera.h>
 
-export module Visera.Core.IO.File:Binary;
-import :Interface;
+export module Visera.Core.IO:BinaryFile;
+import :File;
 
 import Visera.Core.Signal;
 

@@ -3,7 +3,7 @@ module;
 
 #include <GLFW/glfw3.h>
 
-export module Visera.Runtime.Platform.Window;
+export module Visera.Runtime.Platform:Window;
 
 import Visera.Core.Log;
 import Visera.Internal.Pattern;

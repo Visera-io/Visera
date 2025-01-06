@@ -5,15 +5,16 @@ module;
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
-export module Visera.Core.Log.Logger:AppLogger;
+export module Visera.Core.Log:SystemLogger;
 
+import Visera.Core.Signal;
 import Visera.Internal.Pattern;
 
 VISERA_PUBLIC_MODULE
-class AppLogger:
-	public Singleton<AppLogger>
+class SystemLogger:
+	public Singleton<SystemLogger>
 {
-	friend class Singleton<AppLogger>;
+	friend class Singleton<SystemLogger>;
 public:
 	inline void
 	Info(const String& message)
@@ -43,23 +44,12 @@ public:
 	{ Spdlogger->error(Formatter, std::forward<Args>(Arguments)...); }
 
 	inline void
-	Fatal(const String& message, const std::source_location& Location)
+	Fatal(const String& message, const std::source_location& location = std::source_location::current())
 	{ 
-		std::stringstream SS;
-		SS  << "\n[Error Location]"
-			<< "\n- File: "		<< Location.file_name()
-			<< "\n- Line: "		<< Location.line()
-			<< "\n- Function: "	<< Location.function_name();
-		String ErrorInfo = SS.str();
-
-		Spdlogger->critical("{}{}", message, ErrorInfo);
-		std::exit(VISERA_APP_ERROR);
+		RuntimeError Error{ message, location };
+		Spdlogger->critical("{}{}", Error.What(), Error.Where());
+		std::exit(VISERA_ENGINE_ERROR);
 	}
-
-	template<typename... Args>
-	inline void
-	Fatal(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-	{ Spdlogger->critical(Formatter, std::forward<Args>(Arguments)...); }
 
 	inline void
 	Debug(const String& message)
@@ -70,7 +60,7 @@ public:
 	Debug(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
 	{ Spdlogger->debug(Formatter, std::forward<Args>(Arguments)...); }
 
-	AppLogger() noexcept
+	SystemLogger() noexcept
 	{
 		auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 		Spdlogger = std::make_unique<spdlog::logger>("Visera Log", console_sink);
@@ -79,10 +69,10 @@ public:
 #else
 		Spdlogger->set_level(spdlog::level::warn);
 #endif
-		//m_handle->set_pattern("[%^%l%$] [%Y-%m-%d %H:%M:%S] %v
-		Spdlogger->set_pattern("%^[" VISERA_APP_NAME " - %l - %H:%M:%S - Thread:%t]%$\n%v");
+		//m_handle->set_pattern("[%^%l%$] [%Y-%m-%d %H:%M:%S] %v");
+		Spdlogger->set_pattern("%^[Visera - %l - %H:%M:%S - Thread:%t]%$\n%v");
 	}
-	virtual ~AppLogger() noexcept
+	virtual ~SystemLogger() noexcept
 	{
 		Spdlogger->flush();
 

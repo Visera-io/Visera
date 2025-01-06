@@ -2,7 +2,7 @@ module;
 #include <Visera.h>
 
 export module Visera.Runtime.Platform;
-export import Visera.Runtime.Platform.Window;
+export import :Window;
 
 import Visera.Runtime.Context;
 import Visera.Core.Log;

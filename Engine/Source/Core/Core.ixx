@@ -12,25 +12,25 @@ export import Visera.Core.Math;
 import Visera.Internal;
 
 VISERA_PUBLIC_MODULE
-	class Visera;
+class Visera;
 
-	class ViseraCore
+class ViseraCore
+{
+	friend class Visera;
+private:
+	static inline void
+	Bootstrap()
 	{
-		friend class Visera;
-	private:
-		static inline void
-		Bootstrap()
-		{
 			
-		}
+	}
 
-		static inline void
-		Terminate()
-		{
+	static inline void
+	Terminate()
+	{
 			
-		}
+	}
 
-		ViseraCore() noexcept = default;
-	};
+	ViseraCore() noexcept = default;
+};
 
 VISERA_MODULE_END

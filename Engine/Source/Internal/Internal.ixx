@@ -7,27 +7,24 @@ export import Visera.Internal.Pattern;
 
 import Visera.Core.Log;
 
-export namespace VE
+VISERA_PUBLIC_MODULE
+class ViseraInternal
 {
-	class Visera;
-
-	class ViseraInternal
+	friend class Visera;
+private:
+	static inline void
+	Bootstrap()
 	{
-		friend class Visera;
-	private:
-		static inline void
-		Bootstrap()
-		{
 
-		}
+	}
 
-		static inline void
-		Terminate()
-		{
-			
-		}
+	static inline void
+	Terminate()
+	{
+	
+	}
 
-		ViseraInternal() noexcept = default;
-	};
+	ViseraInternal() noexcept = default;
+};
 
 VISERA_MODULE_END

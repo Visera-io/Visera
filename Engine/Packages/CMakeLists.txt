@@ -1,8 +1,8 @@
 add_library(VISERA_ENGINE_EXTERN INTERFACE)
 
 #[Manager]
-add_custom_target(VISERA_RULER ALL) # For adding denpendencies
-#set_target_properties(VISERA_RULER PROPERTIES FOLDER "${PROJECT_NAME}")
+add_custom_target(Visera-Packages ALL) # For adding denpendencies
+#set_target_properties(Visera-Packages PROPERTIES FOLDER "${PROJECT_NAME}")
 
 # Spdlog
 if (NOT TARGET spdlog)
@@ -10,14 +10,14 @@ if (NOT TARGET spdlog)
     FIND_PACKAGE(spdlog REQUIRED)
     target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE spdlog::spdlog)
     add_custom_command(
-        TARGET VISERA_RULER
+        TARGET Visera-Packages
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:spdlog::spdlog>
         $<TARGET_FILE_DIR:${APP_NAME}>
     )
     add_custom_command(
-        TARGET VISERA_RULER
+        TARGET Visera-Packages
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:fmt::fmt>
@@ -59,12 +59,19 @@ if (NOT TARGET glfw)
     find_package(glfw3 REQUIRED)
     target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE glfw)
     add_custom_command(
-        TARGET VISERA_RULER
+        TARGET Visera-Packages
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:glfw>
         $<TARGET_FILE_DIR:${APP_NAME}>
     )
+endif()
+
+# Dear ImGui
+if (NOT TARGET imgui::imgui)
+    message(STATUS "\nLoading Dear ImGui-Docking (imgui::imgui)")
+    find_package(imgui REQUIRED)
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE imgui::imgui)
 endif()
 
 # # DXC
@@ -73,7 +80,7 @@ endif()
 #     FIND_PACKAGE(directx-dxc CONFIG REQUIRED)
 #     target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE Microsoft::DirectXShaderCompiler)
 #     add_custom_command(
-#         TARGET VISERA_RULER
+#         TARGET Visera-Packages
 #         POST_BUILD
 #         COMMAND ${CMAKE_COMMAND} -E copy_if_different
 #         $<TARGET_FILE:Microsoft::DirectXShaderCompiler>
@@ -82,7 +89,7 @@ endif()
 #     # << DXIL used in DX12 API : https://docs.vulkan.org/guide/latest/hlsl.html>>
 #     # target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE Microsoft::DXIL)
 #     # add_custom_command(
-#     #     TARGET VISERA_RULER
+#     #     TARGET Visera-Packages
 #     #     POST_BUILD
 #     #     COMMAND ${CMAKE_COMMAND} -E copy_if_different
 #     #     $<TARGET_FILE:Microsoft::DXIL>

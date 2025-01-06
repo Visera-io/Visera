@@ -38,3 +38,7 @@ source_group(TREE ${VISERA_ENGINE_DIR}
 #[External Libraries]
 add_subdirectory("${VISERA_ENGINE_PACKAGE_DIR}")
 target_link_libraries(${VISERA} PUBLIC VISERA_ENGINE_EXTERN)
+
+#[Project]
+set_target_properties(${VISERA} PROPERTIES FOLDER "Visera Engine")
+set_target_properties(Visera-Packages PROPERTIES FOLDER "Visera Engine")

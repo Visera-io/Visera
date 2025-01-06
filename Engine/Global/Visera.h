@@ -17,6 +17,7 @@
 #define VISERA_MODULE_END       }
 
 #define VE_ASSERT(Expression)	assert(Expression);
+#define VE_INTERFACE static inline auto
 
 #define VE_REGISTER_AUTOCAST(IType, OType) constexpr OType AutoCast(IType src) { return static_cast<OType>(src); }
 

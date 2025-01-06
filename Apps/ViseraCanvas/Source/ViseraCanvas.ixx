@@ -11,8 +11,12 @@ export namespace VISERA_APP_NAMESPACE
 		virtual void Tick() override
 		{
 			Log::Info("Hello World");
-
-
+			VE::IO::CreateBinaryFile("");
+			int a;
+			while (std::cin >> a)
+			{
+				Log::Info("Time: {}s", VE::Time::Now().seconds());
+			}
 			Exit(); // Onetime
 		}
 

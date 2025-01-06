@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 
-export module Visera.Core.IO.File:Interface;
+export module Visera.Core.IO:File;
 
 export import Visera.Core.Signal;
 

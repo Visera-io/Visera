@@ -11,7 +11,8 @@
             "eigen3",
             "volk",
             "glfw3",
-            "vulkan-memory-allocator"
+            "vulkan-memory-allocator",
+            "imgui[docking-experimental]"
         ]
     }
 }
