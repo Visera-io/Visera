@@ -3,7 +3,7 @@ from __MODULE__ import *
 from os import makedirs
 
 def Create(argv) -> int:
-    """<app_name> <app_author>"""
+    """create <app_name> <app_author>"""
     if len(argv) < 2: raise RuntimeError(f"create {Create.__doc__}")
     
     app_name = argv[0]

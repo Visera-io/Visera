@@ -1,10 +1,9 @@
 from __MODULE__ import *
 
-import subprocess
 from os import path
 
 def Generate(argv) -> int:
-    """<app_name> [debug/release]"""
+    """[debug/release]"""
     if len(argv) < 2: raise RuntimeError(f"generate {Generate.__doc__}")
     
     app_name = argv[0]

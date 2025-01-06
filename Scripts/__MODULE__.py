@@ -2,8 +2,10 @@ from sys import argv
 from os import path
 from platform import system
 from datetime import datetime
+import subprocess
 
-VISERA_VERSION      =   "0.0.0"
+VISERA_VERSION      =   "1.0.0"
+VISERA_ENGINE_NAME  =   f"Visera {VISERA_VERSION}"
 VISERA_ROOT_PATH    =   path.dirname((path.dirname(path.abspath(__file__))))
 VISERA_APP_PATH     =   path.join(VISERA_ROOT_PATH, "Apps")
 VISERA_PYTHON_PATH  =   path.join(VISERA_ROOT_PATH, "Python")

@@ -1,10 +1,7 @@
 from __MODULE__ import *
 
-import subprocess
-from os import path
-
 def Run(argv) -> int:
-    """\t<app_name> [debug/release] <arguments>"""
+    """[debug/release] <arguments>"""
     if len(argv) < 2: raise RuntimeError(f"run {Run.__doc__}")
     
     app_name = argv[0]

@@ -2,7 +2,6 @@ from __MODULE__ import *
 
 import json
 import requests
-import subprocess
 from os import name as os_type, path, listdir
 from io import BytesIO
 from zipfile import ZipFile
