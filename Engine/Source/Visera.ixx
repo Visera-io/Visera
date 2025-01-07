@@ -6,7 +6,7 @@ export import Visera.Core;
 #if defined(VISERA_RUNTIME)
 export import Visera.Runtime;
 #endif
-import Visera.Internal;
+
 
 VISERA_PUBLIC_MODULE
 class ViseraApp
@@ -58,8 +58,6 @@ public:
 
 	Visera(ViseraApp* App) : App{ App }
 	{
-		Log::Debug("Bootstrapping Visera Internal...");
-		ViseraInternal::Bootstrap();
 		Log::Debug("Bootstrapping Visera Core...");
 		ViseraCore::Bootstrap();
 #if defined(VISERA_RUNTIME)
@@ -79,8 +77,6 @@ public:
 #endif
 		Log::Debug("Terminating Visera Core...");
 		ViseraCore::Terminate();
-		Log::Debug("Terminating Visera Internal...");
-		ViseraInternal::Terminate();
 	}
 private:
 	ViseraApp* const App = nullptr;

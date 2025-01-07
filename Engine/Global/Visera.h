@@ -7,6 +7,7 @@
 
 #include "PCH/Visera-STD.h"
 #include "PCH/Visera-Types.h"
+#include "PCH/Visera-Patterns.h"
 
 // << Global Macros >>
 #define VISERA_ENGINE_ERROR -1

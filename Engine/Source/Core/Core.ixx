@@ -9,7 +9,7 @@ export import Visera.Core.Signal;
 export import Visera.Core.Time;
 export import Visera.Core.Math;
 
-import Visera.Internal;
+
 
 VISERA_PUBLIC_MODULE
 class Visera;

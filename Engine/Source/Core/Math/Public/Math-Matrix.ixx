@@ -6,8 +6,6 @@ module;
 
 export module Visera.Core.Math:Matrix;
 
-import Visera.Internal.Memory;
-
 VISERA_PUBLIC_MODULE
 using MatrixXF   = Eigen::MatrixX<Float>;
 using Matrix2x2F = Eigen::Matrix2<Float>;

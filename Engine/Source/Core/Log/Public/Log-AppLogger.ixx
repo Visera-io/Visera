@@ -7,7 +7,6 @@ module;
 
 export module Visera.Core.Log:AppLogger;
 
-import Visera.Internal.Pattern;
 
 VISERA_PUBLIC_MODULE
 class AppLogger:

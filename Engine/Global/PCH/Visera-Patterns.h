@@ -1,18 +1,8 @@
-module;
-#include <Visera.h>
+#pragma once
 
-export module Visera.Internal.Pattern:Singleton;
-
-export namespace VE
+namespace VE
 {
-    /*[USAGE]
-    * SINGLETON : public Singleton<?>
-    * { 
-    *   friend class Singleton<SINGLETON>; 
-    *   SINGLETON() = default; // Make Constructor private.
-    * };
-    */
-	template<typename T>
+    template<typename T>
     class Singleton
     {
     protected:
@@ -32,4 +22,4 @@ export namespace VE
         Singleton& operator=(const Singleton&)  = delete;
         Singleton& operator=(Singleton&&)       = delete;
     };
-VISERA_MODULE_END
+} // namespace VE

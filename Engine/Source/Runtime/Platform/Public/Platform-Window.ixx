@@ -6,7 +6,6 @@ module;
 export module Visera.Runtime.Platform:Window;
 
 import Visera.Core.Log;
-import Visera.Internal.Pattern;
 
 export namespace VE
 {

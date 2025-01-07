@@ -8,7 +8,6 @@ module;
 export module Visera.Core.Log:SystemLogger;
 
 import Visera.Core.Signal;
-import Visera.Internal.Pattern;
 
 VISERA_PUBLIC_MODULE
 class SystemLogger:

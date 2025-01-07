@@ -7,7 +7,7 @@ export import Visera.Runtime.Render;
 import Visera.Runtime.Context;
 
 import Visera.Core.Log;
-import Visera.Internal;
+
 
 VISERA_PUBLIC_MODULE
 class Visera;

@@ -25,6 +25,10 @@ ToString(const	Radian&	  Radian)	{ return Text("{}rad",	Float(Radian)); }
 String inline
 ToString(const	Degree&	  Degree)	{ return Text("{}deg",	Float(Degree)); }
 String inline
+ToString(const	VectorXF& Vector) { String Result = "["; for (const auto& Value : Vector) { Result += Text(" {},", Value); } Result.pop_back(); return Result += " ]"; }
+String inline
+ToString(const	VectorXD& Vector) { String Result = "["; for (const auto& Value : Vector) { Result += Text(" {},", Value); } Result.pop_back(); return Result += " ]"; }
+String inline
 ToString(const MatrixXF Matrix)
 {
 	String Result;
@@ -34,12 +38,12 @@ ToString(const MatrixXF Matrix)
 	{
 		Result += '|';
 		for (UInt32 j = 0; j < Cols; ++j)
-		{ Result += std::format(" {:<10.6f},", Matrix(i, j)); }
+		{ Result += Text(" {:<10.6f},", Matrix(i, j)); }
 		Result.pop_back();  //Pop Last ','
 		Result += " |\n";
 	}
 	Result.pop_back(); //Pop Last '\n'
-	return Result += std::format("_Matrix{}x{}", Rows, Cols);
+	return Result += Text("_Matrix{}x{}", Rows, Cols);
 }
 String inline
 ToString(const Matrix2x2F& Matrix)

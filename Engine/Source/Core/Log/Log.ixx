@@ -60,7 +60,6 @@ export namespace VISERA_APP_NAMESPACE
 	using namespace VE;
 	class Log
 	{
-	
 	public:
 		template<typename... Args>
 		static inline void
