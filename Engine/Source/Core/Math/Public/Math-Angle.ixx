@@ -25,7 +25,6 @@ export namespace VE
 		operator Float() const { return Value; }
 		operator Degree() const;
 		Degree   ToDegree() const;
-		String	 ToString() const { return Text("{} rad", Value); }
 
 		Radian operator*(Float Multiplicand)	const;
 		Radian operator*(Double Multiplicand)	const;
@@ -54,7 +53,6 @@ export namespace VE
 		operator Float() const { return Value; }
 		operator Radian() const;
 		Radian	 ToRadian() const;
-		String	 ToString() const { return Text("{}�", Value); }
 
 		Radian operator*(Float Multiplicand)	const;
 		Radian operator*(Double Multiplicand)	const;

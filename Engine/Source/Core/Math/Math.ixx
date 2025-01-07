@@ -8,4 +8,98 @@ export import :Matrix;
 export import :Operation;
 
 VISERA_PUBLIC_MODULE
+String inline
+ToString(const	Vector2F& Vector)	{ return Text("[{}, {}]", Vector[0], Vector[1]); }
+String inline
+ToString(const	Vector3F& Vector)	{ return Text("[{}, {}, {}]", Vector[0], Vector[1], Vector[2]); }
+String inline
+ToString(const	Vector4F& Vector)	{ return Text("[{}, {}, {}, {}]", Vector[0], Vector[1], Vector[2], Vector[3]); }
+String inline
+ToString(const	Vector2D& Vector)	{ return Text("[{}, {}]", Vector[0], Vector[1]); }
+String inline
+ToString(const	Vector3D& Vector)	{ return Text("[{}, {}, {}]", Vector[0], Vector[1], Vector[2]); }
+String inline
+ToString(const	Vector4D& Vector)	{ return Text("[{}, {}, {}, {}]", Vector[0], Vector[1], Vector[2], Vector[3]); }
+String inline
+ToString(const	Radian&	  Radian)	{ return Text("{}rad",	Float(Radian)); }
+String inline
+ToString(const	Degree&	  Degree)	{ return Text("{}deg",	Float(Degree)); }
+String inline
+ToString(const MatrixXF Matrix)
+{
+	String Result;
+	UInt32 Rows = Matrix.rows();
+	UInt32 Cols = Matrix.cols();
+	for (UInt32 i = 0; i < Rows; ++i)
+	{
+		Result += '|';
+		for (UInt32 j = 0; j < Cols; ++j)
+		{ Result += std::format(" {:<10.6f},", Matrix(i, j)); }
+		Result.pop_back();  //Pop Last ','
+		Result += " |\n";
+	}
+	Result.pop_back(); //Pop Last '\n'
+	return Result += std::format("_Matrix{}x{}", Rows, Cols);
+}
+String inline
+ToString(const Matrix2x2F& Matrix)
+{
+	return Text("| {:<10.6f}, {:<10.6f} |\n"
+				"| {:<10.6f}, {:<10.6f} |_Matrix2x2",
+		Matrix(0, 0), Matrix(0, 1),
+		Matrix(1, 0), Matrix(1, 1));
+}
+String inline
+ToString(const Matrix2x2D& Matrix)
+{
+	return Text("| {:<10.6f}, {:<10.6f} |\n"
+				"| {:<10.6f}, {:<10.6f} |_Matrix2x2",
+		Matrix(0, 0), Matrix(0, 1),
+		Matrix(1, 0), Matrix(1, 1));
+}
+String inline
+ToString(const Matrix3x3F& Matrix)
+{
+	return Text("| {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
+				"| {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
+				"| {:<10.6f}, {:<10.6f}, {:<10.6f} |_Matrix3x3",
+		Matrix(0, 0), Matrix(0, 1), Matrix(0, 2),
+		Matrix(1, 0), Matrix(1, 1), Matrix(1, 2),
+		Matrix(2, 0), Matrix(2, 1), Matrix(2, 2));
+}
+String inline
+ToString(const Matrix3x3D& Matrix)
+{
+	return Text("| {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
+				"| {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
+				"| {:<10.6f}, {:<10.6f}, {:<10.6f} |_Matrix3x3",
+		Matrix(0, 0), Matrix(0, 1), Matrix(0, 2),
+		Matrix(1, 0), Matrix(1, 1), Matrix(1, 2),
+		Matrix(2, 0), Matrix(2, 1), Matrix(2, 2));
+}
+String inline
+ToString(const Matrix4x4F& Matrix)
+{
+	return Text("| {:<10.6f}, {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
+				"| {:<10.6f}, {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
+				"| {:<10.6f}, {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
+				"| {:<10.6f}, {:<10.6f}, {:<10.6f}, {:<10.6f} |_Matrix4x4",
+		Matrix(0, 0), Matrix(0, 1), Matrix(0, 2), Matrix(0, 3),
+		Matrix(1, 0), Matrix(1, 1), Matrix(1, 2), Matrix(1, 3),
+		Matrix(2, 0), Matrix(2, 1), Matrix(2, 2), Matrix(2, 3),
+		Matrix(3, 0), Matrix(3, 1), Matrix(3, 2), Matrix(3, 3));
+}
+String inline
+ToString(const Matrix4x4D& Matrix)
+{
+	return Text("| {:<10.6f}, {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
+				"| {:<10.6f}, {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
+				"| {:<10.6f}, {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
+				"| {:<10.6f}, {:<10.6f}, {:<10.6f}, {:<10.6f} |_Matrix4x4",
+		Matrix(0, 0), Matrix(0, 1), Matrix(0, 2), Matrix(0, 3),
+		Matrix(1, 0), Matrix(1, 1), Matrix(1, 2), Matrix(1, 3),
+		Matrix(2, 0), Matrix(2, 1), Matrix(2, 2), Matrix(2, 3),
+		Matrix(3, 0), Matrix(3, 1), Matrix(3, 2), Matrix(3, 3));
+}
+	
 VISERA_MODULE_END

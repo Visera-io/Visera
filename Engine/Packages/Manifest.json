@@ -3,7 +3,8 @@
     {
         "Manual":
         {
-            
+            "TBB": "https://github.com/uxlfoundation/oneTBB/releases/download/v2022.0.0/oneapi-tbb-2022.0.0-win.zip",
+            "Embree": "https://github.com/RenderKit/embree/releases/download/v4.3.3/embree-4.3.3.x64.windows.zip"
         },
         "Vcpkg":
         [

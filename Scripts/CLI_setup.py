@@ -50,18 +50,15 @@ def Setup(argv) -> int:
         cwd  = path_vcpkg).returncode
         if VISERA_FAILED == rc: raise RuntimeError(f"Failed to install the {package} via Vcpkg!")
     
-    pass_manual_package = False
-    if len(listdir(path_manual)) != 0:
-         Log.Warn("You may have installed manual packages, would you like to reinstall? [y/n(default)]")
-         if input().lower() != 'y': pass_manual_package = True
-           
-    if (not pass_manual_package):
-        for package, url in manifest[VISERA_OS_TYPE]["Manual"].items():
+    installed_packages = listdir(path_manual)   
+    for package, url in manifest[VISERA_OS_TYPE]["Manual"].items():
+        if package not in installed_packages:   
             Log.Info(f"Downloading {package}")
             response = requests.get(url)
             zip_file = ZipFile(BytesIO(response.content))
             zip_file.extractall(path.join(path_manual, package))
-            
+        else:
+            Log.Info(f"Skipped downloading {package}.")
     del manifest
 
     Log.Info("Setup Visera successfully.")

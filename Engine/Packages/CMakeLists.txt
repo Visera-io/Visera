@@ -74,6 +74,38 @@ if (NOT TARGET imgui::imgui)
     target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE imgui::imgui)
 endif()
 
+# Intel OneAPI TBB
+if (NOT TARGET TBB::tbb)
+    message(STATUS "\nLoading Intel OneAPI TBB (TBB::tbb)")
+    find_package(TBB REQUIRED)
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE TBB::tbb)
+    add_custom_command(
+        TARGET Visera-Packages
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:TBB::tbb>
+        $<TARGET_FILE_DIR:${APP_NAME}>
+        #"tbb12_debug.dll" conflicts with embree's dependency name "tbb12.dll"
+        COMMAND ${CMAKE_COMMAND} -E rename
+        $<TARGET_FILE_DIR:${APP_NAME}>/$<TARGET_FILE_NAME:TBB::tbb>
+        $<TARGET_FILE_DIR:${APP_NAME}>/tbb12.dll
+    )
+endif()
+
+# Intel Embree4
+if (NOT TARGET embree)
+    message(STATUS "\nLoading Intel Embree4 (embree4)")
+    find_package(embree REQUIRED)
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE embree)
+    add_custom_command(
+        TARGET Visera-Packages
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:embree>
+        $<TARGET_FILE_DIR:${APP_NAME}>
+    )
+endif()
+
 # # DXC
 # if (NOT TARGET Microsoft::DirectXShaderCompiler)
 #     message(STATUS "\nLoading DXC (Microsoft::DirectXShaderCompiler)")

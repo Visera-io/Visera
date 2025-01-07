@@ -50,33 +50,4 @@ VISERA_PUBLIC_MODULE
 	Bool
 	IsIdentity(const T& Vector) { return Vector.isIdentity(); }
 
-	StringView
-	Format(const Vector2F& Vector)
-	{
-		static const char* formatter = "(%f, %f)";
-		auto& buffer = MemoryRegistry::GetInstance().MemFormatVector;
-		
-		auto cursor = std::snprintf(buffer.data(), 32 * 2 + (1 + 2*1 + 1), formatter, Vector[0], Vector[1]);
-		return StringView(buffer.begin(), buffer.begin() + cursor);
-	}
-
-	StringView
-	Format(const Vector3F& Vector)
-	{
-		static const char* formatter = "(%f, %f, %f)";
-		auto& buffer = MemoryRegistry::GetInstance().MemFormatVector;
-
-		auto cursor = std::snprintf(buffer.data(), 32 * 3 + (1 + 2*2 + 1), formatter, Vector[0], Vector[1], Vector[2]);
-		return StringView(buffer.begin(), buffer.begin() + cursor);
-	}
-
-	StringView
-	Format(const Vector4F& Vector)
-	{
-		static const char* formatter = "(%f, %f, %f, %f)";
-		auto& buffer = MemoryRegistry::GetInstance().MemFormatVector;
-
-		auto cursor = std::snprintf(buffer.data(), 32 * 4 + (1 + 2*3 + 1), formatter, Vector[0], Vector[1], Vector[2], Vector[3]);
-		return StringView(buffer.begin(), buffer.begin() + cursor);
-	}
 VISERA_MODULE_END

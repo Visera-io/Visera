@@ -44,7 +44,7 @@ using StringView = std::string_view;
 using RawString  = const char*;
 
 template <class... _Types> inline
-std::string
+String
 Text(const std::format_string<_Types...> _Fmt, _Types&&... _Args)
 { return std::format(_Fmt, std::forward<_Types>(_Args)...); }
 
