@@ -1,5 +1,5 @@
 module;
-#include "../VulkanPC.h"
+#include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:GPU;
 
 import Visera.Core.Log;

@@ -4,16 +4,11 @@ module;
 export module Visera.Runtime.Platform;
 export import :Window;
 
-import Visera.Runtime.Context;
 import Visera.Core.Log;
-
-namespace VE
-{
-	class ViseraRuntime;
-}
 
 export namespace VE
 {
+	class ViseraRuntime;
 
 	class Platform
 	{
@@ -26,10 +21,7 @@ export namespace VE
 		static inline void
 		Tick()
 		{
-			if (!RuntimeContext::MainLoop.ShouldStop())
-			{
-				
-			}
+			
 		}
 
 		static inline void

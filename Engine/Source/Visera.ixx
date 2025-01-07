@@ -18,7 +18,7 @@ public:
 	virtual void RenderTick() = 0;
 
 	void inline
-	Exit(const AppExitSignal& Message = AppExitSignal("Visera App Exited Successfully.")) const throw(AppExitSignal) { throw Message; }
+	Exit(const AppStopSignal& Message = AppStopSignal("Visera App Exited Successfully.")) const throw(AppStopSignal) { throw Message; }
 
 	ViseraApp()	 noexcept = default;
 	~ViseraApp() noexcept = default;
@@ -39,7 +39,7 @@ public:
 			}
 			else Log::Warn("Visera App is not created");
 		}
-		catch (const VE::AppExitSignal& Signal)
+		catch (const VE::AppStopSignal& Signal)
 		{
 			Log::Info(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
 		}

@@ -5,7 +5,6 @@ export module Visera.Runtime.Render;
 export import Visera.Runtime.Render.RHI;
 //export import Visera.Runtime.Render.Coordinate;
 
-import Visera.Runtime.Context;
 import Visera.Runtime.Platform;
 import Visera.Core.Log;
 
@@ -27,11 +26,8 @@ private:
 	static inline void
 	Tick()
 	{
-		if (RuntimeContext::MainLoop.ShouldStop()) return;
-
 		//Check Window State
-		if  (Platform::GetWindow().ShouldClose()) return RuntimeContext::MainLoop.Stop();
-		else Platform::GetWindow().PollEvents();
+		if  (!Platform::GetWindow().ShouldClose()) Platform::GetWindow().PollEvents();
 
 		try
 		{
@@ -72,8 +68,7 @@ private:
 	static inline void
 	Bootstrap()
 	{
-		if (!RuntimeContext::Render.IsOffScreenRendering())
-		{ Platform::GetWindow(); } // Create Window
+		Platform::GetWindow(); // Create Window [TODO]:Modify This Logic
 		RHI::Bootstrap();
 	}
 
