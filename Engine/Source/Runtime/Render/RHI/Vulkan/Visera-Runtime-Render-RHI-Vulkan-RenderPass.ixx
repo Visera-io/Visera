@@ -427,7 +427,7 @@ Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShade
 		
 	if(VK_SUCCESS != vkCreateGraphicsPipelines(
 		GVulkan->Device->GetHandle(),
-		GVulkan->RenderPassPipelineCache->GetHandle(),
+		GVulkan->GraphicsCache->GetHandle(),
 		1,
 		&CreateInfo,
 		GVulkan->AllocationCallbacks,

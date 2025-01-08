@@ -45,7 +45,7 @@ public:
 	Fatal(const String& Message, const std::source_location& Location)
 	throw (AppStopSignal)
 	{ 
-		AppStopSignal Signal{ Message, Location };
+		AppStopSignal Signal{ Message, VISERA_APP_ERROR, Location };
 		Spdlogger->critical("{}{}", Signal.What(), Signal.Where());
 		throw Signal;
 	}

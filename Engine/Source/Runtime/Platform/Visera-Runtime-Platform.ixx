@@ -13,7 +13,7 @@ class Platform
 	friend class ViseraRuntime;
 public:
 	static inline auto
-	GetWindow() -> Window& { return Window::GetInstance(); }
+	GetWindow() -> Window& { return Window::GetInstance(); } //Deferred Creation
 
 private:
 	static inline void

@@ -23,7 +23,6 @@ private:
 	Array<RawString>		Extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 										VK_KHR_MAINTENANCE1_EXTENSION_NAME };
 public:
-	enum QueueFamilyType {Graphics, Present, Transfer, Compute, MAX_QUEUE_FAMILY_TYPE};
 	struct QueueFamily
 	{
 		UInt32				Index = UINT32_MAX;
@@ -31,7 +30,7 @@ public:
 		Array<Float>		QueuePriorities{ 1.0 };
 		Bool IsValid() const { return Index != UINT32_MAX; }
 	};
-	auto GetQueueFamily(QueueFamilyType Type) const -> const QueueFamily& { return QueueFamilies[Type]; }
+	auto GetQueueFamily(EQueueFamily Type) const -> const QueueFamily& { return QueueFamilies[AutoCast(Type)]; }
 
 private:
 	Array<QueueFamily> QueueFamilies;
@@ -58,7 +57,7 @@ Create(VulkanGPU* GPU, VulkanSurface* Surface)
 		}
 
 		//Queue Families Properties
-		QueueFamilies.resize(MAX_QUEUE_FAMILY_TYPE);
+		QueueFamilies.resize(AutoCast(EQueueFamily::All));
 		{
 			const auto& Properties = GPUCandidate.GetQueueFamilyProperties();
 			Set<UInt32>		GraphicsQueueFamilies;
@@ -92,16 +91,16 @@ Create(VulkanGPU* GPU, VulkanSurface* Surface)
 			Bool Found = False;
 			for (UInt32 IdxA : GraphicsAndPresentQueueFamilies)
 			{
-				QueueFamilies[Graphics].Index = IdxA;
-				QueueFamilies[Present].Index = IdxA;
+				QueueFamilies[AutoCast(EQueueFamily::Graphics)].Index = IdxA;
+				QueueFamilies[AutoCast(EQueueFamily::Present)].Index = IdxA;
 				for (UInt32 IdxB : TransferQueueFamilies)
 				{
 					if (IdxB == IdxA) continue;
-					QueueFamilies[Transfer].Index = IdxB;
+					QueueFamilies[AutoCast(EQueueFamily::Transfer)].Index = IdxB;
 					for (UInt32 IdxC : ComputeQueueFamilies)
 					{
 						if (IdxC == IdxB) continue;
-						QueueFamilies[Compute].Index = IdxC;
+						QueueFamilies[AutoCast(EQueueFamily::Compute)].Index = IdxC;
 						Found = True;
 					}
 					if (Found) break;
@@ -149,40 +148,46 @@ Create(VulkanGPU* GPU, VulkanSurface* Surface)
 	if (GVulkan->GPU->GetHandle() == VK_NULL_HANDLE)
 	{ throw RuntimeError("Failed to find a suitable Physical Device on current computer!"); }
 
+	auto& GraphicsQueueFamily	= QueueFamilies[AutoCast(EQueueFamily::Graphics)];
+	auto& PresentQueueFamily	= QueueFamilies[AutoCast(EQueueFamily::Present)];
+	auto& TransferQueueFamily	= QueueFamilies[AutoCast(EQueueFamily::Transfer)];
+	auto& ComputeQueueFamily	= QueueFamilies[AutoCast(EQueueFamily::Compute)];
+
 	//Create Queues
 	Array<VkDeviceQueueCreateInfo> DeviceQueueCreateInfos(4-1/*Graphics == Present*/);
 	{
-		VE_ASSERT(QueueFamilies[Graphics].Index == QueueFamilies[Present].Index);
-		QueueFamilies[Graphics].Queues.resize(QueueFamilies[Graphics].QueuePriorities.size());
-		QueueFamilies[Present].Queues.resize(QueueFamilies[Present].QueuePriorities.size());
-		QueueFamilies[Transfer].Queues.resize(QueueFamilies[Transfer].QueuePriorities.size());
-		QueueFamilies[Compute].Queues.resize(QueueFamilies[Compute].QueuePriorities.size());
+		VE_ASSERT(GraphicsQueueFamily.Index == PresentQueueFamily.Index);
+
+		GraphicsQueueFamily.Queues.resize(GraphicsQueueFamily.QueuePriorities.size());
+		PresentQueueFamily.Queues.resize(PresentQueueFamily.QueuePriorities.size());
+		TransferQueueFamily.Queues.resize(TransferQueueFamily.QueuePriorities.size());
+		ComputeQueueFamily.Queues.resize(ComputeQueueFamily.QueuePriorities.size());
 
 		auto& GraphicsAndPresentQueueCreateInfo = DeviceQueueCreateInfos[0];
 		GraphicsAndPresentQueueCreateInfo = VkDeviceQueueCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-			.queueFamilyIndex = QueueFamilies[Graphics].Index,
-			.queueCount = UInt32(QueueFamilies[Graphics].Queues.size()),
-			.pQueuePriorities = QueueFamilies[Graphics].QueuePriorities.data()
+			.queueFamilyIndex = GraphicsQueueFamily.Index,
+			.queueCount = UInt32(GraphicsQueueFamily.Queues.size()),
+			.pQueuePriorities = GraphicsQueueFamily.QueuePriorities.data()
 		};
 
 		auto& TransferQueueCreateInfo = DeviceQueueCreateInfos[1];
 		TransferQueueCreateInfo = VkDeviceQueueCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-			.queueFamilyIndex = QueueFamilies[Transfer].Index,
-			.queueCount = UInt32(QueueFamilies[Transfer].Queues.size()),
-			.pQueuePriorities = QueueFamilies[Transfer].QueuePriorities.data()
+			.queueFamilyIndex =TransferQueueFamily.Index,
+			.queueCount = UInt32(TransferQueueFamily.Queues.size()),
+			.pQueuePriorities = TransferQueueFamily.QueuePriorities.data()
 		};
 
 		auto& ComputeQueueCreateInfo = DeviceQueueCreateInfos[2];
 		ComputeQueueCreateInfo = VkDeviceQueueCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-			.queueFamilyIndex = QueueFamilies[Compute].Index,
-			.queueCount = UInt32(QueueFamilies[Compute].Queues.size()),
-			.pQueuePriorities = QueueFamilies[Compute].QueuePriorities.data()
+			.queueFamilyIndex = ComputeQueueFamily.Index,
+			.queueCount = UInt32(ComputeQueueFamily.Queues.size()),
+			.pQueuePriorities = ComputeQueueFamily.QueuePriorities.data()
 		};
 	}
 
@@ -206,16 +211,16 @@ Create(VulkanGPU* GPU, VulkanSurface* Surface)
 
 	//Retrieve Queues
 	{
-		for (UInt32 Idx = 0; Idx < QueueFamilies[Graphics].Queues.size(); ++Idx)
-		{ vkGetDeviceQueue(Handle, QueueFamilies[Graphics].Index, Idx, &QueueFamilies[Graphics].Queues[Idx]); }	
+		for (UInt32 Idx = 0; Idx < GraphicsQueueFamily.Queues.size(); ++Idx)
+		{ vkGetDeviceQueue(Handle, GraphicsQueueFamily.Index, Idx, &GraphicsQueueFamily.Queues[Idx]); }	
 
-		QueueFamilies[Present].Queues.front() = QueueFamilies[Graphics].Queues.front();
+		PresentQueueFamily.Queues.front() = GraphicsQueueFamily.Queues.front();
 
-		for (UInt32 Idx = 0; Idx < QueueFamilies[Transfer].Queues.size(); ++Idx)
-		{ vkGetDeviceQueue(Handle, QueueFamilies[Transfer].Index, Idx, &QueueFamilies[Transfer].Queues[Idx]); }	
+		for (UInt32 Idx = 0; Idx < TransferQueueFamily.Queues.size(); ++Idx)
+		{ vkGetDeviceQueue(Handle, TransferQueueFamily.Index, Idx, &TransferQueueFamily.Queues[Idx]); }	
 
-		for (UInt32 Idx = 0; Idx < QueueFamilies[Compute].Queues.size(); ++Idx)
-		{ vkGetDeviceQueue(Handle, QueueFamilies[Compute].Index, Idx, &QueueFamilies[Compute].Queues[Idx]); }	
+		for (UInt32 Idx = 0; Idx < ComputeQueueFamily.Queues.size(); ++Idx)
+		{ vkGetDeviceQueue(Handle, ComputeQueueFamily.Index, Idx, &ComputeQueueFamily.Queues[Idx]); }	
 	}
 
 	return Handle;

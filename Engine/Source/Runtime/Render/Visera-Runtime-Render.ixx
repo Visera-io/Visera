@@ -3,14 +3,14 @@ module;
 
 export module Visera.Runtime.Render;
 export import Visera.Runtime.Render.RHI;
+export import Visera.Runtime.Render.UI;
 
 import Visera.Runtime.Platform;
 import Visera.Core.Signal;
 
 VISERA_PUBLIC_MODULE
-
 class ViseraRuntime;
-	
+
 class Render
 {
 	friend class ViseraRuntime;
@@ -68,11 +68,13 @@ private:
 	Bootstrap()
 	{
 		RHI::Bootstrap();
+		//UI::Bootstrap();
 	}
 
 	static inline void
 	Terminate()
 	{
+		//UI::Terminate();
 		RHI::Terminate();
 	}
 

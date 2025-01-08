@@ -14,13 +14,6 @@ class VulkanCommandPool
 	friend class RHI;
 	friend class Vulkan;
 public:
-	enum PoolType
-	{
-		Transient = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
-		Resetable = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-		Protected = VK_COMMAND_POOL_CREATE_PROTECTED_BIT,
-	};
-
 	class CommandBuffer
 	{
 		friend class VulkanCommandPool;
@@ -54,8 +47,8 @@ public:
 		~CommandBuffer() noexcept;
 	};
 
-	auto GetType() const -> PoolType { return PoolType(Type); }
-	Bool IsResetable() const { return Type == PoolType::Resetable; }
+	auto GetType() const -> ECommandPool { return ECommandPool(Type); }
+	Bool IsResetable() const { return Type == ECommandPool::Resetable; }
 	auto Allocate(CommandBuffer::Level Level) const -> SharedPtr<CommandBuffer>;
 	void Free(VkCommandBuffer CommandBuffer)  const;
 	struct SubmitInfo
@@ -72,7 +65,7 @@ public:
 	operator VkCommandPool() const { return Handle; }
 
 private:
-	void Create(VulkanDevice::QueueFamilyType QueueFamilyType, PoolType Type);
+	void Create(EQueueFamily QueueFamilyType, ECommandPool Type);
 	void Destroy();
 	void EmptyRecycleBin();
 
@@ -81,22 +74,22 @@ public:
 	~VulkanCommandPool() noexcept = default;
 
 private:
-	VkCommandPool						Handle{ VK_NULL_HANDLE };
-	VkCommandPoolCreateFlags			Type;
-	VulkanDevice::QueueFamilyType		QueueFamilyType;
-	Array<VkCommandBuffer>				RecycleBin;
+	VkCommandPool				Handle{ VK_NULL_HANDLE };
+	ECommandPool				Type;
+	EQueueFamily				QueueFamilyType;
+	Array<VkCommandBuffer>		RecycleBin;
 };
 
 void VulkanCommandPool::
-Create(VulkanDevice::QueueFamilyType QueueFamilyType, PoolType Type)
+Create(EQueueFamily _QueueFamilyType, ECommandPool _CommandPoolType)
 {
-	this->Type = Type;
-	QueueFamilyType = QueueFamilyType;
+	Type = _CommandPoolType;
+	QueueFamilyType = _QueueFamilyType;
 
 	VkCommandPoolCreateInfo CreateInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-		.flags = this->Type,
+		.flags = AutoCast(Type),
 		.queueFamilyIndex = GVulkan->Device->GetQueueFamily(QueueFamilyType).Index,
 	};
 

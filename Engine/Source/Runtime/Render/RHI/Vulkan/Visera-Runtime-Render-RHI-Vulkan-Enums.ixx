@@ -4,6 +4,9 @@ export module Visera.Runtime.Render.RHI.Vulkan:Enums;
 
 VISERA_PUBLIC_MODULE
 
+//VE_ENUM_CLASS(EQueueFamily, UInt32)
+//VE_ENUM_CLASS(ECommandPool, VkCommandPoolCreateFlags)
+//VE_ENUM_CLASS(ESampleRate, VkSampleCountFlags)
 //VE_ENUM_CLASS(EAccessibility,	VkAccessFlags)
 //VE_ENUM_CLASS(EShaderStage,	VkShaderStageFlags)
 //VE_ENUM_CLASS(EPipelineStage,	VkPipelineStageFlags)
@@ -12,6 +15,35 @@ VISERA_PUBLIC_MODULE
 //VE_ENUM_CLASS(EImageUsage,	VkImageUsageFlags)
 //VE_ENUM_CLASS(EBufferUsage,	VkBufferUsageFlags)
 //VE_ENUM_CLASS(EAttachmentIO,	VkAttachmentLoadOp)
+
+VE_ENUM_CLASS(EQueueFamily, UInt32)
+{
+	Graphics = 0,
+	Present  = 1,
+	Transfer = 2,
+	Compute  = 3,
+	All		 = 4,
+};
+
+VE_ENUM_CLASS(ESampleRate, VkSampleCountFlags)
+{
+	X1	= VK_SAMPLE_COUNT_1_BIT,
+	X2	= VK_SAMPLE_COUNT_2_BIT,
+	X4	= VK_SAMPLE_COUNT_4_BIT,
+	X8  = VK_SAMPLE_COUNT_8_BIT,
+	X16	= VK_SAMPLE_COUNT_16_BIT,
+	X32 = VK_SAMPLE_COUNT_32_BIT,
+	X64 = VK_SAMPLE_COUNT_64_BIT,
+};
+VE_REGISTER_AUTOCAST(VkSampleCountFlags, VkSampleCountFlagBits);
+
+VE_ENUM_CLASS(ECommandPool, VkCommandPoolCreateFlags)
+{
+	Transient = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
+	Resetable = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+	Protected = VK_COMMAND_POOL_CREATE_PROTECTED_BIT,
+};
+
 
 VE_ENUM_CLASS(EAccessibility, VkAccessFlags)
 {

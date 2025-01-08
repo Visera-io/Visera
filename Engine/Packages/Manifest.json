@@ -13,7 +13,7 @@
             "volk",
             "glfw3",
             "vulkan-memory-allocator",
-            "imgui[docking-experimental]"
+            "imgui[core,docking-experimental,vulkan-binding, glfw-binding]"
         ]
     }
 }

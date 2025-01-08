@@ -8,6 +8,7 @@ import Visera.Core.Signal;
 import :Enums;
 import :Instance;
 import :Device;
+import :GPU;
 
 VISERA_PUBLIC_MODULE
 
@@ -40,7 +41,7 @@ public:
 	};
 
 public:
-	auto CreateBuffer(const Buffer::CreateInfo& _CreateInfo) -> SharedPtr<Buffer>;
+	auto CreateBuffer(const Buffer::CreateInfo& _CreateInfo) const -> SharedPtr<Buffer>;
 
 	auto GetHandle() const -> VmaAllocator { return Handle; }
 	operator VmaAllocator() const { return Handle; }
@@ -80,7 +81,7 @@ private:
 
 SharedPtr<VulkanAllocator::Buffer>
 VulkanAllocator::
-CreateBuffer(const Buffer::CreateInfo& _CreateInfo)
+CreateBuffer(const Buffer::CreateInfo& _CreateInfo) const
 {
 	VE_ASSERT(_CreateInfo.Size > 0);
 
@@ -91,7 +92,7 @@ CreateBuffer(const Buffer::CreateInfo& _CreateInfo)
 		.pNext = nullptr,
 		.flags = 0x0,
 		.size = _CreateInfo.Size,
-		.usage = VkBufferUsageFlags(_CreateInfo.Usages),
+		.usage = AutoCast(_CreateInfo.Usages),
 		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
 		.queueFamilyIndexCount = 0,
 		.pQueueFamilyIndices = nullptr,

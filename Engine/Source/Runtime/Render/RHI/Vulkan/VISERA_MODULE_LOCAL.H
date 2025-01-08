@@ -24,12 +24,12 @@ class VulkanContext
 	friend class Vulkan;
 public:
 	const VulkanInstance*		Instance	{nullptr};
-	const VulkanGPU*		GPU		{nullptr};
-	const VulkanDevice*		Device		{nullptr};
+	const VulkanGPU*			GPU			{nullptr};
+	const VulkanDevice*			Device		{nullptr};
 	const VulkanAllocator*		Allocator	{nullptr};
 	const VulkanSurface*		Surface		{nullptr};
 	const VulkanSwapchain*		Swapchain	{nullptr};
-	const VulkanPipelineCache*	RenderPassPipelineCache	{nullptr};
+	const VulkanPipelineCache*	GraphicsCache	{nullptr};
 	const VkAllocationCallbacks*AllocationCallbacks		{nullptr};
 
 	VulkanContext() noexcept { VE_ASSERT(!bCreated); bCreated = true; };

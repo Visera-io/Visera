@@ -142,8 +142,8 @@ Create()
 
 	Array<UInt32> QueuefamilyIndices
 	{
-		GVulkan->Device->GetQueueFamily(GVulkan->Device->Graphics).Index,
-		GVulkan->Device->GetQueueFamily(GVulkan->Device->Present).Index
+		GVulkan->Device->GetQueueFamily(EQueueFamily::Graphics).Index,
+		GVulkan->Device->GetQueueFamily(EQueueFamily::Present).Index
 	};
 	VkSwapchainCreateInfoKHR CreateInfo
 	{
@@ -258,7 +258,7 @@ throw(RecreateSignal)
 		.pImageIndices		= &Cursor,
 		.pResults			= nullptr // It is not necessary if you are only using a single swap chain
 	};
-	VkQueue PresentQueue = GVulkan->Device->GetQueueFamily(VulkanDevice::QueueFamilyType::Present).Queues.front();
+	VkQueue PresentQueue = GVulkan->Device->GetQueueFamily(EQueueFamily::Present).Queues.front();
 	auto Result = vkQueuePresentKHR(PresentQueue, &PresentInfo);
 
 	if (VK_ERROR_OUT_OF_DATE_KHR == Result ||

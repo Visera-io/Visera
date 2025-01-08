@@ -10,10 +10,12 @@ VISERA_PUBLIC_MODULE
 #define CALL static inline auto
 
 class Render;
+class UI;
 
 class RHI
 {
 	friend class Render;
+	friend class UI;
 public:
 	using Semaphore			= Vulkan::Semaphore;
 	using CommandPool		= Vulkan::CommandPool;
@@ -23,6 +25,9 @@ public:
 	using RenderPass		= Vulkan::RenderPass;
 	using Buffer			= VulkanAllocator::Buffer;
 
+	using ESampleRate		= Vulkan::ESampleRate;
+	using EQueueFamily		= Vulkan::EQueueFamily;
+	using ECommandPool		= Vulkan::ECommandPool;
 	using EShaderStage		= Vulkan::EShaderStage;
 	using EAccessibility	= Vulkan::EAccessibility;
 	using EPipelineStage	= Vulkan::EPipelineStage;
@@ -40,13 +45,31 @@ public:
 	CALL RegisterCommandContext(const String& Name, EPipelineStage Deadline) -> void;
 	CALL SearchCommandContext(StringView Name)	-> WeakPtr<CommandContext>;
 
-	CALL CreateBuffer(const Buffer::CreateInfo& _CreateInfo) -> SharedPtr<Buffer> { return Vulkan::Allocator.CreateBuffer(_CreateInfo); }
+	CALL CreateBuffer(const Buffer::CreateInfo& _CreateInfo) -> SharedPtr<Buffer> { return API.Allocator.CreateBuffer(_CreateInfo); }
 	CALL CreateFence()				-> SharedPtr<Fence>		{ return CreateSharedPtr<Fence>(); }
 	CALL CreateSignaledFence()		-> SharedPtr<Fence>		{ return CreateSharedPtr<Fence>(true); }
 	CALL CreateSemaphore()			-> SharedPtr<Semaphore> { return CreateSharedPtr<Semaphore>(); }
 	CALL CreateShader(EShaderStage Stage, const Array<Byte>& ShadingCode) -> SharedPtr<Shader> { return CreateSharedPtr<VulkanShader>(Stage, ShadingCode);}
 
-	CALL WaitIdle() -> void { Vulkan::Device.WaitIdle(); }
+	CALL WaitIdle() -> void { API.Device.WaitIdle(); }
+
+private:
+	struct APIContext
+	{
+		VulkanInstance&		Instance	= Vulkan::Instance;
+		VulkanSurface&		Surface		= Vulkan::Surface;
+		VulkanGPU&			GPU			= Vulkan::GPU;
+		VulkanDevice&		Device		= Vulkan::Device;
+		VulkanAllocator&	Allocator	= Vulkan::Allocator;
+		VulkanSwapchain&	Swapchain	= Vulkan::Swapchain;
+
+		VulkanPipelineCache& GraphicsCache = Vulkan::GraphicsCache;
+
+		VulkanAllocationCallbacks AllocationCallbacks = Vulkan::AllocationCallbacks;
+	};
+	static inline APIContext API;
+	CALL GetAPI() -> const APIContext& { return API; }
+
 public:
 	class CommandContext
 	{
@@ -78,14 +101,14 @@ private:
 	};
 	static inline Array<Frame> Frames;
 
-	CALL GetCurrentFrame() -> Frame& { return Frames[Vulkan::Swapchain.GetCursor()]; }
+	CALL GetCurrentFrame() -> Frame& { return Frames[API.Swapchain.GetCursor()]; }
 
 	static inline void
 	WaitForCurrentFrame() throw(SwapchainRecreateSignal)
 	{
 		auto& CurrentFrame = GetCurrentFrame();
 		CurrentFrame.Fence_Rendering.Wait();
-		Vulkan::Swapchain.WaitForCurrentImage(CurrentFrame.Semaphore_ReadyToRender, nullptr);
+		API.Swapchain.WaitForCurrentImage(CurrentFrame.Semaphore_ReadyToRender, nullptr);
 		CurrentFrame.Fence_Rendering.Lock(); //Reset to Unsignaled (Lock)
 	}
 
@@ -93,7 +116,7 @@ private:
 	PresentCurrentFrame()	throw(SwapchainRecreateSignal)
 	{
 		auto& CurrentFrame = GetCurrentFrame();
-		Vulkan::Swapchain.PresentCurrentImage(CurrentFrame.Semaphore_ReadyToPresent);
+		API.Swapchain.PresentCurrentImage(CurrentFrame.Semaphore_ReadyToPresent);
 	}
 
 private:
@@ -106,9 +129,9 @@ private:
 	Bootstrap()
 	{
 		Vulkan::Bootstrap();
-		ResetableGraphicsCommandPool.Create(VulkanDevice::QueueFamilyType::Graphics, VulkanCommandPool::PoolType::Resetable);
-		TransientGraphicsCommandPool.Create(VulkanDevice::QueueFamilyType::Graphics, VulkanCommandPool::PoolType::Transient);
-		Frames.resize(Vulkan::Swapchain.GetSize());
+		ResetableGraphicsCommandPool.Create(EQueueFamily::Graphics, ECommandPool::Resetable);
+		TransientGraphicsCommandPool.Create(EQueueFamily::Graphics, ECommandPool::Transient);
+		Frames.resize(API.Swapchain.GetSize());
 	}
 	static void
 	Terminate()

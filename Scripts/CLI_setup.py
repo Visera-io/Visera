@@ -44,7 +44,7 @@ def Setup(argv) -> int:
         Log.Info(f"Downloading {package} via Vcpkg")
         rc = subprocess.run(
         args = [
-                "vcpkg", "install", f"{package}"
+                "vcpkg", "install", f"{package}", "--recurse"
                 ],
         shell= True,
         cwd  = path_vcpkg).returncode

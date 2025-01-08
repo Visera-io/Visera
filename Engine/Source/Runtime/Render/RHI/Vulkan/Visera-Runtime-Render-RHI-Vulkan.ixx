@@ -19,6 +19,7 @@ import :Swapchain;
 VISERA_PUBLIC_MODULE
 
 #define SI static inline
+using VulkanAllocationCallbacks = VkAllocationCallbacks*;
 
 class Vulkan
 {
@@ -31,6 +32,9 @@ private:
 	using Shader			=VulkanShader;
 	using RenderPass		=VulkanRenderPass;
 
+	using ESampleRate		=ESampleRate;
+	using EQueueFamily		=EQueueFamily;
+	using ECommandPool		=ECommandPool;
 	using EShaderStage		=EShaderStage;
 	using EAccessibility	=EAccessibility;
 	using EPipelineStage	=EPipelineStage;
@@ -48,10 +52,12 @@ private:
 	SI VulkanDevice		Device		{};
 	SI VulkanAllocator	Allocator	{};
 	SI VulkanSwapchain	Swapchain	{};
-		
-	SI VulkanPipelineCache RenderPassPipelineCache{VISERA_APP_CACHE_DIR "/.RenderPassCache.bin"};
-	//VulkanPipelineCache ComputePassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
 
+	SI VulkanPipelineCache GraphicsCache{VISERA_APP_CACHE_DIR "/.GraphicsCache.bin"};
+	//VulkanPipelineCache ComputeCache	{VISERA_APP_ASSETS_DIR "/.ComputeCache.bin"};
+
+	SI VulkanAllocationCallbacks AllocationCallbacks {nullptr};
+		
 private:
 	SI void Bootstrap();
 	SI void Terminate();
@@ -68,7 +74,8 @@ Bootstrap()
 	Context->Device		= &Device;
 	Context->Allocator	= &Allocator;
 	Context->Swapchain	= &Swapchain;
-	Context->RenderPassPipelineCache = &RenderPassPipelineCache;
+	Context->GraphicsCache = &GraphicsCache;
+	Context->AllocationCallbacks	 = AllocationCallbacks;
 		
 	Loader.Create();
 	Loader.LoadInstance(Instance.Create());
@@ -81,13 +88,13 @@ Bootstrap()
 
 	Swapchain.Create();
 
-	RenderPassPipelineCache.Create();
+	GraphicsCache.Create();
 }
 
 void Vulkan::
 Terminate()
 {
-	RenderPassPipelineCache.Destroy();
+	GraphicsCache.Destroy();
 
 	Swapchain.Destroy();
 
