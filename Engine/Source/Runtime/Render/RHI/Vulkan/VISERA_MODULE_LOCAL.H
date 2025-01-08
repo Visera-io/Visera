@@ -26,8 +26,8 @@ class VulkanContext
 	friend class Vulkan;
 public:
 	const VulkanInstance*		Instance	{nullptr};
-	const VulkanGPU*			GPU			{nullptr};
-	const VulkanDevice*			Device		{nullptr};
+	const VulkanGPU*		GPU		{nullptr};
+	const VulkanDevice*		Device		{nullptr};
 	const VulkanAllocator*		Allocator	{nullptr};
 	const VulkanSurface*		Surface		{nullptr};
 	const VulkanSwapchain*		Swapchain	{nullptr};
