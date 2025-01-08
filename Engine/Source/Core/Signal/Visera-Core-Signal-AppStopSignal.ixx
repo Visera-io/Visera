@@ -9,10 +9,10 @@ class AppStopSignal final : public Signal
 {
 public:
 	explicit AppStopSignal(
-		const String& Message,
-		const std::source_location& Location = std::source_location::current())
+		const String& _Message, Int32 _StateCode = 0,
+		const std::source_location& _Location = std::source_location::current())
 		:
-		Signal{Message, Location}
+		Signal{_Message, _StateCode, _Location}
 	{
 
 	}

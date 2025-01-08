@@ -7,6 +7,7 @@ import :Loader;
 import :GPU;
 
 import Visera.Core.Log;
+import Visera.Core.Signal;
 
 VISERA_PUBLIC_MODULE
 
@@ -60,7 +61,7 @@ public:
 			Log::Warn("[Vulkan]: {}",	CallbackData->pMessage);
 			break;
 		case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-			Log::Fatal(Text("[Vulkan]: {}",	CallbackData->pMessage));
+			Log::Error("[Vulkan]: {}",	CallbackData->pMessage);
 			break;
 		default:
 			Log::Error("[Vulkan]: Unknow Message Severity {}", ErrorCode(MessageSeverity));
@@ -99,7 +100,8 @@ Create()
 	for (UInt32 i = 0; i < GLFWExtensionCount; ++i) { Extensions.emplace_back(*(GLFWExtensions + i)); }
 
 	UInt32 LayerPropertyCount = 0;
-	VK_CHECK(vkEnumerateInstanceLayerProperties(&LayerPropertyCount, nullptr));
+	if(VK_SUCCESS != vkEnumerateInstanceLayerProperties(&LayerPropertyCount, nullptr))
+	{ throw RuntimeError("Failed to enumerate instance layer properties!"); }
 
 	Array<VkLayerProperties> LayerProperties(LayerPropertyCount);
 	vkEnumerateInstanceLayerProperties(&LayerPropertyCount, LayerProperties.data());
@@ -154,7 +156,11 @@ Create()
 		.enabledExtensionCount	= UInt32(Extensions.size()),
 		.ppEnabledExtensionNames= Extensions.data(),
 	};
-	VK_CHECK(vkCreateInstance(&InstanceCreateInfo, GVulkan->AllocationCallbacks, &Handle));
+	if(VK_SUCCESS != vkCreateInstance(
+		&InstanceCreateInfo,
+		GVulkan->AllocationCallbacks,
+		&Handle))
+	{ throw RuntimeError("Failed to create Vulkan Instance!"); }
 
 	return Handle;
 }

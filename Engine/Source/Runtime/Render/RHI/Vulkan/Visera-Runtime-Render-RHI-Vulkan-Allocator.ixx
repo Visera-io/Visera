@@ -3,7 +3,7 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Allocator;
 
-import Visera.Core.Log;
+import Visera.Core.Signal;
 
 import :Enums;
 import :Instance;
@@ -64,7 +64,8 @@ private:
 			.instance = GVulkan->Instance->GetHandle(),
 			.vulkanApiVersion = GVulkan->Instance->GetVulkanAPIVersion()
 		};
-		VK_CHECK(vmaCreateAllocator(&CreateInfo, &Handle));
+		if (VK_SUCCESS != vmaCreateAllocator(&CreateInfo, &Handle))
+		{ throw RuntimeError("Failed to create VMA Allocator!"); }
 	}
 
 	void Destory()
@@ -102,13 +103,14 @@ CreateBuffer(const Buffer::CreateInfo& _CreateInfo)
 		.usage = VmaMemoryUsage(_CreateInfo.Location)
 	};
 
-	VK_CHECK(vmaCreateBuffer(
+	if(VK_SUCCESS != vmaCreateBuffer(
 		Handle,
 		&CreateInfo,
 		&AllocationCreateInfo,
 		&NewBuffer->Handle,
 		&NewBuffer->Allocation,
-		nullptr));
+		nullptr))
+	{ throw RuntimeError("Failed to create VMA Buffer!"); }
 
 	return NewBuffer;
 }
@@ -117,6 +119,7 @@ VulkanAllocator::Buffer::
 ~Buffer() noexcept
 {
 	vmaDestroyBuffer(GVulkan->Allocator->GetHandle(), Handle, Allocation);
+	Handle = VK_NULL_HANDLE;
 }
 
 VISERA_MODULE_END

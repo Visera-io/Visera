@@ -6,7 +6,7 @@ module;
 #include <spdlog/sinks/basic_file_sink.h>
 
 export module Visera.Core.Log:AppLogger;
-
+import Visera.Core.Signal;
 
 VISERA_PUBLIC_MODULE
 class AppLogger:
@@ -42,23 +42,13 @@ public:
 	{ Spdlogger->error(Formatter, std::forward<Args>(Arguments)...); }
 
 	inline void
-	Fatal(const String& message, const std::source_location& Location)
+	Fatal(const String& Message, const std::source_location& Location)
+	throw (AppStopSignal)
 	{ 
-		std::stringstream SS;
-		SS  << "\n[Error Location]"
-			<< "\n- File: "		<< Location.file_name()
-			<< "\n- Line: "		<< Location.line()
-			<< "\n- Function: "	<< Location.function_name();
-		String ErrorInfo = SS.str();
-
-		Spdlogger->critical("{}{}", message, ErrorInfo);
-		std::exit(VISERA_APP_ERROR);
+		AppStopSignal Signal{ Message, Location };
+		Spdlogger->critical("{}{}", Signal.What(), Signal.Where());
+		throw Signal;
 	}
-
-	template<typename... Args>
-	inline void
-	Fatal(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-	{ Spdlogger->critical(Formatter, std::forward<Args>(Arguments)...); }
 
 	inline void
 	Debug(const String& message)

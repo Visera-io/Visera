@@ -2,6 +2,8 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Synchronization;
 
+import Visera.Core.Signal;
+
 import :Device;
 
 VISERA_PUBLIC_MODULE
@@ -47,11 +49,12 @@ VulkanSemaphore(Bool bSignaled/* = False*/)
 		.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
 		.flags = bSignaled? VK_FENCE_CREATE_SIGNALED_BIT : VkSemaphoreCreateFlags(0),
 	};
-	VK_CHECK(vkCreateSemaphore(
+	if(VK_SUCCESS != vkCreateSemaphore(
 		GVulkan->Device->GetHandle(),
 		&CreateInfo,
 		GVulkan->AllocationCallbacks,
-		&Handle));
+		&Handle))
+	{ throw RuntimeError("Failed to create Vulkan Semaphore!"); }
 }
 
 VulkanSemaphore::
@@ -69,11 +72,12 @@ VulkanFence(Bool bSignaled/* = False*/)
 		.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
 		.flags = bSignaled? VK_FENCE_CREATE_SIGNALED_BIT : VkFenceCreateFlags(0),
 	};
-	VK_CHECK(vkCreateFence(
+	if(VK_SUCCESS != vkCreateFence(
 		GVulkan->Device->GetHandle(),
 		&CreateInfo,
 		GVulkan->AllocationCallbacks,
-		&Handle));
+		&Handle))
+	{ throw RuntimeError("Failed to create Vulkan Fence!"); }
 }
 
 VulkanFence::

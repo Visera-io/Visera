@@ -8,7 +8,7 @@ import :Device;
 import :Surface;
 import :Synchronization;
 
-import Visera.Core.Log;
+import Visera.Core.Signal;
 import Visera.Runtime.Platform;
 
 VISERA_PUBLIC_MODULE
@@ -71,7 +71,7 @@ Create()
 				continue;
 			bImageFormatSupport = True;
 		}
-		if (!bImageFormatSupport) Log::Fatal("Failed to create the Swapchain since required Image Format is unsupported!");
+		if (!bImageFormatSupport) throw RuntimeError("Failed to create the Swapchain since required Image Format is unsupported!");
 
 		Bool bPresentModeSupport = False;
 		//Check Image Format Support
@@ -80,7 +80,7 @@ Create()
 			if (SurfacePresentMode != PresentMode) continue;
 			bPresentModeSupport = True;
 		}
-		if (!bPresentModeSupport) Log::Fatal("Failed to create the Swapchain since required Present Mode is unsupported!");
+		if (!bPresentModeSupport) throw RuntimeError("Failed to create the Swapchain since required Present Mode is unsupported!");
 		
 		Bool bZBufferFormatSupport = False;
 		//Check Depth Buffer (ZBuffer) Format
@@ -96,7 +96,7 @@ Create()
 			break;
 		default: break;
 		}
-		if(!bZBufferFormatSupport) Log::Fatal("Failed to create the Swapchain since required ZBuffer Format is unsupported!");
+		if(!bZBufferFormatSupport) throw RuntimeError("Failed to create the Swapchain since required ZBuffer Format is unsupported!");
 	}
 		
 	auto& SurfaceCapabilities = GVulkan->Surface->GetCapabilities();
@@ -109,7 +109,7 @@ Create()
 		Images.resize(RequiredImageCount);
 		ImageViews.resize(RequiredImageCount);
 	}
-	else Log::Fatal("Failed to create the Swapchain since the Surface Image Count is unsupported!");
+	else throw RuntimeError("Failed to create the Swapchain since the Surface Image Count is unsupported!");
 
 	if (SurfaceCapabilities.currentExtent.height == UINT32_MAX)
 	{
@@ -166,7 +166,12 @@ Create()
 		.clipped				= VK_TRUE, // Means that we do not care about the color of pixels that are obscured for the best performance. (P89)
 		.oldSwapchain			= VK_NULL_HANDLE //[TODO] Add Old Swapchain
 	};
-	VK_CHECK(vkCreateSwapchainKHR(GVulkan->Device->GetHandle(), &CreateInfo, GVulkan->AllocationCallbacks, &Handle));
+	if(VK_SUCCESS != vkCreateSwapchainKHR(
+		GVulkan->Device->GetHandle(),
+		&CreateInfo,
+		GVulkan->AllocationCallbacks,
+		&Handle))
+	{ throw RuntimeError("Failed to create Vulkan Swapchain!"); }
 
 	//Retrieve Swap Chain Images
 	vkGetSwapchainImagesKHR(GVulkan->Device->GetHandle(), Handle, &RequiredImageCount, Images.data());
@@ -195,7 +200,12 @@ Create()
 						.layerCount		= 1
 						}
 		};
-		VK_CHECK(vkCreateImageView(GVulkan->Device->GetHandle(), &CreateInfo, GVulkan->AllocationCallbacks,&ImageViews[Idx]));
+		if(VK_SUCCESS != vkCreateImageView(
+			GVulkan->Device->GetHandle(),
+			&CreateInfo,
+			GVulkan->AllocationCallbacks,
+			&ImageViews[Idx]))
+		{ throw RuntimeError("Failed to create Vulkan Image View!"); }
 	}
 
 	//Init Frames
@@ -231,7 +241,7 @@ throw(RecreateSignal)
 		//recreate_swapchain();
 		throw RecreateSignal{};
 	}
-	if (Result != VK_SUCCESS) Log::Fatal("Failed to retrive the next image from the Vulkan Swapchain!");
+	if (Result != VK_SUCCESS) throw RuntimeError("Failed to retrive the next image from the Vulkan Swapchain!");
 }
 
 void VulkanSwapchain::
@@ -257,7 +267,7 @@ throw(RecreateSignal)
 		//recreate_swapchain();
 		throw RecreateSignal{};
 	}
-	if (Result != VK_SUCCESS) Log::Fatal(Text("Failed to present the Vulkan Swapchain! (Cursor:{})", Cursor));
+	if (Result != VK_SUCCESS) throw RuntimeError(Text("Failed to present the Vulkan Swapchain! (Cursor:{})", Cursor));
 
 	if (bMoveCursor) MoveCursor(1);
 }

@@ -34,24 +34,20 @@ public:
 		{
 			if (App)
 			{
-				Log::Info("App Started Running");
+				Log::Debug("App Started Running");
 				do { App->Tick(); } while (RuntimeTick());
 			}
-			else Log::Warn("Visera App is not created");
+			else Log::Error("Visera App is not created");
 		}
-		catch (const VE::AppStopSignal& Signal)
+		catch (const AppStopSignal& Signal)
 		{
-			Log::Info(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
+			Log::Debug(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
+			return Signal.StateCode;
 		}
-		catch (const VE::RuntimeError& Error)
+		catch (const EngineStopSignal& Signal)
 		{
-			Log::Error("Unsolved Visera runtime error:\n{}{}", Error.What(), Error.Where());
-			return EXIT_FAILURE;
-		}
-		catch (const std::exception& Error)
-		{ 
-			Log::Error("Unexcepted Error:\n{}", Error.what());
-			return EXIT_FAILURE;
+			Log::Debug("Visera Engine Stopped:\n{}{}", Signal.What(), Signal.Where());
+			return Signal.StateCode;
 		}
 		return EXIT_SUCCESS;
 	}

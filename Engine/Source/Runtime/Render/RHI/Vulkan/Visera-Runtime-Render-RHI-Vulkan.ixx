@@ -18,22 +18,12 @@ import :Swapchain;
 
 VISERA_PUBLIC_MODULE
 
+#define SI static inline
+
 class Vulkan
 {
 	friend class RHI;
 private:
-	/* << Vulkan Objects >>*/
-	VulkanLoader	Loader		{};
-	VulkanInstance	Instance	{};
-	VulkanSurface	Surface		{};
-	VulkanGPU		GPU			{};
-	VulkanDevice	Device		{};
-	VulkanAllocator Allocator	{};
-	VulkanSwapchain	Swapchain	{};
-		
-	VulkanPipelineCache RenderPassPipelineCache	{VISERA_APP_CACHE_DIR "/.RenderPassCache.bin"};
-	//VulkanPipelineCache ComputePassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
-
 	using Fence				=VulkanFence;
 	using Semaphore			=VulkanSemaphore;
 	using CommandPool		=VulkanCommandPool;
@@ -50,9 +40,21 @@ private:
 	using EPipelineStage	=EPipelineStage;
 	using EAttachmentIO		=EAttachmentIO;
 
+	/* << Vulkan Objects >>*/
+	SI VulkanLoader		Loader		{};
+	SI VulkanInstance	Instance	{};
+	SI VulkanSurface	Surface		{};
+	SI VulkanGPU		GPU			{};
+	SI VulkanDevice		Device		{};
+	SI VulkanAllocator	Allocator	{};
+	SI VulkanSwapchain	Swapchain	{};
+		
+	SI VulkanPipelineCache RenderPassPipelineCache{VISERA_APP_CACHE_DIR "/.RenderPassCache.bin"};
+	//VulkanPipelineCache ComputePassPipelineCache	{VISERA_APP_ASSETS_DIR "/.RenderPassCache.bin"};
+
 private:
-	void Bootstrap();
-	void Terminate();
+	SI void Bootstrap();
+	SI void Terminate();
 };
 
 void Vulkan::

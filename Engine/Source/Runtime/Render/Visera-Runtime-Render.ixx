@@ -3,10 +3,9 @@ module;
 
 export module Visera.Runtime.Render;
 export import Visera.Runtime.Render.RHI;
-//export import Visera.Runtime.Render.Coordinate;
 
 import Visera.Runtime.Platform;
-import Visera.Core.Log;
+import Visera.Core.Signal;
 
 VISERA_PUBLIC_MODULE
 
@@ -27,7 +26,7 @@ private:
 	Tick()
 	{
 		//Check Window State
-		if  (!Platform::GetWindow().ShouldClose()) Platform::GetWindow().PollEvents();
+		Platform::GetWindow().PollEvents();
 
 		try
 		{
@@ -61,14 +60,13 @@ private:
 		}
 		catch (const RHI::SwapchainRecreateSignal&)
 		{
-			Log::Fatal("Not support Swapchain recreation right now.");
+			throw RuntimeError("Not support Swapchain recreation right now.");
 		}
 	}
 
 	static inline void
 	Bootstrap()
 	{
-		Platform::GetWindow(); // Create Window [TODO]:Modify This Logic
 		RHI::Bootstrap();
 	}
 

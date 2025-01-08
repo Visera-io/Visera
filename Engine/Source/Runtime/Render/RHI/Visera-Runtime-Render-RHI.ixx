@@ -40,13 +40,13 @@ public:
 	CALL RegisterCommandContext(const String& Name, EPipelineStage Deadline) -> void;
 	CALL SearchCommandContext(StringView Name)	-> WeakPtr<CommandContext>;
 
-	CALL CreateBuffer(const Buffer::CreateInfo& _CreateInfo) -> SharedPtr<Buffer> { return VulkanAPI.Allocator.CreateBuffer(_CreateInfo); }
-	CALL CreateFence()						-> SharedPtr<Fence> { return CreateSharedPtr<Fence>(); }
-	CALL CreateSignaledFence()				-> SharedPtr<Fence> { return CreateSharedPtr<Fence>(true); }
-	CALL CreateSemaphore()					-> SharedPtr<Semaphore> { return CreateSharedPtr<Semaphore>(); }
+	CALL CreateBuffer(const Buffer::CreateInfo& _CreateInfo) -> SharedPtr<Buffer> { return Vulkan::Allocator.CreateBuffer(_CreateInfo); }
+	CALL CreateFence()				-> SharedPtr<Fence>		{ return CreateSharedPtr<Fence>(); }
+	CALL CreateSignaledFence()		-> SharedPtr<Fence>		{ return CreateSharedPtr<Fence>(true); }
+	CALL CreateSemaphore()			-> SharedPtr<Semaphore> { return CreateSharedPtr<Semaphore>(); }
 	CALL CreateShader(EShaderStage Stage, const Array<Byte>& ShadingCode) -> SharedPtr<Shader> { return CreateSharedPtr<VulkanShader>(Stage, ShadingCode);}
 
-	CALL WaitIdle() -> void { VulkanAPI.Device.WaitIdle(); }
+	CALL WaitIdle() -> void { Vulkan::Device.WaitIdle(); }
 public:
 	class CommandContext
 	{
@@ -69,8 +69,6 @@ public:
 
 
 private:
-	static inline Vulkan VulkanAPI;
-
 	struct Frame
 	{
 		Fence		Fence_Rendering{ True };
@@ -80,14 +78,14 @@ private:
 	};
 	static inline Array<Frame> Frames;
 
-	CALL GetCurrentFrame() -> Frame& { return Frames[VulkanAPI.Swapchain.GetCursor()]; }
+	CALL GetCurrentFrame() -> Frame& { return Frames[Vulkan::Swapchain.GetCursor()]; }
 
 	static inline void
 	WaitForCurrentFrame() throw(SwapchainRecreateSignal)
 	{
 		auto& CurrentFrame = GetCurrentFrame();
 		CurrentFrame.Fence_Rendering.Wait();
-		VulkanAPI.Swapchain.WaitForCurrentImage(CurrentFrame.Semaphore_ReadyToRender, nullptr);
+		Vulkan::Swapchain.WaitForCurrentImage(CurrentFrame.Semaphore_ReadyToRender, nullptr);
 		CurrentFrame.Fence_Rendering.Lock(); //Reset to Unsignaled (Lock)
 	}
 
@@ -95,7 +93,7 @@ private:
 	PresentCurrentFrame()	throw(SwapchainRecreateSignal)
 	{
 		auto& CurrentFrame = GetCurrentFrame();
-		VulkanAPI.Swapchain.PresentCurrentImage(CurrentFrame.Semaphore_ReadyToPresent);
+		Vulkan::Swapchain.PresentCurrentImage(CurrentFrame.Semaphore_ReadyToPresent);
 	}
 
 private:
@@ -107,10 +105,10 @@ private:
 	static void
 	Bootstrap()
 	{
-		VulkanAPI.Bootstrap();
+		Vulkan::Bootstrap();
 		ResetableGraphicsCommandPool.Create(VulkanDevice::QueueFamilyType::Graphics, VulkanCommandPool::PoolType::Resetable);
 		TransientGraphicsCommandPool.Create(VulkanDevice::QueueFamilyType::Graphics, VulkanCommandPool::PoolType::Transient);
-		Frames.resize(VulkanAPI.Swapchain.GetSize());
+		Frames.resize(Vulkan::Swapchain.GetSize());
 	}
 	static void
 	Terminate()
@@ -119,7 +117,7 @@ private:
 		Frames.clear();
 		TransientGraphicsCommandPool.Destroy();
 		ResetableGraphicsCommandPool.Destroy();
-		VulkanAPI.Terminate();
+		Vulkan::Terminate();
 	}
 };
 

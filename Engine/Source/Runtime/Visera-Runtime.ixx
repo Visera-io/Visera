@@ -22,13 +22,13 @@ private:
 		{
 			Platform::Tick();
 			Render::Tick();
-
-			return True;
 		}
-		catch(const EngineStopSignal& Signal)//[FIXME]: Runtime Terminate Signal
+		catch(const RuntimeError& Error)
 		{
-			return False;
+			Log::Error("Visera Runtime Error:\n{}{}", Error.What(), Error.Where());
+			throw EngineStopSignal("An unsolved Runtime Error!", VISERA_ENGINE_ERROR);
 		}
+		return True;
 	}
 
 	static inline void

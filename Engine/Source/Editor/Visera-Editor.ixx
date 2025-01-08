@@ -1,3 +1,3 @@
 module;
 #include <Visera.h>
-export Visera.Editor;
+export module Visera.Editor;

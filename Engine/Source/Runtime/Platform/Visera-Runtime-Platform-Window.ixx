@@ -2,8 +2,7 @@ module;
 #include <Visera.h>
 #include <GLFW/glfw3.h>
 export module Visera.Runtime.Platform:Window;
-
-import Visera.Core.Log;
+import Visera.Core.Signal;
 
 VISERA_PUBLIC_MODULE
 class Platform;
@@ -41,7 +40,6 @@ private:
 	const GLFWvidmode*
 	GetVideoMode(GLFWmonitor* Monitor) { return glfwGetVideoMode(Monitor); }
 
-
 private:
 	String		 Title				= VISERA_APP_NAME;
 	Extent		 CurrentExtent		{{.Width = 1280, .Height = 800}};
@@ -52,7 +50,6 @@ private:
 private:
 	Window()
 	{
-		Log::Debug("Bootstrapping the System Window...");
 		//Init GLFW
 		glfwInit();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -60,7 +57,7 @@ private:
 
 		//Create Window
 		Handle = glfwCreateWindow(CurrentExtent.Width, CurrentExtent.Height, Title.c_str(), NULL, NULL);
-		if (!Handle) Log::Fatal("Failed to create GLFWwindow!");
+		if (!Handle) throw RuntimeError("Failed to create GLFWwindow!");
 
 		// Set Window Position
 		const GLFWvidmode* VidMode = GetVideoMode(GetPrimaryMonitor());
@@ -72,7 +69,6 @@ private:
 
 	~Window()
 	{
-		Log::Debug("Terminating the System Window...");
 		glfwDestroyWindow(Handle);
 		glfwTerminate();
 	}

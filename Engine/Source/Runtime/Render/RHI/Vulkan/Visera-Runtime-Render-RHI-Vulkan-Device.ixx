@@ -7,7 +7,7 @@ import :Instance;
 import :GPU;
 import :Surface;
 
-import Visera.Core.Log;
+import Visera.Core.Signal;
 
 VISERA_PUBLIC_MODULE
 class VulkanDevice
@@ -87,7 +87,7 @@ Create(VulkanGPU* GPU, VulkanSurface* Surface)
 									PresentQueueFamilies.begin(),  PresentQueueFamilies.end(),
 									std::back_inserter(GraphicsAndPresentQueueFamilies));
 			if(GraphicsAndPresentQueueFamilies.empty())
-			{ Log::Fatal("Failed to find a queue family supporting both Graphics and Present!"); }
+			{ throw RuntimeError("Failed to find a queue family supporting both Graphics and Present!"); }
 
 			Bool Found = False;
 			for (UInt32 IdxA : GraphicsAndPresentQueueFamilies)
@@ -108,7 +108,7 @@ Create(VulkanGPU* GPU, VulkanSurface* Surface)
 				}
 				if (Found) break;
 			}
-			if (!Found) Log::Fatal("Failed to find queue families that fit all requirements!");
+			if (!Found) throw RuntimeError("Failed to find queue families that fit all requirements!");
 		}
 
 		//Extension Supports
@@ -146,7 +146,8 @@ Create(VulkanGPU* GPU, VulkanSurface* Surface)
 		//Found Suitable Host GPU
 		{ *GPU = std::move(GPUCandidate); break; }
 	}
-	if (GVulkan->GPU->GetHandle() == VK_NULL_HANDLE) { Log::Fatal("Failed to find a suitable Physical Device on current computer!"); }
+	if (GVulkan->GPU->GetHandle() == VK_NULL_HANDLE)
+	{ throw RuntimeError("Failed to find a suitable Physical Device on current computer!"); }
 
 	//Create Queues
 	Array<VkDeviceQueueCreateInfo> DeviceQueueCreateInfos(4-1/*Graphics == Present*/);
@@ -197,7 +198,11 @@ Create(VulkanGPU* GPU, VulkanSurface* Surface)
 		.ppEnabledExtensionNames= Extensions.data(),
 		.pEnabledFeatures = &GVulkan->GPU->GetFeatures()/*m_physical_device_features2.has_value() ? nullptr : &m_physical_device_features*/// (If pNext includes a VkPhysicalDeviceFeatures2, here should be NULL)
 	};
-	VK_CHECK(vkCreateDevice(GVulkan->GPU->GetHandle(), &DeviceCreateInfo, GVulkan->AllocationCallbacks, &Handle));
+	if(VK_SUCCESS != vkCreateDevice(
+		GVulkan->GPU->GetHandle(),
+		&DeviceCreateInfo,
+		GVulkan->AllocationCallbacks,&Handle))
+	{ throw RuntimeError("Failed to create Vulkan Device!"); }
 
 	//Retrieve Queues
 	{

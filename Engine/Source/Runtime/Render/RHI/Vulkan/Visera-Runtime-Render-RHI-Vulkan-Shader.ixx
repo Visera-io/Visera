@@ -2,6 +2,8 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Shader;
 
+import Visera.Core.Signal;
+
 import :Enums;
 import :Device;
 
@@ -41,7 +43,12 @@ VulkanShader(EShaderStage ShaderType, const Array<Byte>& ShadingCode)
 		.codeSize	= Data.size(),
 		.pCode		= reinterpret_cast<const uint32_t*>(Data.data())
 	};
-	VK_CHECK(vkCreateShaderModule(GVulkan->Device->GetHandle(), &CreateInfo, GVulkan->AllocationCallbacks, &Handle));
+	if(VK_SUCCESS != vkCreateShaderModule(
+		GVulkan->Device->GetHandle(),
+		&CreateInfo,
+		GVulkan->AllocationCallbacks,
+		&Handle))
+	{ throw RuntimeError("Failed to create Vulkan Shader Module!"); }
 }
 
 VulkanShader::

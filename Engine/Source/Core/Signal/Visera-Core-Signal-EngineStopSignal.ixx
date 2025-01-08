@@ -10,10 +10,10 @@ class EngineStopSignal final : public Signal
 {
 public:
 	explicit EngineStopSignal(
-		const String& Message,
+		const String& Message, Int32 _StateCode = 0,
 		const std::source_location& Location = std::source_location::current())
 		:
-		Signal{Message, Location}
+		Signal{Message, _StateCode, Location}
 	{
 
 	}

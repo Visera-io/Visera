@@ -6,7 +6,7 @@ import :Enums;
 import :Device;
 import :Synchronization;
 
-import Visera.Core.Log;
+import Visera.Core.Signal;
 
 VISERA_PUBLIC_MODULE
 class VulkanCommandPool
@@ -100,7 +100,12 @@ Create(VulkanDevice::QueueFamilyType QueueFamilyType, PoolType Type)
 		.queueFamilyIndex = GVulkan->Device->GetQueueFamily(QueueFamilyType).Index,
 	};
 
-	VK_CHECK(vkCreateCommandPool(GVulkan->Device->GetHandle(), &CreateInfo, GVulkan->AllocationCallbacks, &Handle));
+	if(VK_SUCCESS != vkCreateCommandPool(
+		GVulkan->Device->GetHandle(),
+		&CreateInfo,
+		GVulkan->AllocationCallbacks,
+		&Handle))
+	{ throw RuntimeError("Failed to create Vulkan CommandPool!"); }
 }
 
 void VulkanCommandPool::
@@ -129,7 +134,11 @@ Allocate(CommandBuffer::Level Level) const
 		.level = CommandBuffer->GetLevel(),
 		.commandBufferCount = 1
 	};
-	VK_CHECK(vkAllocateCommandBuffers(GVulkan->Device->GetHandle(), &AllocateInfo, &CommandBuffer->Handle));
+	if(VK_SUCCESS != vkAllocateCommandBuffers(
+		GVulkan->Device->GetHandle(),
+		&AllocateInfo,
+		&CommandBuffer->Handle))
+	{ throw RuntimeError("Failed to create Vulkan CommandBuffer!"); }
 
 	return CommandBuffer;
 }
@@ -159,7 +168,6 @@ Submit(const SubmitInfo& SubmitInfo) const
 	VkQueue Queue = GVulkan->Device->GetQueueFamily(QueueFamilyType).Queues.front();
 	//[FIXME]: Revise the last parameter.
 	vkQueueSubmit(Queue, 1, &FinalSubmitInfo, SubmitInfo.Fence);
-	//{ Log::Fatal("Failed to submit current commandbuffers!"); }
 }
 
 VulkanCommandPool::CommandBuffer::
@@ -188,7 +196,7 @@ StartRecording()
 		.pInheritanceInfo = nullptr
 	};
 	if (VK_SUCCESS != vkBeginCommandBuffer(Handle, &BeginInfo))
-	{ Log::Fatal("Failed to begin recording Vulkan Command Buffer!"); }
+	{ throw RuntimeError("Failed to begin recording Vulkan Command Buffer!"); }
 
 	bRecording = True;
 }
@@ -199,7 +207,7 @@ StopRecording()
 	VE_ASSERT(IsRecording());
 
 	if (VK_SUCCESS != vkEndCommandBuffer(Handle))
-	{ Log::Fatal("Failed to stop recording Vulkan Command Buffer!"); }
+	{ throw RuntimeError("Failed to stop recording Vulkan Command Buffer!"); }
 
 	bRecording = False;
 }

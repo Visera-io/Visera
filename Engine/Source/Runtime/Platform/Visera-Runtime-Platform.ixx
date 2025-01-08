@@ -2,42 +2,39 @@ module;
 #include <Visera.h>
 
 export module Visera.Runtime.Platform;
-export import :Window;
+import :Window;
+import Visera.Core.Signal;
 
-import Visera.Core.Log;
+VISERA_PUBLIC_MODULE
+class ViseraRuntime;
 
-export namespace VE
+class Platform
 {
-	class ViseraRuntime;
+	friend class ViseraRuntime;
+public:
+	static inline auto
+	GetWindow() -> Window& { return Window::GetInstance(); }
 
-	class Platform
+private:
+	static inline void
+	Tick()
 	{
-		friend class ViseraRuntime;
-	public:
-		static inline auto
-		GetWindow() -> Window& { return Window::GetInstance(); }
+		if  (GetWindow().ShouldClose())
+		{ throw EngineStopSignal("Window is being closed..."); }
+	}
 
-	private:
-		static inline void
-		Tick()
-		{
-			
-		}
+	static inline void
+	Bootstrap()
+	{
+		GetWindow();
+	}
 
-		static inline void
-		Bootstrap()
-		{
+	static inline void
+	Terminate()
+	{
 
-		}
+	}
 
-		static inline void
-		Terminate()
-		{
-
-		}
-
-		Platform() noexcept = default;
-	};
-	
-
+	Platform() noexcept = default;
+};
 VISERA_MODULE_END 

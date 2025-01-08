@@ -52,7 +52,12 @@ Create()
 		.initialDataSize	= CacheFile->GetSize(),
 		.pInitialData		= CacheFile->GetData().data(),
 	};
-	VK_CHECK(vkCreatePipelineCache(GVulkan->Device->GetHandle(), &CreateInfo, GVulkan->AllocationCallbacks, &Handle));
+	if(VK_SUCCESS != vkCreatePipelineCache(
+		GVulkan->Device->GetHandle(),
+		&CreateInfo,
+		GVulkan->AllocationCallbacks,
+		&Handle))
+	{ throw RuntimeError("Failed to create Vulkan Pipeline Cache!"); }
 }
 
 void VulkanPipelineCache::

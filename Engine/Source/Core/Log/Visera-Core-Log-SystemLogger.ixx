@@ -44,10 +44,11 @@ public:
 
 	inline void
 	Fatal(const String& message, const std::source_location& location = std::source_location::current())
-	{ 
-		RuntimeError Error{ message, location };
-		Spdlogger->critical("{}{}", Error.What(), Error.Where());
-		std::exit(VISERA_ENGINE_ERROR);
+	throw (EngineStopSignal)
+	{
+		EngineStopSignal Signal{ message, location };
+		Spdlogger->critical("{}{}", Signal.What(), Signal.Where());
+		throw Signal;
 	}
 
 	inline void

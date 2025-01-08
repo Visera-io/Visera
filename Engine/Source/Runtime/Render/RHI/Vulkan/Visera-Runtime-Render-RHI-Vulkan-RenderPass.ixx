@@ -2,6 +2,8 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:RenderPass;
 
+import Visera.Core.Signal;
+
 import :Enums;
 import :Device;
 import :Shader;
@@ -213,7 +215,12 @@ Create()
 		.dependencyCount = UInt32(SubpassDependencyInfos.size()),
 		.pDependencies	 = SubpassDependencyInfos.data(),
 	};
-	VK_CHECK(vkCreateRenderPass(GVulkan->Device->GetHandle(), &CreateInfo, GVulkan->AllocationCallbacks, &Handle));
+	if(VK_SUCCESS != vkCreateRenderPass(
+		GVulkan->Device->GetHandle(),
+		&CreateInfo,
+		GVulkan->AllocationCallbacks,
+		&Handle))
+	{ throw RuntimeError("Failed to create Vulkan RenderPass!"); }
 	
 	//Create FrameBuffers
 	for (auto& FrameBuffer : FrameBuffers)
@@ -229,7 +236,12 @@ Create()
 			.height = RenderArea.extent.height,
 			.layers = 1
 		};
-		VK_CHECK(vkCreateFramebuffer(GVulkan->Device->GetHandle(), &FrameBufferCreateInfo, GVulkan->AllocationCallbacks, &FrameBuffer.Handle));
+		if(VK_SUCCESS != vkCreateFramebuffer(
+			GVulkan->Device->GetHandle(),
+			&FrameBufferCreateInfo,
+			GVulkan->AllocationCallbacks,
+			&FrameBuffer.Handle))
+		{ throw RuntimeError("Failed to create Vulkan Framebuffer!"); }
 	}
 }
 
@@ -347,7 +359,12 @@ Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShade
 		.pushConstantRangeCount = 1,
 		.pPushConstantRanges	= &PCRange,
 	};
-	VK_CHECK(vkCreatePipelineLayout(GVulkan->Device->GetHandle(), &LayoutCreateInfo, GVulkan->AllocationCallbacks, &Layout));
+	if(VK_SUCCESS != vkCreatePipelineLayout(
+		GVulkan->Device->GetHandle(),
+		&LayoutCreateInfo,
+		GVulkan->AllocationCallbacks,
+		&Layout))
+	{ throw RuntimeError("Failed to create Vulkan Pipeline Layout!"); }
 
 	ShaderStages.resize(Shaders.size());
 	for(UInt32 Idx = 0; Idx < ShaderStages.size(); ++Idx)
@@ -408,7 +425,14 @@ Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShade
 		.basePipelineIndex		= -1,					// Optional
 	};
 		
-	VK_CHECK(vkCreateGraphicsPipelines(GVulkan->Device->GetHandle(), GVulkan->RenderPassPipelineCache->GetHandle(), 1, &CreateInfo, GVulkan->AllocationCallbacks, &Handle));
+	if(VK_SUCCESS != vkCreateGraphicsPipelines(
+		GVulkan->Device->GetHandle(),
+		GVulkan->RenderPassPipelineCache->GetHandle(),
+		1,
+		&CreateInfo,
+		GVulkan->AllocationCallbacks,
+		&Handle))
+	{ throw RuntimeError("Failed to create Vulkan Graphics Pipeline!"); }
 }
 
 void VulkanRenderPass::Subpass::

@@ -7,8 +7,6 @@
 #include <GLFW/glfw3.h>
 #include <vma/vk_mem_alloc.h>
 
-#define VK_CHECK(Func) { if (VK_SUCCESS != Func) VE_ASSERT(False); }
-
 VISERA_PRIVATE_MODULE
 
 class RHI;

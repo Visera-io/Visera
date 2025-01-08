@@ -25,18 +25,19 @@ public:
 	}
 
 	explicit Signal(
-		const String& Message,
+		const String& Message, Int32 _StateCode,
 		const std::source_location& Location = std::source_location::current())
 		:
-		Message	{ std::move(Message) },
-		Location	{ std::move(Location) }
+		Message		{ std::move(Message) },
+		Location	{ std::move(Location) },
+		StateCode	{_StateCode}
 	{
 
 	}
-
-private:
-	String Message;
-	std::source_location Location;
+	
+	const String Message;
+	const std::source_location Location;
+	const Int32 StateCode;
 };
 
 VISERA_MODULE_END

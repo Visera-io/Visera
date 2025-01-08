@@ -2,10 +2,11 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Surface;
 
+import Visera.Runtime.Platform;
+import Visera.Core.Signal;
+
 import :Instance;
 import :GPU;
-
-import Visera.Runtime.Platform;
 
 VISERA_PUBLIC_MODULE
 
@@ -39,11 +40,12 @@ public:
 void VulkanSurface::
 Create()
 {
-	VK_CHECK(glfwCreateWindowSurface(
+	if(VK_SUCCESS != glfwCreateWindowSurface(
 		GVulkan->Instance->GetHandle(),
 		Platform::GetWindow().GetHandle(),
 		GVulkan->AllocationCallbacks,
-		&Handle));
+		&Handle))
+	{ throw RuntimeError("Failed to create Vulkan Window Surface!"); }
 }
 
 void VulkanSurface::
