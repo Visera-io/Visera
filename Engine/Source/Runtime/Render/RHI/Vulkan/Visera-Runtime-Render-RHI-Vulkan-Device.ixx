@@ -51,10 +51,9 @@ Create(VulkanGPU* GPU, VulkanSurface* Surface)
 	for (const auto& GPUCandidate : GPUs)
 	{
 		//Features
-		{
-			if (!GPUCandidate.IsDiscreteGPU()) continue;
-			if (!GPUCandidate.GetFeatures().samplerAnisotropy) continue;
-		}
+		if (!GPUCandidate.IsDiscreteGPU() ||
+			!GPUCandidate.GetFeatures().samplerAnisotropy)
+		{ continue; }
 
 		//Queue Families Properties
 		QueueFamilies.resize(AutoCast(EQueueFamily::All));

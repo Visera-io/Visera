@@ -33,7 +33,7 @@ private:
 				.ImageCount		= UInt32(API.Swapchain.GetImages().size()),
 				.MSAASamples	= AutoCast(AutoCast(RHI::ESampleRate::X1)),
 
-				.PipelineCache	= API.GraphicsCache.GetHandle(),
+				.PipelineCache	= API.GraphicsPipelineCache.GetHandle(),
 				//[Debug]
 				.Allocator		= API.AllocationCallbacks,
 			});

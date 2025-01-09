@@ -9,27 +9,27 @@ export import :Operation;
 
 VISERA_PUBLIC_MODULE
 String inline
-ToString(const	Vector2F& Vector)	{ return Text("[{}, {}]", Vector[0], Vector[1]); }
+Text(const	Vector2F& Vector)	{ return Text("[{}, {}]", Vector[0], Vector[1]); }
 String inline
-ToString(const	Vector3F& Vector)	{ return Text("[{}, {}, {}]", Vector[0], Vector[1], Vector[2]); }
+Text(const	Vector3F& Vector)	{ return Text("[{}, {}, {}]", Vector[0], Vector[1], Vector[2]); }
 String inline
-ToString(const	Vector4F& Vector)	{ return Text("[{}, {}, {}, {}]", Vector[0], Vector[1], Vector[2], Vector[3]); }
+Text(const	Vector4F& Vector)	{ return Text("[{}, {}, {}, {}]", Vector[0], Vector[1], Vector[2], Vector[3]); }
 String inline
-ToString(const	Vector2D& Vector)	{ return Text("[{}, {}]", Vector[0], Vector[1]); }
+Text(const	Vector2D& Vector)	{ return Text("[{}, {}]", Vector[0], Vector[1]); }
 String inline
-ToString(const	Vector3D& Vector)	{ return Text("[{}, {}, {}]", Vector[0], Vector[1], Vector[2]); }
+Text(const	Vector3D& Vector)	{ return Text("[{}, {}, {}]", Vector[0], Vector[1], Vector[2]); }
 String inline
-ToString(const	Vector4D& Vector)	{ return Text("[{}, {}, {}, {}]", Vector[0], Vector[1], Vector[2], Vector[3]); }
+Text(const	Vector4D& Vector)	{ return Text("[{}, {}, {}, {}]", Vector[0], Vector[1], Vector[2], Vector[3]); }
 String inline
-ToString(const	Radian&	  Radian)	{ return Text("{}rad",	Float(Radian)); }
+Text(const	Radian&	  Radian)	{ return Text("{}rad",	Float(Radian)); }
 String inline
-ToString(const	Degree&	  Degree)	{ return Text("{}deg",	Float(Degree)); }
+Text(const	Degree&	  Degree)	{ return Text("{}deg",	Float(Degree)); }
 String inline
-ToString(const	VectorXF& Vector) { String Result = "["; for (const auto& Value : Vector) { Result += Text(" {},", Value); } Result.pop_back(); return Result += " ]"; }
+Text(const	VectorXF& Vector) { String Result = "["; for (const auto& Value : Vector) { Result += Text(" {},", Value); } Result.pop_back(); return Result += " ]"; }
 String inline
-ToString(const	VectorXD& Vector) { String Result = "["; for (const auto& Value : Vector) { Result += Text(" {},", Value); } Result.pop_back(); return Result += " ]"; }
+Text(const	VectorXD& Vector) { String Result = "["; for (const auto& Value : Vector) { Result += Text(" {},", Value); } Result.pop_back(); return Result += " ]"; }
 String inline
-ToString(const MatrixXF Matrix)
+Text(const MatrixXF Matrix)
 {
 	String Result;
 	UInt32 Rows = Matrix.rows();
@@ -46,7 +46,7 @@ ToString(const MatrixXF Matrix)
 	return Result += Text("_Matrix{}x{}", Rows, Cols);
 }
 String inline
-ToString(const Matrix2x2F& Matrix)
+Text(const Matrix2x2F& Matrix)
 {
 	return Text("| {:<10.6f}, {:<10.6f} |\n"
 				"| {:<10.6f}, {:<10.6f} |_Matrix2x2",
@@ -54,7 +54,7 @@ ToString(const Matrix2x2F& Matrix)
 		Matrix(1, 0), Matrix(1, 1));
 }
 String inline
-ToString(const Matrix2x2D& Matrix)
+Text(const Matrix2x2D& Matrix)
 {
 	return Text("| {:<10.6f}, {:<10.6f} |\n"
 				"| {:<10.6f}, {:<10.6f} |_Matrix2x2",
@@ -62,7 +62,7 @@ ToString(const Matrix2x2D& Matrix)
 		Matrix(1, 0), Matrix(1, 1));
 }
 String inline
-ToString(const Matrix3x3F& Matrix)
+Text(const Matrix3x3F& Matrix)
 {
 	return Text("| {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
 				"| {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
@@ -72,7 +72,7 @@ ToString(const Matrix3x3F& Matrix)
 		Matrix(2, 0), Matrix(2, 1), Matrix(2, 2));
 }
 String inline
-ToString(const Matrix3x3D& Matrix)
+Text(const Matrix3x3D& Matrix)
 {
 	return Text("| {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
 				"| {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
@@ -82,7 +82,7 @@ ToString(const Matrix3x3D& Matrix)
 		Matrix(2, 0), Matrix(2, 1), Matrix(2, 2));
 }
 String inline
-ToString(const Matrix4x4F& Matrix)
+Text(const Matrix4x4F& Matrix)
 {
 	return Text("| {:<10.6f}, {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
 				"| {:<10.6f}, {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
@@ -94,7 +94,7 @@ ToString(const Matrix4x4F& Matrix)
 		Matrix(3, 0), Matrix(3, 1), Matrix(3, 2), Matrix(3, 3));
 }
 String inline
-ToString(const Matrix4x4D& Matrix)
+Text(const Matrix4x4D& Matrix)
 {
 	return Text("| {:<10.6f}, {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"
 				"| {:<10.6f}, {:<10.6f}, {:<10.6f}, {:<10.6f} |\n"

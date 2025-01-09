@@ -63,7 +63,7 @@ private:
 		VulkanAllocator&	Allocator	= Vulkan::Allocator;
 		VulkanSwapchain&	Swapchain	= Vulkan::Swapchain;
 
-		VulkanPipelineCache& GraphicsCache = Vulkan::GraphicsCache;
+		VulkanPipelineCache& GraphicsPipelineCache = Vulkan::GraphicsPipelineCache;
 
 		VulkanAllocationCallbacks AllocationCallbacks = Vulkan::AllocationCallbacks;
 	};

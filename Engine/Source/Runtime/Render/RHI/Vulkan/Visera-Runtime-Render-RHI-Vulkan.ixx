@@ -53,7 +53,7 @@ private:
 	SI VulkanAllocator	Allocator	{};
 	SI VulkanSwapchain	Swapchain	{};
 
-	SI VulkanPipelineCache GraphicsCache{VISERA_APP_CACHE_DIR "/.GraphicsCache.bin"};
+	SI VulkanPipelineCache GraphicsPipelineCache{VISERA_APP_CACHE_DIR "/.GraphicsPipelineCache.bin"};
 	//VulkanPipelineCache ComputeCache	{VISERA_APP_ASSETS_DIR "/.ComputeCache.bin"};
 
 	SI VulkanAllocationCallbacks AllocationCallbacks {nullptr};
@@ -74,7 +74,7 @@ Bootstrap()
 	Context->Device		= &Device;
 	Context->Allocator	= &Allocator;
 	Context->Swapchain	= &Swapchain;
-	Context->GraphicsCache = &GraphicsCache;
+	Context->GraphicsPipelineCache = &GraphicsPipelineCache;
 	Context->AllocationCallbacks	 = AllocationCallbacks;
 		
 	Loader.Create();
@@ -88,13 +88,13 @@ Bootstrap()
 
 	Swapchain.Create();
 
-	GraphicsCache.Create();
+	GraphicsPipelineCache.Create();
 }
 
 void Vulkan::
 Terminate()
 {
-	GraphicsCache.Destroy();
+	GraphicsPipelineCache.Destroy();
 
 	Swapchain.Destroy();
 

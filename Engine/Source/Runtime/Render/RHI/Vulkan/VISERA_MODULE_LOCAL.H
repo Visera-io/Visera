@@ -29,7 +29,7 @@ public:
 	const VulkanAllocator*		Allocator	{nullptr};
 	const VulkanSurface*		Surface		{nullptr};
 	const VulkanSwapchain*		Swapchain	{nullptr};
-	const VulkanPipelineCache*	GraphicsCache	{nullptr};
+	const VulkanPipelineCache*	GraphicsPipelineCache	{nullptr};
 	const VkAllocationCallbacks*AllocationCallbacks		{nullptr};
 
 	VulkanContext() noexcept { VE_ASSERT(!bCreated); bCreated = true; };
