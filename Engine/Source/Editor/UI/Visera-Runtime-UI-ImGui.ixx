@@ -2,35 +2,28 @@ module;
 #include <Visera.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
-export module Visera.Runtime.UI.ImGui;
+export module Visera.Editor.UI:ImGui;
 
 import Visera.Core.Signal;
-import Visera.Runtime.RHI;
 
 export namespace VE { namespace Runtime
 {
-
-
 class UI;
-#define SI static inline
 
-class ImGui
+class FImGui
 {
 	friend class UI;
 public:
 
 private:
-
-	
-private:
 	using CreateInfo = ImGui_ImplVulkan_InitInfo;
 
-	static inline void
+	inline void
 	Bootstrap(const CreateInfo& _CreateInfo)
 	{
 		
 	}
-	static inline void
+	inline void
 	Terminate()
 	{
 		ImGui_ImplVulkan_Shutdown();
