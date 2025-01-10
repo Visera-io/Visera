@@ -42,7 +42,7 @@ class TimePoint<std::chrono::system_clock>
 public:
     //[FIXME] Time Zone issues.
     std::string
-    Text() const
+    ToString() const
     { return Text("UTC(+0) {:%Y-%m-%d %H:%M:%S}", Value); }
 
 public:
