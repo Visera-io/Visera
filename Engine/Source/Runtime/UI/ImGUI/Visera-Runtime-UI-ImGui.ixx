@@ -2,12 +2,14 @@ module;
 #include <Visera.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
-export module Visera.Runtime.Render.UI.ImGui;
+export module Visera.Runtime.UI.ImGui;
 
 import Visera.Core.Signal;
-import Visera.Runtime.Render.RHI;
+import Visera.Runtime.RHI;
 
-VISERA_PUBLIC_MODULE
+export namespace VE { namespace Runtime
+{
+
 
 class UI;
 #define SI static inline
@@ -36,4 +38,4 @@ private:
 	}
 };
 
-VISERA_MODULE_END
+} } // namespace VE::Runtime

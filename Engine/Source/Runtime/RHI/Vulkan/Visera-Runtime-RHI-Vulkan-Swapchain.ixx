@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:Swapchain;
+export module Visera.Runtime.RHI.Vulkan:Swapchain;
 
 import :Enums;
 import :GPU;
@@ -9,13 +9,14 @@ import :Surface;
 import :Synchronization;
 
 import Visera.Core.Signal;
-import Visera.Runtime.Platform;
+import Visera.Runtime.Window;
 
-VISERA_PUBLIC_MODULE
-	
-class VulkanSwapchain
+export namespace VE { namespace Runtime
 {
-	friend class Vulkan;
+
+class FVulkanSwapchain
+{
+	friend class FVulkan;
 public:
 	class RecreateSignal : public std::exception { public: RecreateSignal() noexcept = default; };
 	void WaitForCurrentImage(VkSemaphore SignalSemaphore, VkFence SignalFence) throw(RecreateSignal);
@@ -51,11 +52,11 @@ private:
 	void Create();
 	void Destroy();
 
-	VulkanSwapchain() noexcept  = default;
-	~VulkanSwapchain() noexcept = default;
+	FVulkanSwapchain() noexcept  = default;
+	~FVulkanSwapchain() noexcept = default;
 };
 
-void VulkanSwapchain::
+void FVulkanSwapchain::
 Create()
 {
 	//First Time Creation
@@ -113,11 +114,11 @@ Create()
 
 	if (SurfaceCapabilities.currentExtent.height == UINT32_MAX)
 	{
-		auto FrameBufferExtent = Platform::GetWindow().QueryFrameBufferExtent();
+		auto FrameBufferExtent = Window::QueryFrameBufferExtent();
 		while(!FrameBufferExtent.IsValid())
 		{
-			Platform::GetWindow().PollEvents();
-			Platform::GetWindow().QueryFrameBufferExtent(&FrameBufferExtent);
+			Window::PollEvents();
+			Window::QueryFrameBufferExtent(&FrameBufferExtent);
 		}
 		ImageExtent = VkExtent2D
 		{
@@ -134,7 +135,7 @@ Create()
 		while (SurfaceCapabilities.currentExtent.width <= 0 ||
 				SurfaceCapabilities.currentExtent.height <= 0)
 			{
-				Platform::GetWindow().PollEvents();
+				Window::PollEvents();
 				GVulkan->Surface->GetCapabilities();
 			}
 			ImageExtent = SurfaceCapabilities.currentExtent;
@@ -212,7 +213,7 @@ Create()
 	Cursor = 0;
 }
 
-void VulkanSwapchain::
+void FVulkanSwapchain::
 Destroy()
 {
 	for (auto ImageView : ImageViews)
@@ -224,7 +225,7 @@ Destroy()
 	Handle = VK_NULL_HANDLE;
 }
 
-void VulkanSwapchain::
+void FVulkanSwapchain::
 WaitForCurrentImage(VkSemaphore SignalSemaphore, VkFence SignalFence)
 throw(RecreateSignal)
 {
@@ -244,7 +245,7 @@ throw(RecreateSignal)
 	if (Result != VK_SUCCESS) throw RuntimeError("Failed to retrive the next image from the Vulkan Swapchain!");
 }
 
-void VulkanSwapchain::
+void FVulkanSwapchain::
 PresentCurrentImage(VkSemaphore WaitSemaphore, Bool bMoveCursor/* = True*/)
 throw(RecreateSignal)
 {
@@ -272,4 +273,4 @@ throw(RecreateSignal)
 	if (bMoveCursor) MoveCursor(1);
 }
 
-VISERA_MODULE_END
+} } // namespace VE::Runtime

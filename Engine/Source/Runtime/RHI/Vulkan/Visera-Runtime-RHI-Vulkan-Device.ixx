@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:Device;
+export module Visera.Runtime.RHI.Vulkan:Device;
 
 import :Enums;
 import :Instance;
@@ -9,10 +9,12 @@ import :Surface;
 
 import Visera.Core.Signal;
 
-VISERA_PUBLIC_MODULE
-class VulkanDevice
+export namespace VE { namespace Runtime
 {
-	friend class Vulkan;
+
+class FVulkanDevice
+{
+	friend class FVulkan;
 public:
 	void WaitIdle() const { vkDeviceWaitIdle(Handle); }
 	auto GetHandle() const	-> VkDevice	{ return Handle; }
@@ -35,15 +37,15 @@ public:
 private:
 	Array<QueueFamily> QueueFamilies;
 
-	auto Create(VulkanGPU* GPU, VulkanSurface* Surface) -> VkDevice;
+	auto Create(FVulkanGPU* GPU, FVulkanSurface* Surface) -> VkDevice;
 	void Destroy();
 
-	VulkanDevice()	noexcept	= default;
-	~VulkanDevice() noexcept	= default;
+	FVulkanDevice()	noexcept	= default;
+	~FVulkanDevice() noexcept	= default;
 };
 
-VkDevice VulkanDevice::
-Create(VulkanGPU* GPU, VulkanSurface* Surface)
+VkDevice FVulkanDevice::
+Create(FVulkanGPU* GPU, FVulkanSurface* Surface)
 {
 	//Find Suitable Host GPU
 	auto GPUs = GVulkan->Instance->EnumerateAvailableGPUs();
@@ -225,10 +227,10 @@ Create(VulkanGPU* GPU, VulkanSurface* Surface)
 	return Handle;
 }
 
-void VulkanDevice::
+void FVulkanDevice::
 Destroy()
 {
 	vkDestroyDevice(Handle, GVulkan->AllocationCallbacks);
 	Handle = VK_NULL_HANDLE;
 }
-VISERA_MODULE_END
+} } // namespace VE::Runtime

@@ -1,17 +1,19 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:PipelineCache;
+export module Visera.Runtime.RHI.Vulkan:PipelineCache;
 
 import :Device;
 import :GPU;
 
 import Visera.Core.IO;
 
-VISERA_PUBLIC_MODULE
-
-class VulkanPipelineCache
+export namespace VE { namespace Runtime
 {
-	friend class Vulkan;
+
+
+class FVulkanPipelineCache
+{
+	friend class FVulkan;
 public:
 	Bool IsExpired() const { return bExpired; }
 	auto GetHandle() const -> VkPipelineCache { return Handle; }
@@ -25,12 +27,12 @@ private:
 private:
 	void Create();
 	void Destroy();
-	VulkanPipelineCache() noexcept = delete;
-	VulkanPipelineCache(RawString CachePath) noexcept : Path{ CachePath } {};
-	~VulkanPipelineCache() noexcept = default;
+	FVulkanPipelineCache() noexcept = delete;
+	FVulkanPipelineCache(RawString CachePath) noexcept : Path{ CachePath } {};
+	~FVulkanPipelineCache() noexcept = default;
 };
 
-void VulkanPipelineCache::
+void FVulkanPipelineCache::
 Create()
 {
 	IO::File::CreateIfNotExists(Path);
@@ -60,7 +62,7 @@ Create()
 	{ throw RuntimeError("Failed to create Vulkan Pipeline Cache!"); }
 }
 
-void VulkanPipelineCache::
+void FVulkanPipelineCache::
 Destroy()
 {
 	if (IsExpired())
@@ -77,4 +79,4 @@ Destroy()
 	Handle = VK_NULL_HANDLE;
 }
 
-VISERA_MODULE_END
+} } // namespace VE::Runtime

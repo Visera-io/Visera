@@ -3,7 +3,9 @@ module;
 
 export module Visera.Core.Signal:Interface;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 class Signal : public std::exception
 {
 public:
@@ -40,4 +42,4 @@ public:
 	const Int32 StateCode;
 };
 
-VISERA_MODULE_END
+} // namespace VE

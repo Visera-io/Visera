@@ -6,7 +6,9 @@ export module Visera.Core.Log;
 import :SystemLogger;
 import :AppLogger;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 /*
 [Levels] 1.Debug 2.Info 3.Warn 4.Error 5.Fatal(throw VE::RuntimeError)
 */
@@ -53,7 +55,7 @@ public:
 	Debug(const String& Message)
 	{SystemLogger::GetInstance().Debug(Message);}
 };
-VISERA_MODULE_END
+} // namespace VE
 
 export namespace VISERA_APP_NAMESPACE
 {

@@ -1,17 +1,19 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:Shader;
+export module Visera.Runtime.RHI.Vulkan:Shader;
 
 import Visera.Core.Signal;
 
 import :Enums;
 import :Device;
 
-VISERA_PUBLIC_MODULE
-
-class VulkanShader
+export namespace VE { namespace Runtime
 {
-	friend class Vulkan;
+
+
+class FVulkanShader
+{
+	friend class FVulkan;
 public:
 	auto GetName()	const -> RawString				{ return "main"; }
 	auto GetSize()  const -> VkDeviceSize			{ return Data.size(); }
@@ -22,9 +24,9 @@ public:
 	operator VkShaderModule()	const { return Handle; }
 
 public:
-	VulkanShader() noexcept = delete;
-	VulkanShader(EShaderStage ShaderType, const Array<Byte>& ShadingCode);
-	~VulkanShader() noexcept;
+	FVulkanShader() noexcept = delete;
+	FVulkanShader(EShaderStage ShaderType, const Array<Byte>& ShadingCode);
+	~FVulkanShader() noexcept;
 		
 private:
 	VkShaderModule			Handle{ VK_NULL_HANDLE };
@@ -32,8 +34,8 @@ private:
 	Array<Byte>				Data;
 };
 
-VulkanShader::
-VulkanShader(EShaderStage ShaderType, const Array<Byte>& ShadingCode)
+FVulkanShader::
+FVulkanShader(EShaderStage ShaderType, const Array<Byte>& ShadingCode)
 	:Stage{VkShaderStageFlagBits(ShaderType)}, Data{ShadingCode}
 {
 	VE_ASSERT(!Data.empty());
@@ -51,11 +53,11 @@ VulkanShader(EShaderStage ShaderType, const Array<Byte>& ShadingCode)
 	{ throw RuntimeError("Failed to create Vulkan Shader Module!"); }
 }
 
-VulkanShader::
-~VulkanShader() noexcept
+FVulkanShader::
+~FVulkanShader() noexcept
 {
 	vkDestroyShaderModule(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 	Handle = VK_NULL_HANDLE;
 }
 
-VISERA_MODULE_END
+} } // namespace VE::Runtime

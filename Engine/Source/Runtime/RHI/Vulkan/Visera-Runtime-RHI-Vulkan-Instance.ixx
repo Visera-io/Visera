@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:Instance;
+export module Visera.Runtime.RHI.Vulkan:Instance;
 
 import :Enums;
 import :Loader;
@@ -9,13 +9,15 @@ import :GPU;
 import Visera.Core.Log;
 import Visera.Core.Signal;
 
-VISERA_PUBLIC_MODULE
-
-class VulkanInstance
+export namespace VE { namespace Runtime
 {
-	friend class Vulkan;
+
+
+class FVulkanInstance
+{
+	friend class FVulkan;
 public:
-	auto EnumerateAvailableGPUs() const -> Array<VulkanGPU>;
+	auto EnumerateAvailableGPUs() const -> Array<FVulkanGPU>;
 	auto GetVulkanAPIVersion() const -> UInt32 { return AppVersion; }
 
 	auto GetHandle() const		-> VkInstance { return  Handle; }
@@ -40,8 +42,8 @@ private:
 	void Destroy();
 
 public:
-	VulkanInstance() noexcept = default;
-	~VulkanInstance() noexcept = default;
+	FVulkanInstance() noexcept = default;
+	~FVulkanInstance() noexcept = default;
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL
 		DefaultMessengerCallback(
@@ -70,7 +72,7 @@ public:
 	}
 };
 
-VkInstance VulkanInstance::
+VkInstance FVulkanInstance::
 Create()
 {
 	VE_ASSERT(VK_API_VERSION_1_3 != 0);
@@ -165,7 +167,7 @@ Create()
 	return Handle;
 }
 
-void VulkanInstance::
+void FVulkanInstance::
 Destroy()
 {
 #ifndef NDEBUG
@@ -177,7 +179,7 @@ Destroy()
 	Handle = VK_NULL_HANDLE;
 }
 
-Array<VulkanGPU> VulkanInstance::
+Array<FVulkanGPU> FVulkanInstance::
 EnumerateAvailableGPUs() const
 {
 	/*Find Proper Physical Device(Host)*/
@@ -188,12 +190,12 @@ EnumerateAvailableGPUs() const
 	Array<VkPhysicalDevice> PhysicalDevices(PhysicalDeviceCount);
 	vkEnumeratePhysicalDevices(Handle, &PhysicalDeviceCount, PhysicalDevices.data());
 
-	Array<VulkanGPU> GPUs(PhysicalDevices.size());
+	Array<FVulkanGPU> GPUs(PhysicalDevices.size());
 	std::transform(PhysicalDevices.begin(), PhysicalDevices.end(), GPUs.begin(),
-		[](VkPhysicalDevice PhysicalDevice) -> VulkanGPU
-		{ return VulkanGPU{ PhysicalDevice }; });
+		[](VkPhysicalDevice PhysicalDevice) -> FVulkanGPU
+		{ return FVulkanGPU{ PhysicalDevice }; });
 
 	return GPUs;
 }
 
-VISERA_MODULE_END
+} } // namespace VE::Runtime

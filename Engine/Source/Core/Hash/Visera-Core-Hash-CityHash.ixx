@@ -129,7 +129,9 @@ module;
 
 export module Visera.Core.Hash:CityHash;
 
-VISERA_PRIVATE_MODULE
+namespace VE
+{
+
 namespace Hash
 {
     using namespace std;
@@ -387,9 +389,11 @@ namespace Hash
       return uint128(a ^ b, HashLen16(b, a));
     }
 }
-VISERA_MODULE_END
+} // namespace VE
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 namespace Hash
 {
 	// Hash function for a byte array.
@@ -739,4 +743,4 @@ namespace Hash
     }
     #endif
 }
-VISERA_MODULE_END
+} // namespace VE

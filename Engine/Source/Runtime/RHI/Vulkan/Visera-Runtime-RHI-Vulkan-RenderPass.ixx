@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:RenderPass;
+export module Visera.Runtime.RHI.Vulkan:RenderPass;
 
 import Visera.Core.Signal;
 
@@ -11,16 +11,18 @@ import :CommandPool;
 import :Swapchain;
 import :PipelineCache;
 
-VISERA_PUBLIC_MODULE
-
-class VulkanRenderPass
+export namespace VE { namespace Runtime
 {
-	friend class Vulkan;
+
+
+class FVulkanRenderPass
+{
+	friend class FVulkan;
 	class Subpass;
 public:
-	virtual void Start(SharedPtr<VulkanCommandPool::CommandBuffer> CommandBuffer) const;
-	virtual void Render(SharedPtr<VulkanCommandPool::CommandBuffer> CommandBuffer) = 0;
-	virtual void Stop(SharedPtr<VulkanCommandPool::CommandBuffer>  CommandBuffer) const;
+	virtual void Start(SharedPtr<FVulkanCommandPool::CommandBuffer> CommandBuffer) const;
+	virtual void Render(SharedPtr<FVulkanCommandPool::CommandBuffer> CommandBuffer) = 0;
+	virtual void Stop(SharedPtr<FVulkanCommandPool::CommandBuffer>  CommandBuffer) const;
 	//VkSubpassDependency
 	struct FrameBuffer
 	{
@@ -40,10 +42,10 @@ public:
 public:
 	class Subpass
 	{
-		friend class VulkanRenderPass;
+		friend class FVulkanRenderPass;
 	public:
 		//[TODO] UseSubpassCreateInfo
-		void Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders);
+		void Create(const FVulkanRenderPass& HostRenderPass, const Array<SharedPtr<FVulkanShader>>& Shaders);
 		void Destroy() noexcept;
 
 		auto GetLayout()	const  ->	VkPipelineLayout			{ return Layout; }
@@ -112,13 +114,13 @@ public:
 	void Destroy();
 
 public:
-	VulkanRenderPass() noexcept = delete;
-	VulkanRenderPass(UInt32 SubpassCount) noexcept;
-	virtual ~VulkanRenderPass() noexcept;
+	FVulkanRenderPass() noexcept = delete;
+	FVulkanRenderPass(UInt32 SubpassCount) noexcept;
+	virtual ~FVulkanRenderPass() noexcept;
 };
 
-void VulkanRenderPass::
-Start(SharedPtr<VulkanCommandPool::CommandBuffer> CommandBuffer) const
+void FVulkanRenderPass::
+Start(SharedPtr<FVulkanCommandPool::CommandBuffer> CommandBuffer) const
 {
 	VE_ASSERT(CommandBuffer->IsRecording());
 
@@ -139,15 +141,15 @@ Start(SharedPtr<VulkanCommandPool::CommandBuffer> CommandBuffer) const
 	vkCmdBeginRenderPass(CommandBuffer->GetHandle(), &BeginInfo, SubpassContents);
 }
 
-void VulkanRenderPass::
-Stop(SharedPtr<VulkanCommandPool::CommandBuffer> CommandBuffer) const
+void FVulkanRenderPass::
+Stop(SharedPtr<FVulkanCommandPool::CommandBuffer> CommandBuffer) const
 {
 	VE_ASSERT(CommandBuffer->IsRecording());
 	vkCmdEndRenderPass(CommandBuffer->GetHandle());
 }
 
-VulkanRenderPass::
-VulkanRenderPass(UInt32 SubpassCount) noexcept
+FVulkanRenderPass::
+FVulkanRenderPass(UInt32 SubpassCount) noexcept
 	:RenderArea{{0,0}, { GVulkan->Swapchain->GetExtent() }},
 		Subpasses(SubpassCount),
 		SubpassDescriptions(SubpassCount),
@@ -157,13 +159,13 @@ VulkanRenderPass(UInt32 SubpassCount) noexcept
 	//!!!Remeber to call VulkanRenderPass::Create() in the Derived Renderpass!!!
 }
 
-VulkanRenderPass::
-~VulkanRenderPass() noexcept
+FVulkanRenderPass::
+~FVulkanRenderPass() noexcept
 {
 	Destroy();
 }
 
-void VulkanRenderPass::
+void FVulkanRenderPass::
 Create()
 {
 	VE_ASSERT(!Subpasses.empty() &&
@@ -245,7 +247,7 @@ Create()
 	}
 }
 
-void VulkanRenderPass::
+void FVulkanRenderPass::
 Destroy()
 {
 	for (auto& Subpass : Subpasses) { Subpass->Destroy(); }
@@ -253,7 +255,7 @@ Destroy()
 	Handle = VK_NULL_HANDLE;
 }
 
-VulkanRenderPass::Subpass::
+FVulkanRenderPass::Subpass::
 Subpass():
 	VertexInputState{ VkPipelineVertexInputStateCreateInfo
 	{
@@ -341,8 +343,8 @@ Subpass():
 	//!!!Remeber to call Subpass::Create() in Renderpass!!!
 }
 
-void VulkanRenderPass::Subpass::
-Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShader>>& Shaders)
+void FVulkanRenderPass::Subpass::
+Create(const FVulkanRenderPass& HostRenderPass, const Array<SharedPtr<FVulkanShader>>& Shaders)
 {
 	//[TODO][FIXME]: Add SPIR-V Reflection?
 	VkPushConstantRange PCRange //[FIXME]: Test Data
@@ -435,7 +437,7 @@ Create(const VulkanRenderPass& HostRenderPass, const Array<SharedPtr<VulkanShade
 	{ throw RuntimeError("Failed to create Vulkan Graphics Pipeline!"); }
 }
 
-void VulkanRenderPass::Subpass::
+void FVulkanRenderPass::Subpass::
 Destroy() noexcept
 {
 	vkDestroyPipeline(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
@@ -444,4 +446,4 @@ Destroy() noexcept
 	Layout = VK_NULL_HANDLE;
 }
 	
-VISERA_MODULE_END
+} } // namespace VE::Runtime

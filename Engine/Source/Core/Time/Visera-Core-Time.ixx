@@ -4,7 +4,9 @@ module;
 export module Visera.Core.Time;
 export import :Clock;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 
 class Time
 {
@@ -15,4 +17,4 @@ private:
 	static inline SystemClock Clock;
 };
 
-VISERA_MODULE_END
+} // namespace VE

@@ -9,7 +9,9 @@ export module Visera.Core.Log:SystemLogger;
 
 import Visera.Core.Signal;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 class SystemLogger:
 	public Singleton<SystemLogger>
 {
@@ -84,4 +86,4 @@ public:
 protected:
 	UniquePtr<spdlog::logger> Spdlogger;
 };
-VISERA_MODULE_END
+} // namespace VE

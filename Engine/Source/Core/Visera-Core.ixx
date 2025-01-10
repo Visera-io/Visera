@@ -10,7 +10,9 @@ export import Visera.Core.Time;
 export import Visera.Core.Math;
 export import Visera.Core.Hash;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 class Visera;
 
 class ViseraCore
@@ -32,4 +34,4 @@ private:
 	ViseraCore() noexcept = default;
 };
 
-VISERA_MODULE_END
+} // namespace VE

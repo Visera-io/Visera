@@ -4,7 +4,9 @@ module;
 export module Visera.Core.Signal:EngineStopSignal;
 import :Interface;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 
 class EngineStopSignal final : public Signal
 {
@@ -18,4 +20,4 @@ public:
 
 	}
 };
-VISERA_MODULE_END
+} // namespace VE

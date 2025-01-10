@@ -4,7 +4,9 @@ module;
 export module Visera.Core.Signal:RuntimeError;
 import :Interface;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 	
 class RuntimeError final : public Signal
 {
@@ -19,4 +21,4 @@ public:
 	}
 };
 
-VISERA_MODULE_END
+} // namespace VE

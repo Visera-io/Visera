@@ -7,29 +7,29 @@
 #include <GLFW/glfw3.h>
 #include <vma/vk_mem_alloc.h>
 
-VISERA_PRIVATE_MODULE
-
+namespace VE { namespace Runtime
+{
 class RHI;
 class Vulkan;
-class VulkanInstance;
-class VulkanGPU;
-class VulkanDevice;
-class VulkanAllocator;
-class VulkanSurface;
-class VulkanSwapchain;
-class VulkanPipelineCache;
+class FVulkanInstance;
+class FVulkanGPU;
+class FVulkanDevice;
+class FVulkanAllocator;
+class FVulkanSurface;
+class FVulkanSwapchain;
+class FVulkanPipelineCache;
 
 class VulkanContext
 {
-	friend class Vulkan;
+	friend class FVulkan;
 public:
-	const VulkanInstance*		Instance	{nullptr};
-	const VulkanGPU*			GPU			{nullptr};
-	const VulkanDevice*			Device		{nullptr};
-	const VulkanAllocator*		Allocator	{nullptr};
-	const VulkanSurface*		Surface		{nullptr};
-	const VulkanSwapchain*		Swapchain	{nullptr};
-	const VulkanPipelineCache*	GraphicsPipelineCache	{nullptr};
+	const FVulkanInstance*		Instance	{nullptr};
+	const FVulkanGPU*			GPU			{nullptr};
+	const FVulkanDevice*			Device		{nullptr};
+	const FVulkanAllocator*		Allocator	{nullptr};
+	const FVulkanSurface*		Surface		{nullptr};
+	const FVulkanSwapchain*		Swapchain	{nullptr};
+	const FVulkanPipelineCache*	GraphicsPipelineCache	{nullptr};
 	const VkAllocationCallbacks*AllocationCallbacks		{nullptr};
 
 	VulkanContext() noexcept { VE_ASSERT(!bCreated); bCreated = true; };
@@ -43,4 +43,4 @@ private:
 };
 inline const VulkanContext* GVulkan = nullptr;
 
-VISERA_MODULE_END
+} } // namespace VE::Runtime

@@ -1,18 +1,20 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:Surface;
+export module Visera.Runtime.RHI.Vulkan:Surface;
 
-import Visera.Runtime.Platform;
+import Visera.Runtime.Window;
 import Visera.Core.Signal;
 
 import :Instance;
 import :GPU;
 
-VISERA_PUBLIC_MODULE
-
-class VulkanSurface
+export namespace VE { namespace Runtime
 {
-	friend class Vulkan;
+
+
+class FVulkanSurface
+{
+	friend class FVulkan;
 public:
 	auto GetCapabilities()	const	-> const VkSurfaceCapabilitiesKHR&	{ auto& C = const_cast<VkSurfaceCapabilitiesKHR&>(Capacities); vkGetPhysicalDeviceSurfaceCapabilitiesKHR(GVulkan->GPU->GetHandle(), Handle, &C); return Capacities; }
 	auto GetFormats()		const	-> const Array<VkSurfaceFormatKHR>& { return Formats; }
@@ -33,26 +35,26 @@ private:
 	void Destroy();
 
 public:
-	VulkanSurface()  noexcept = default;
-	~VulkanSurface() noexcept = default;
+	FVulkanSurface()  noexcept = default;
+	~FVulkanSurface() noexcept = default;
 };
 
-void VulkanSurface::
+void FVulkanSurface::
 Create()
 {
 	if(VK_SUCCESS != glfwCreateWindowSurface(
 		GVulkan->Instance->GetHandle(),
-		Platform::GetWindow().GetHandle(),
+		Window::GetHandle(),
 		GVulkan->AllocationCallbacks,
 		&Handle))
 	{ throw RuntimeError("Failed to create Vulkan Window Surface!"); }
 }
 
-void VulkanSurface::
+void FVulkanSurface::
 Destroy()
 {
 	vkDestroySurfaceKHR(GVulkan->Instance->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 	Handle = VK_NULL_HANDLE;
 }
 
-VISERA_MODULE_END
+} } // namespace VE::Runtime

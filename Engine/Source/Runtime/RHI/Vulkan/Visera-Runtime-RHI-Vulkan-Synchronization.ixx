@@ -1,30 +1,32 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:Synchronization;
+export module Visera.Runtime.RHI.Vulkan:Synchronization;
 
 import Visera.Core.Signal;
 
 import :Device;
 
-VISERA_PUBLIC_MODULE
-
-class VulkanSemaphore
+export namespace VE { namespace Runtime
 {
-	friend class Vulkan;
+
+
+class FVulkanSemaphore
+{
+	friend class FVulkan;
 public:
 	auto GetHandle()		const	-> VkSemaphore { return Handle; }
 	operator VkSemaphore()	const { return Handle; }
 
-	VulkanSemaphore(Bool bSignaled = False);
-	~VulkanSemaphore();
+	FVulkanSemaphore(Bool bSignaled = False);
+	~FVulkanSemaphore();
 
 private:
 	VkSemaphore				Handle{ VK_NULL_HANDLE };
 };
 
-class VulkanFence
+class FVulkanFence
 {
-	friend class Vulkan;
+	friend class FVulkan;
 public:
 	enum WaitTime : UInt64 { Forever = UINT64_MAX };
 	void Wait(WaitTime Timeout = Forever) const { vkWaitForFences(GVulkan->Device->GetHandle(), 1, &Handle, VK_TRUE, Timeout); }
@@ -34,15 +36,15 @@ public:
 	auto GetHandle()	const -> VkFence { return Handle; }
 	operator VkFence()	const { return Handle; }
 
-	VulkanFence(Bool bSignaled = False);
-	~VulkanFence();
+	FVulkanFence(Bool bSignaled = False);
+	~FVulkanFence();
 
 private:
 	VkFence					Handle{ VK_NULL_HANDLE };
 };
 
-VulkanSemaphore::
-VulkanSemaphore(Bool bSignaled/* = False*/)
+FVulkanSemaphore::
+FVulkanSemaphore(Bool bSignaled/* = False*/)
 {
 	VkSemaphoreCreateInfo CreateInfo
 	{
@@ -57,15 +59,15 @@ VulkanSemaphore(Bool bSignaled/* = False*/)
 	{ throw RuntimeError("Failed to create Vulkan Semaphore!"); }
 }
 
-VulkanSemaphore::
-~VulkanSemaphore()
+FVulkanSemaphore::
+~FVulkanSemaphore()
 {
 	vkDestroySemaphore(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 	Handle = VK_NULL_HANDLE;
 }
 
-VulkanFence::
-VulkanFence(Bool bSignaled/* = False*/) 
+FVulkanFence::
+FVulkanFence(Bool bSignaled/* = False*/) 
 {
 	VkFenceCreateInfo CreateInfo
 	{
@@ -80,11 +82,11 @@ VulkanFence(Bool bSignaled/* = False*/)
 	{ throw RuntimeError("Failed to create Vulkan Fence!"); }
 }
 
-VulkanFence::
-~VulkanFence()
+FVulkanFence::
+~FVulkanFence()
 {
 	vkDestroyFence(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 	Handle = VK_NULL_HANDLE;
 }
 
-VISERA_MODULE_END
+} } // namespace VE::Runtime

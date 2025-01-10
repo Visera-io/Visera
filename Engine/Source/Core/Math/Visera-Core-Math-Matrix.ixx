@@ -6,7 +6,9 @@ module;
 
 export module Visera.Core.Math:Matrix;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 using MatrixXF   = Eigen::MatrixX<Float>;
 using Matrix2x2F = Eigen::Matrix2<Float>;
 using Matrix3x3F = Eigen::Matrix3<Float>;
@@ -36,4 +38,4 @@ IsZero(const T& Matrix) { return Matrix.isZero(); }
 template<MatrixType T> inline
 Bool
 IsIdentity(const T& Matrix) { return Matrix.isIdentity(); }
-VISERA_MODULE_END
+} // namespace VE

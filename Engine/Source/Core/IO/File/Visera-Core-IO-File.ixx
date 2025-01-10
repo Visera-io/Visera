@@ -7,7 +7,9 @@ export import Visera.Core.Signal;
 
 import Visera.Core.Log;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 
 class File
 {
@@ -145,4 +147,4 @@ CloseOStream()
 	IOStream.OStream = nullptr;
 }
 
-VISERA_MODULE_END
+} // namespace VE

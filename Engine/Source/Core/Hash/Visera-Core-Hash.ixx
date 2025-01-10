@@ -4,7 +4,9 @@ module;
 export module Visera.Core.Hash;
 import :CityHash;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 namespace Hash
 {
 	using UInt128 = uint128;
@@ -16,4 +18,4 @@ namespace Hash
 	UInt128 inline CityHash128(const String& _String,  UInt128 _Seed) { return CityHash128WithSeed(_String.data(), _String.size(), _Seed); }
 
 }
-VISERA_MODULE_END
+} // namespace VE

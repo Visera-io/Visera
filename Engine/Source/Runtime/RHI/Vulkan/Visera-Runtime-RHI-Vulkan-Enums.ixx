@@ -1,8 +1,10 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:Enums;
+export module Visera.Runtime.RHI.Vulkan:Enums;
 
-VISERA_PUBLIC_MODULE
+export namespace VE { namespace Runtime
+{
+
 
 //VE_ENUM_CLASS(EQueueFamily, UInt32)
 //VE_ENUM_CLASS(ECommandPool, VkCommandPoolCreateFlags)
@@ -186,4 +188,4 @@ VE_ENUM_CLASS(EAttachmentIO, VkAttachmentLoadOp)
 	O_Whatever 	= VK_ATTACHMENT_STORE_OP_DONT_CARE,
 };
 
-VISERA_MODULE_END
+} } // namespace VE::Runtime

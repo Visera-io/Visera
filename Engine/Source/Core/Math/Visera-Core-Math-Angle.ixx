@@ -147,4 +147,4 @@ export namespace VE
 	Radian Radian::operator/(Float Divisor)			const { return Radian(Value / Divisor);	}
 	Radian Radian::operator/(Double Divisor)		const { return Radian(Value / Divisor);	}
 
-VISERA_MODULE_END
+} // namespace VE

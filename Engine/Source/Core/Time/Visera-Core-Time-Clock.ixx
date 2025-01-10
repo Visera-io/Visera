@@ -10,7 +10,9 @@ import :TimeZone;
 //[Class]		HiResClock
 //[Class]		SystemClock
 
-VISERA_PRIVATE_MODULE
+namespace VE
+{
+
 template<ClockType T>
 class Clock
 {
@@ -44,9 +46,11 @@ protected:
 	TimePoint<T> StartTimePoint;
 	TimePoint<T> LastTickTimePoint;
 };
-VISERA_MODULE_END
+} // namespace VE
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 class HiResClock  : public Clock<std::chrono::high_resolution_clock> {};
 class SystemClock : public Clock<std::chrono::system_clock> {};
-VISERA_MODULE_END
+} // namespace VE

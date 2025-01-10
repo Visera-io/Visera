@@ -60,7 +60,7 @@ UInt64 BytesOf() { return sizeof(T); }
 template<typename T> inline
 UInt64 BitsOf()  { return 8 * BytesOf<T>(); }
 
-using ID		= std::uint32_t;
+using ID		= UInt32;
 using Token		= std::uint64_t;
 using Address   = void*;
 using ErrorCode = std::int32_t;

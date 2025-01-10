@@ -7,7 +7,9 @@ export module Visera.Core.Math:Vector;
 
 import :Operation;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 using VectorXF = Eigen::VectorX<Float>;
 using Vector2F = Eigen::Vector2<Float>;
 using Vector3F = Eigen::Vector3<Float>;
@@ -48,4 +50,4 @@ template<VectorType T> inline
 Bool
 IsIdentity(const T& Vector) { return Vector.isIdentity(); }
 
-VISERA_MODULE_END
+} // namespace VE

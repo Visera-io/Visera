@@ -4,7 +4,9 @@ module;
 export module Visera.Core.Signal:AppStopSignal;
 import :Interface;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 class AppStopSignal final : public Signal
 {
 public:
@@ -18,4 +20,4 @@ public:
 	}
 };
 
-VISERA_MODULE_END
+} // namespace VE

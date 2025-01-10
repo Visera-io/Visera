@@ -7,7 +7,9 @@ export import :Vector;
 export import :Matrix;
 export import :Operation;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 String inline
 Text(const	Vector2F& Vector)	{ return Text("[{}, {}]", Vector[0], Vector[1]); }
 String inline
@@ -106,4 +108,4 @@ Text(const Matrix4x4D& Matrix)
 		Matrix(3, 0), Matrix(3, 1), Matrix(3, 2), Matrix(3, 3));
 }
 	
-VISERA_MODULE_END
+} // namespace VE

@@ -1,14 +1,15 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:GPU;
+export module Visera.Runtime.RHI.Vulkan:GPU;
 
 import Visera.Core.Log;
 
-VISERA_PUBLIC_MODULE
-
-class VulkanGPU
+export namespace VE { namespace Runtime
 {
-	friend class Vulkan;
+
+class FVulkanGPU
+{
+	friend class FVulkan;
 public:
 	auto GetName()					const -> RawString								{ return Properties.deviceName; }
 	auto GetHandle()				const -> VkPhysicalDevice						{ return Handle; }
@@ -33,8 +34,8 @@ private:
 	Array<VkQueueFamilyProperties>		QueueFamilyProperties;
 
 public:
-	VulkanGPU() noexcept = default;
-	VulkanGPU(VkPhysicalDevice PhysicalDevice) noexcept
+	FVulkanGPU() noexcept = default;
+	FVulkanGPU(VkPhysicalDevice PhysicalDevice) noexcept
 		:Handle{PhysicalDevice}
 	{
 		vkGetPhysicalDeviceFeatures(Handle, &Features);
@@ -58,9 +59,9 @@ public:
 		vkEnumerateDeviceExtensionProperties(Handle, nullptr, &ExtensionCount, ExtensionProperties.data());
 	}
 
-	~VulkanGPU()
+	~FVulkanGPU()
 	{
 			
 	}
 };
-VISERA_MODULE_END
+} } // namespace VE::Runtime

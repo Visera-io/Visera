@@ -1,7 +1,7 @@
 module;
 #define VMA_IMPLEMENTATION
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:Allocator;
+export module Visera.Runtime.RHI.Vulkan:Allocator;
 
 import Visera.Core.Signal;
 
@@ -10,15 +10,17 @@ import :Instance;
 import :Device;
 import :GPU;
 
-VISERA_PUBLIC_MODULE
-
-class VulkanAllocator
+export namespace VE { namespace Runtime
 {
-	friend class Vulkan;
+
+
+class FVulkanAllocator
+{
+	friend class FVulkan;
 public:
 	class Buffer
 	{
-		friend class VulkanAllocator;
+		friend class FVulkanAllocator;
 	public:
 		struct CreateInfo
 		{
@@ -79,8 +81,8 @@ private:
 	VmaAllocator	Handle{ VMA_NULL };
 };
 
-SharedPtr<VulkanAllocator::Buffer>
-VulkanAllocator::
+SharedPtr<FVulkanAllocator::Buffer>
+FVulkanAllocator::
 CreateBuffer(const Buffer::CreateInfo& _CreateInfo) const
 {
 	VE_ASSERT(_CreateInfo.Size > 0);
@@ -116,11 +118,11 @@ CreateBuffer(const Buffer::CreateInfo& _CreateInfo) const
 	return NewBuffer;
 }
 
-VulkanAllocator::Buffer::
+FVulkanAllocator::Buffer::
 ~Buffer() noexcept
 {
 	vmaDestroyBuffer(GVulkan->Allocator->GetHandle(), Handle, Allocation);
 	Handle = VK_NULL_HANDLE;
 }
 
-VISERA_MODULE_END
+} } // namespace VE::Runtime

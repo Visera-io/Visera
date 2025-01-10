@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:CommandPool;
+export module Visera.Runtime.RHI.Vulkan:CommandPool;
 
 import :Enums;
 import :Device;
@@ -8,15 +8,17 @@ import :Synchronization;
 
 import Visera.Core.Signal;
 
-VISERA_PUBLIC_MODULE
-class VulkanCommandPool
+export namespace VE { namespace Runtime
+{
+
+class FVulkanCommandPool
 {
 	friend class RHI;
-	friend class Vulkan;
+	friend class FVulkan;
 public:
 	class CommandBuffer
 	{
-		friend class VulkanCommandPool;
+		friend class FVulkanCommandPool;
 	public:
 		enum Level
 		{
@@ -37,12 +39,12 @@ public:
 
 	private:
 		VkCommandBuffer				Handle{ VK_NULL_HANDLE };
-		const VulkanCommandPool&	HostCommandPool;
+		const FVulkanCommandPool&	HostCommandPool;
 		VkCommandBufferLevel		Type;
 		Bool						bRecording{ False };
 
 	public:
-		CommandBuffer(const VulkanCommandPool& CommandPool, Level Type) noexcept;
+		CommandBuffer(const FVulkanCommandPool& CommandPool, Level Type) noexcept;
 		CommandBuffer() noexcept = delete;
 		~CommandBuffer() noexcept;
 	};
@@ -70,8 +72,8 @@ private:
 	void EmptyRecycleBin();
 
 public:
-	VulkanCommandPool()  noexcept = default;
-	~VulkanCommandPool() noexcept = default;
+	FVulkanCommandPool()  noexcept = default;
+	~FVulkanCommandPool() noexcept = default;
 
 private:
 	VkCommandPool				Handle{ VK_NULL_HANDLE };
@@ -80,7 +82,7 @@ private:
 	Array<VkCommandBuffer>		RecycleBin;
 };
 
-void VulkanCommandPool::
+void FVulkanCommandPool::
 Create(EQueueFamily _QueueFamilyType, ECommandPool _CommandPoolType)
 {
 	Type = _CommandPoolType;
@@ -101,7 +103,7 @@ Create(EQueueFamily _QueueFamilyType, ECommandPool _CommandPoolType)
 	{ throw RuntimeError("Failed to create Vulkan CommandPool!"); }
 }
 
-void VulkanCommandPool::
+void FVulkanCommandPool::
 Destroy()
 {
 	EmptyRecycleBin();
@@ -109,17 +111,17 @@ Destroy()
 	Handle = VK_NULL_HANDLE;
 }
 
-void VulkanCommandPool::
+void FVulkanCommandPool::
 EmptyRecycleBin()
 {
 	if (RecycleBin.empty()) return;
 	vkFreeCommandBuffers(GVulkan->Device->GetHandle(), Handle, RecycleBin.size(), RecycleBin.data());
 }
 
-SharedPtr<VulkanCommandPool::CommandBuffer> VulkanCommandPool::
+SharedPtr<FVulkanCommandPool::CommandBuffer> FVulkanCommandPool::
 Allocate(CommandBuffer::Level Level) const
 {
-	auto CommandBuffer = CreateSharedPtr<VulkanCommandPool::CommandBuffer>(*this, Level);
+	auto CommandBuffer = CreateSharedPtr<FVulkanCommandPool::CommandBuffer>(*this, Level);
 	VkCommandBufferAllocateInfo AllocateInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -136,14 +138,14 @@ Allocate(CommandBuffer::Level Level) const
 	return CommandBuffer;
 }
 
-void VulkanCommandPool::
+void FVulkanCommandPool::
 Free(VkCommandBuffer CommandBuffer)  const
 {
 	auto& Bin = const_cast<decltype(RecycleBin)&>(RecycleBin);
 	Bin.emplace_back(CommandBuffer);
 }
 
-void VulkanCommandPool::
+void FVulkanCommandPool::
 Submit(const SubmitInfo& SubmitInfo) const
 {
 	VkSubmitInfo FinalSubmitInfo
@@ -163,21 +165,21 @@ Submit(const SubmitInfo& SubmitInfo) const
 	vkQueueSubmit(Queue, 1, &FinalSubmitInfo, SubmitInfo.Fence);
 }
 
-VulkanCommandPool::CommandBuffer::
-CommandBuffer(const VulkanCommandPool& CommandPool, Level Type) noexcept
+FVulkanCommandPool::CommandBuffer::
+CommandBuffer(const FVulkanCommandPool& CommandPool, Level Type) noexcept
 	:HostCommandPool{ CommandPool }, Type{ VkCommandBufferLevel(Type) }
 {
 
 }
 
-VulkanCommandPool::CommandBuffer::
+FVulkanCommandPool::CommandBuffer::
 ~CommandBuffer() noexcept
 {
 	HostCommandPool.Free(Handle);
 	Handle = VK_NULL_HANDLE;
 }
 
-void VulkanCommandPool::CommandBuffer::
+void FVulkanCommandPool::CommandBuffer::
 StartRecording()
 {
 	VE_ASSERT(!IsRecording());
@@ -194,7 +196,7 @@ StartRecording()
 	bRecording = True;
 }
 
-void VulkanCommandPool::CommandBuffer::
+void FVulkanCommandPool::CommandBuffer::
 StopRecording()
 {
 	VE_ASSERT(IsRecording());
@@ -204,4 +206,4 @@ StopRecording()
 
 	bRecording = False;
 }
-VISERA_MODULE_END
+} } // namespace VE::Runtime

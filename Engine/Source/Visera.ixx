@@ -4,79 +4,84 @@ module;
 export module Visera;
 export import Visera.Core;
 #if defined(VISERA_RUNTIME)
-export import Visera.Runtime;
+import Visera.Runtime;
 #endif
 
 
-VISERA_PUBLIC_MODULE
-class ViseraApp
+export namespace VE
 {
-public:
-	virtual void Bootstrap() = 0;
-	virtual void Terminate() = 0;
-	virtual void Tick() = 0;
-	virtual void RenderTick() = 0;
+	using RHI		= VE::Runtime::RHI;
+	using UI		= VE::Runtime::UI;
+	using Window	= VE::Runtime::Window;
 
-	void inline
-	Exit(const AppStopSignal& Message = AppStopSignal("Visera App Exited Successfully.")) const throw(AppStopSignal) { throw Message; }
-
-	ViseraApp()	 noexcept = default;
-	~ViseraApp() noexcept = default;
-};
-
-class Visera final
-{
-public:
-	Int32 inline
-	Run()
+	class ViseraApp
 	{
-		try
+	public:
+		virtual void Bootstrap() = 0;
+		virtual void Terminate() = 0;
+		virtual void Tick() = 0;
+		virtual void RenderTick() = 0;
+
+		void inline
+		Exit(const AppStopSignal& Message = AppStopSignal("Visera App Exited Successfully.")) const throw(AppStopSignal) { throw Message; }
+
+		ViseraApp()	 noexcept = default;
+		~ViseraApp() noexcept = default;
+	};
+
+	class Visera final
+	{
+	public:
+		Int32 inline
+		Run()
 		{
-			if (App)
+			try
 			{
-				Log::Debug("App Started Running");
-				do { App->Tick(); } while (RuntimeTick());
+				if (App)
+				{
+					Log::Debug("App Started Running");
+					do { App->Tick(); } while (RuntimeTick());
+				}
+				else Log::Error("Visera App is not created");
 			}
-			else Log::Error("Visera App is not created");
+			catch (const AppStopSignal& Signal)
+			{
+				Log::Debug(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
+				return Signal.StateCode;
+			}
+			catch (const EngineStopSignal& Signal)
+			{
+				Log::Debug("Visera Engine Stopped:\n{}{}", Signal.What(), Signal.Where());
+				return Signal.StateCode;
+			}
+			return EXIT_SUCCESS;
 		}
-		catch (const AppStopSignal& Signal)
+
+		Visera(ViseraApp* App) : App{ App }
 		{
-			Log::Debug(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
-			return Signal.StateCode;
+			Log::Debug("Bootstrapping Visera Core...");
+			ViseraCore::Bootstrap();
+	#if defined(VISERA_RUNTIME)
+			Log::Debug("Bootstrapping Visera Runtime...");
+			Runtime::Bootstrap();
+			RuntimeTick = Runtime::Tick;
+	#endif
+			if (App) App->Bootstrap();
 		}
-		catch (const EngineStopSignal& Signal)
+
+		~Visera()
 		{
-			Log::Debug("Visera Engine Stopped:\n{}{}", Signal.What(), Signal.Where());
-			return Signal.StateCode;
+			if (App) { App->Terminate(); delete App; }
+	#if defined(VISERA_RUNTIME)
+			Log::Debug("Terminating Visera Runtime...");
+			Runtime::Terminate();
+	#endif
+			Log::Debug("Terminating Visera Core...");
+			ViseraCore::Terminate();
 		}
-		return EXIT_SUCCESS;
-	}
+	private:
+		ViseraApp* const App = nullptr;
+		static inline std::function<Bool()> RuntimeTick = []() -> Bool { return False; };
+	};
 
-	Visera(ViseraApp* App) : App{ App }
-	{
-		Log::Debug("Bootstrapping Visera Core...");
-		ViseraCore::Bootstrap();
-#if defined(VISERA_RUNTIME)
-		Log::Debug("Bootstrapping Visera Runtime...");
-		ViseraRuntime::Bootstrap();
-		RuntimeTick = ViseraRuntime::Tick;
-#endif
-		if (App) App->Bootstrap();
-	}
-
-	~Visera()
-	{
-		if (App) { App->Terminate(); delete App; }
-#if defined(VISERA_RUNTIME)
-		Log::Debug("Terminating Visera Runtime...");
-		ViseraRuntime::Terminate();
-#endif
-		Log::Debug("Terminating Visera Core...");
-		ViseraCore::Terminate();
-	}
-private:
-	ViseraApp* const App = nullptr;
-	static inline std::function<Bool()> RuntimeTick = []() -> Bool { return False; };
-};
-
-VISERA_MODULE_END
+} // namespace VE

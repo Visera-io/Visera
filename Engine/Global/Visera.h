@@ -13,10 +13,6 @@
 #define VISERA_ENGINE_ERROR -1
 #define VISERA_APP_ERROR    -2
 
-#define VISERA_PUBLIC_MODULE    export namespace VE {
-#define VISERA_PRIVATE_MODULE   namespace VE {
-#define VISERA_MODULE_END       }
-
 #define VE_ASSERT(Expression)	assert(Expression);
 #define VE_INTERFACE static inline auto
 
@@ -33,3 +29,11 @@
 		VE_OP_BITXOR(Name, Name)		\
 		VE_OP_BITAND(Name, Name);		\
 		enum class Name : EnumBit
+
+#define VE_NOT_COPYABLE(ClassName) \
+	ClassName(const ClassName&) = delete;\
+	ClassName& operator=(const ClassName&) = delete;
+
+#define VE_NOT_MOVABLE(ClassName) \
+	ClassName(ClassName&&) = delete;\
+	ClassName& operator=(ClassName&&) = delete;

@@ -1,15 +1,17 @@
 module;
 #define VOLK_IMPLEMENTATION
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:Loader;
+export module Visera.Runtime.RHI.Vulkan:Loader;
 
 import Visera.Core.Log;
 
-VISERA_PUBLIC_MODULE
-
-class VulkanLoader
+export namespace VE { namespace Runtime
 {
-	friend class Vulkan;
+
+
+class FVulkanLoader
+{
+	friend class FVulkan;
 private:
 	void LoadInstance(VkInstance Instance);
 	void LoadDevice(VkDevice Device);
@@ -18,35 +20,35 @@ private:
 	void Destroy();
 
 public:
-	VulkanLoader() noexcept = default;
-	~VulkanLoader() noexcept = default;
+	FVulkanLoader() noexcept = default;
+	~FVulkanLoader() noexcept = default;
 };
 
-void VulkanLoader::
+void FVulkanLoader::
 Create()
 {
 	if (VK_SUCCESS != volkInitialize())
 	{ Log::Fatal("Failed to initialize Volk!"); }
 }
 
-void VulkanLoader::
+void FVulkanLoader::
 Destroy()
 {
 	volkFinalize();
 }
 		
-void VulkanLoader::
+void FVulkanLoader::
 LoadInstance(VkInstance Instance)
 {
 	VE_ASSERT(Instance != VK_NULL_HANDLE);
 	volkLoadInstance(Instance);
 }
 
-void VulkanLoader::
+void FVulkanLoader::
 LoadDevice(VkDevice Device)
 {
 	VE_ASSERT(Device != VK_NULL_HANDLE);
 	volkLoadDevice(Device);
 }
 
-VISERA_MODULE_END
+} } // namespace VE::Runtime

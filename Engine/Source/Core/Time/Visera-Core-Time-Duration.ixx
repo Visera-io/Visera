@@ -3,7 +3,9 @@ module;
 
 export module Visera.Core.Time:Duration;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 
 template<ClockType T>
 class Duration
@@ -34,4 +36,4 @@ private:
     T::duration Value;
 };
 
-VISERA_MODULE_END
+} // namespace VE

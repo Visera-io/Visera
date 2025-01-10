@@ -6,7 +6,9 @@ import :File;
 
 import Visera.Core.Signal;
 
-VISERA_PUBLIC_MODULE	
+export namespace VE
+{
+	
 
 class BinaryFile :public File
 {
@@ -52,4 +54,4 @@ LoadFrom(StringView FilePath, Int32 LoadModes) throw(RuntimeError)
 	else throw RuntimeError(Text("Failed to open {}", FilePath));
 }
 
-VISERA_MODULE_END
+} // namespace VE

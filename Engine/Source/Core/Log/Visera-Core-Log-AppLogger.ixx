@@ -8,7 +8,9 @@ module;
 export module Visera.Core.Log:AppLogger;
 import Visera.Core.Signal;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 class AppLogger:
 	public Singleton<AppLogger>
 {
@@ -83,4 +85,4 @@ public:
 protected:
 	UniquePtr<spdlog::logger> Spdlogger;
 };
-VISERA_MODULE_END
+} // namespace VE

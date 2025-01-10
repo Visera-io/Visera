@@ -4,7 +4,9 @@ module;
 export module Visera.Core.Time:TimePoint;
 import :Duration;
 
-VISERA_PUBLIC_MODULE
+export namespace VE
+{
+
 
 template<ClockType T>
 class TimePoint
@@ -58,4 +60,4 @@ private:
     std::chrono::system_clock::time_point Value;
 };
 
-VISERA_MODULE_END
+} // namespace VE
