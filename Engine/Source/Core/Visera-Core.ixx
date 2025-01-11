@@ -4,7 +4,7 @@ module;
 export module Visera.Core;
 
 export import Visera.Core.Log;
-export import Visera.Core.IO;
+export import Visera.Core.System;
 export import Visera.Core.Signal;
 export import Visera.Core.Time;
 export import Visera.Core.Math;
@@ -12,26 +12,5 @@ export import Visera.Core.Hash;
 
 export namespace VE
 {
-
-class Visera;
-
-class ViseraCore
-{
-	friend class Visera;
-private:
-	static inline void
-	Bootstrap()
-	{
-			
-	}
-
-	static inline void
-	Terminate()
-	{
-			
-	}
-
-	ViseraCore() noexcept = default;
-};
 
 } // namespace VE

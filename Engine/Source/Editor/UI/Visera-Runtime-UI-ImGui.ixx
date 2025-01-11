@@ -18,13 +18,12 @@ public:
 private:
 	using CreateInfo = ImGui_ImplVulkan_InitInfo;
 
-	inline void
-	Bootstrap(const CreateInfo& _CreateInfo)
+	FImGui(const CreateInfo& _CreateInfo)
 	{
 		
 	}
-	inline void
-	Terminate()
+	
+	~FImGui()
 	{
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();

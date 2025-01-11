@@ -11,7 +11,6 @@ import Visera.Runtime;
 export namespace VE
 {
 	using RHI		= VE::Runtime::RHI;
-	using UI		= VE::Runtime::UI;
 	using Window	= VE::Runtime::Window;
 
 	class ViseraApp
@@ -23,7 +22,7 @@ export namespace VE
 		virtual void RenderTick() = 0;
 
 		void inline
-		Exit(const AppStopSignal& Message = AppStopSignal("Visera App Exited Successfully.")) const throw(AppStopSignal) { throw Message; }
+		Exit(const SAppStop& Message = SAppStop("Visera App Exited Successfully.")) const throw(SAppStop) { throw Message; }
 
 		ViseraApp()	 noexcept = default;
 		~ViseraApp() noexcept = default;
@@ -44,12 +43,12 @@ export namespace VE
 				}
 				else Log::Error("Visera App is not created");
 			}
-			catch (const AppStopSignal& Signal)
+			catch (const SAppStop& Signal)
 			{
 				Log::Debug(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
 				return Signal.StateCode;
 			}
-			catch (const EngineStopSignal& Signal)
+			catch (const SEngineStop& Signal)
 			{
 				Log::Debug("Visera Engine Stopped:\n{}{}", Signal.What(), Signal.Where());
 				return Signal.StateCode;
@@ -59,8 +58,6 @@ export namespace VE
 
 		Visera(ViseraApp* App) : App{ App }
 		{
-			Log::Debug("Bootstrapping Visera Core...");
-			ViseraCore::Bootstrap();
 	#if defined(VISERA_RUNTIME)
 			Log::Debug("Bootstrapping Visera Runtime...");
 			Runtime::Bootstrap();
@@ -76,8 +73,6 @@ export namespace VE
 			Log::Debug("Terminating Visera Runtime...");
 			Runtime::Terminate();
 	#endif
-			Log::Debug("Terminating Visera Core...");
-			ViseraCore::Terminate();
 		}
 	private:
 		ViseraApp* const App = nullptr;

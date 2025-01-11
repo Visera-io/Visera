@@ -6,51 +6,51 @@ import :Duration;
 import :TimePoint;
 import :TimeZone;
 
-//[Interface]	Clock
-//[Class]		HiResClock
-//[Class]		SystemClock
+//[Interface]	TClock
+//[Class]		FHiResClock
+//[Class]		FSystemClock
 
 namespace VE
 {
 
-template<ClockType T>
-class Clock
-{
-public:
-	static inline
-    TimePoint<T>
-    Now() { return { T::now() }; }
+	template<ClockType T>
+	class TClock
+	{
+	public:
+		static inline
+		TTimePoint<T>
+		Now() { return { T::now() }; }
 
-	inline
-    Duration<T>
-	Tick() { auto OldTime = LastTickTimePoint; LastTickTimePoint = Now(); return { LastTickTimePoint - OldTime }; }
+		inline
+		TDuration<T>
+		Tick() { auto OldTime = LastTickTimePoint; LastTickTimePoint = Now(); return { LastTickTimePoint - OldTime }; }
 
-	inline
-    Duration<T>
-	Elapsed() const { return Duration<T>{ Now() - LastTickTimePoint }; }
+		inline
+		TDuration<T>
+		Elapsed() const { return TDuration<T>{ Now() - LastTickTimePoint }; }
 
-	inline
-    Duration<T>
-	GetTotalTime() const { return Duration<T>{ Now() - StartTimePoint }; }
+		inline
+		TDuration<T>
+		GetTotalTime() const { return TDuration<T>{ Now() - StartTimePoint }; }
 
-    inline void
-    Set(TimePoint<T> NewTimePoint) { LastTickTimePoint = NewTimePoint; }
+		inline void
+		Set(TTimePoint<T> NewTimePoint) { LastTickTimePoint = NewTimePoint; }
 
-	inline void
-	Reset() { LastTickTimePoint = TimePoint<T>{}; StartTimePoint = LastTickTimePoint;}
+		inline void
+		Reset() { LastTickTimePoint = TTimePoint<T>{}; StartTimePoint = LastTickTimePoint;}
 
-public:
-	Clock() noexcept : StartTimePoint{ Now() }, LastTickTimePoint{ Now() } {}
+	public:
+		TClock() noexcept : StartTimePoint{ Now() }, LastTickTimePoint{ Now() } {}
 
-protected:
-	TimePoint<T> StartTimePoint;
-	TimePoint<T> LastTickTimePoint;
-};
+	protected:
+		TTimePoint<T> StartTimePoint;
+		TTimePoint<T> LastTickTimePoint;
+	};
+
 } // namespace VE
 
 export namespace VE
 {
-
-class HiResClock  : public Clock<std::chrono::high_resolution_clock> {};
-class SystemClock : public Clock<std::chrono::system_clock> {};
+	class FHiResClock  : public TClock<std::chrono::high_resolution_clock> {};
+	class FSystemClock : public TClock<std::chrono::system_clock> {};
 } // namespace VE

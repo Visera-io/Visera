@@ -5,8 +5,7 @@ export module Visera.Runtime;
 //Runtime Modules
 export import Visera.Runtime.Window;
 export import Visera.Runtime.RHI;
-export import Visera.Runtime.UI;
-export import Visera.Runtime.Object;//[TODO]: Remove
+export import Visera.Runtime.World;
 
 import Visera.Core.Log;
 import Visera.Core.Signal;
@@ -21,10 +20,10 @@ export namespace VE { namespace Runtime
 			//Platform::Tick();
 			//Render::Tick();
 		}
-		catch(const RuntimeError& Error)
+		catch(const SRuntimeError& Error)
 		{
 			Log::Error("Visera Runtime Error:\n{}{}", Error.What(), Error.Where());
-			throw EngineStopSignal("An unsolved Runtime Error!", VISERA_ENGINE_ERROR);
+			throw SEngineStop("An unsolved Runtime Error!", VISERA_ENGINE_ERROR);
 		}
 		return True;
 	}
@@ -86,7 +85,7 @@ export namespace VE { namespace Runtime
 		}
 		catch (const RHI::SwapchainRecreateSignal&)
 		{
-			throw RuntimeError("Not support Swapchain recreation right now.");
+			throw SRuntimeError("Not support Swapchain recreation right now.");
 		}
 	}
 

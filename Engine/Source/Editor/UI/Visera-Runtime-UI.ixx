@@ -42,7 +42,7 @@ export namespace VE { namespace Runtime
 		static void
 		Terminate()
 		{
-			ImGui->Terminate();
+			delete ImGui;
 		}
 
 	private:

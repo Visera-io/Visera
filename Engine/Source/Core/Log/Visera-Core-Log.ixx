@@ -10,7 +10,7 @@ export namespace VE
 {
 
 /*
-[Levels] 1.Debug 2.Info 3.Warn 4.Error 5.Fatal(throw VE::RuntimeError)
+[Levels] 1.Debug 2.Info 3.Warn 4.Error 5.Fatal(throw VE::SRuntimeError)
 */
 class Log
 {

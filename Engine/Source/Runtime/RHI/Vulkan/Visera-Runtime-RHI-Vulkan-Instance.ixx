@@ -103,7 +103,7 @@ Create()
 
 	UInt32 LayerPropertyCount = 0;
 	if(VK_SUCCESS != vkEnumerateInstanceLayerProperties(&LayerPropertyCount, nullptr))
-	{ throw RuntimeError("Failed to enumerate instance layer properties!"); }
+	{ throw SRuntimeError("Failed to enumerate instance layer properties!"); }
 
 	Array<VkLayerProperties> LayerProperties(LayerPropertyCount);
 	vkEnumerateInstanceLayerProperties(&LayerPropertyCount, LayerProperties.data());
@@ -162,7 +162,7 @@ Create()
 		&InstanceCreateInfo,
 		GVulkan->AllocationCallbacks,
 		&Handle))
-	{ throw RuntimeError("Failed to create Vulkan Instance!"); }
+	{ throw SRuntimeError("Failed to create Vulkan Instance!"); }
 
 	return Handle;
 }

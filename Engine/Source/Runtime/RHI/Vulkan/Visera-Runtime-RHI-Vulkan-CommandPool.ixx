@@ -100,7 +100,7 @@ Create(EQueueFamily _QueueFamilyType, ECommandPool _CommandPoolType)
 		&CreateInfo,
 		GVulkan->AllocationCallbacks,
 		&Handle))
-	{ throw RuntimeError("Failed to create Vulkan CommandPool!"); }
+	{ throw SRuntimeError("Failed to create Vulkan CommandPool!"); }
 }
 
 void FVulkanCommandPool::
@@ -133,7 +133,7 @@ Allocate(CommandBuffer::Level Level) const
 		GVulkan->Device->GetHandle(),
 		&AllocateInfo,
 		&CommandBuffer->Handle))
-	{ throw RuntimeError("Failed to create Vulkan CommandBuffer!"); }
+	{ throw SRuntimeError("Failed to create Vulkan CommandBuffer!"); }
 
 	return CommandBuffer;
 }
@@ -191,7 +191,7 @@ StartRecording()
 		.pInheritanceInfo = nullptr
 	};
 	if (VK_SUCCESS != vkBeginCommandBuffer(Handle, &BeginInfo))
-	{ throw RuntimeError("Failed to begin recording Vulkan Command Buffer!"); }
+	{ throw SRuntimeError("Failed to begin recording Vulkan Command Buffer!"); }
 
 	bRecording = True;
 }
@@ -202,7 +202,7 @@ StopRecording()
 	VE_ASSERT(IsRecording());
 
 	if (VK_SUCCESS != vkEndCommandBuffer(Handle))
-	{ throw RuntimeError("Failed to stop recording Vulkan Command Buffer!"); }
+	{ throw SRuntimeError("Failed to stop recording Vulkan Command Buffer!"); }
 
 	bRecording = False;
 }

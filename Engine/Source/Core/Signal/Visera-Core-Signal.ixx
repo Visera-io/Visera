@@ -1,6 +1,7 @@
 module;
 
 export module Visera.Core.Signal;
-export import :AppStopSignal;
-export import :EngineStopSignal;
+export import :AppStop;
+export import :EngineStop;
 export import :RuntimeError;
+export import :IOFailure;

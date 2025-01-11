@@ -47,7 +47,7 @@ Create()
 		Window::GetHandle(),
 		GVulkan->AllocationCallbacks,
 		&Handle))
-	{ throw RuntimeError("Failed to create Vulkan Window Surface!"); }
+	{ throw SRuntimeError("Failed to create Vulkan Window Surface!"); }
 }
 
 void FVulkanSurface::

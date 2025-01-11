@@ -5,10 +5,6 @@
 #define VISERA_YEAR     2024
 #define VISERA_AUTHOR   "LJYC (ljyc.me)"
 
-#include "PCH/Visera-STD.h"
-#include "PCH/Visera-Types.h"
-#include "PCH/Visera-Patterns.h"
-
 // << Global Macros >>
 #define VISERA_ENGINE_ERROR -1
 #define VISERA_APP_ERROR    -2
@@ -37,3 +33,149 @@
 #define VE_NOT_MOVABLE(ClassName) \
 	ClassName(ClassName&&) = delete;\
 	ClassName& operator=(ClassName&&) = delete;
+
+// << STD Modules >>
+#include <cassert>
+#include <sstream>
+#include <ostream>
+#include <fstream>
+#include <iostream>
+#include <chrono>
+#include <format>
+#include <algorithm>
+#include <array>
+#include <bitset>
+#include <thread>
+#include <ranges>
+#include <memory>
+#include <typeinfo>
+#include <filesystem>
+#include <functional>
+#include <source_location>
+#include <exception>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <unordered_set>
+#include <variant>
+#include <type_traits>
+
+namespace VE {
+/* <<  Concepts >>
+        
+*/
+template <typename T>
+concept Hashable = requires(T type) {{ std::hash<T>{}(type) } -> std::same_as<std::size_t>;};
+
+template<typename T>
+concept UnsignedIntegerol = std::unsigned_integral<T>;
+
+template<typename T>
+concept SignedInteger = std::integral<T>;
+
+template<typename T>
+concept Integer = std::integral<T> || std::unsigned_integral<T>;
+
+template<typename T>
+concept FloatingPoint = std::floating_point<T>;
+
+template<typename T>
+concept Number = std::floating_point<T> || std::integral<T>;
+
+template<typename T>
+concept ClockType = std::is_class_v<std::chrono::system_clock>          ||
+                    std::is_class_v<std::chrono::high_resolution_clock>;
+
+/* <<  Basic Types >>
+        
+*/
+using Bool		= bool;
+using Float  	= float;
+using Double 	= double;
+using Int32  	= std::int32_t;
+using UInt32 	= std::uint32_t;
+using Int64  	= std::int64_t;
+using UInt64 	= std::uint64_t;
+
+using String	 = std::string;
+using StringView = std::string_view;
+using RawString  = const char*;
+
+template <class... _Types> inline
+String
+Text(const std::format_string<_Types...> _Fmt, _Types&&... _Args)
+{ return std::format(_Fmt, std::forward<_Types>(_Args)...); }
+
+template<unsigned int _Size>
+using Bits      = std::bitset<_Size>;
+using Byte		= unsigned char;
+constexpr Byte    OneByte  = 1;
+constexpr UInt64  OneKByte = 1024 * OneByte;
+constexpr UInt64  OneMByte = 1024 * OneKByte;
+constexpr UInt64  OneGByte = 1024 * OneMByte;
+using EnumMask	= std::uint32_t;
+using EnumBit	= std::uint32_t;
+template<typename T> inline
+UInt64 BytesOf() { return sizeof(T); }
+template<typename T> inline
+UInt64 BitsOf()  { return 8 * BytesOf<T>(); }
+
+using ID		= UInt32;
+using Token		= std::uint64_t;
+using Address   = void*;
+using ErrorCode = std::int32_t;
+
+constexpr Bool False   = false;
+constexpr Bool True    = !False;
+
+/* <<  Containers >>
+    1. Array
+    2. Set
+    3. HashMap
+    4. Segment
+*/
+
+template<typename T>
+using Array	   = std::vector<T>;
+
+template<typename T>
+using List	   = std::list<T>;
+
+template<typename T>
+using Set	   = std::unordered_set<T>;
+
+template<Hashable Key, typename Value>
+using HashMap  = std::unordered_map<Key, Value>;
+
+template<typename T, size_t Length>
+using Segment  = std::array<T, Length>;
+
+template <typename... Args>
+using Tuple = std::tuple<Args...>;
+
+/* <<  Pointers >>
+    1. SharedPtr
+    2. WeakPtr
+    3. UniquePtr
+*/
+
+template<typename T>
+using SharedPtr   = std::shared_ptr<T>;
+template<typename T, typename... Args>
+inline SharedPtr<T>
+CreateSharedPtr(Args &&...args) { return std::make_shared<T>(std::forward<Args>(args)...); }
+
+template<typename T>
+using WeakPtr	  = std::weak_ptr<T>;
+
+template<typename T>
+using UniquePtr   = std::unique_ptr<T>;
+template<typename T, typename... Args>
+inline UniquePtr<T> 
+CreateUniquePtr(Args &&...args) { return std::make_unique<T>(std::forward<Args>(args)...); }
+
+template<typename T>
+using Optional	  = std::optional<T>;
+    
+} // namespace VE

@@ -87,7 +87,7 @@ Create(FVulkanGPU* GPU, FVulkanSurface* Surface)
 									PresentQueueFamilies.begin(),  PresentQueueFamilies.end(),
 									std::back_inserter(GraphicsAndPresentQueueFamilies));
 			if(GraphicsAndPresentQueueFamilies.empty())
-			{ throw RuntimeError("Failed to find a queue family supporting both Graphics and Present!"); }
+			{ throw SRuntimeError("Failed to find a queue family supporting both Graphics and Present!"); }
 
 			Bool Found = False;
 			for (UInt32 IdxA : GraphicsAndPresentQueueFamilies)
@@ -108,7 +108,7 @@ Create(FVulkanGPU* GPU, FVulkanSurface* Surface)
 				}
 				if (Found) break;
 			}
-			if (!Found) throw RuntimeError("Failed to find queue families that fit all requirements!");
+			if (!Found) throw SRuntimeError("Failed to find queue families that fit all requirements!");
 		}
 
 		//Extension Supports
@@ -147,7 +147,7 @@ Create(FVulkanGPU* GPU, FVulkanSurface* Surface)
 		{ *GPU = std::move(GPUCandidate); break; }
 	}
 	if (GVulkan->GPU->GetHandle() == VK_NULL_HANDLE)
-	{ throw RuntimeError("Failed to find a suitable Physical Device on current computer!"); }
+	{ throw SRuntimeError("Failed to find a suitable Physical Device on current computer!"); }
 
 	auto& GraphicsQueueFamily	= QueueFamilies[AutoCast(EQueueFamily::Graphics)];
 	auto& PresentQueueFamily	= QueueFamilies[AutoCast(EQueueFamily::Present)];
@@ -208,7 +208,7 @@ Create(FVulkanGPU* GPU, FVulkanSurface* Surface)
 		GVulkan->GPU->GetHandle(),
 		&DeviceCreateInfo,
 		GVulkan->AllocationCallbacks,&Handle))
-	{ throw RuntimeError("Failed to create Vulkan Device!"); }
+	{ throw SRuntimeError("Failed to create Vulkan Device!"); }
 
 	//Retrieve Queues
 	{

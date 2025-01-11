@@ -222,7 +222,7 @@ Create()
 		&CreateInfo,
 		GVulkan->AllocationCallbacks,
 		&Handle))
-	{ throw RuntimeError("Failed to create Vulkan RenderPass!"); }
+	{ throw SRuntimeError("Failed to create Vulkan RenderPass!"); }
 	
 	//Create FrameBuffers
 	for (auto& FrameBuffer : FrameBuffers)
@@ -243,7 +243,7 @@ Create()
 			&FrameBufferCreateInfo,
 			GVulkan->AllocationCallbacks,
 			&FrameBuffer.Handle))
-		{ throw RuntimeError("Failed to create Vulkan Framebuffer!"); }
+		{ throw SRuntimeError("Failed to create Vulkan Framebuffer!"); }
 	}
 }
 
@@ -366,7 +366,7 @@ Create(const FVulkanRenderPass& HostRenderPass, const Array<SharedPtr<FVulkanSha
 		&LayoutCreateInfo,
 		GVulkan->AllocationCallbacks,
 		&Layout))
-	{ throw RuntimeError("Failed to create Vulkan Pipeline Layout!"); }
+	{ throw SRuntimeError("Failed to create Vulkan Pipeline Layout!"); }
 
 	ShaderStages.resize(Shaders.size());
 	for(UInt32 Idx = 0; Idx < ShaderStages.size(); ++Idx)
@@ -434,7 +434,7 @@ Create(const FVulkanRenderPass& HostRenderPass, const Array<SharedPtr<FVulkanSha
 		&CreateInfo,
 		GVulkan->AllocationCallbacks,
 		&Handle))
-	{ throw RuntimeError("Failed to create Vulkan Graphics Pipeline!"); }
+	{ throw SRuntimeError("Failed to create Vulkan Graphics Pipeline!"); }
 }
 
 void FVulkanRenderPass::Subpass::

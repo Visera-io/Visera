@@ -3,6 +3,7 @@ module;
 export module Visera.Runtime.RHI;
 
 import Visera.Runtime.RHI.Vulkan;
+import Visera.Runtime.RHI.Embree;
 import Visera.Core.Log;
 
 export namespace VE { namespace Runtime
@@ -54,6 +55,7 @@ public:
 //private:
 	static inline FVulkan*	 Vulkan;
 	CALL GetAPI() -> const FVulkan* { return Vulkan; }
+	static inline FEmbree*	 Embree;
 
 public:
 	class CommandContext
@@ -113,6 +115,7 @@ public:
 	Bootstrap()
 	{
 		Vulkan = new FVulkan();
+		Embree = new FEmbree();
 		ResetableGraphicsCommandPool.Create(EQueueFamily::Graphics, ECommandPool::Resetable);
 		TransientGraphicsCommandPool.Create(EQueueFamily::Graphics, ECommandPool::Transient);
 		Frames.resize(Vulkan->Swapchain.GetSize());
@@ -124,6 +127,7 @@ public:
 		Frames.clear();
 		TransientGraphicsCommandPool.Destroy();
 		ResetableGraphicsCommandPool.Destroy();
+		delete Embree;
 		delete Vulkan;
 	}
 };

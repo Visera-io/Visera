@@ -5,7 +5,8 @@ export module Visera.Runtime.RHI.Vulkan:PipelineCache;
 import :Device;
 import :GPU;
 
-import Visera.Core.IO;
+import Visera.Core.System;
+import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
@@ -35,8 +36,8 @@ private:
 void FVulkanPipelineCache::
 Create()
 {
-	IO::File::CreateIfNotExists(Path);
-	auto CacheFile = IO::CreateBinaryFile(Path);
+	System::CreateFileIfNotExists(Path);
+	auto CacheFile = System::CreateBinaryFile(Path);
 	CacheFile->Load();
 
 	auto* CacheHeader = (VkPipelineCacheHeaderVersionOne*)(CacheFile->GetData().data());
@@ -59,7 +60,7 @@ Create()
 		&CreateInfo,
 		GVulkan->AllocationCallbacks,
 		&Handle))
-	{ throw RuntimeError("Failed to create Vulkan Pipeline Cache!"); }
+	{ throw SRuntimeError("Failed to create Vulkan Pipeline Cache!"); }
 }
 
 void FVulkanPipelineCache::
@@ -67,7 +68,7 @@ Destroy()
 {
 	if (IsExpired())
 	{
-		auto CacheFile = IO::CreateBinaryFile(Path);
+		auto CacheFile = System::CreateBinaryFile(Path);
 		UInt64 CacheSize = 0;
 		vkGetPipelineCacheData(GVulkan->Device->GetHandle(), Handle, &CacheSize, nullptr);
 		Array<Byte> CacheDate(CacheSize);

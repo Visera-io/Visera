@@ -10,6 +10,7 @@
         [
             "spdlog",
             "eigen3",
+            "assimp",
             "volk",
             "glfw3",
             "vulkan-memory-allocator",

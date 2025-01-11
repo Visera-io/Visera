@@ -50,7 +50,7 @@ FVulkanShader(EShaderStage ShaderType, const Array<Byte>& ShadingCode)
 		&CreateInfo,
 		GVulkan->AllocationCallbacks,
 		&Handle))
-	{ throw RuntimeError("Failed to create Vulkan Shader Module!"); }
+	{ throw SRuntimeError("Failed to create Vulkan Shader Module!"); }
 }
 
 FVulkanShader::

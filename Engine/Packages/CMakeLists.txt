@@ -106,6 +106,20 @@ if (NOT TARGET embree)
     )
 endif()
 
+# Intel Assimp
+if (NOT TARGET assimp)
+    message(STATUS "\nLoading Assimp (assimp)")
+    find_package(assimp CONFIG REQUIRED)
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE assimp::assimp)
+    add_custom_command(
+        TARGET Visera-Packages
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:assimp::assimp>
+        $<TARGET_FILE_DIR:${APP_NAME}>
+    )
+endif()
+
 # # DXC
 # if (NOT TARGET Microsoft::DirectXShaderCompiler)
 #     message(STATUS "\nLoading DXC (Microsoft::DirectXShaderCompiler)")

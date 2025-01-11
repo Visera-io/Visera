@@ -3,18 +3,11 @@ module;
 
 export module Visera.Core.Time;
 export import :Clock;
+export import :TimePoint;
+export import :Duration;
+export import :TimeZone;
 
 export namespace VE
 {
-
-
-class Time
-{
-public:
-	VE_INTERFACE Now() { return Clock.GetTotalTime(); }
-
-private:
-	static inline SystemClock Clock;
-};
 
 } // namespace VE

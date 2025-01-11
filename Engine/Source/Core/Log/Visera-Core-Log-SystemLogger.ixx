@@ -12,11 +12,13 @@ import Visera.Core.Signal;
 export namespace VE
 {
 
-class SystemLogger:
-	public Singleton<SystemLogger>
+class SystemLogger
 {
-	friend class Singleton<SystemLogger>;
 public:
+	static inline SystemLogger&
+	GetInstance()
+	{ static SystemLogger Singleton; return Singleton; }
+
 	inline void
 	Info(const String& message)
 	{ Spdlogger->info(message); }
@@ -46,9 +48,9 @@ public:
 
 	inline void
 	Fatal(const String& message, const std::source_location& location = std::source_location::current())
-	throw (EngineStopSignal)
+	throw (SEngineStop)
 	{
-		EngineStopSignal Signal{ message, VISERA_ENGINE_ERROR, location };
+		SEngineStop Signal{ message, VISERA_ENGINE_ERROR, location };
 		Spdlogger->critical("{}{}", Signal.What(), Signal.Where());
 		throw Signal;
 	}

@@ -68,7 +68,7 @@ private:
 			.vulkanApiVersion = GVulkan->Instance->GetVulkanAPIVersion()
 		};
 		if (VK_SUCCESS != vmaCreateAllocator(&CreateInfo, &Handle))
-		{ throw RuntimeError("Failed to create VMA Allocator!"); }
+		{ throw SRuntimeError("Failed to create VMA Allocator!"); }
 	}
 
 	void Destory()
@@ -113,7 +113,7 @@ CreateBuffer(const Buffer::CreateInfo& _CreateInfo) const
 		&NewBuffer->Handle,
 		&NewBuffer->Allocation,
 		nullptr))
-	{ throw RuntimeError("Failed to create VMA Buffer!"); }
+	{ throw SRuntimeError("Failed to create VMA Buffer!"); }
 
 	return NewBuffer;
 }

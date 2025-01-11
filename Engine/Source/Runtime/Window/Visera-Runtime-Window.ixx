@@ -57,7 +57,7 @@ export namespace VE { namespace Runtime
 
 			//Create Window
 			Handle = glfwCreateWindow(CurrentExtent.Width, CurrentExtent.Height, Title.c_str(), NULL, NULL);
-			if (!Handle) throw RuntimeError("Failed to create GLFWwindow!");
+			if (!Handle) throw SRuntimeError("Failed to create GLFWwindow!");
 
 			// Set Window Position
 			const GLFWvidmode* VidMode = GetVideoMode(GetPrimaryMonitor());

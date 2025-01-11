@@ -72,7 +72,7 @@ Create()
 				continue;
 			bImageFormatSupport = True;
 		}
-		if (!bImageFormatSupport) throw RuntimeError("Failed to create the Swapchain since required Image Format is unsupported!");
+		if (!bImageFormatSupport) throw SRuntimeError("Failed to create the Swapchain since required Image Format is unsupported!");
 
 		Bool bPresentModeSupport = False;
 		//Check Image Format Support
@@ -81,7 +81,7 @@ Create()
 			if (SurfacePresentMode != PresentMode) continue;
 			bPresentModeSupport = True;
 		}
-		if (!bPresentModeSupport) throw RuntimeError("Failed to create the Swapchain since required Present Mode is unsupported!");
+		if (!bPresentModeSupport) throw SRuntimeError("Failed to create the Swapchain since required Present Mode is unsupported!");
 		
 		Bool bZBufferFormatSupport = False;
 		//Check Depth Buffer (ZBuffer) Format
@@ -97,7 +97,7 @@ Create()
 			break;
 		default: break;
 		}
-		if(!bZBufferFormatSupport) throw RuntimeError("Failed to create the Swapchain since required ZBuffer Format is unsupported!");
+		if(!bZBufferFormatSupport) throw SRuntimeError("Failed to create the Swapchain since required ZBuffer Format is unsupported!");
 	}
 		
 	auto& SurfaceCapabilities = GVulkan->Surface->GetCapabilities();
@@ -110,7 +110,7 @@ Create()
 		Images.resize(RequiredImageCount);
 		ImageViews.resize(RequiredImageCount);
 	}
-	else throw RuntimeError("Failed to create the Swapchain since the Surface Image Count is unsupported!");
+	else throw SRuntimeError("Failed to create the Swapchain since the Surface Image Count is unsupported!");
 
 	if (SurfaceCapabilities.currentExtent.height == UINT32_MAX)
 	{
@@ -172,7 +172,7 @@ Create()
 		&CreateInfo,
 		GVulkan->AllocationCallbacks,
 		&Handle))
-	{ throw RuntimeError("Failed to create Vulkan Swapchain!"); }
+	{ throw SRuntimeError("Failed to create Vulkan Swapchain!"); }
 
 	//Retrieve Swap Chain Images
 	vkGetSwapchainImagesKHR(GVulkan->Device->GetHandle(), Handle, &RequiredImageCount, Images.data());
@@ -206,7 +206,7 @@ Create()
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&ImageViews[Idx]))
-		{ throw RuntimeError("Failed to create Vulkan Image View!"); }
+		{ throw SRuntimeError("Failed to create Vulkan Image View!"); }
 	}
 
 	//Init Frames
@@ -242,7 +242,7 @@ throw(RecreateSignal)
 		//recreate_swapchain();
 		throw RecreateSignal{};
 	}
-	if (Result != VK_SUCCESS) throw RuntimeError("Failed to retrive the next image from the Vulkan Swapchain!");
+	if (Result != VK_SUCCESS) throw SRuntimeError("Failed to retrive the next image from the Vulkan Swapchain!");
 }
 
 void FVulkanSwapchain::
@@ -268,7 +268,7 @@ throw(RecreateSignal)
 		//recreate_swapchain();
 		throw RecreateSignal{};
 	}
-	if (Result != VK_SUCCESS) throw RuntimeError(Text("Failed to present the Vulkan Swapchain! (Cursor:{})", Cursor));
+	if (Result != VK_SUCCESS) throw SRuntimeError(Text("Failed to present the Vulkan Swapchain! (Cursor:{})", Cursor));
 
 	if (bMoveCursor) MoveCursor(1);
 }

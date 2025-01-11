@@ -8,7 +8,7 @@ export namespace VE
 
 
 template<ClockType T>
-class Duration
+class TDuration
 {
 public:
     auto nanoseconds()  const { return std::chrono::duration_cast<std::chrono::nanoseconds>(Value).count(); }
@@ -19,19 +19,19 @@ public:
     auto hours()        const { return std::chrono::duration_cast<std::chrono::hours>(Value).count(); }
     auto days()         const { return std::chrono::duration_cast<std::chrono::days>(Value).count(); }
 public:
-    Duration() noexcept : Value{ 0 } {};
-    Duration(const Duration<T>& NewDuration) :Value{ NewDuration.Value } {}
-    Duration(Duration<T>&& SourceDuration)      :Value{ std::move(SourceDuration.Value) } {}
-    Duration(const T::duration& NewDuration) :Value{ NewDuration } {}
-    Duration(T::duration&& SourceDuration)      :Value{ std::move(SourceDuration) } {}
-    Duration(T::time_point Start, T::time_point End) :Value{ End - Start } {}
-    //Duration<T>& operator=(const T::duration& duration) { Value = duration; return *this; }
-    Duration<T>& operator=(T::duration&& SourceDuration)      { Value = SourceDuration; return *this; }
+    TDuration() noexcept : Value{ 0 } {};
+    TDuration(const TDuration<T>& NewDuration) :Value{ NewDuration.Value } {}
+    TDuration(TDuration<T>&& SourceDuration)      :Value{ std::move(SourceDuration.Value) } {}
+    TDuration(const T::duration& NewDuration) :Value{ NewDuration } {}
+    TDuration(T::duration&& SourceDuration)      :Value{ std::move(SourceDuration) } {}
+    TDuration(T::time_point Start, T::time_point End) :Value{ End - Start } {}
+    //TDuration<T>& operator=(const T::duration& TDuration) { Value = TDuration; return *this; }
+    TDuration<T>& operator=(T::duration&& SourceDuration)      { Value = SourceDuration; return *this; }
 
-    Duration<T>  operator+ (const Duration<T>&  Addend)     const  { return {Value + Addend.Value}; }
-    Duration<T>& operator+=(const Duration<T>&  Addend)            { Value += Addend.Value; return *this; }
-    Duration<T>  operator- (const Duration<T>&  Subtrahend) const  { return {Value - Subtrahend.Value}; }
-    Duration<T>& operator-=(const Duration<T>&  Subtrahend)        { Value -= Subtrahend.Value; return *this; }
+    TDuration<T>  operator+ (const TDuration<T>&  Addend)     const  { return {Value + Addend.Value}; }
+    TDuration<T>& operator+=(const TDuration<T>&  Addend)            { Value += Addend.Value; return *this; }
+    TDuration<T>  operator- (const TDuration<T>&  Subtrahend) const  { return {Value - Subtrahend.Value}; }
+    TDuration<T>& operator-=(const TDuration<T>&  Subtrahend)        { Value -= Subtrahend.Value; return *this; }
 private:
     T::duration Value;
 };
