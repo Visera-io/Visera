@@ -34,18 +34,24 @@
 	ClassName(ClassName&&) = delete;\
 	ClassName& operator=(ClassName&&) = delete;
 
+#if defined(_WIN32) || defined(_WIN64)
+#define VE_IS_WINDOWS_SYSTEM
+#endif
+
 // << STD Modules >>
 #include <cassert>
 #include <sstream>
 #include <ostream>
 #include <fstream>
 #include <iostream>
+#include <thread>
 #include <chrono>
+#include <cstdlib>
 #include <format>
 #include <algorithm>
 #include <array>
 #include <bitset>
-#include <thread>
+#include <shared_mutex>
 #include <ranges>
 #include <memory>
 #include <typeinfo>
@@ -120,6 +126,8 @@ template<typename T> inline
 UInt64 BytesOf() { return sizeof(T); }
 template<typename T> inline
 UInt64 BitsOf()  { return 8 * BytesOf<T>(); }
+template<Integer T> inline
+Bool IsPowerOfTwo(T _Number) { return (_Number > 0) && ((_Number & (_Number - 1)) == 0); }
 
 using ID		= UInt32;
 using Token		= std::uint64_t;

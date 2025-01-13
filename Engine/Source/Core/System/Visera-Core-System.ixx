@@ -1,46 +1,31 @@
 module;
 #include <Visera.h>
 export module Visera.Core.System;
-import Visera.Core.System.FileSystem;
+
+export import Visera.Core.System.Memory;
+export import Visera.Core.System.FileSystem;
+export import Visera.Core.System.Concurrency;
 
 import Visera.Core.Time;
-import Visera.Core.Signal;
 
 export namespace VE
 {
 	class System
 	{
 	public:
+		//[FIXME]: Unknown Bug (Perhaps, a MSVC bug: https://github.com/microsoft/STL/issues/5203)
+		/*static inline void
+		Sleep(UInt32 _MilliSeconds) { std::this_thread::sleep_for(std::chrono::milliseconds(_MilliSeconds)); }*/
+
 		static inline auto
 		Now() { return SystemClock.Now(); }
 		static inline auto
 		GetRunningTime() { return SystemClock.GetTotalTime(); }
-
 		constexpr Bool
 		IsLittleEndian() { return std::endian::native == std::endian::little; }
 
-		static inline Bool
-		IsExistedFile(StringView _Path) { return std::filesystem::exists(_Path); }
-		static inline void
-		CreateFileIfNotExists(const String& _Path);
-		static inline auto
-		CreateFile(const String& Path)		 -> SharedPtr<FFile>		{ return FileSystem.CreateFile(Path); }
-		static inline auto
-		CreateBinaryFile(const String& Path) -> SharedPtr<FBinaryFile>	{ return FileSystem.CreateBinaryFile(Path); }
-
 	private:
 		static inline FSystemClock	SystemClock;
-		static inline FFileSystem	FileSystem;
 	};
 
-	void System::
-	CreateFileIfNotExists(const String& _Path)
-	{
-		if (!IsExistedFile(_Path))
- 	    {
- 		    std::ofstream NewFile(_Path.data());
- 		    if (NewFile.is_open()) NewFile.close();
- 		    else throw SIOFailure(Text("Failed to create a new file at {}", _Path));
- 	    }
-	}
-}
+} // namespace VE

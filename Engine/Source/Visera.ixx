@@ -7,7 +7,6 @@ export import Visera.Core;
 import Visera.Runtime;
 #endif
 
-
 export namespace VE
 {
 	using RHI		= VE::Runtime::RHI;
@@ -34,6 +33,7 @@ export namespace VE
 		Int32 inline
 		Run()
 		{
+			Int32 StateCode = EXIT_SUCCESS;
 			try
 			{
 				if (App)
@@ -46,14 +46,14 @@ export namespace VE
 			catch (const SAppStop& Signal)
 			{
 				Log::Debug(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
-				return Signal.StateCode;
+				StateCode = Signal.StateCode;
 			}
 			catch (const SEngineStop& Signal)
 			{
 				Log::Debug("Visera Engine Stopped:\n{}{}", Signal.What(), Signal.Where());
-				return Signal.StateCode;
+				StateCode = Signal.StateCode;
 			}
-			return EXIT_SUCCESS;
+			return StateCode;
 		}
 
 		Visera(ViseraApp* App) : App{ App }

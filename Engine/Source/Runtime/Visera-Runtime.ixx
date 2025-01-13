@@ -20,11 +20,10 @@ export namespace VE { namespace Runtime
 			//Platform::Tick();
 			//Render::Tick();
 		}
-		catch(const SRuntimeError& Error)
-		{
-			Log::Error("Visera Runtime Error:\n{}{}", Error.What(), Error.Where());
-			throw SEngineStop("An unsolved Runtime Error!", VISERA_ENGINE_ERROR);
-		}
+		catch(const SRuntimeError& RuntimeError)
+		{ Log::Fatal(Text("Visera Runtime Error:\n{}{}", RuntimeError.What(), RuntimeError.Where())); }
+		catch (const std::bad_alloc& BadAllocation)
+		{ Log::Fatal(Text("Failed to allocate physical memory because {}", BadAllocation.what())); }
 		return True;
 	}
 
@@ -50,11 +49,10 @@ export namespace VE { namespace Runtime
 	inline void
 	RenderTick()
 	{
-		//Check Window State
-		Window::PollEvents();
-
 		try
 		{
+			Window::PollEvents();
+
 			RHI::WaitForCurrentFrame();
 			{
 				auto& CurrentFrame = RHI::GetCurrentFrame();

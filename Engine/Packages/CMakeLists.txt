@@ -79,11 +79,15 @@ if (NOT TARGET TBB::tbb)
     message(STATUS "\nLoading Intel OneAPI TBB (TBB::tbb)")
     find_package(TBB REQUIRED)
     target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE TBB::tbb)
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE TBB::tbbmalloc)
     add_custom_command(
         TARGET Visera-Packages
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:TBB::tbb>
+        $<TARGET_FILE_DIR:${APP_NAME}>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:TBB::tbbmalloc>
         $<TARGET_FILE_DIR:${APP_NAME}>
         #"tbb12_debug.dll" conflicts with embree's dependency name "tbb12.dll"
         COMMAND ${CMAKE_COMMAND} -E rename

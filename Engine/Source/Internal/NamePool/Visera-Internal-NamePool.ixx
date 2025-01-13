@@ -1,9 +1,12 @@
 module;
 #include <Visera.h>
-export module Visera.Internal.Memory:NamePool;
+export module Visera.Internal.NamePool;
+
+import :NameEntry;
+import :NameSlot;
 
 import Visera.Core.Hash;
-import Visera.Core.System;
+import Visera.Core.System.Concurrency;
 
 export namespace VE { namespace Internal
 {
@@ -12,21 +15,19 @@ export namespace VE { namespace Internal
     {
         enum //Settings (!CRITICAL!)
         { 
-            MaxMemoryBlocks     = 2048, //Sub-Effects:...
+            MaxMemoryBlocks     = 4096, //Sub-Effects:...
+            MaxMemoryBlockSize  = 256 * OneKByte,
             MaxNameSlots        = 256,  //Sub-Effects:{Register}
             MaxNameDigitCount   = 10,   //Sub-Effects:...
             MaxNameNumber       = INT32_MAX,
+
+            //MaxMemoryUsage = MaxMemoryBlocks * MaxNameSlots * OneByte,
         };
     public:
         void Register(const String& _Name);
         auto Search(StringView _Name) -> const char* { return nullptr; }
 
     public:
-        struct FNameSlot
-        {
-
-        };
-
         struct FMemoryBlock
         {
             UInt32 ByteCursor  = 0;  //Point at the current byte.
@@ -34,6 +35,7 @@ export namespace VE { namespace Internal
         };
 
     private:
+        //mutable FRWLock RWLock;
         Segment<FMemoryBlock, MaxMemoryBlocks> MemoryBlocks;
         UInt32 MemoryBlockCursor = 0; // Point at the current memory block.
 
@@ -44,7 +46,7 @@ export namespace VE { namespace Internal
         ParseNumber(const char* _Name, UInt32 _Length)
         {
             Int32 Number = -1; //Invalid Number
-
+            
             //1. Find the First Digit.
             constexpr auto IsDigit = [](char _Char)->bool { return '0' <= _Char && _Char <= '9'; };
             UInt32 Digits = 0;
