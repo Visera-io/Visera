@@ -41,8 +41,7 @@ private:
 	//VulkanPipelineCache ComputeCache	{VISERA_APP_ASSETS_DIR "/.ComputeCache.bin"};
 
 	VulkanAllocationCallbacks AllocationCallbacks {nullptr};
-		
-public:
+	
 	FVulkan();
 	~FVulkan();
 };

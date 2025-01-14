@@ -10,7 +10,7 @@
 #define VISERA_APP_ERROR    -2
 
 #define VE_ASSERT(Expression)	assert(Expression);
-#define VE_API static inline auto
+#define VE_API public: static inline auto
 
 #define VE_REGISTER_AUTOCAST(IType, OType) constexpr OType AutoCast(IType src) { return static_cast<OType>(src); }
 
@@ -42,7 +42,16 @@
 #if defined(_WIN32) || defined(_WIN64)
 #define VE_IS_WINDOWS_SYSTEM
 #endif
-
+#if (defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__amd64__) || defined(__x86_64__)) && !defined(_M_ARM64EC)
+#define VE_IS_X86_CPU true
+#else
+#define VE_IS_X86_CPU false
+#endif
+#if (defined(__arm__) || defined(_M_ARM) || defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC))
+#define VE_IS_ARM_CPU true
+#else
+#define VE_IS_ARM_CPU false
+#endif
 // << STD Modules >>
 #include <cassert>
 #include <sstream>
@@ -95,6 +104,12 @@ template<typename T>
 concept Number = std::floating_point<T> || std::integral<T>;
 
 template<typename T>
+concept Pointer = std::is_pointer_v<T>;
+
+template<typename T>
+concept Alignable = std::integral<T> || std::is_pointer_v<T>;
+
+template<typename T>
 concept ClockType = std::is_class_v<std::chrono::system_clock>          ||
                     std::is_class_v<std::chrono::high_resolution_clock>;
 
@@ -104,11 +119,15 @@ concept ClockType = std::is_class_v<std::chrono::system_clock>          ||
 using Bool		= bool;
 using Float  	= float;
 using Double 	= double;
+using Int16     = int16_t;
+using UInt16    = uint16_t;
 using Int32  	= std::int32_t;
 using UInt32 	= std::uint32_t;
 using Int64  	= std::int64_t;
 using UInt64 	= std::uint64_t;
 
+using ANSIChar   = char;
+using WideChar   = wchar_t;
 using String	 = std::string;
 using StringView = std::string_view;
 using RawString  = const char*;

@@ -6,98 +6,148 @@ import :NameEntry;
 import :NameSlot;
 
 import Visera.Core.Math.Hash;
-import Visera.Core.System.Concurrency;
+import Visera.Core.Signal;
+import Visera.Core.Log;
+import Visera.Core.System;
 
 export namespace VE { namespace Internal
 {
+    
+    enum class EName : UInt32
+	{
+		None = 0, //MUST be registered at first for assuring FNameEntryID == 0 && Number == 0
 
+		MaxReservedName,
+	};
+    
     class FNamePool
     {
-        enum //Settings (!CRITICAL!)
+        enum//Settings (!CRITICAL!)
         { 
-            MaxMemoryBlocks     = 4096, //Sub-Effects:...
-            MaxMemoryBlockSize  = 256 * OneKByte,
-            MaxNameSlots        = 256,  //Sub-Effects:{Register}
-            MaxNameDigitCount   = 10,   //Sub-Effects:...
-            MaxNameNumber       = INT32_MAX,
-
-            //MaxMemoryUsage = MaxMemoryBlocks * MaxNameSlots * OneByte,
+            //NamePool
+            InitNamePoolShards   = 256,
+            //NameSlot
+            MaxNameSlots         = 256,  //Sub-Effects:{Register}
+            MaxNameDigitCount    = 10,   //Sub-Effects:...
+            MaxNameNumber        = INT32_MAX,
+            //MemoryBlock
+            MaxMemoryBlocks      = 4096, //Sub-Effects:...
+            MaxMemoryBlockSize   = 256 * OneKByte,
+            MemoryBlockAlignment = 2,
         };
+
     public:
-        void Register(const String& _Name);
+        auto Register(const String& _Name) throw (SRuntimeError) -> Tuple<UInt32, UInt32>;
         auto Search(StringView _Name) -> const char* { return nullptr; }
 
-    public:
+    private:
+        mutable FRWLock RWLock;
+
+        struct FShard
+        {
+            FNameSlot* Slots = nullptr;
+        };
+        Array<FShard> Shards;
+
         struct FMemoryBlock
         {
             UInt32 ByteCursor  = 0;  //Point at the current byte.
             Byte*  Data;
         };
-
-    private:
-        //mutable FRWLock RWLock;
         Segment<FMemoryBlock, MaxMemoryBlocks> MemoryBlocks;
         UInt32 MemoryBlockCursor = 0; // Point at the current memory block.
 
-    private:
-        /*<< Helpers >>*/
-    public://[TODO]:Remove (Testing)
-        Tuple<Int32, UInt32> //[Number(<0 means invalid), NameLength]
-        ParseNumber(const char* _Name, UInt32 _Length)
-        {
-            Int32 Number = -1; //Invalid Number
-            
-            //1. Find the First Digit.
-            constexpr auto IsDigit = [](char _Char)->bool { return '0' <= _Char && _Char <= '9'; };
-            UInt32 Digits = 0;
-            for (const char* It = _Name + _Length - 1; It >= _Name && IsDigit(*It); --It)
-            { ++Digits; }
+    public:
+        FNamePool();
+        ~FNamePool();
 
-            UInt32 FirstDigitCursor = _Length - Digits;
+    private:
+        void Grow()
+        {
+            Log::Warn("Growing NamePool...");
+        }
+
+        /*<< Helpers >>*/
+        Tuple<Int32, UInt32> //[Number(<0 means invalid), NameLength]
+        ParseName(const char* _Name, UInt32 _Length)
+        {
+            constexpr auto IsDigit = [](char _Char)->bool { return '0' <= _Char && _Char <= '9'; };
+
+            UInt32 Digits = 0;
+            const char* It = _Name + _Length - 1;
+            //Count Digits
+            while(It >= _Name && IsDigit(*It)) { ++Digits; --It; }
+            //Convert Case
+            while (It >= _Name) { std::tolower(static_cast<unsigned char>(*It)); --It; }       
             
-            if (/*Valid Digit Length*/      (Digits && Digits < _Length) &&
-                /*Valid Naming Convention*/ (_Name[FirstDigitCursor - 1] == '_') &&
-                /*Valid Digit Count*/       (Digits <= MaxNameDigitCount))
+            if (Digits)
             {
-                //Handle Special Cases
-                if (/*Name_0 is Valid*/         Digits == 1 ||
-                    /*Zero Prefix is InValid*/  _Name[FirstDigitCursor] != '0')
+                UInt32 FirstDigitCursor = _Length - Digits;
+                
+                if (/*Valid Digit Length*/      (Digits < _Length) &&
+                    /*Valid Naming Convention*/ (_Name[FirstDigitCursor - 1] == '_') &&
+                    /*Valid Digit Count*/       (Digits <= MaxNameDigitCount))
                 {
-                    Number = atoi(_Name + FirstDigitCursor);
-                    if (Number < MaxNameNumber)
-                    { return { Number , _Length - Digits - 1 }; }
+                    if (/*Name_0 is Valid*/         Digits == 1 ||
+                        /*Zero Prefix is InValid*/  _Name[FirstDigitCursor] != '0')
+                    {
+                        Int32 Number = atoi(_Name + FirstDigitCursor);
+                        if (Number < MaxNameNumber)
+                        { return { Number , _Length - Digits - 1 }; }
+                    }
                 }
+                return { -1, _Length }; //Invalid Name
             }
-            return { Number, _Length }; // No Valid Number
+            else return { 0, _Length }; //No Numbers
         }
     };
 
-    void FNamePool::
+    Tuple<UInt32, UInt32> FNamePool::
     Register(const String& _Name)
     {
-        auto [Number, NameLength] = ParseNumber(_Name.data(), _Name.size());
-        if (Number < 0) { throw std::invalid_argument("Ref: Naming Convention"); }
-        
+        auto [Number, NameLength] = ParseName(_Name.data(), _Name.size());
+        if (Number < 0) { throw SRuntimeError("Ref: Naming Convention"); }
+
         String Name = _Name.substr(0, NameLength);
-        
-        VE_ASSERT(MaxNameSlots == 256);
+
         union FNameHash
         {
-            struct
-            {
-                struct
-                {
-                    int a : 2;
-                    Byte Slot : 8;
-                    //Bit(Slot, 8);
-                };
-                UInt32 Low32Bits;   //Determine the slot
-            };
-
             UInt64 Value;
         };
-        FNameHash Hash{ .Value = Hash::CityHash64(Name) };
-        
+        FNameHash NameHash{ .Value = Hash::CityHash64(Name) };
+        VE_ASSERT(MaxNameSlots == 256 && "If you use a new size, make sure that the encoding is revised.");
+
+
+        RWLock.StartWriting();
+        {
+
+        }
+        RWLock.StopWriting();
+
+        return { 1, Number + 1 };
+    }
+
+    FNamePool::
+    FNamePool()
+    {
+        //Initialize Shards
+        Shards.resize(InitNamePoolShards);
+
+        UInt64 ShardSize = MaxNameSlots * sizeof(FNameSlot);
+        for (auto& Shard : Shards)
+        {
+            Shard.Slots = (FNameSlot*)Memory::Malloc(ShardSize, alignof(FNameSlot));
+            Memory::Memset(Shard.Slots, 0, ShardSize);
+        }
+    }
+
+    FNamePool::
+    ~FNamePool()
+    {
+        for (auto& Shard : Shards)
+        {
+            Memory::Free(Shard.Slots, alignof(FNameSlot));
+        }
     }
 
 } } // namespace VE::Internal
