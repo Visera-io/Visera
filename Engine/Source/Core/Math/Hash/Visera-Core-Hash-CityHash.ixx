@@ -127,19 +127,16 @@ module;
 #endif
 #endif
 
-export module Visera.Core.Hash:CityHash;
+export module Visera.Core.Math.Hash:CityHash;
 
-namespace VE
-{
-
-namespace Hash
+namespace Google
 {
     using namespace std;
     
 	typedef uint8_t uint8;
 	typedef uint32_t uint32;
 	typedef uint64_t uint64;
-	typedef std::pair<uint64, uint64> uint128;
+	export typedef std::pair<uint64, uint64> uint128;
 
     static uint64 UNALIGNED_LOAD64(const char *p)
     {
@@ -388,13 +385,9 @@ namespace Hash
       b = HashLen16(d, b);
       return uint128(a ^ b, HashLen16(b, a));
     }
-}
-} // namespace VE
+} // namespace Google
 
-export namespace VE
-{
-
-namespace Hash
+export namespace Google
 {
 	// Hash function for a byte array.
 	uint64 CityHash64(const char *buf, size_t len);
@@ -742,5 +735,4 @@ namespace Hash
         }
     }
     #endif
-}
-} // namespace VE
+} // namespace Google

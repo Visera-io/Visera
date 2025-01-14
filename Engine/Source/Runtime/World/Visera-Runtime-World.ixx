@@ -29,6 +29,7 @@ export namespace VE { namespace Runtime
 
 	class World
 	{
+		VE_MODULE_MANAGER_CLASS(World);
 	public:
 		auto CreateStage(const String& _StageFile) -> SharedPtr<VStage> { return nullptr; }
 

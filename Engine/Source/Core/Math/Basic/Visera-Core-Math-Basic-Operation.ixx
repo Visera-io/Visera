@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 
-export module Visera.Core.Math:Operation;
+export module Visera.Core.Math.Basic:Operation;
 
 export namespace VE
 {

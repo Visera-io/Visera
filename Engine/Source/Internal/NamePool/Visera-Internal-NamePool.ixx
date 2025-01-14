@@ -5,7 +5,7 @@ export module Visera.Internal.NamePool;
 import :NameEntry;
 import :NameSlot;
 
-import Visera.Core.Hash;
+import Visera.Core.Math.Hash;
 import Visera.Core.System.Concurrency;
 
 export namespace VE { namespace Internal

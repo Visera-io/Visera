@@ -1,6 +1,5 @@
 module;
 #include <Visera.h>
-
 export module Visera.Editor.UI;
 
 import Visera.Runtime.RHI;
@@ -11,12 +10,11 @@ export namespace VE { namespace Runtime
 
 	class UI
 	{
+		VE_MODULE_MANAGER_CLASS(UI);
 	public:
 
 	private:
-		UI() noexcept = default;
-		static void
-		Bootstrap()
+		VE_API Bootstrap()
 		{
 			auto* API = RHI::GetAPI();
 			//[TODO]
@@ -39,8 +37,8 @@ export namespace VE { namespace Runtime
 			//	.Allocator		= API->AllocationCallbacks,
 			//});
 		}
-		static void
-		Terminate()
+
+		VE_API Terminate()
 		{
 			delete ImGui;
 		}

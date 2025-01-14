@@ -10,7 +10,7 @@
 #define VISERA_APP_ERROR    -2
 
 #define VE_ASSERT(Expression)	assert(Expression);
-#define VE_INTERFACE static inline auto
+#define VE_API static inline auto
 
 #define VE_REGISTER_AUTOCAST(IType, OType) constexpr OType AutoCast(IType src) { return static_cast<OType>(src); }
 
@@ -33,6 +33,11 @@
 #define VE_NOT_MOVABLE(ClassName) \
 	ClassName(ClassName&&) = delete;\
 	ClassName& operator=(ClassName&&) = delete;
+
+#define VE_MODULE_MANAGER_CLASS(ClassName)\
+    ClassName() noexcept = delete;\
+    VE_NOT_COPYABLE(ClassName);\
+    VE_NOT_MOVABLE(ClassName);
 
 #if defined(_WIN32) || defined(_WIN64)
 #define VE_IS_WINDOWS_SYSTEM

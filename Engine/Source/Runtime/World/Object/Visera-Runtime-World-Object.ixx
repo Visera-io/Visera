@@ -2,7 +2,7 @@ module;
 #include <Visera.h>
 
 export module Visera.Runtime.World.Object;
-import Visera.Core.Hash;
+import Visera.Core.Math.Hash;
 
 export namespace VE { namespace Runtime
 {

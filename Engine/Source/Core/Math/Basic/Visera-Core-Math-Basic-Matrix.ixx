@@ -4,7 +4,7 @@ module;
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-export module Visera.Core.Math:Matrix;
+export module Visera.Core.Math.Basic:Matrix;
 
 export namespace VE
 {

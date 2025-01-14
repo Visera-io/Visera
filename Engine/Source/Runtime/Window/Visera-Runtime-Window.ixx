@@ -8,6 +8,7 @@ export namespace VE { namespace Runtime
 {
 	class Window
 	{
+		VE_MODULE_MANAGER_CLASS(Window);
 	public:
 		union Extent
 		{
@@ -46,7 +47,6 @@ export namespace VE { namespace Runtime
 		static inline GLFWwindow*  Handle		= nullptr;
 
 	private:
-		Window() = delete;
 		static inline void
 		Bootstrap()
 		{

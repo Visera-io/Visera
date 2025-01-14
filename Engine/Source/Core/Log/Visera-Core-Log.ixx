@@ -14,6 +14,7 @@ export namespace VE
 */
 class Log
 {
+	VE_MODULE_MANAGER_CLASS(Log);
 public:
 	template<typename... Args>
 	static inline void
@@ -62,6 +63,7 @@ export namespace VISERA_APP_NAMESPACE
 	using namespace VE;
 	class Log
 	{
+		VE_MODULE_MANAGER_CLASS(Log);
 	public:
 		template<typename... Args>
 		static inline void

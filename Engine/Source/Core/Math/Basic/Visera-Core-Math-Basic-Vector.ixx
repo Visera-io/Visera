@@ -3,7 +3,7 @@ module;
 
 #include <Eigen/Core>
 
-export module Visera.Core.Math:Vector;
+export module Visera.Core.Math.Basic:Vector;
 
 import :Operation;
 

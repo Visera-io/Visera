@@ -2,7 +2,7 @@ module;
 #include <Visera.h>
 #include <Eigen/Geometry>
 
-export module Visera.Core.Math:Angle;
+export module Visera.Core.Math.Basic:Angle;
 
 import :Operation;
 

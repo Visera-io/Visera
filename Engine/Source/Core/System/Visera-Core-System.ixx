@@ -12,17 +12,14 @@ export namespace VE
 {
 	class System
 	{
+		VE_MODULE_MANAGER_CLASS(System);
 	public:
 		//[FIXME]: Unknown Bug (Perhaps, a MSVC bug: https://github.com/microsoft/STL/issues/5203)
-		/*static inline void
-		Sleep(UInt32 _MilliSeconds) { std::this_thread::sleep_for(std::chrono::milliseconds(_MilliSeconds)); }*/
+		/*VE_API Sleep(UInt32 _MilliSeconds) { std::this_thread::sleep_for(std::chrono::milliseconds(_MilliSeconds)); }*/
 
-		static inline auto
-		Now() { return SystemClock.Now(); }
-		static inline auto
-		GetRunningTime() { return SystemClock.GetTotalTime(); }
-		constexpr Bool
-		IsLittleEndian() { return std::endian::native == std::endian::little; }
+		VE_API Now()			{ return SystemClock.Now(); }
+		VE_API GetRunningTime() { return SystemClock.GetTotalTime(); }
+		VE_API IsLittleEndian() { return std::endian::native == std::endian::little; }
 
 	private:
 		static inline FSystemClock	SystemClock;
