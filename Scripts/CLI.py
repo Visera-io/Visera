@@ -20,11 +20,14 @@ class ViseraCLI:
     def Listen(self) -> bool:
         if len(self.History) > self.MaxHistory: self.History = self.History[:self.MaxHistory]
         
-        newinput = input(f"[{self.Workspace}]> ")
+        newinput = input(f"[{self.Workspace}]> ").lstrip()
         if newinput != "":
-            if newinput == "!!": #Linux execute the last command
+            if newinput[0] == ">": #Python Commands
+                print(eval(newinput[1:]))
+                return True
+            elif newinput == "!!": #Linux execute the last command
                 if len(self.History) > 0: newinput = self.History[-1]
-                else: newinput = ""
+                return True
             else: self.History.append(newinput)
 
             newinput = newinput.split()
@@ -75,7 +78,7 @@ class ViseraCLI:
     
     def Open(self, arguments):
         """open <app_name>"""
-        if len(arguments) < 1: Log.Error(f"generate {Generate.__doc__}")
+        if len(arguments) < 1: raise RuntimeError(f"open {self.Open.__doc__}")
         app_name = arguments[0]
         app_path = path.join(VISERA_APP_PATH, app_name)
         if not path.isdir(app_path):
