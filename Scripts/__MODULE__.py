@@ -1,5 +1,5 @@
 from sys import argv
-from os import path
+from os import path, environ, access
 from platform import system
 from datetime import datetime
 import subprocess
@@ -12,6 +12,9 @@ VISERA_PYTHON_PATH  =   path.join(VISERA_ROOT_PATH, "Python")
 VISERA_ENGINE_PATH  =   path.join(VISERA_ROOT_PATH, "Engine")
 
 VISERA_OS_TYPE      =   system()
+VISERA_ENV_PATH     =   {
+                            "Vulkan" : [path.join(environ["VK_SDK_PATH"], "bin")] #vulkanCapsViewer, vkconfig, vkcube [TODO]:Alias
+                        }
 
 VISERA_SUCCESS      =   0
 VISERA_FAILED       =   not VISERA_SUCCESS

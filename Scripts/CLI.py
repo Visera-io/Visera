@@ -28,10 +28,31 @@ class ViseraCLI:
             else: self.History.append(newinput)
 
             newinput = newinput.split()
-            command     = ""
+            command     = newinput[0]
             arguments   = []
-            if len(newinput)  > 0 : command   = newinput[0]
             if len(newinput)  > 1 : arguments = newinput[1:]
+            
+            #'At' Grammar (Path Find)
+            #[TODO]: Path Family (Optimizing Search Efficiency)
+            if command[0] == '@':
+                target = command[1:]
+                if target != "":
+                    if '.' not in target and VISERA_OS_TYPE == "Windows": target += ".exe"
+                    for path_family, paths in VISERA_ENV_PATH.items():
+                        for _path in paths:
+                            target = path.join(_path, target)
+                            if path.isfile(target):
+                                arguments = [target] + arguments
+                                rc = subprocess.run(
+                                    args = arguments,
+                                    shell= True,
+                                    cwd  = self.WorkDir).returncode
+                                return True
+                    Log.Error(f"Failed to find {target} in VISERA_ENV_PATH!")
+                    return True
+                else:
+                    print(VISERA_ENV_PATH) #Help
+                    return True
             
             commandset = None
             if self.Workspace == "Visera": commandset = self.CommandSets["Visera"]
@@ -63,7 +84,7 @@ class ViseraCLI:
             self.Workspace += f"|{app_name}"
             self.WorkDir    = app_path
     
-    def Help(self, placeholder):
+    def Help(self, arguments):
         """Get the command list in current workspace."""
         prompt = ""
         if self.Workspace == "Visera":
@@ -74,13 +95,15 @@ class ViseraCLI:
                 prompt += f"- {alias}".ljust(20) + f"{cmd.__doc__}\n"
         Log.Info(prompt)
     
-    def Exit(self, placeholder):
-        """Exit current workspace."""
+    def Exit(self, arguments):
+        """Exit current workspace (add '!' to exit all)."""
+        if arguments and arguments[-1] == "!": exit(0)
         if self.Workspace == "Visera":
             exit(0)
         else:
             self.Workspace = "Visera"
             self.WorkDir   = VISERA_ENGINE_PATH
+            return VISERA_SUCCESS
 
 if "__main__" == __name__:
     Log.Info("Welcome to use Visera Engine!")

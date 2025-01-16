@@ -40,7 +40,7 @@ export namespace VE { namespace Internal
 		ANSIChar		Name[MaxNameSize];
 
 		auto GetName() const-> String { return {}; }
-		void FetchName(ANSIChar _Buffer[MaxNameSize]);
+		//void FetchName(StringView Name, ANSIChar _Buffer[MaxNameSize]);
 	};
 
 } } // namespace VE::Internal

@@ -75,7 +75,7 @@ set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${APP_NAM
             App.write(f"module;\n#include <Visera.h>\nexport module {app_name};\nimport Visera;\n")
             App.write("\nexport namespace VISERA_APP_NAMESPACE\n{")
             App.write("\n\tclass App final : public VE::ViseraApp")
-            App.write("\n\t{\n\tpublic:\n\t\tvirtual void Tick() override\n\t\t{\n\n\t\t}\n")
+            App.write("\n\t{\n\tpublic:\n\t\tvirtual void Tick() override\n\t\t{\n\t\t\tLog::Info(VISERA_APP_NAME\": Hello World!\");\n\t\t\tExit();\n\t\t}\n")
             App.write("\n\t\tvirtual void RenderTick() override\n\t\t{\n\n\t\t}\n")
             App.write("\n\t\tvirtual void Bootstrap() override\n\t\t{\n\n\t\t}\n")
             App.write("\n\t\tvirtual void Terminate() override\n\t\t{\n\n\t\t}\n")
