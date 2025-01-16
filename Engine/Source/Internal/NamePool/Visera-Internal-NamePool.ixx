@@ -22,32 +22,34 @@ export namespace VE { namespace Internal
     
     class FNamePool
     {
-        enum//Settings (!CRITICAL!)
+        enum//Settings (!!!CRITICAL!!!)
         { 
             //NamePool
-            InitNamePoolShards   = 256,
-            //NameSlot
-            MaxNameSlots         = 256,  //Sub-Effects:{Register}
-            MaxNameDigitCount    = 10,   //Sub-Effects:...
+            MaxNamePoolShards    = 256, //8bits encoded
+            InitNamePoolShardSize= 256, //Sub-Effects:{Register}
+            //Name
+            MaxNameLength        = 1024 * OneByte,
+            MaxNameDigitCount    = 10,  //Sub-Effects:...
             MaxNameNumber        = INT32_MAX,
             //MemoryBlock
             MaxMemoryBlocks      = 4096, //Sub-Effects:...
             MaxMemoryBlockSize   = 256 * OneKByte,
+            MaxMemoryBlockUsage  = UInt32(MaxMemoryBlockSize * 0.95), //Sub-Effects:{AllocateNewMemoryBlock}
             MemoryBlockAlignment = 2,
+            MaxMemoryUsage       = MaxMemoryBlocks * MaxMemoryBlockSize, //1GB
         };
 
     public:
-        auto Register(const String& _Name) throw (SRuntimeError) -> Tuple<UInt32, UInt32>;
-        auto Search(StringView _Name) -> const char* { return nullptr; }
+        auto Register(String& _Name) throw (SRuntimeError) -> Tuple<UInt32, UInt32>;
 
     private:
         mutable FRWLock RWLock;
-
-        struct FShard
+        struct FPoolShard
         {
-            FNameSlot* Slots = nullptr;
+            FNameSlot* Slots;
+            UInt32     SlotCursor = 0;
         };
-        Array<FShard> Shards;
+        Array<FPoolShard> Shards;
 
         struct FMemoryBlock
         {
@@ -55,16 +57,24 @@ export namespace VE { namespace Internal
             Byte*  Data;
         };
         Segment<FMemoryBlock, MaxMemoryBlocks> MemoryBlocks;
-        UInt32 MemoryBlockCursor = 0; // Point at the current memory block.
+        Int32 MemoryBlockCursor = -1; // Point at the current memory block.
 
     public:
         FNamePool();
         ~FNamePool();
 
     private:
-        void Grow()
+        void AllocateNewMemoryBlock()
         {
-            Log::Warn("Growing NamePool...");
+            if (MemoryBlockCursor >= 0)
+            { Log::Debug("Allocating a new NamePool MemoryBlock (Last Memory Usage Rate: {}%)...", 100 * MemoryBlocks[MemoryBlockCursor].ByteCursor / MaxMemoryBlockSize); }
+            
+            if (MemoryBlockCursor < MaxMemoryBlocks)
+            {
+                auto& NewMemoryBlock = MemoryBlocks[++MemoryBlockCursor];
+                NewMemoryBlock.Data = (Byte*)Memory::MallocNow(MaxMemoryBlockSize, MemoryBlockAlignment);
+            }
+            else throw SRuntimeError("NamePool's MemoryBlocks have reached the maximum limit!");
         }
 
         /*<< Helpers >>*/
@@ -74,11 +84,11 @@ export namespace VE { namespace Internal
             constexpr auto IsDigit = [](char _Char)->bool { return '0' <= _Char && _Char <= '9'; };
 
             UInt32 Digits = 0;
-            const char* It = _Name + _Length - 1;
+            char* It = const_cast<char*>(_Name) + _Length - 1;
             //Count Digits
             while(It >= _Name && IsDigit(*It)) { ++Digits; --It; }
             //Convert Case
-            while (It >= _Name) { std::tolower(static_cast<unsigned char>(*It)); --It; }       
+            while (It >= _Name) { *It = std::tolower(static_cast<unsigned char>(*It)); --It; }       
             
             if (Digits)
             {
@@ -103,42 +113,37 @@ export namespace VE { namespace Internal
     };
 
     Tuple<UInt32, UInt32> FNamePool::
-    Register(const String& _Name)
+    Register(String& _Name)
     {
         auto [Number, NameLength] = ParseName(_Name.data(), _Name.size());
-        if (Number < 0) { throw SRuntimeError("Ref: Naming Convention"); }
+        if (Number < 0) { throw SRuntimeError("Bad Name! Naming Convention:(#Name_{Number})."); }
 
         String Name = _Name.substr(0, NameLength);
+        UInt64 NameHash = Hash::CityHash64(Name);
 
-        union FNameHash
-        {
-            UInt64 Value;
-        };
-        FNameHash NameHash{ .Value = Hash::CityHash64(Name) };
-        VE_ASSERT(MaxNameSlots == 256 && "If you use a new size, make sure that the encoding is revised.");
-
-
+        Log::Debug("Registering a new FName:{}", _Name);
         RWLock.StartWriting();
         {
 
         }
         RWLock.StopWriting();
 
-        return { 1, Number + 1 };
+        return { 1/*[FIXME]*/, Number + 1};
     }
 
     FNamePool::
     FNamePool()
     {
         //Initialize Shards
-        Shards.resize(InitNamePoolShards);
+        Shards.resize(MaxNamePoolShards);
 
-        UInt64 ShardSize = MaxNameSlots * sizeof(FNameSlot);
+        UInt64 ShardSize = InitNamePoolShardSize * sizeof(FNameSlot);
         for (auto& Shard : Shards)
         {
-            Shard.Slots = (FNameSlot*)Memory::Malloc(ShardSize, alignof(FNameSlot));
-            Memory::Memset(Shard.Slots, 0, ShardSize);
+            Shard.Slots = (FNameSlot*)Memory::MallocNow(ShardSize, alignof(FNameSlot));
+            Shard.SlotCursor = 0;
         }
+        AllocateNewMemoryBlock();
     }
 
     FNamePool::
@@ -147,6 +152,11 @@ export namespace VE { namespace Internal
         for (auto& Shard : Shards)
         {
             Memory::Free(Shard.Slots, alignof(FNameSlot));
+            Shard.SlotCursor = 0;
+        }
+        for (auto& MemoryBlock : MemoryBlocks)
+        {
+            Memory::Free(MemoryBlock.Data, MemoryBlockAlignment);
         }
     }
 

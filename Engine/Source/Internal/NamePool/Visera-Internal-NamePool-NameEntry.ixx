@@ -10,7 +10,11 @@ export namespace VE { namespace Internal
 	class FNameEntryID
 	{
 		friend class FNamePool;
-
+		enum : EnumMask
+		{
+			EntryIDRange = 29U, //OnToMapping{FNameSlot.ID_AND_Hash:29}
+			EntryIDMask  = 1U << EntryIDRange - 1U,
+		};
 		UInt32 Value;
 		Bool IsNone() const { return !Value; }
 	};
@@ -21,7 +25,7 @@ export namespace VE { namespace Internal
 
 		UInt32 BlockIndex   = 0;
 		UInt32 Offset		= 0;
-		auto GetID() const -> UInt32 { return BlockIndex << /*[FIXME]: FNameBlockOffsetBits*/ 1 | Offset; }
+		//auto GetID() const -> UInt32 { return BlockIndex << /*[FIXME]: FNameBlockOffsetBits*/ 1 | Offset; }
 	};
 
 	/* A global deduplicated name stored in the global name table */
@@ -32,15 +36,16 @@ export namespace VE { namespace Internal
 
 		struct FHeader
 		{
-			UInt16 LowerCaseProbeHash	: 6;
+			UInt16 LowerCaseProbeHash	: 6;  // 1bit from WideChar
 			UInt16 Length				: 10;
 		};
 		FHeader			Header;
 		FNameEntryID	ComparisonID;
-		ANSIChar		Name[MaxNameSize];
-
-		auto GetName() const-> String { return {}; }
-		//void FetchName(StringView Name, ANSIChar _Buffer[MaxNameSize]);
+		union
+		{
+			ANSIChar ANSIName[MaxNameSize];
+			WideChar WideName[MaxNameSize >> 1];
+		};
 	};
 
 } } // namespace VE::Internal

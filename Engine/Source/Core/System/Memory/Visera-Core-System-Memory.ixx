@@ -18,12 +18,13 @@ export namespace VE
 
         class FBuffer; //RAII
         VE_API Allocate(UInt64 _Size, UInt32 _Alignment = 0) throw (SRuntimeError) { return CreateSharedPtr<FBuffer>(_Size, _Alignment); }
-        
+        VE_API AllocateNow(UInt64 _Size, UInt32 _Alignment = 0, Int32 _Value = 0) { auto Buffer = CreateSharedPtr<FBuffer>(_Size, _Alignment); Memset(Buffer->GetData(), _Value, Buffer->GetSize()); return Buffer; }
+
         VE_API Malloc(UInt64 _Size, UInt32 _Alignment) throw (SRuntimeError) -> void*;
         VE_API Memset(void* _Memory, Int32 _Value, UInt64 _Size) -> void;
+        VE_API MallocNow(UInt64 _Size, UInt32 _Alignment, Int32 _Value = 0) -> void* { void* AllocatedMemory = Malloc(_Size, _Alignment); Memset(AllocatedMemory, _Value, _Size); return AllocatedMemory; }
         VE_API Realloc(void* _Memory, UInt64 _NewSize, UInt32 _NewAlignment) throw (SRuntimeError) -> void*;
         VE_API Free(void* _Memory, UInt32 _Alignment) -> void;
-        
 
         VE_API Prefetch(const void* _Memory, UInt32 _Offset = 0) -> void;
         
@@ -63,7 +64,7 @@ export namespace VE
     Memory::FBuffer::FBuffer(UInt64 _Size, UInt32 _Alignment/* = 0*/)
         :Size{_Size},
          Alignment{_Alignment},
-         Data{ Memory::Malloc(Size, Alignment) }
+         Data{ Memory::Malloc(_Size, _Alignment) }
     { 
         
     }

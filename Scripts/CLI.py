@@ -109,7 +109,7 @@ class ViseraCLI:
             return VISERA_SUCCESS
 
 if "__main__" == __name__:
-    Log.Info("Welcome to use Visera Engine!")
+    Log.Info("Welcome to Visera Engine!")
     
     CLI = ViseraCLI()
     
