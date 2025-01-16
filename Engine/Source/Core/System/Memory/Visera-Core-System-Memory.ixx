@@ -1,6 +1,10 @@
 module;
 #include <Visera.h>
+#if defined(VE_ON_X86_CPU)
 #include <xmmintrin.h>
+#elif defined(VE_ON_ARM_CPU)
+#include <arm_acle.h>
+#endif
 export module Visera.Core.System.Memory;
 
 import Visera.Core.Signal;
@@ -21,7 +25,7 @@ export namespace VE
         VE_API Free(void* _Memory, UInt32 _Alignment) -> void;
         
 
-        VE_API Prefetch(const void* _Memory, UInt32 _Offset = 0) { _mm_prefetch((const char*)_Memory + _Offset, _MM_HINT_T0); }
+        VE_API Prefetch(const void* _Memory, UInt32 _Offset = 0) -> void;
         
         VE_API IsValidAllocation(UInt64 _Size, UInt32 _Alignment)   ->Bool;
         VE_API IsZero(const void* _Memory, UInt64 _Size)            ->Bool;
@@ -134,6 +138,16 @@ export namespace VE
 #endif
         }
         else std::free(_Memory);
+    }
+
+    void Memory::
+    Prefetch(const void* _Memory, UInt32 _Offset/* = 0*/)
+    {
+#if defined(VE_ON_X86_CPU)
+        _mm_prefetch((const char*)_Memory + _Offset, _MM_HINT_T0);
+#elif defined(VE_ON_ARM_CPU)
+        __pld((const char*)_Memory + _Offset); //[FIXME]: Not be tested!
+#endif
     }
 
     Bool Memory::

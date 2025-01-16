@@ -44,11 +44,13 @@
 #endif
 #if (defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__amd64__) || defined(__x86_64__)) && !defined(_M_ARM64EC)
 #define VE_IS_X86_CPU true
+#define VE_ON_X86_CPU
 #else
 #define VE_IS_X86_CPU false
 #endif
 #if (defined(__arm__) || defined(_M_ARM) || defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC))
 #define VE_IS_ARM_CPU true
+#define VE_ON_ARM_CPU
 #else
 #define VE_IS_ARM_CPU false
 #endif
