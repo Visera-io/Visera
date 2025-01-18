@@ -10,21 +10,20 @@ export namespace VE
 	/* Case-Ignored String */
 	class FName
 	{
-		VE_API HasExisted(const FName& _Name)		-> Bool { return False; }
-		VE_API HasExisted(StringView _Name)			-> Bool { return False; }
-		VE_API HasExisted(const ANSIChar* _Name)	-> Bool { return False; }
+		VE_API Search(FName _Name) -> StringView { return Internal::GetNamePool().Search(_Name.Handle); }
 	public:
 		//auto GetName()	 const -> String { return }
 		auto GetHandle() const -> UInt32 { return Handle; }
 		auto GetNumber() const -> UInt32 { return Number; }
 		auto IsNone()	 const -> Bool	 { return !Handle && !Number; }
+		auto HasNumber() const -> Bool	 { return !!Number; }
 	
-		FName(String _Name) { /*[TODO]: Handle = */ Internal::GetNamePool().Register(_Name); }
+		FName(String _Name) { auto [Handle_, Number_] = Internal::GetNamePool().Register(_Name.data(), _Name.size()); Handle = Handle_; Number = Number_; }
 		
 		Bool operator==(const FName& _Another) const { return Handle == _Another.Handle && Number == _Another.Number; }
 	private:
-		UInt32 Handle{ 0 }; //FNameEntryID
-		UInt32 Number{ 0 };
+		UInt32	Handle;		//HashAndID
+		UInt32	Number{ 0 };
 	};
 	
 } // namespace VE

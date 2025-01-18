@@ -15,6 +15,8 @@ export namespace VE
 		void StartWriting() { Handle.lock(); }
 		void StopWriting()  { Handle.unlock(); }
 
+		Bool IsLocked()     { return !TryToWrite(); }
+
 	private:
 		std::shared_mutex Handle;
 	};

@@ -40,7 +40,8 @@
     VE_NOT_MOVABLE(ClassName);
 
 #if defined(_WIN32) || defined(_WIN64)
-#define VE_IS_WINDOWS_SYSTEM
+#define VE_IS_WINDOWS_SYSTEM true
+#define VE_ON_WINDOWS_SYSTEM
 #endif
 #if (defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__amd64__) || defined(__x86_64__)) && !defined(_M_ARM64EC)
 #define VE_IS_X86_CPU true
@@ -186,7 +187,7 @@ template<typename T, size_t Length>
 using Segment  = std::array<T, Length>;
 
 template <typename... Args>
-using Tuple = std::tuple<Args...>;
+using ResultPackage = std::tuple<Args...>;
 
 /* <<  Pointers >>
     1. SharedPtr

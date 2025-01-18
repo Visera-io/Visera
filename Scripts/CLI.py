@@ -27,7 +27,6 @@ class ViseraCLI:
                 return True
             elif newinput == "!!": #Linux execute the last command
                 if len(self.History) > 0: newinput = self.History[-1]
-                return True
             else: self.History.append(newinput)
 
             newinput = newinput.split()

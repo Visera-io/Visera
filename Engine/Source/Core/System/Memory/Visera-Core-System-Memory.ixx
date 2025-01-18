@@ -21,8 +21,9 @@ export namespace VE
         VE_API AllocateNow(UInt64 _Size, UInt32 _Alignment = 0, Int32 _Value = 0) { auto Buffer = CreateSharedPtr<FBuffer>(_Size, _Alignment); Memset(Buffer->GetData(), _Value, Buffer->GetSize()); return Buffer; }
 
         VE_API Malloc(UInt64 _Size, UInt32 _Alignment) throw (SRuntimeError) -> void*;
-        VE_API Memset(void* _Memory, Int32 _Value, UInt64 _Size) -> void;
         VE_API MallocNow(UInt64 _Size, UInt32 _Alignment, Int32 _Value = 0) -> void* { void* AllocatedMemory = Malloc(_Size, _Alignment); Memset(AllocatedMemory, _Value, _Size); return AllocatedMemory; }
+        VE_API Memset(void* _Memory, Int32 _Value, UInt64 _Size) -> void;
+        VE_API Memcpy(void* _Destination, const void* _Source, UInt64 _Size) -> void { std::memcpy(_Destination, _Source, _Size); }
         VE_API Realloc(void* _Memory, UInt64 _NewSize, UInt32 _NewAlignment) throw (SRuntimeError) -> void*;
         VE_API Free(void* _Memory, UInt32 _Alignment) -> void;
 
@@ -31,9 +32,13 @@ export namespace VE
         VE_API IsValidAllocation(UInt64 _Size, UInt32 _Alignment)   ->Bool;
         VE_API IsZero(const void* _Memory, UInt64 _Size)            ->Bool;
 
-        /*Aligns a value to the nearest higher multiple of 'Alignment', which must be a power of two.*/
+        /**Example: VE::Memory::GetDataOffset(&Foo::bar);*/
+        template <class _Structure, typename _MemeberType> static constexpr
+        UInt64 GetDataOffset(_MemeberType _Structure::* Member) { static_assert(std::is_standard_layout_v<_Structure>, "_Structure MUST be a standard layout type!"); return reinterpret_cast<UInt64>(&(reinterpret_cast<_Structure*>(NULL)->*Member)); }
+        
+        /**Aligns a value to the nearest higher multiple of 'Alignment', which must be a power of two.*/
         template <Alignable T> static constexpr
-        T Align(T _Target, UInt64 _Alignment) { VE_ASSERT(IsPowerOfTwo(_Alignment)); return (T)(((UInt64)_Target + _Alignment - 1) & ~(_Alignment - 1)); };
+        T Align(T _Value, UInt64 _Alignment) { VE_ASSERT(IsPowerOfTwo(_Alignment)); return (T)(((UInt64)_Target + _Alignment - 1) & ~(_Alignment - 1)); };
 
         class FBuffer final
         {
@@ -129,10 +134,12 @@ export namespace VE
     void Memory::
     Free(void* _Memory, UInt32 _Alignment)
     { 
+        if (!_Memory) { return; }
+
         if (_Alignment)
         {
             VE_ASSERT(IsPowerOfTwo(_Alignment));
-#if defined(VE_IS_WINDOWS_SYSTEM)
+#if defined(VE_ON_WINDOWS_SYSTEM)
             _aligned_free(_Memory);
 #else
             std::aligned_free(_Memory);
@@ -144,10 +151,17 @@ export namespace VE
     void Memory::
     Prefetch(const void* _Memory, UInt32 _Offset/* = 0*/)
     {
+        //Copied from Unreal Engine!
 #if defined(VE_ON_X86_CPU)
-        _mm_prefetch((const char*)_Memory + _Offset, _MM_HINT_T0);
+		_mm_prefetch(static_cast<const char*>(_Memory) + _Offset, _MM_HINT_T0);
 #elif defined(VE_ON_ARM_CPU)
-        __pld((const char*)_Memory + _Offset); //[FIXME]: Not be tested!
+#	if defined(_MSC_VER)
+		__prefetch(static_cast<const char*>(_Memory) + _Offset);
+#	else
+		__asm__ __volatile__("prfm pldl1keep, [%[ptr]]\n" ::[ptr] "r"(Ptr) : );
+#	endif
+#else
+#	error Unknown architecture
 #endif
     }
 
