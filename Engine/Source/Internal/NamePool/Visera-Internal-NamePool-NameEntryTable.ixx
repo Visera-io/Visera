@@ -18,13 +18,14 @@ export namespace VE { namespace Internal
 			SectionByteSize		= 256 * OneKByte,				//Unaligned Size
 
 			MaxSectionBits		= 13,
-			MaxSections			= 1U << MaxSectionBits,		// 8192 Sections
+			MaxSections			= (1U << MaxSectionBits),		// 8192 Sections
 			NameEntryAlignment	= alignof(FNameEntry),
 			NameEntryByteStride = NameEntryAlignment,
+
 			SectionOffsetBits	= 16, // Since NameEntryAlignment and NameEntryByteStride are same (2), we can use 16bits to encode 65536 offsets (remeber these factor!)
-			SectionOffsets		= 1U << SectionOffsetBits,	//65536 Offsets (Max)
-			NameEntryIDBits		= MaxSectionBits + SectionOffsetBits,
-			NameEntryIDMask		= (1U << NameEntryIDBits) - 1,
+			SectionOffsets		= (1U << SectionOffsetBits), //65536 Offsets (Max)
+			NameEntryHandleBits	= MaxSectionBits + SectionOffsetBits,
+			NameEntryHandleMask	= (1U << NameEntryHandleBits) - 1,
 		};
 	public:
 		auto Insert(StringView _ParsedName, const FNameHash& _NameHash) -> FNameEntryHandle;

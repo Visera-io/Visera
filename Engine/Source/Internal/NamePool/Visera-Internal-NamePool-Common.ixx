@@ -11,12 +11,12 @@ export namespace VE { namespace Internal
 	/*
 	* [Abstract]:
 	  This file defines main mappings among {FNameHandle, FNameEntryHandle, FNameTokenHandle}.
+	  - FNameHash:			the medium among different types of handle.
 	  - FNameHandle:		it is stored in FName as a user-level handle.
 	  - FNameEntry:			the entity stored in FNameEntryTable
 	  - FNameEntryHandle:	it can be mapped from FNameHandle or FNameTokenHandle, and then be used to get its FNameEntry in the FNameEntryTable
 	  - FNameToken:			the entity stored in FNameTokenTable
 	  - FNameTokenHandle:	it can be mapped from FNameHandle or FNameEntryHandle, and then be used to get its FNameToken in the FNameTokenTable
-	  - FNameHash:			the medium among different types of handle.
 
 	* [Keywords]: Handle; Hash; Mapping;
 	*/
@@ -24,6 +24,31 @@ export namespace VE { namespace Internal
 	class FNamePool;
 	class FNameEntryTable;
 	class FNameTokenTablel;
+
+	class FNameHash
+	{
+	public:
+		enum
+        {
+            /*L:[ 0~31]: Token Index*/
+            UnmaskedTokenIndexMask          = (1U << 32) - 1,
+            /*H:[32~39]: TokenTableSection Index*/
+            TokenTableSectionIndexBits      = 8,
+            TokenTableSectionIndexMask      = (1U << TokenTableSectionIndexBits) - 1,
+            /*H:[40~45]: Lower Case Probe Hash*/
+            LowerCaseProbeHashBits          = 6,
+            LowerCaseProbeHashMask          = (1U << LowerCaseProbeHashBits) - 1,
+        };
+        UInt32 GetUnmaskedTokenIndex()		const { return Value & UnmaskedTokenIndexMask; }
+        UInt32 GetTokenTableSectionIndex()  const { return Value & TokenTableSectionIndexMask; }
+        UInt32 GetLowerCaseProbeHash()		const { return Value & LowerCaseProbeHashMask; }
+
+		FNameHash() = delete;
+        FNameHash(StringView _ParsedName) : Value{ Hash::CityHash64(_ParsedName) } {};
+
+	private:
+		UInt64 Value = 0;
+	};
 
 	/* User Level Handle */
 	class FNameHandle
@@ -53,7 +78,7 @@ export namespace VE { namespace Internal
 		{ 
 			LowerCaseProbeHashBits = 6,		// Steal 1bit from WideChar
 			NameByteSizeBits	   = 10,	// Bytes with '\0'
-			MaxNameByteSize		   = 1U << NameByteSizeBits,
+			MaxNameByteSize		   = (1U << NameByteSizeBits),
 		};
 		struct FHeader
 		{
@@ -85,6 +110,12 @@ export namespace VE { namespace Internal
 	class FNameTokenHandle
 	{
 		friend class FNameTokenTable;
+	public:
+		FNameTokenHandle() = default;
+		FNameTokenHandle(FNameHash _NameHash) : SectionIndex{ _NameHash.GetTokenTableSectionIndex() }, UnmaskedTokenIndex{ _NameHash.GetUnmaskedTokenIndex() } {}
+	private:
+		UInt32 SectionIndex;
+		UInt32 UnmaskedTokenIndex;
 	};
 
 	class FNameToken
@@ -94,7 +125,7 @@ export namespace VE { namespace Internal
 		enum
 		{
 			IdentifierBits	 = 29U, //OntoMapping{FNameEntryHandle.Value:29}
-			IdentifierMask	 = 1U << IdentifierBits - 1U,
+			IdentifierMask	 = (1U << IdentifierBits) - 1,
             ProbeHashBits    = 3U,
             ProbeHashOffsets = IdentifierBits,
 			ProbeHashMask    = ~IdentifierMask,
@@ -104,34 +135,9 @@ export namespace VE { namespace Internal
 		Bool IsClaimed()	const { return !!HashAndID; }
 
 	private:
-		UInt32 HashAndID = 0U; //[3:ProbeHash 29:ID]
+		UInt32 HashAndID = 0; //[3:ProbeHash 29:ID]
+
+		FNameToken() = default;
 	};
-
-	class FNameHash
-	{
-	public:
-		enum
-        {
-            /*L:[ 0~31]: Slot Index*/
-            UnmaskedTokenIndexMask          = 1U << 32 - 1,
-            /*H:[32~39]: TokenTableSection Index*/
-            TokenTableSectionIndexBits      = 8,
-            TokenTableSectionIndexMask      = 1U << TokenTableSectionIndexBits - 1,
-            /*H:[40~45]: Lower Case Probe Hash*/
-            LowerCaseProbeHashBits          = 6,
-            LowerCaseProbeHashMask          = 1U << LowerCaseProbeHashBits - 1,
-        };
-        UInt32 GetUnmaskedTokenIndex()		const { return Value & UnmaskedTokenIndexMask; }
-        UInt32 GetTokenTableSectionIndex()  const { return Value & TokenTableSectionIndexMask; }
-        UInt32 GetLowerCaseProbeHash()		const { return Value & LowerCaseProbeHashMask; }
-        UInt32 GetTokenProbeHash()			const { return Value & FNameToken::ProbeHashMask; }
-
-		FNameHash() = delete;
-        FNameHash(StringView _ParsedName) : Value{ Hash::CityHash64(_ParsedName) } {};
-
-	private:
-		UInt64 Value = 0;
-	};
-
 
 } } // namespace VE::Internal

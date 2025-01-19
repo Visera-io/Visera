@@ -21,7 +21,7 @@ export namespace VE
 		//auto GetName()	 const -> String { return }
 		auto GetHandle() const -> UInt32 { return Handle; }
 		auto GetNumber() const -> UInt32 { return Number; }
-		auto IsNone()	 const -> Bool	 { return !Handle && !Number; }
+		auto IsNone()	 const -> Bool	 { return !Handle && !Number; } //[FIXME]: Pre-Register EName::None in the Engine
 		auto HasNumber() const -> Bool	 { return !!Number; }
 	
 		FName(String _Name) { auto [Handle_, Number_] = Internal::GetNamePool().Register(_Name); Handle = Handle_; Number = Number_; }

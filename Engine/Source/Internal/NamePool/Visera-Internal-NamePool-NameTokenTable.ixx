@@ -17,16 +17,21 @@ export namespace VE { namespace Internal
 		enum
         {
             MaxNameTokenTableSectionsBits    = 8,
-            MaxNameTokenTableSections        = 1U << MaxNameTokenTableSectionsBits,
+            MaxNameTokenTableSections        = (1U << MaxNameTokenTableSectionsBits),
             MaxNameTokenTableSectionsMask    = MaxNameTokenTableSections - 1,
         };
 	public:
 		// !!!Call FNameTokenTable::Insert before FNameEntryTable::Insert!!!
-		auto Insert(const FNameEntryTable& _NameEntryTable, const FNameHash& _NameHash) -> FNameTokenHandle;
+		auto Insert(FNameToken _NameToken, FNameHash _NameHash) -> FNameTokenHandle;
+
+        FNameTokenTable() = delete;
+        FNameTokenTable(const FNameEntryTable& _NameEntryTable) : LinkedNameEntryTable{ _NameEntryTable } {}
 
 	private:
+        const FNameEntryTable& LinkedNameEntryTable;
 		class FNameTokenTableSection
 		{
+            friend class FNameTokenTable;
             enum
             {
                 InitNameTokens    = 1 << 8,
@@ -34,8 +39,8 @@ export namespace VE { namespace Internal
             };
             static constexpr float GrowingThresh = 0.9;
 		public:
-			auto ProbeToken(const FNameHash& _NameHash) const -> const FNameToken&;
-			auto ClaimToken(FNameToken* _Token, UInt32 _HashAndID) { VE_ASSERT(RWLock.IsLocked() && !_Token->IsClaimed()); _Token->HashAndID = _HashAndID; ++UseCount; };
+			auto ProbeToken(FNameHash _NameHash, std::function<Bool(FNameToken)> _Prediction) const -> const FNameToken&;
+			auto ClaimToken(const FNameToken* _Token, UInt32 _HashAndID) { VE_ASSERT(RWLock.IsLocked() && !_Token->IsClaimed()); const_cast<FNameToken*>(_Token)->HashAndID = _HashAndID; ++UseCount; };
 			Bool ShouldGrow() const { return UseCount > Capacity * GrowingThresh; }
 			void GrowAndRehash(const FNameEntryTable& _NameEntryTable);
 
@@ -65,6 +70,26 @@ export namespace VE { namespace Internal
         Memory::Free(Tokens, alignof(FNameToken));
         Capacity = 0;
         UseCount = 0;
+    }
+
+    FNameTokenHandle FNameTokenTable::
+    Insert(FNameToken _NameToken, FNameHash _NameHash)
+    {
+        auto& Section = Sections[_NameHash.GetTokenTableSectionIndex()];
+        
+        Section.RWLock.StartWriting();
+        {
+            FNameToken ExpectedToken{};
+            
+            /*auto& Token = Section.ProbeToken(_NameHash, [](FNameToken _Token)->Bool { return _Token.; });
+            if (!Token.IsClaimed())
+            {
+                Section.ClaimToken(&Token, 0);
+            } */
+        }
+        Section.RWLock.StopWriting();
+
+        return { _NameHash };
     }
 
 	void FNameTokenTable::FNameTokenTableSection::
@@ -97,9 +122,8 @@ export namespace VE { namespace Internal
         Memory::Free(OldTokens, alignof(FNameToken));
     }
 
-    
     const FNameToken& FNameTokenTable::FNameTokenTableSection::
-    ProbeToken(const FNameHash& _NameHash) const
+    ProbeToken(FNameHash _NameHash, std::function<Bool(FNameToken)> _Prediction) const
     {
         VE_ASSERT(UseCount <= Capacity && "Curreny FNamePoolShard is full! Try to call FNamePool::GrowAndRehash(...)");
         VE_ASSERT(IsPowerOfTwo(Capacity));
@@ -108,10 +132,9 @@ export namespace VE { namespace Internal
         for(UInt32 Offset = 0; True; Offset++)
         {
             auto& Token = Tokens[(_NameHash.GetUnmaskedTokenIndex() + Offset) & SlotIndexMask];
-            if (!Token.IsClaimed() || False)
+            if (!Token.IsClaimed() || _Prediction(Token))
             {
-                VE_ASSERT(False);// WIP
-                return Token; // Call FNamePoolShard::ClaimSlot(Slot) if it is used.
+                return Token; // Call FNameTokenTable::ClaimToken(...) if it should be used.
             }
         }
         VE_ASSERT(False && "Absolutely return a Token!");

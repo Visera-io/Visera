@@ -25,8 +25,8 @@ export namespace VE { namespace Internal
         //auto Search(StringView _Name) const -> StringView;
 
     private:
-        FNameTokenTable NameTokenTable;
         FNameEntryTable NameEntryTable;
+        FNameTokenTable NameTokenTable{ NameEntryTable };
 
         //[Number(<0 means invalid), NameLength]
         auto ParseName(const char* _Name, UInt32 _Length) const -> ResultPackage<Int32, UInt32>;
@@ -43,8 +43,8 @@ export namespace VE { namespace Internal
         StringView PureName{ _Name.data(), NameLength};
         FNameHash  NameHash{ PureName };
 
-        FNameTokenHandle NameTokenHandle = NameTokenTable.Insert(NameEntryTable, NameHash);
-
+        //FNameTokenHandle NameTokenHandle = NameTokenTable.Insert({1}, NameHash);
+        
         //auto BookMark = NameDictionary.Insert(NewNameEntry.Header, PureName);
 
         /*auto& TargetShard = Shards[NameHash.GetShardIndex()];
