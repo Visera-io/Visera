@@ -22,7 +22,7 @@ export namespace VE { namespace Internal
         };
 	public:
 		// !!!Call FNameTokenTable::Insert before FNameEntryTable::Insert!!!
-		auto Insert(FNameToken _NameToken, FNameHash _NameHash) -> FNameTokenHandle;
+		auto Insert(StringView _ParsedName, FNameHash _NameHash) -> FNameTokenHandle;
 
         FNameTokenTable() = delete;
         FNameTokenTable(const FNameEntryTable& _NameEntryTable) : LinkedNameEntryTable{ _NameEntryTable } {}
@@ -42,7 +42,7 @@ export namespace VE { namespace Internal
 			auto ProbeToken(FNameHash _NameHash, std::function<Bool(FNameToken)> _Prediction) const -> const FNameToken&;
 			auto ClaimToken(const FNameToken* _Token, UInt32 _HashAndID) { VE_ASSERT(RWLock.IsLocked() && !_Token->IsClaimed()); const_cast<FNameToken*>(_Token)->HashAndID = _HashAndID; ++UseCount; };
 			Bool ShouldGrow() const { return UseCount > Capacity * GrowingThresh; }
-			void GrowAndRehash(const FNameEntryTable& _NameEntryTable);
+			void GrowAndRehash();
 
             FNameTokenTableSection();
             ~FNameTokenTableSection();
@@ -73,19 +73,31 @@ export namespace VE { namespace Internal
     }
 
     FNameTokenHandle FNameTokenTable::
-    Insert(FNameToken _NameToken, FNameHash _NameHash)
+    Insert(StringView _ParsedName, FNameHash _NameHash)
     {
         auto& Section = Sections[_NameHash.GetTokenTableSectionIndex()];
         
         Section.RWLock.StartWriting();
         {
-            FNameToken ExpectedToken{};
-            
-            /*auto& Token = Section.ProbeToken(_NameHash, [](FNameToken _Token)->Bool { return _Token.; });
+            auto& Token = Section.ProbeToken(_NameHash,
+                                             [&](FNameToken _Token)->Bool
+                                             { 
+                                                 FNameEntryHandle NameEntryHandle{_Token};
+                                                 auto& NameEntry = LinkedNameEntryTable.LookUp(NameEntryHandle);
+                                                 if (NameEntry.GetHeader().LowerCaseProbeHash == _NameHash.GetLowerCaseProbeHash())
+                                                 {
+                                                     if (NameEntry.GetANSIName() == _ParsedName)
+                                                     {
+                                                         return True;
+                                                     }
+                                                     return False;
+                                                 }
+                                                 return False;
+                                             });
             if (!Token.IsClaimed())
             {
                 Section.ClaimToken(&Token, 0);
-            } */
+            } 
         }
         Section.RWLock.StopWriting();
 
@@ -93,7 +105,7 @@ export namespace VE { namespace Internal
     }
 
 	void FNameTokenTable::FNameTokenTableSection::
-    GrowAndRehash(const FNameEntryTable& _NameEntryTable)
+    GrowAndRehash()
     {
         VE_ASSERT(RWLock.IsLocked());
 
@@ -113,7 +125,8 @@ export namespace VE { namespace Internal
             if (CurrentOldSlot.IsClaimed())
             {
                 VE_ASSERT(False);//WIP
-                /*auto&     NameEntry           = _NameEntryTable.LookUp({ FNameEntryID{CurrentOldSlot.HashAndID} });
+                
+                /*auto&     NameEntry           = LinkedNameEntryTable.LookUp({ FNameEntryID{CurrentOldSlot.HashAndID} });
                 FNameHash NameHash{ StringView(NameEntry, NameEntry.GetSizeWithoutTerminator()) };
                 auto&     EmptySlot           = ProbeSlot(NameHash.GetUnmaskedTokenIndex());
                 ClaimToken(&EmptySlot, CurrentOldSlot.HashAndID);*/

@@ -25,6 +25,13 @@ export namespace VE { namespace Internal
 	class FNameEntryTable;
 	class FNameTokenTablel;
 
+	class FNameHash;
+	class FNameHandle;
+	class FNameEntry;
+	class FNameEntryHandle;
+	class FNameToken;
+	class FNameTokenHandle;
+
 	class FNameHash
 	{
 	public:
@@ -87,7 +94,8 @@ export namespace VE { namespace Internal
 		};
 	public:
 		auto	GetHeader()		const -> const FHeader&  { return Header; }
-		auto	GetANSIName()	const -> const ANSIChar* { return ANSIName; }
+		auto	GetANSIName()	const -> StringView { return StringView(ANSIName, Header.Size); }
+
 		UInt64	GetSizeWithTerminator()    const { return sizeof(ANSIChar) * (Header.Size + 1); }
 		UInt64	GetSizeWithoutTerminator() const { return sizeof(ANSIChar) * Header.Size; }
 
@@ -102,6 +110,21 @@ export namespace VE { namespace Internal
 	class FNameEntryHandle
 	{
 		friend class FNameEntryTable;
+	public:
+		enum
+		{
+			NameEntryTableSectionOffsetBits = 16,//[0~15]
+			NameEntryTableSectionOffsetMask = (1U << NameEntryTableSectionOffsetBits) - 1,
+			NameEntryTableSectionIndexBits  = 13,//[16, 29]
+			NameEntryTableSectionIndexMask  = ((1U << NameEntryTableSectionIndexBits) - 1) << NameEntryTableSectionOffsetBits,
+		};
+		UInt32 GetSectionIndex()  const { return SectionIndex; }
+		UInt32 GetSectionOffset() const { return SectionOffset; }
+
+		FNameEntryHandle() = default;
+		FNameEntryHandle(const FNameToken& _NameToken);
+
+	private:
 		UInt32 SectionIndex  = 0;
 		UInt32 SectionOffset = 0; // Note that this offset is divided by NameEntryByteStride
 	};
@@ -134,10 +157,27 @@ export namespace VE { namespace Internal
 		auto GetProbeHash()	const -> UInt32 { return HashAndID & ProbeHashMask; }
 		Bool IsClaimed()	const { return !!HashAndID; }
 
+	public:
+		FNameToken() = default;
+		FNameToken(const FNameEntryHandle& _NameEntryHandle);
+
 	private:
 		UInt32 HashAndID = 0; //[3:ProbeHash 29:ID]
-
-		FNameToken() = default;
 	};
+
+	FNameEntryHandle::
+	FNameEntryHandle(const FNameToken& _NameToken)
+		:SectionIndex { _NameToken.GetIdentifier() & NameEntryTableSectionIndexMask  },
+		 SectionOffset{ _NameToken.GetIdentifier() & NameEntryTableSectionOffsetMask }
+	{
+
+	}
+
+	FNameToken::
+	FNameToken(const FNameEntryHandle& _NameEntryHandle)
+		:HashAndID{ _NameEntryHandle.GetSectionIndex() << FNameEntryHandle::NameEntryTableSectionOffsetBits | _NameEntryHandle.GetSectionOffset() }
+	{
+
+	}
 
 } } // namespace VE::Internal
