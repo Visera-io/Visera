@@ -38,7 +38,7 @@ export namespace VE
         
         /**Aligns a value to the nearest higher multiple of 'Alignment', which must be a power of two.*/
         template <Alignable T> static constexpr
-        T Align(T _Value, UInt64 _Alignment) { VE_ASSERT(IsPowerOfTwo(_Alignment)); return (T)(((UInt64)_Target + _Alignment - 1) & ~(_Alignment - 1)); };
+        T Align(T _Value, UInt64 _Alignment) { VE_ASSERT(IsPowerOfTwo(_Alignment)); return (T)(((UInt64)_Value + _Alignment - 1) & ~(_Alignment - 1)); };
 
         class FBuffer final
         {
