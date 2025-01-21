@@ -10,13 +10,11 @@ export namespace VE { namespace Internal
 {
 	/*
 	* [Abstract]:
-	  This file defines main mappings among {FNameHandle, FNameEntryHandle, FNameTokenHandle}.
+	  This file defines main mappings among:
 	  - FNameHash:			the medium among different types of handle.
-	  - FNameHandle:		it is stored in FName as a user-level handle.
 	  - FNameEntry:			the entity stored in FNameEntryTable
 	  - FNameEntryHandle:	it can be mapped from FNameHandle or FNameTokenHandle, and then be used to get its FNameEntry in the FNameEntryTable
 	  - FNameToken:			the entity stored in FNameTokenTable
-	  - FNameTokenHandle:	it can be mapped from FNameHandle or FNameEntryHandle, and then be used to get its FNameToken in the FNameTokenTable
 
 	* [Keywords]: Handle; Hash; Mapping;
 	*/
@@ -26,14 +24,13 @@ export namespace VE { namespace Internal
 	class FNameTokenTablel;
 
 	class FNameHash;
-	class FNameHandle;
 	class FNameEntry;
 	class FNameEntryHandle;
 	class FNameToken;
-	class FNameTokenHandle;
 
 	class FNameHash
 	{
+		friend class FNamePool;
 	public:
 		enum
         {
@@ -42,44 +39,29 @@ export namespace VE { namespace Internal
             /*H:[32~39]: TokenTableSection Index*/
             TokenTableSectionIndexBits      = 8,
             TokenTableSectionIndexMask      = (1U << TokenTableSectionIndexBits) - 1,
-            /*H:[40~45]: Lower Case Probe Hash*/
+            /*H:[40~45]: Lower-Case Probe Hash*/
             LowerCaseProbeHashBits          = 6,
             LowerCaseProbeHashMask          = (1U << LowerCaseProbeHashBits) - 1,
+			/*H:[61~63]: Token Probe Hash*/
+			TokenProbeHashBits				= 3,
+			TokenProbeHashMask				= (1U << TokenProbeHashBits) - 1,
         };
         UInt32 GetUnmaskedTokenIndex()		const { return Value & UnmaskedTokenIndexMask; }
-        UInt32 GetTokenTableSectionIndex()  const { return Value & TokenTableSectionIndexMask; }
-        UInt32 GetLowerCaseProbeHash()		const { return Value & LowerCaseProbeHashMask; }
+        UInt32 GetTokenTableSectionIndex()  const { return (Value >> 32) & TokenTableSectionIndexMask; }
+        UInt32 GetLowerCaseProbeHash()		const { return (Value >> 40) & LowerCaseProbeHashMask; }
+		UInt32 GetTokenProbeHash()			const { return (Value >> 61) & TokenProbeHashMask; }
 
 		FNameHash() = delete;
-        FNameHash(StringView _ParsedName) : Value{ Hash::CityHash64(_ParsedName) } {};
+		FNameHash(StringView _ParsedName) : Value{ Hash::CityHash64(_ParsedName) } {}
 
 	private:
 		UInt64 Value = 0;
 	};
 
-	/* User Level Handle */
-	class FNameHandle
-	{
-		friend class FName;
-		UInt32 Value = 0;
-	//public:
-	//	enum
-	//	{
-	//		EntryIDBits = 29U, // OntoMapping{FNameSlot.HashAndID:29}
-	//		EntryIDMask = 1U << EntryIDBits - 1U,
-	//	};
-
-	//	auto GetID() const -> UInt32 { return Value & EntryIDMask ; } // OntoMapping{FNameSlot::GetID()}
-
-	//	FNameEntryID() = default;
-	//	FNameEntryID(UInt32 _Value) : Value{ _Value } {}
-	//	operator UInt32() const { return Value; }
-	//	Bool IsNone() const { return !Value; }
-	};
-
 	/* A global deduplicated name stored in the global name table */
 	class FNameEntry
 	{
+		friend class FNamePool;
 		friend class FNameEntryTable; // FNameEntry is managed by FNameEntryTable.
 		enum
 		{ 
@@ -109,6 +91,7 @@ export namespace VE { namespace Internal
 	/* NameEntryTable Handle */
 	class FNameEntryHandle
 	{
+		friend class FNamePool;
 		friend class FNameEntryTable;
 	public:
 		enum
@@ -118,48 +101,40 @@ export namespace VE { namespace Internal
 			NameEntryTableSectionIndexBits  = 13,//[16, 29]
 			NameEntryTableSectionIndexMask  = ((1U << NameEntryTableSectionIndexBits) - 1) << NameEntryTableSectionOffsetBits,
 		};
-		UInt32 GetSectionIndex()  const { return SectionIndex; }
-		UInt32 GetSectionOffset() const { return SectionOffset; }
+		UInt32 GetSectionIndex()  const { return Value & NameEntryTableSectionIndexMask;  }
+		UInt32 GetSectionOffset() const { return Value & NameEntryTableSectionOffsetMask; }
 
 		FNameEntryHandle() = default;
+		FNameEntryHandle(const FNameEntryHandle& _Another) = default;
+		FNameEntryHandle(UInt32 _SectionIndex, UInt32 _SectionOffset)
+			: Value{ ((_SectionIndex << NameEntryTableSectionOffsetBits) & NameEntryTableSectionIndexMask) | (_SectionOffset & NameEntryTableSectionOffsetMask) } { }
 		FNameEntryHandle(const FNameToken& _NameToken);
 
 	private:
-		UInt32 SectionIndex  = 0;
-		UInt32 SectionOffset = 0; // Note that this offset is divided by NameEntryByteStride
-	};
-
-	/* NameTokenTable Handle */
-	class FNameTokenHandle
-	{
-		friend class FNameTokenTable;
-	public:
-		FNameTokenHandle() = default;
-		FNameTokenHandle(FNameHash _NameHash) : SectionIndex{ _NameHash.GetTokenTableSectionIndex() }, UnmaskedTokenIndex{ _NameHash.GetUnmaskedTokenIndex() } {}
-	private:
-		UInt32 SectionIndex;
-		UInt32 UnmaskedTokenIndex;
+		UInt32 Value  = 0;
 	};
 
 	class FNameToken
 	{
+		friend class FNamePool;
 		friend class FNameTokenTable; // FNameToken is managed by FNameTokenTable -- Call FNameTokenTable::ClaimToken(...) to set HashAndID!
 	public:
 		enum
 		{
-			IdentifierBits	 = 29U, //OntoMapping{FNameEntryHandle.Value:29}
-			IdentifierMask	 = (1U << IdentifierBits) - 1,
-            ProbeHashBits    = 3U,
-            ProbeHashOffsets = IdentifierBits,
-			ProbeHashMask    = ~IdentifierMask,
+			TokenIdentifierBits	  = 29U, //OntoMapping{FNameEntryHandle.Value:29}
+			TokenIdentifierMask	  = (1U << TokenIdentifierBits) - 1,
+            TokenProbeHashBits    = 3U,
+            TokenProbeHashOffsets = TokenIdentifierBits,
+			TokenProbeHashMask    = ~TokenIdentifierMask,
 		};
-		auto GetIdentifier()const -> UInt32 { return HashAndID & IdentifierMask; }
-		auto GetProbeHash()	const -> UInt32 { return HashAndID & ProbeHashMask; }
-		Bool IsClaimed()	const { return !!HashAndID; }
+		auto GetTokenIdentifier()	const -> UInt32 { return HashAndID & TokenIdentifierMask; }
+		auto GetTokenProbeHash()	const -> UInt32 { return (HashAndID & TokenProbeHashMask) >> TokenProbeHashOffsets; }
+		Bool IsNone()				const { return !HashAndID;  }
+		Bool IsClaimed()			const { return !!HashAndID; } // "EName::None" IsNone() but also IsClaimed()
 
 	public:
 		FNameToken() = default;
-		FNameToken(const FNameEntryHandle& _NameEntryHandle);
+		FNameToken(const FNameEntryHandle& _NameEntryHandle, const FNameHash& _NameHash);
 
 	private:
 		UInt32 HashAndID = 0; //[3:ProbeHash 29:ID]
@@ -167,15 +142,14 @@ export namespace VE { namespace Internal
 
 	FNameEntryHandle::
 	FNameEntryHandle(const FNameToken& _NameToken)
-		:SectionIndex { _NameToken.GetIdentifier() & NameEntryTableSectionIndexMask  },
-		 SectionOffset{ _NameToken.GetIdentifier() & NameEntryTableSectionOffsetMask }
+		/*:VValue{_NameToken.}*/
 	{
 
 	}
 
 	FNameToken::
-	FNameToken(const FNameEntryHandle& _NameEntryHandle)
-		:HashAndID{ _NameEntryHandle.GetSectionIndex() << FNameEntryHandle::NameEntryTableSectionOffsetBits | _NameEntryHandle.GetSectionOffset() }
+	FNameToken(const FNameEntryHandle& _NameEntryHandle, const FNameHash& _NameHash)
+		:HashAndID{ _NameHash.GetTokenProbeHash() | _NameEntryHandle.GetSectionIndex() | _NameEntryHandle.GetSectionOffset() }
 	{
 
 	}

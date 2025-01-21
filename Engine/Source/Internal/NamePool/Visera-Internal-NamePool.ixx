@@ -7,11 +7,16 @@ import :NameEntryTable;
 
 import Visera.Core.Math.Hash;
 import Visera.Core.Signal;
-import Visera.Core.Log;
 import Visera.Core.System;
 
 export namespace VE { namespace Internal
 {
+    enum class EName : UInt32
+	{
+		None = 0, //MUST be registered at first for assuring FNameEntryID == 0 && Number == 0
+
+		MaxReservedName,
+	};
 
     class FNamePool
     {
@@ -22,47 +27,50 @@ export namespace VE { namespace Internal
         };
     public:
         auto Register(StringView _Name) throw (SRuntimeError) -> ResultPackage<UInt32, UInt32>; //[Handle_, Number_]
-        //auto Search(StringView _Name) const -> StringView;
+        auto Search(UInt32 _NameHandle /*NameEntryHandle*/) const->StringView;
+        auto Search(EName _PreservedName) const -> StringView;
 
+        FNamePool();
+        ~FNamePool() = default;
     private:
         FNameEntryTable NameEntryTable;
-        FNameTokenTable NameTokenTable{ NameEntryTable };
+        FNameTokenTable NameTokenTable{ &NameEntryTable };
 
         //[Number(<0 means invalid), NameLength]
         auto ParseName(const char* _Name, UInt32 _Length) const -> ResultPackage<Int32, UInt32>;
     };
 
+    FNamePool::
+    FNamePool()
+    {
+        // Pre-Register ENames (Do NOT use String Literal here -- Read-Only Segment Fault!)
+        /*None*/ auto [Handle_, Number_] = Register(String("none")); VE_ASSERT(Handle_ == 0);
+    }
+
     ResultPackage<UInt32, UInt32> FNamePool::
     Register(StringView _Name)
     {
-        Log::Debug("Registering a new FName:{}", _Name);
-
         auto [Number, NameLength] = ParseName(_Name.data(), _Name.size());
         if (Number < 0) { throw SRuntimeError("Bad Name! -- Naming Convention:([#Name][_#Number]?)."); }
 
         StringView PureName{ _Name.data(), NameLength};
         FNameHash  NameHash{ PureName };
-
-        //FNameTokenHandle NameTokenHandle = NameTokenTable.Insert({1}, NameHash);
         
-        //auto BookMark = NameDictionary.Insert(NewNameEntry.Header, PureName);
+        FNameEntryHandle NameEntryHandle = NameTokenTable.Insert(PureName, NameHash);
 
-        /*auto& TargetShard = Shards[NameHash.GetShardIndex()];
-        UInt32 HashAndID = 0;
-        TargetShard.RWLock.StartWriting();
-        {
-            if (TargetShard.ShouldGrow())
-            { GrowAndRehash(&TargetShard, NameDictionary); }
+        return { NameEntryHandle.Value, Number };
+    }
 
-            auto& Slot = TargetShard.ProbeSlot(NameHash.GetUnmaskedTokenIndex());
-            HashAndID  = NameHash.GetSlotProbeHash() | FNameEntryID(BookMark).GetID();
-            TargetShard.ClaimSlot(&Slot, HashAndID);
-        }
-        TargetShard.RWLock.StopWriting();*/
-        
-        VE_ASSERT(False); //WIP
-        return {};
-        //return { HashAndID, Number }; // Numer == 0 means NO Number
+    StringView FNamePool::
+    Search(UInt32 _NameHandle /*NameEntryHandle*/) const
+    {
+        FNameEntryHandle NameEntryHandle;
+        NameEntryHandle.Value = _NameHandle;
+        VE_ASSERT(NameEntryHandle.GetSectionIndex()  < FNameEntryTable::MaxSections &&
+                  NameEntryHandle.GetSectionOffset() < FNameEntryTable::MaxSectionOffset);
+        auto& R = NameEntryTable.LookUp(NameEntryHandle);
+
+        return NameEntryTable.LookUp(NameEntryHandle).GetANSIName();
     }
 
     ResultPackage<Int32, UInt32> FNamePool::
@@ -96,6 +104,18 @@ export namespace VE { namespace Internal
             return { -1, _Length }; //Invalid Name
         }
         else return { 0, _Length }; //No Numbers
+    }
+
+    StringView FNamePool::
+    Search(EName _PreservedName) const
+    {
+        switch (_PreservedName)
+        {
+        case EName::None:
+            return "";
+        default:
+            throw SRuntimeError("Unexpected EName!");
+        }
     }
 
 } } // namespace VE::Internal

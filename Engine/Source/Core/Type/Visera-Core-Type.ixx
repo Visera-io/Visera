@@ -1,6 +1,6 @@
 module;
 #include <Visera.h>
-export module Visera.Core.Basic.Type;
+export module Visera.Core.Type;
 export import :Name;
 export import :Char;
 

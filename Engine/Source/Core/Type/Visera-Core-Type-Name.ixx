@@ -1,35 +1,33 @@
 module;
 #include <Visera.h>
-export module Visera.Core.Basic.Type:Name;
+export module Visera.Core.Type:Name;
 
-import Visera.Internal;
+import Visera.Internal.NamePool;
 
 export namespace VE
 {
-	enum class EName : UInt32
-	{
-		None = 0, //MUST be registered at first for assuring FNameEntryID == 0 && Number == 0
-
-		MaxReservedName,
-	};
+	using EName = Internal::EName;
 
 	/* Case-Ignored String */
 	class FName
 	{
-		//VE_API Search(StringView _Name) -> StringView { return Internal::GetNamePool().Search(_Name); }
+		VE_API Search(EName _Name) -> StringView { if (_Name == EName::None) { return "None"; }; return ""; }
+		VE_API Search(FName _Name) -> String	 { return Text("{}_{}", NamePool.Search(_Name.Handle), _Name.Number); }
 	public:
-		//auto GetName()	 const -> String { return }
+		auto GetName()			 const -> StringView { return NamePool.Search(Handle); }
+		auto GetNameWithNumber() const -> String	 { return FName::Search(*this); }
 		auto GetHandle() const -> UInt32 { return Handle; }
 		auto GetNumber() const -> UInt32 { return Number; }
 		auto IsNone()	 const -> Bool	 { return !Handle && !Number; } //[FIXME]: Pre-Register EName::None in the Engine
 		auto HasNumber() const -> Bool	 { return !!Number; }
 	
-		FName(String _Name) { auto [Handle_, Number_] = Internal::GetNamePool().Register(_Name); Handle = Handle_; Number = Number_; }
+		FName(String _Name) { auto [Handle_, Number_] = NamePool.Register(_Name); Handle = Handle_; Number = Number_; }
 		
 		Bool operator==(const FName& _Another) const { return Handle == _Another.Handle && Number == _Another.Number; }
 	private:
-		UInt32	Handle;		//HashAndID
-		UInt32	Number{ 0 };
+		static inline Internal::FNamePool NamePool;
+		UInt32		Handle;		//FNameEntryHandle
+		UInt32		Number{ 0 };
 	};
 	
 } // namespace VE

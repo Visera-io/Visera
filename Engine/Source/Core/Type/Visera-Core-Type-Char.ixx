@@ -1,6 +1,6 @@
 module;
 #include <Visera.h>
-export module Visera.Core.Basic.Type:Char;
+export module Visera.Core.Type:Char;
 
 export namespace VE
 {

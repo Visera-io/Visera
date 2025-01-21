@@ -10,9 +10,10 @@ import Visera.Core.Signal;
 
 export namespace VE { namespace Internal
 {
-	
+
 	class FNameEntryTable
 	{
+	public:
 		enum
 		{
 			SectionByteSize		= 256 * OneKByte,				//Unaligned Size
@@ -23,15 +24,14 @@ export namespace VE { namespace Internal
 			NameEntryByteStride = NameEntryAlignment,
 
 			SectionOffsetBits	= 16, // Since NameEntryAlignment and NameEntryByteStride are same (2), we can use 16bits to encode 65536 offsets (remeber these factor!)
-			SectionOffsets		= (1U << SectionOffsetBits), //65536 Offsets (Max)
+			MaxSectionOffset	= (1U << SectionOffsetBits), //65536 Offsets (Max)
 			NameEntryHandleBits	= MaxSectionBits + SectionOffsetBits,
 			NameEntryHandleMask	= (1U << NameEntryHandleBits) - 1,
 		};
-	public:
 		auto Insert(StringView _ParsedName, const FNameHash& _NameHash) -> FNameEntryHandle;
 		auto LookUp(FNameEntryHandle _NameEntryHandle) const -> const FNameEntry&
 		{ // Lock not needed since any valid NameEntryHandle is distributed after the insertion.
-		  return *reinterpret_cast<FNameEntry*>(Sections[_NameEntryHandle.SectionIndex].Data + NameEntryByteStride * _NameEntryHandle.SectionOffset);
+		  return *reinterpret_cast<FNameEntry*>(Sections[_NameEntryHandle.GetSectionIndex()].Data + NameEntryByteStride * _NameEntryHandle.GetSectionOffset());
 		}
 
 	private:
@@ -54,8 +54,6 @@ export namespace VE { namespace Internal
 	FNameEntryHandle FNameEntryTable::
 	Insert(StringView _ParsedName, const FNameHash& _NameHash)
 	{
-		Log::Debug("Inserting a new FNameEntry \"{}\"", _ParsedName);
-			
 		UInt32 AlignedMemorySize = Memory::Align(Memory::GetDataOffset(&FNameEntry::ANSIName) + _ParsedName.size(), NameEntryAlignment);
 		VE_ASSERT(AlignedMemorySize <= SectionByteSize);
 
@@ -67,11 +65,11 @@ export namespace VE { namespace Internal
 			{ AllocateNewSection(); }
 
 			VE_ASSERT(CurrentSectionCursor % NameEntryByteStride == 0 &&
-					  CurrentSectionCursor / NameEntryByteStride < SectionOffsets);
+					  CurrentSectionCursor / NameEntryByteStride < MaxSectionOffset);
 
 			auto& CurrentSection = Sections[CurrentSectionCursor];
-			NameEntryHandle.SectionIndex  = CurrentSectionCursor;
-			NameEntryHandle.SectionOffset = CurrentSection.CurrentByteCursor / NameEntryByteStride;
+			NameEntryHandle = FNameEntryHandle{ static_cast<UInt32>(CurrentSectionCursor),
+												CurrentSection.CurrentByteCursor / NameEntryByteStride };
 
 			CurrentSection.CurrentByteCursor += AlignedMemorySize;
 		}
