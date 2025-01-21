@@ -85,23 +85,17 @@ export namespace VE { namespace Internal
         Section.RWLock.StartWriting();
         {
             if (Section.ShouldGrow()) { GrowAndRehash(Section); }
-
             auto& Token = Section.ProbeToken(_NameHash,
                                              /*Further Comparsion*/
                                              [&](FNameToken _Token)->Bool
                                              { 
                                                  VE_ASSERT(_Token.IsClaimed());
-                                                 Log::Warn("{}, {}", _Token.GetTokenIdentifier(), _Token.GetTokenProbeHash());
-                                                 Log::Warn("{}", _NameHash.GetTokenTableSectionIndex());
                                                  FNameEntryHandle NameEntryHandle{_Token};
                                                  auto& NameEntry = LinkedNameEntryTable->LookUp(NameEntryHandle);
-                                                 Log::Debug("RPOBHASH_CMP: {} v.s. {}", NameEntry.GetHeader().LowerCaseProbeHash, _NameHash.GetLowerCaseProbeHash());
                                                  if (NameEntry.GetHeader().LowerCaseProbeHash == _NameHash.GetLowerCaseProbeHash())
                                                  {
-                                                     Log::Debug("ANSINAME_CMP: {} v.s. {}", NameEntry.GetANSIName(), _ParsedName);
                                                      if (NameEntry.GetANSIName() == _ParsedName)
                                                      {
-                                                         Log::Debug("Same");
                                                          return True; // [O]
                                                      }
                                                      return False; // [X]: Different String Literal
