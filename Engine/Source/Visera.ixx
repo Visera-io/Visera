@@ -11,6 +11,7 @@ export namespace VE
 {
 	using RHI		= VE::Runtime::RHI;
 	using Window	= VE::Runtime::Window;
+	using World		= VE::Runtime::World;
 
 	class ViseraApp
 	{

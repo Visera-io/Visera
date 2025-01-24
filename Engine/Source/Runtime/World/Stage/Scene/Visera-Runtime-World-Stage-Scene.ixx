@@ -1,12 +1,13 @@
 module;
 #include <Visera.h>
-//#include <assimp/Importer.hpp>
-//#include <assimp/scene.h>
-//#include <assimp/postprocess.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 export module Visera.Runtime.World.Stage.Scene;
 
 import Visera.Core.Log;
 import Visera.Core.Signal;
+import Visera.Core.System;
 import Visera.Runtime.World.Object;
 import Visera.Runtime.RHI;
 
@@ -17,45 +18,64 @@ export namespace VE { namespace Runtime
 	{
 	public:
 		auto GetPath()	const -> StringView { return Path; }
-		//auto IsLoaded() const -> Bool { return Handle != nullptr; }
+		auto IsLoaded() const -> Bool { return Handle != nullptr; }
 
+		virtual void Update()  override;
 		virtual void Create()  override;
 		virtual void Destroy() override;
 
 	public:
-		VScene(const String& _Name, const String _FilePath);
+		VScene(FName _Name, const String _FilePath);
 		VScene() = delete;
 		~VScene();
 
 	private:
-		//const aiScene* Handle = nullptr;
+		const aiScene* Handle = nullptr;
 		String		   Path;
 
-		//static inline Assimp::Importer Importer;
+		static inline Assimp::Importer Importer;
 	};
+
+	void VScene::
+	Update()
+	{
+		RWLock.StartWriting();
+		{
+
+		}
+		RWLock.StopWriting();
+	}
 
 	void VScene::Create()
 	{
-		Log::Debug("Creating Scene {} from {}.", GetID(), Path);
-		/*Handle = Importer.ReadFile(Path,
-			aiProcess_Triangulate		 |
-			aiProcess_ConvertToLeftHanded|
-			aiProcess_FixInfacingNormals
-			);
+		RWLock.StartWriting();
+		{
+			Log::Debug("Creating Scene {} from {}.", GetObjectName(), Path);
+			Handle = Importer.ReadFile(Path,
+				aiProcess_Triangulate		 |
+				aiProcess_ConvertToLeftHanded|
+				aiProcess_FixInfacingNormals
+				);
 
-		if (!Handle ||
-			 Handle->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
-			!Handle->mRootNode)
-		{ throw SIOFailure(Text("Failed to load scene {} from {}!", GetID(), Path)); }*/
+			if (!Handle ||
+				 Handle->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
+				!Handle->mRootNode)
+			{ throw SIOFailure(Text("Failed to load scene {} from {}!", GetObjectName(), Path)); }
+		}
+		RWLock.StopWriting();
 	}
 
 	void VScene::Destroy()
 	{
-		Log::Debug("Destroying Scene {} from {}.", GetID(), Path);
+		RWLock.StartWriting();
+		{
+			Log::Debug("Destroying Scene {} from {}.", GetObjectName(), Path);
+		}
+		RWLock.StopWriting();
 	}
 
 	VScene::
-	VScene(const String& _Name, const String _FilePath)
+	VScene(FName _Name, const String _FilePath)
 		: VObject(_Name),
 		  Path{_FilePath}
 	{

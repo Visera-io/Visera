@@ -126,7 +126,7 @@ export namespace VE
 
 	Double inline ACos(Double Value)
 	{
-		return ACos(static_cast<Float>(Value));
+		return Radian{ ACos(static_cast<Float>(Value)) };
 	}
 	
 	Degree::Degree(Radian TargetRadian):Value{(TargetRadian / PI) * 180.0f} {};

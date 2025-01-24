@@ -108,6 +108,10 @@ export namespace VE { namespace Internal
                 NewNameEntryHandle = LinkedNameEntryTable->Insert(_ParsedName, _NameHash);
                 Section.ClaimToken(&Token, FNameToken{ NewNameEntryHandle, _NameHash });
             }
+            else
+            {
+                NewNameEntryHandle = FNameEntryHandle{ Token };
+            }
         }
         Section.RWLock.StopWriting();
 

@@ -180,7 +180,7 @@ using List	   = std::list<T>;
 template<typename T>
 using Set	   = std::unordered_set<T>;
 
-template<Hashable Key, typename Value>
+template<typename Key, typename Value>
 using HashMap  = std::unordered_map<Key, Value>;
 
 template<typename T, size_t Length>
