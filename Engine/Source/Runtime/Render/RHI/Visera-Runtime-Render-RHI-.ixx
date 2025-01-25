@@ -3,7 +3,6 @@ module;
 export module Visera.Runtime.Render.RHI;
 
 import Visera.Runtime.Render.RHI.Vulkan;
-import Visera.Runtime.Render.RHI.Embree;
 import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
@@ -51,10 +50,7 @@ export namespace VE { namespace Runtime
 
 		VE_API WaitIdle() -> void { Vulkan->Device.WaitIdle(); }
 
-	//private:
-		static inline FVulkan*	 Vulkan;
 		VE_API GetAPI() -> const FVulkan* { return Vulkan; }
-		static inline FEmbree*	 Embree;
 
 	public:
 		class CommandContext
@@ -76,7 +72,9 @@ export namespace VE { namespace Runtime
 		};
 
 
-	//private:
+	private:	
+		static inline FVulkan*	 Vulkan;
+
 		struct Frame
 		{
 			Fence		Fence_Rendering{ True };
@@ -113,7 +111,6 @@ export namespace VE { namespace Runtime
 		Bootstrap()
 		{
 			Vulkan = new FVulkan();
-			Embree = new FEmbree();
 			ResetableGraphicsCommandPool.Create(EQueueFamily::Graphics, ECommandPool::Resetable);
 			TransientGraphicsCommandPool.Create(EQueueFamily::Graphics, ECommandPool::Transient);
 			Frames.resize(Vulkan->Swapchain.GetSize());
@@ -125,7 +122,6 @@ export namespace VE { namespace Runtime
 			Frames.clear();
 			TransientGraphicsCommandPool.Destroy();
 			ResetableGraphicsCommandPool.Destroy();
-			delete Embree;
 			delete Vulkan;
 		}
 	};

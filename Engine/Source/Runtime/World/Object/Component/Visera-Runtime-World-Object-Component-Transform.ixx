@@ -25,10 +25,12 @@ export namespace VE { namespace Runtime
 		//void Rotate();
 		//void Translate();
 
+	protected:
 		virtual void Update()  override { UpdateMatrix(); };
 		virtual void Create()  override {};
 		virtual void Destroy() override {};
 
+	public:
 		OCTransform() = delete;
 		OCTransform(FName _Name, SharedPtr<VObject> _Owner)
 			:OCComponent(_Name, _Owner) { }

@@ -2,6 +2,7 @@ module;
 #include <Visera.h>
 
 export module Visera.Runtime.World;
+import Visera.Runtime.World.RTC;
 import Visera.Runtime.World.Atlas;
 import Visera.Runtime.World.Object;
 import Visera.Runtime.World.Stage;
@@ -30,6 +31,7 @@ export namespace VE { namespace Runtime
 
 	private:
 		VE_API Bootstrap() -> void;
+		VE_API Tick() -> void;
 		VE_API Terminate() -> void;
 
 	private:
@@ -39,6 +41,12 @@ export namespace VE { namespace Runtime
 
 	void World::
 	Bootstrap()
+	{
+		RTC::Bootstrap();
+	}
+
+	void World::
+	Tick()
 	{
 
 	}
@@ -54,6 +62,8 @@ export namespace VE { namespace Runtime
 			}
 		}
 		RWLock.StopWriting();
+
+		RTC::Terminate();
 	}
 
 

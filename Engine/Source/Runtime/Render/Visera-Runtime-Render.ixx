@@ -14,6 +14,7 @@ export namespace VE { namespace Runtime
 
 	private:
 		VE_API Bootstrap() -> void { RHI::Bootstrap(); };
+		VE_API Tick()	   -> void {  };
 		VE_API Terminate() -> void { RHI::Terminate(); };
 	};
 

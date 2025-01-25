@@ -21,6 +21,8 @@ export namespace VE { namespace Runtime
 
 		Bool HasTransform()				const { return TransformComponent != nullptr; }
 		auto GetTransform()				const -> SharedPtr<OCTransform> { return TransformComponent; }
+		Bool HasMesh()					const { return MeshComponent != nullptr; }
+		auto GetMesh()					const -> SharedPtr<OCMesh> { return MeshComponent; }
 
 		auto GetObjectName()			const -> StringView { return Name.GetName(); }
 		auto GetObjectNameWithNumber()	const -> String		{ return Name.GetNameWithNumber(); }
@@ -29,12 +31,14 @@ export namespace VE { namespace Runtime
 		virtual void Create()	= 0; // You may attach components here
 		virtual void Destroy()	= 0;
 		
-		void AttachTransformComponent() { TransformComponent = CreateSharedPtr<OCTransform>(FName("Component::Transform"), shared_from_this()); }
+		void AttachTransformComponent() { TransformComponent	= CreateSharedPtr<OCTransform>(FName("Component::Transform"), shared_from_this()); }
+		void AttachMeshComponent()		{ MeshComponent			= CreateSharedPtr<OCMesh>(FName("Component::Mesh"), shared_from_this()); }
 		void AttachCustomizedComponent(SharedPtr<OCComponent> _Component) { CustomizedComponents.push_back(_Component); };
 
 	protected:
 		FRWLock							RWLock;
 		SharedPtr<OCTransform>			TransformComponent;
+		SharedPtr<OCMesh>				MeshComponent;
 		Array<SharedPtr<OCComponent>>	CustomizedComponents;
 
 	private:

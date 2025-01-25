@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 #include <embree4/rtcore.h>
-export module Visera.Runtime.Render.RHI.Embree;
+export module Visera.Runtime.World.RTC.Embree;
 export import :Device;
 
 export namespace VE { namespace Runtime
@@ -13,6 +13,7 @@ export namespace VE { namespace Runtime
 		friend class RHI;
 	public:
 		auto GetDevice() const -> const FEmbreeDevice& { return Device; }
+		//
 
 	private:
 		FEmbreeDevice Device;

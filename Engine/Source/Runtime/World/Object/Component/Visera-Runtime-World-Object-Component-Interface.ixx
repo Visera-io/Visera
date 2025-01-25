@@ -22,13 +22,13 @@ export namespace VE { namespace Runtime
 		virtual void Create() = 0;
 		virtual void Destroy() = 0;
 
+	public:
 		OCComponent() = delete;
 		OCComponent(FName _Name, SharedPtr<VObject> _Owner)
 			:Name{ _Name }, Owner{ _Owner }
-		{
-			VE_ASSERT(!Name.IsNone() && _Owner != nullptr);
-		}
-
+		{ VE_ASSERT(!Name.IsNone() && _Owner != nullptr); }
+				
+	private:
 		FName Name;
 		WeakPtr<VObject> Owner;
 	};

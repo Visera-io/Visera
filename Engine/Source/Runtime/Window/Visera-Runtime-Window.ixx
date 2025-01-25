@@ -50,8 +50,7 @@ export namespace VE { namespace Runtime
 		static inline GLFWwindow*  Handle		= nullptr;
 
 	private:
-		static inline void
-		Bootstrap()
+		VE_API Bootstrap() -> void
 		{
 			//Init GLFW
 			glfwInit();
@@ -69,8 +68,11 @@ export namespace VE { namespace Runtime
 				(VidMode->height   -   CurrentExtent.Height) >> 1);	// Mid
 			if (bMaximized) glfwMaximizeWindow(Handle);
 		}
-		static inline void
-		Terminate()
+		VE_API Tick() -> void
+		{
+			glfwPollEvents();
+		}
+		VE_API Terminate() -> void
 		{
 			glfwDestroyWindow(Handle);
 			glfwTerminate();

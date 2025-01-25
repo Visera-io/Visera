@@ -21,12 +21,13 @@ export namespace VE { namespace Runtime
 		{	
 			try
 			{
-			
+				World::Tick();
+				Window::Tick();
+				Render::Tick();
+				if (Window::ShouldClose()) { throw SEngineStop("Window has been closed."); }
 			}
 			catch(const SRuntimeError& RuntimeError)
 			{ Log::Fatal(Text("Visera Runtime Error:\n{}{}", RuntimeError.What(), RuntimeError.Where())); }
-			catch (const std::bad_alloc& BadAllocation)
-			{ Log::Fatal(Text("Failed to allocate physical memory because {}", BadAllocation.what())); }
 			return True;
 		}
 
@@ -53,8 +54,6 @@ export namespace VE { namespace Runtime
 		{
 			try
 			{
-				Window::PollEvents();
-
 				RHI::WaitForCurrentFrame();
 				{
 					auto& CurrentFrame = RHI::GetCurrentFrame();
