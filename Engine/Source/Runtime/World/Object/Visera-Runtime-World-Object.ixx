@@ -19,6 +19,7 @@ export namespace VE { namespace Runtime
 	public:
 		virtual void Update()   { /* Use RWLock in the Multi-Thread Program. */ };
 
+		Bool HasTransform()				const { return TransformComponent != nullptr; }
 		auto GetTransform()				const -> SharedPtr<OCTransform> { return TransformComponent; }
 
 		auto GetObjectName()			const -> StringView { return Name.GetName(); }

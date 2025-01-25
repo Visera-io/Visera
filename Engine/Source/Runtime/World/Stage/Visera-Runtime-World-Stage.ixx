@@ -3,6 +3,7 @@ module;
 export module Visera.Runtime.World.Stage;
 import Visera.Runtime.World.Stage.Scene;
 import Visera.Runtime.World.Object;
+import Visera.Runtime.Render.Camera;
 
 import Visera.Core.System;
 import Visera.Core.Log;
@@ -20,7 +21,7 @@ export namespace VE { namespace Runtime
 
 		// Don't forget to Update() Stage after modification.
 		Bool AttachScene(FName _SceneName, const String& _SceneFile);
-		Bool RemoveScene(FName _SceneName);
+		Bool DetachScene(FName _SceneName);
 
 		FStage() = delete;
 		FStage(FName _Name, const String& _StageFile);
@@ -29,6 +30,7 @@ export namespace VE { namespace Runtime
 	private:
 		FRWLock RWLock;
 		FName   Name;
+		SharedPtr<VCamera>				  Camera;
 		HashMap<FName, SharedPtr<FScene>> Scenes;
 	};
 
@@ -58,7 +60,7 @@ export namespace VE { namespace Runtime
 	}
 
 	Bool FStage::
-	RemoveScene(FName _SceneName)
+	DetachScene(FName _SceneName)
 	{
 		Bool Result = False;
 		RWLock.StartWriting();

@@ -6,9 +6,12 @@ import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
+	class ViseraRuntime;
+
 	class Window
 	{
 		VE_MODULE_MANAGER_CLASS(Window);
+		friend class ViseraRuntime;
 	public:
 		union Extent
 		{

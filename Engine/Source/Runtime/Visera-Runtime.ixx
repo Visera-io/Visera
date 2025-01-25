@@ -33,10 +33,14 @@ export namespace VE { namespace Runtime
 		VE_API Bootstrap() -> void
 		{
 			World::Bootstrap();
+			Window::Bootstrap();
+			Render::Bootstrap();
 		}
 
 		VE_API Terminate() -> void
 		{
+			Render::Terminate();
+			Window::Terminate();
 			World::Terminate();
 		}
 

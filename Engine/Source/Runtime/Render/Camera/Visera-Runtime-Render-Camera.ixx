@@ -3,11 +3,13 @@ module;
 export module Visera.Runtime.Render.Camera;
 
 import Visera.Core.Math;
+import Visera.Runtime.World.Object;
+import Visera.Runtime.World.Atlas;
 
 export namespace VE { namespace Runtime
 {
 	
-	class VCamera
+	class VCamera : VObject
 	{
 	public:
 		enum class EMode
@@ -18,14 +20,30 @@ export namespace VE { namespace Runtime
 
 		VCamera(EMode _Mode);
 
+		virtual void Create()	override;
+		virtual void Destroy()	override;
+
 	private:
-		EMode      Mode = EMode::Default;
+		EMode      Mode   = EMode::Default;
+		Vector3F   Origin = Atlas::Visera.Origin;
+		Vector3F   Upward = Atlas::Visera.Upward;
+		Vector3F   Forward= Atlas::Visera.Forward;
 		Matrix4x4F ViewingMatrix;
 		Matrix4x4F ProjectMatrix;
 	};
 
+	void VCamera::Create()
+	{
+		AttachTransformComponent();
+	}
+
+	void VCamera::Destroy()
+	{
+
+	}
+
 	VCamera::
-	VCamera(EMode _Mode)
+	VCamera(EMode _Mode) : Mode {_Mode}
 	{
 
 	}

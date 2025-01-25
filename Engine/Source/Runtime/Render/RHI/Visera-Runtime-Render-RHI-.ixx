@@ -8,14 +8,12 @@ import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
-
-	class UI;
+	class Render;
 
 	class RHI
 	{
 		VE_MODULE_MANAGER_CLASS(RHI);
-
-		friend class UI;
+		friend class Render;
 	public:
 		using Semaphore			= FVulkanSemaphore;
 		using CommandPool		= FVulkanCommandPool;
@@ -110,7 +108,7 @@ export namespace VE { namespace Runtime
 		static inline FVulkanCommandPool ResetableGraphicsCommandPool{};
 		static inline FVulkanCommandPool TransientGraphicsCommandPool{};
 
-	//private:
+	private:
 		static void
 		Bootstrap()
 		{
