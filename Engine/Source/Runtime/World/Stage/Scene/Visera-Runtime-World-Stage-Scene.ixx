@@ -6,6 +6,7 @@ module;
 export module Visera.Runtime.World.Stage.Scene;
 
 import Visera.Core.Log;
+import Visera.Core.Type;
 import Visera.Core.Signal;
 import Visera.Core.System;
 import Visera.Runtime.World.Object;
@@ -14,29 +15,32 @@ import Visera.Runtime.RHI;
 export namespace VE { namespace Runtime
 {
 
-	class VScene : public VObject
+	class FScene
 	{
 	public:
+		auto GetName()  const -> FName { return Name; }
 		auto GetPath()	const -> StringView { return Path; }
 		auto IsLoaded() const -> Bool { return Handle != nullptr; }
 
-		virtual void Update()  override;
-		virtual void Create()  override;
-		virtual void Destroy() override;
+		void Update()  ;
+		void Create()  ;
+		void Destroy() ;
 
 	public:
-		VScene(FName _Name, const String _FilePath);
-		VScene() = delete;
-		~VScene();
+		FScene(FName _Name, const String _FilePath);
+		FScene() = delete;
+		~FScene();
 
 	private:
-		const aiScene* Handle = nullptr;
+		FRWLock		   RWLock;
+		FName		   Name;
 		String		   Path;
+		const aiScene* Handle = nullptr;
 
 		static inline Assimp::Importer Importer;
 	};
 
-	void VScene::
+	void FScene::
 	Update()
 	{
 		RWLock.StartWriting();
@@ -46,11 +50,11 @@ export namespace VE { namespace Runtime
 		RWLock.StopWriting();
 	}
 
-	void VScene::Create()
+	void FScene::Create()
 	{
 		RWLock.StartWriting();
 		{
-			Log::Debug("Creating Scene {} from {}.", GetObjectName(), Path);
+			Log::Debug("Creating Scene {} from {}.", Name.GetNameWithNumber(), Path);
 			Handle = Importer.ReadFile(Path,
 				aiProcess_Triangulate		 |
 				aiProcess_ConvertToLeftHanded|
@@ -60,30 +64,30 @@ export namespace VE { namespace Runtime
 			if (!Handle ||
 				 Handle->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
 				!Handle->mRootNode)
-			{ throw SIOFailure(Text("Failed to load scene {} from {}!", GetObjectName(), Path)); }
+			{ throw SIOFailure(Text("Failed to load scene {} from {}!", Name.GetNameWithNumber(), Path)); }
 		}
 		RWLock.StopWriting();
 	}
 
-	void VScene::Destroy()
+	void FScene::Destroy()
 	{
 		RWLock.StartWriting();
 		{
-			Log::Debug("Destroying Scene {} from {}.", GetObjectName(), Path);
+			Log::Debug("Destroying Scene {} from {}.", Name.GetNameWithNumber(), Path);
 		}
 		RWLock.StopWriting();
 	}
 
-	VScene::
-	VScene(FName _Name, const String _FilePath)
-		: VObject(_Name),
+	FScene::
+	FScene(FName _Name, const String _FilePath)
+		: Name{_Name},
 		  Path{_FilePath}
 	{
 
 	}
 
-	VScene::
-	~VScene()
+	FScene::
+	~FScene()
 	{
 
 	}

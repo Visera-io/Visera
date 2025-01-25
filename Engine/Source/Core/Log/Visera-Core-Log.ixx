@@ -19,42 +19,42 @@ public:
 	template<typename... Args>
 	static inline void
 	Info(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-	{SystemLogger::GetInstance().Info(Formatter, std::forward<Args>(Arguments)...);}
+	{FSystemLogger::GetInstance().Info(Formatter, std::forward<Args>(Arguments)...);}
 
 	static inline void
 	Info(const String& Message)
-	{SystemLogger::GetInstance().Info(Message);}
+	{FSystemLogger::GetInstance().Info(Message);}
 
 	template<typename... Args>
 	static inline void
 	Warn(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-	{SystemLogger::GetInstance().Warn(Formatter, std::forward<Args>(Arguments)...);}
+	{FSystemLogger::GetInstance().Warn(Formatter, std::forward<Args>(Arguments)...);}
 
 	static inline void
 	Warn(const String& Message)
-	{SystemLogger::GetInstance().Warn(Message);}
+	{FSystemLogger::GetInstance().Warn(Message);}
 
 	template<typename... Args>
 	static inline void
 	Error(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-	{SystemLogger::GetInstance().Error(Formatter, std::forward<Args>(Arguments)...);}
+	{FSystemLogger::GetInstance().Error(Formatter, std::forward<Args>(Arguments)...);}
 
 	static inline void
 	Error(const String& Message)
-	{SystemLogger::GetInstance().Error(Message);}
+	{FSystemLogger::GetInstance().Error(Message);}
 
 	static inline void
 	Fatal(const String& Message, const std::source_location& location = std::source_location::current())
-	{SystemLogger::GetInstance().Fatal(Message, location);}
+	{FSystemLogger::GetInstance().Fatal(Message, location);}
 
 	template<typename... Args>
 	static inline void
 	Debug(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-	{SystemLogger::GetInstance().Debug(Formatter, std::forward<Args>(Arguments)...);}
+	{FSystemLogger::GetInstance().Debug(Formatter, std::forward<Args>(Arguments)...);}
 
 	static inline void
 	Debug(const String& Message)
-	{SystemLogger::GetInstance().Debug(Message);}
+	{FSystemLogger::GetInstance().Debug(Message);}
 };
 } // namespace VE
 
@@ -68,41 +68,41 @@ export namespace VISERA_APP_NAMESPACE
 		template<typename... Args>
 		static inline void
 		Info(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{AppLogger::GetInstance().Info(Formatter, std::forward<Args>(Arguments)...);}
+		{FAppLogger::GetInstance().Info(Formatter, std::forward<Args>(Arguments)...);}
 
 		static inline void
 		Info(const String& Message)
-		{AppLogger::GetInstance().Info(Message);}
+		{FAppLogger::GetInstance().Info(Message);}
 
 		template<typename... Args>
 		static inline void
 		Warn(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{AppLogger::GetInstance().Warn(Formatter, std::forward<Args>(Arguments)...);}
+		{FAppLogger::GetInstance().Warn(Formatter, std::forward<Args>(Arguments)...);}
 
 		static inline void
 		Warn(const String& Message)
-		{AppLogger::GetInstance().Warn(Message);}
+		{FAppLogger::GetInstance().Warn(Message);}
 
 		template<typename... Args>
 		static inline void
 		Error(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{AppLogger::GetInstance().Error(Formatter, std::forward<Args>(Arguments)...);}
+		{FAppLogger::GetInstance().Error(Formatter, std::forward<Args>(Arguments)...);}
 
 		static inline void
 		Error(const String& Message)
-		{AppLogger::GetInstance().Error(Message);}
+		{FAppLogger::GetInstance().Error(Message);}
 
 		static inline void
 		Fatal(const String& Message, const std::source_location& location = std::source_location::current())
-		{AppLogger::GetInstance().Fatal(Message, location);}
+		{FAppLogger::GetInstance().Fatal(Message, location);}
 
 		template<typename... Args>
 		static inline void
 		Debug(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{AppLogger::GetInstance().Debug(Formatter, std::forward<Args>(Arguments)...);}
+		{FAppLogger::GetInstance().Debug(Formatter, std::forward<Args>(Arguments)...);}
 
 		static inline void
 		Debug(const String& Message)
-		{AppLogger::GetInstance().Debug(Message);}
+		{FAppLogger::GetInstance().Debug(Message);}
 	};
 } // namespace VISERA_APP_NAMESPACE

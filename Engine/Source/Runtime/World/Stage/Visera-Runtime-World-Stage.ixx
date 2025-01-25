@@ -1,52 +1,54 @@
 module;
 #include <Visera.h>
-
 export module Visera.Runtime.World.Stage;
 import Visera.Runtime.World.Stage.Scene;
 import Visera.Runtime.World.Object;
 
 import Visera.Core.System;
 import Visera.Core.Log;
+import Visera.Core.Type;
 
 export namespace VE { namespace Runtime
 {
 
-	class VStage : public VObject
+	class FStage
 	{
 	public:
-		virtual void Update()  override;
-		virtual void Create()  override;
-		virtual void Destroy() override;
+		void Update() ;
+		void Create() ;
+		void Destroy();
 
 		// Don't forget to Update() Stage after modification.
 		Bool AttachScene(FName _SceneName, const String& _SceneFile);
 		Bool RemoveScene(FName _SceneName);
 
-		VStage() = delete;
-		VStage(FName _StageName, const String& _StageFile);
-		~VStage();
+		FStage() = delete;
+		FStage(FName _Name, const String& _StageFile);
+		~FStage();
 
 	private:
-		HashMap<FName, SharedPtr<VScene>> Scenes;
+		FRWLock RWLock;
+		FName   Name;
+		HashMap<FName, SharedPtr<FScene>> Scenes;
 	};
 
-	Bool VStage::
+	Bool FStage::
 	AttachScene(FName _SceneName, const String& _SceneFile)
 	{
 		Bool Result = False;
 		RWLock.StartWriting();
 		{
-			auto& SceneSlot = Scenes[_SceneName];
+			SharedPtr<FScene>& SceneSlot = Scenes[_SceneName];
 			if (SceneSlot == nullptr)
 			{
-				SceneSlot = CreateSharedPtr<VScene>(_SceneName, _SceneFile);
+				SceneSlot = CreateSharedPtr<FScene>(_SceneName, _SceneFile);
 				Result = True;
 			}
 			else
 			{
 				Log::Warn("You may attach a duplicated Scene({}) to the Stage({})."
 						  "-- If you want to do that, try to increase the number of FName.",
-						  GetObjectNameWithNumber(), SceneSlot->GetObjectName());
+						  Name.GetNameWithNumber(), SceneSlot->GetName().GetNameWithNumber());
 				Result = False;
 			}
 		}
@@ -55,7 +57,7 @@ export namespace VE { namespace Runtime
 		return Result;
 	}
 
-	Bool VStage::
+	Bool FStage::
 	RemoveScene(FName _SceneName)
 	{
 		Bool Result = False;
@@ -69,7 +71,8 @@ export namespace VE { namespace Runtime
 			}
 			else
 			{
-				Log::Warn("Failed to remove Scene({}) from Stage({})", _SceneName.GetNameWithNumber(), GetObjectNameWithNumber());
+				Log::Warn("Failed to remove Scene({}) from Stage({})",
+						  _SceneName.GetNameWithNumber(), Name.GetNameWithNumber());
 				Result = False;
 			}
 		}
@@ -78,7 +81,7 @@ export namespace VE { namespace Runtime
 		return Result;
 	}
 
-	void VStage::
+	void FStage::
 	Update()
 	{
 		RWLock.StartWriting();
@@ -91,7 +94,7 @@ export namespace VE { namespace Runtime
 		RWLock.StopWriting();
 	}
 
-	void VStage::
+	void FStage::
 	Create()
 	{
 		RWLock.StartWriting();
@@ -101,7 +104,7 @@ export namespace VE { namespace Runtime
 		RWLock.StopWriting();
 	}
 
-	void VStage::
+	void FStage::
 	Destroy()
 	{
 		RWLock.StartWriting();
@@ -111,14 +114,14 @@ export namespace VE { namespace Runtime
 		RWLock.StopWriting();
 	}
 
-	VStage::
-	VStage(FName _StageName, const String& _StageFile) : VObject(_StageName)
+	FStage::
+	FStage(FName _Name, const String& _StageFile) : Name(_Name)
 	{
 
 	}
 
-	VStage::
-	~VStage()
+	FStage::
+	~FStage()
 	{
 
 	}

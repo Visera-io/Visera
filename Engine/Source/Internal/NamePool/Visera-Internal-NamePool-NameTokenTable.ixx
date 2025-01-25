@@ -39,7 +39,7 @@ export namespace VE { namespace Internal
 		public:
 			auto ProbeToken(FNameHash _NameHash, std::function<Bool(FNameToken)> _Prediction) const -> const FNameToken&;
 			auto ClaimToken(const FNameToken* _Token, FNameToken _Value) { 
-                VE_ASSERT(RWLock.IsLocked() && !_Token->IsClaimed()); 
+                VE_ASSERT(!RWLock.TryToWrite() && !_Token->IsClaimed()); 
                 const_cast<FNameToken*>(_Token)->HashAndID = _Value.HashAndID; 
                 ++UseCount; 
             };
@@ -121,7 +121,7 @@ export namespace VE { namespace Internal
 	void FNameTokenTable::
     GrowAndRehash(FNameTokenTableSection& _Section)
     {
-        VE_ASSERT(_Section.RWLock.IsLocked());
+        VE_ASSERT(!_Section.RWLock.TryToWrite());
 
         //Log::Debug("Growing FNamePool::FNameSlot...");
         auto* OldTokens     = _Section.Tokens;

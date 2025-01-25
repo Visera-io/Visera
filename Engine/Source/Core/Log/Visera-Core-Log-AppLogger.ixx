@@ -11,12 +11,12 @@ import Visera.Core.Signal;
 export namespace VE
 {
 
-	class AppLogger
+	class FAppLogger
 	{
 	public:
-		static inline AppLogger&
+		static inline FAppLogger&
 		GetInstance()
-		{ static AppLogger Singleton; return Singleton; }
+		{ static FAppLogger Singleton; return Singleton; }
 
 		inline void
 		Info(const String& message)
@@ -63,7 +63,7 @@ export namespace VE
 		Debug(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
 		{ Spdlogger->debug(Formatter, std::forward<Args>(Arguments)...); }
 
-		AppLogger() noexcept
+		FAppLogger() noexcept
 		{
 			auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 			Spdlogger = std::make_unique<spdlog::logger>("Visera Log", console_sink);
@@ -75,7 +75,7 @@ export namespace VE
 			//m_handle->set_pattern("[%^%l%$] [%Y-%m-%d %H:%M:%S] %v
 			Spdlogger->set_pattern("%^[" VISERA_APP_NAME " - %l - %H:%M:%S - Thread:%t]%$\n%v");
 		}
-		virtual ~AppLogger() noexcept
+		virtual ~FAppLogger() noexcept
 		{
 			Spdlogger->flush();
 

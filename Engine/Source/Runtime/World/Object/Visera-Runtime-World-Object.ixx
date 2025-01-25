@@ -1,48 +1,47 @@
 module;
 #include <Visera.h>
 export module Visera.Runtime.World.Object;
+import Visera.Runtime.World.Object.Component;
 
 import Visera.Core.Type;
-import Visera.Core.Math.Hash;
 import Visera.Core.System.Concurrency;
 
 export namespace VE { namespace Runtime
 {
-
-	class ViseraRuntime;
+	class World;
+	class VObject;
+	template<typename T>
+	concept VObjectType = std::is_class_v<VObject>;
 
 	class VObject
 	{
-		friend class ViseraRuntime;
+		friend class World; // VObject can only be created via World::CreateObject(...)
 	public:
-		virtual void Update()   { /* Please Use RWLock in the Multi-Thread Program. */ };
-		virtual void Create()	= 0;
-		virtual void Destroy()	= 0;
+		virtual void Update()   { /* Use RWLock in the Multi-Thread Program. */ };
 
-		auto GetObjectID()				const -> UInt64		{ return ID; }
+		auto GetTransform()				const -> SharedPtr<OCTransform> { return TransformComponent; }
+
 		auto GetObjectName()			const -> StringView { return Name.GetName(); }
 		auto GetObjectNameWithNumber()	const -> String		{ return Name.GetNameWithNumber(); }
 
-	public:
-		VObject(FName _Name) noexcept;
-		VObject() noexcept = delete;
-		virtual ~VObject() noexcept {};
+		auto AttachCustomizedComponent(SharedPtr<OCComponent> _Component);
 
 	protected:
-		FRWLock RWLock;
+		virtual void Create()	= 0; // You may attach components here
+		virtual void Destroy()	= 0;
+	
+	protected:
+		FRWLock					RWLock;
+		SharedPtr<OCTransform>	TransformComponent;
+		HashMap<FName, SharedPtr<OCComponent>> CustomizedComponents;
 
 	private:
-		static inline UInt64 ObjectCount = 0;
-		UInt64	ID = 0;
 		FName	Name;
-	};
+		Bool	bRecollectable = False;
 
-	VObject::
-	VObject(FName _Name) noexcept
-		:Name{ _Name },
-		 ID { ObjectCount++ }
-	{
-	
+	public:
+		VObject() noexcept = default;
+		virtual ~VObject() noexcept = default;
 	};
 
 } } // namespace VE::Runtime

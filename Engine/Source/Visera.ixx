@@ -59,10 +59,11 @@ export namespace VE
 
 		Visera(ViseraApp* App) : App{ App }
 		{
+			ViseraCore::Bootstrap();
 	#if defined(VISERA_RUNTIME)
 			Log::Debug("Bootstrapping Visera Runtime...");
-			Runtime::Bootstrap();
-			RuntimeTick = Runtime::Tick;
+			Runtime::ViseraRuntime::Bootstrap();
+			RuntimeTick = Runtime::ViseraRuntime::Tick;
 	#endif
 			if (App) App->Bootstrap();
 		}
@@ -72,8 +73,9 @@ export namespace VE
 			if (App) { App->Terminate(); delete App; }
 	#if defined(VISERA_RUNTIME)
 			Log::Debug("Terminating Visera Runtime...");
-			Runtime::Terminate();
+			Runtime::ViseraRuntime::Terminate();
 	#endif
+			ViseraCore::Terminate();
 		}
 	private:
 		ViseraApp* const App = nullptr;
