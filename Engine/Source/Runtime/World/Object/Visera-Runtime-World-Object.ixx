@@ -13,7 +13,7 @@ export namespace VE { namespace Runtime
 	template<typename T>
 	concept VObjectType = std::is_class_v<VObject>;
 
-	class VObject
+	class VObject : public std::enable_shared_from_this<VObject>
 	{
 		friend class World; // VObject can only be created via World::CreateObject(...)
 	public:
@@ -24,12 +24,13 @@ export namespace VE { namespace Runtime
 		auto GetObjectName()			const -> StringView { return Name.GetName(); }
 		auto GetObjectNameWithNumber()	const -> String		{ return Name.GetNameWithNumber(); }
 
-		auto AttachCustomizedComponent(SharedPtr<OCComponent> _Component);
-
 	protected:
 		virtual void Create()	= 0; // You may attach components here
 		virtual void Destroy()	= 0;
-	
+		
+		void AttachTransformComponent() { TransformComponent = CreateSharedPtr<OCTransform>(FName("Transform"), shared_from_this()); }
+		void AttachCustomizedComponent(SharedPtr<OCComponent> _Component);
+
 	protected:
 		FRWLock					RWLock;
 		SharedPtr<OCTransform>	TransformComponent;
@@ -41,7 +42,7 @@ export namespace VE { namespace Runtime
 
 	public:
 		VObject() noexcept = default;
-		virtual ~VObject() noexcept = default;
+		~VObject() noexcept = default; // Do NOT do anything in deconstructor!
 	};
 
 } } // namespace VE::Runtime

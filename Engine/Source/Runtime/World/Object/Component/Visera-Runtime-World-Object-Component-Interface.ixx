@@ -10,7 +10,7 @@ export namespace VE { namespace Runtime
 
 	class OCComponent
 	{
-		friend class VObject;
+		friend class VObject; // Object Components are managed by the VObject.
 	protected:
 		virtual void Update() {};
 		virtual void Create() = 0;

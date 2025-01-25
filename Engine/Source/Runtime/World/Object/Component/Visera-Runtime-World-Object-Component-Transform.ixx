@@ -29,15 +29,23 @@ export namespace VE { namespace Runtime
 		virtual void Create()  override {};
 		virtual void Destroy() override {};
 
+		OCTransform() = delete;
+		OCTransform(FName _Name, SharedPtr<VObject> _Owner)
+			:OCComponent(_Name, _Owner) { }
+
 	private:
 		Optional<Matrix4x4F> Matrix;
 		Vector4F			 Scaling;
 		Vector4F			 Rotation;
 		Vector4F			 Translation;
 	public:
-		void Foo() //[TODO]:Remove this test func
+		Matrix4x4F Foo() //[TODO]:Remove this test func
 		{
-			Scaling.matrix();
+			if (Matrix.has_value())
+			{
+				return Matrix.value();
+			}
+			else return Matrix4x4F::Identity();
 		}
 	};
 

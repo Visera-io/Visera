@@ -27,7 +27,6 @@ export namespace VE { namespace Runtime
 		VE_API SearchObject(FName _Name)->SharedPtr<VObject>;
 		
 		VE_API CreateStage(FName _StageName, const String& _StageFile) -> SharedPtr<FStage> { return CreateSharedPtr<FStage>(_StageName, _StageFile); }
-		
 
 	private:
 		VE_API Bootstrap() -> void;
