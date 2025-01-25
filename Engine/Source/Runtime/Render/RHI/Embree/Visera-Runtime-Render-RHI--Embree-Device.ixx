@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 #include <embree4/rtcore.h>
-export module Visera.Runtime.RHI.Embree:Device;
+export module Visera.Runtime.Render.RHI.Embree:Device;
 
 import Visera.Core.Signal;
 

@@ -3,6 +3,7 @@ module;
 export module Visera.Runtime.World.Object.Component:Interface;
 
 import Visera.Core.Type;
+import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
@@ -11,6 +12,11 @@ export namespace VE { namespace Runtime
 	class OCComponent
 	{
 		friend class VObject; // Object Components are managed by the VObject.
+	public:
+		auto GetComponentName()				-> StringView { return Name.GetName(); }
+		auto GetComponentNameWithNumber()   -> String { return Name.GetNameWithNumber(); }
+		auto GetOwner() -> WeakPtr<VObject> { return Owner; }
+	
 	protected:
 		virtual void Update() {};
 		virtual void Create() = 0;

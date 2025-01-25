@@ -5,7 +5,6 @@ export module Visera.Runtime;
 //Runtime Modules
 export import Visera.Runtime.Render;
 export import Visera.Runtime.Window;
-export import Visera.Runtime.RHI;
 export import Visera.Runtime.World;
 
 import Visera.Core.Log;

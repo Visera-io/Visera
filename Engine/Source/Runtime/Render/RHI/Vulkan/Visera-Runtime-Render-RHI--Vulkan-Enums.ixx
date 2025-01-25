@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.RHI.Vulkan:Enums;
+export module Visera.Runtime.Render.RHI.Vulkan:Enums;
 
 export namespace VE { namespace Runtime
 {

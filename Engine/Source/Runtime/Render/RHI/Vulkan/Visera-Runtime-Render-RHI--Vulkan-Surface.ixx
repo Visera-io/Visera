@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.RHI.Vulkan:Surface;
+export module Visera.Runtime.Render.RHI.Vulkan:Surface;
 
 import Visera.Runtime.Window;
 import Visera.Core.Signal;

@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.RHI.Vulkan:Synchronization;
+export module Visera.Runtime.Render.RHI.Vulkan:Synchronization;
 
 import Visera.Core.Signal;
 

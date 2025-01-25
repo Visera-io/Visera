@@ -28,13 +28,13 @@ export namespace VE { namespace Runtime
 		virtual void Create()	= 0; // You may attach components here
 		virtual void Destroy()	= 0;
 		
-		void AttachTransformComponent() { TransformComponent = CreateSharedPtr<OCTransform>(FName("Transform"), shared_from_this()); }
-		void AttachCustomizedComponent(SharedPtr<OCComponent> _Component);
+		void AttachTransformComponent() { TransformComponent = CreateSharedPtr<OCTransform>(FName("Component::Transform"), shared_from_this()); }
+		void AttachCustomizedComponent(SharedPtr<OCComponent> _Component) { CustomizedComponents.push_back(_Component); };
 
 	protected:
-		FRWLock					RWLock;
-		SharedPtr<OCTransform>	TransformComponent;
-		HashMap<FName, SharedPtr<OCComponent>> CustomizedComponents;
+		FRWLock							RWLock;
+		SharedPtr<OCTransform>			TransformComponent;
+		Array<SharedPtr<OCComponent>>	CustomizedComponents;
 
 	private:
 		FName	Name;

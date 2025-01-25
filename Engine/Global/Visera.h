@@ -11,6 +11,7 @@
 
 #define VE_ASSERT(Expression)	assert(Expression);
 #define VE_API public: static inline auto
+#define VE_WIP assert(false && "Work In Progress...")
 
 #define VE_REGISTER_AUTOCAST(IType, OType) constexpr OType AutoCast(IType src) { return static_cast<OType>(src); }
 

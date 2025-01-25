@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.RHI.Vulkan:Shader;
+export module Visera.Runtime.Render.RHI.Vulkan:Shader;
 
 import Visera.Core.Signal;
 

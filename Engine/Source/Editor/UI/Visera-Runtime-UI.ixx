@@ -2,7 +2,7 @@ module;
 #include <Visera.h>
 export module Visera.Editor.UI;
 
-import Visera.Runtime.RHI;
+import Visera.Runtime.Render.RHI;
 import :ImGui;
 
 export namespace VE { namespace Runtime

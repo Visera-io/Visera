@@ -1,9 +1,9 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.RHI;
+export module Visera.Runtime.Render.RHI;
 
-import Visera.Runtime.RHI.Vulkan;
-import Visera.Runtime.RHI.Embree;
+import Visera.Runtime.Render.RHI.Vulkan;
+import Visera.Runtime.Render.RHI.Embree;
 import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime

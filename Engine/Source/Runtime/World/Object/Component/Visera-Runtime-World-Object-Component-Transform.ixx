@@ -25,7 +25,7 @@ export namespace VE { namespace Runtime
 		//void Rotate();
 		//void Translate();
 
-		virtual void Update()  override {};
+		virtual void Update()  override { UpdateMatrix(); };
 		virtual void Create()  override {};
 		virtual void Destroy() override {};
 
@@ -38,15 +38,8 @@ export namespace VE { namespace Runtime
 		Vector4F			 Scaling;
 		Vector4F			 Rotation;
 		Vector4F			 Translation;
-	public:
-		Matrix4x4F Foo() //[TODO]:Remove this test func
-		{
-			if (Matrix.has_value())
-			{
-				return Matrix.value();
-			}
-			else return Matrix4x4F::Identity();
-		}
+
+		void UpdateMatrix() { if (!Matrix.has_value()) { VE_WIP; }; }
 	};
 
 } } // namespace VE::Runtime
