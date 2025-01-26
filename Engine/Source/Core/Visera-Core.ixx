@@ -7,6 +7,7 @@ export import Visera.Core.System;
 export import Visera.Core.Signal;
 export import Visera.Core.Time;
 export import Visera.Core.Math;
+export import Visera.Core.Media;
 
 export namespace VE
 {
@@ -22,15 +23,13 @@ export namespace VE
 	void ViseraCore::
 	Bootstrap()
 	{
-		//Log::SystemLogger = CreateUniquePtr<FSystemLogger>();
-		//VISERA_APP_NAMESPACE::Log::AppLogger = CreateUniquePtr<FAppLogger>();
+		Media::Bootstrap();
 	}
 
 	void ViseraCore::
 	Terminate()
 	{
-		//VISERA_APP_NAMESPACE::Log::AppLogger.reset();
-		//Log::SystemLogger.reset();
+		Media::Terminate();
 	}
 
 } // namespace VE
