@@ -1,6 +1,7 @@
 module;
 #include <Visera.h>
 export module Visera.Core.System.FileSystem;
+export import Visera.Core.System.FileSystem.Path;
 export import :File;
 export import :BinaryFile;
 
@@ -13,7 +14,7 @@ export namespace VE
 	{
 		VE_MODULE_MANAGER_CLASS(FileSystem);
 	public:
-		struct Path
+		/*struct EPath
 		{
 			public: struct APP
 			{
@@ -24,7 +25,7 @@ export namespace VE
 			{
 				
 			};
-		};
+		};*/
 		VE_API IsExistedFile(StringView _Path)				-> Bool						{ return std::filesystem::exists(_Path); }
 		VE_API CreateFileIfNotExists(const String& _Path)	-> void;
 		VE_API CreateFile(const String& _FilePath)			-> SharedPtr<FFile>			{ return CreateSharedPtr<FFile>(_FilePath); };
@@ -41,4 +42,4 @@ export namespace VE
  		    else throw SIOFailure(Text("Failed to create a new file at {}", _Path));
  	    }
 	}
-}
+} // namespace VE

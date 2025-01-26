@@ -126,6 +126,7 @@ endif()
 
 # Free Image
 if (NOT TARGET freeimage)
+    message(STATUS "\nLoading FreeImage (freeimage::FreeImage)")
     find_package(freeimage CONFIG REQUIRED)
     target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE
             freeimage::FreeImage
@@ -141,6 +142,25 @@ if (NOT TARGET freeimage)
         $<TARGET_FILE_DIR:${APP_NAME}>
     )
 endif()
+
+# ICU
+if (NOT TARGET ICU)
+    message(STATUS "\nLoading ICU (ICU::uc, ICU::i18n)")
+    find_package(ICU REQUIRED COMPONENTS uc i18n)
+    #target_include_directories(VISERA_ENGINE_EXTERN INTERFACE ${ICU_INCLUDE_DIRS})
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE ICU::uc ICU::i18n)
+    add_custom_command(
+        TARGET Visera-Packages
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:ICU::i18n>
+        $<TARGET_FILE_DIR:${APP_NAME}>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:ICU::uc>
+        $<TARGET_FILE_DIR:${APP_NAME}>
+    )
+endif()
+
 # # DXC
 # if (NOT TARGET Microsoft::DirectXShaderCompiler)
 #     message(STATUS "\nLoading DXC (Microsoft::DirectXShaderCompiler)")

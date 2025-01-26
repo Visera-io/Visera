@@ -2,6 +2,8 @@ module;
 #include <Visera.h>
 export module Visera.Core.Media;
 import Visera.Core.Media.Image;
+import Visera.Core.Type;
+import Visera.Core.System.FileSystem;
 
 export namespace VE
 {
@@ -12,7 +14,7 @@ export namespace VE
 		VE_MODULE_MANAGER_CLASS(Media);
 		friend class ViseraCore;
 	public:
-		VE_API CreateImage() -> SharedPtr<FImage> { return CreateSharedPtr<FImage>(); }
+		VE_API CreateImage(FName _Name, const FPath& _Path) -> SharedPtr<FImage> { return CreateSharedPtr<FImage>(_Name, _Path); }
 
 	private:
 		VE_API Bootstrap() -> void { FreeImage::Bootstrap(); }

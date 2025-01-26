@@ -12,6 +12,7 @@
             "eigen3",
             "assimp",
             "freeimage",
+            "icu",
             "volk",
             "glfw3",
             "vulkan-memory-allocator",

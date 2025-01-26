@@ -7,7 +7,6 @@ import :NameEntryTable;
 
 import Visera.Core.Math.Hash;
 import Visera.Core.Signal;
-import Visera.Core.System;
 
 export namespace VE { namespace Internal
 {

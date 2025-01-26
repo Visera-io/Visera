@@ -3,6 +3,7 @@ module;
 #include <FreeImagePlus.h>
 export module Visera.Core.Media.Image;
 
+import Visera.Core.System.FileSystem;
 import Visera.Core.Signal;
 import Visera.Core.Type;
 
@@ -41,6 +42,7 @@ export namespace VE
 
 		struct FPixel
 		{
+			//[TODO]: Pixel Iterator (Avoid the SLOW Boundary Check)
 			union
 			{
 				Byte	R, G, B, A;
@@ -59,22 +61,24 @@ export namespace VE
 		Bool IsValid()		const { return Handle.isValid(); }
 		Bool IsGrayScale()	const { return Handle.isGrayscale(); }
 
-		void Save() const { if (!Handle.save(Text("D:\\Downloads\\{}.png", Name.GetNameWithNumber()).c_str())) { throw SIOFailure(Text("Failed to save the image({}) to {}!", Name.GetNameWithNumber(), Path)); } }
+		void Save() const { String Sink = Path.ToString(); if (!Handle.save(Sink.c_str())) { throw SIOFailure(Text("Failed to save the image({}) to {}!", Name.GetNameWithNumber(), Sink)); } }
 
-		FImage();
+		FImage() = delete;
+		FImage(FName _Name, const FPath& _Path);
 		~FImage() = default;
 
 	private:
 		FName  Name;
-		String Path = "D:\\Downloads\\Figure 11.8.png";
+		FPath  Path;
 		mutable fipImage Handle;
 	};
 
 	FImage::
-	FImage() : Name{"TestImage"}
+	FImage(FName _Name, const FPath& _Path) : Name{_Name}, Path{_Path}
 	{
-		if (!Handle.load(Path.c_str()))
-		{ throw SIOFailure(Text("Failed to load the image from {}!", Path)); }
+		String Source = Path.ToString();
+		if (!Handle.load(Source.c_str()))
+		{ throw SIOFailure(Text("Failed to load the image from {}!", Source)); }
 	}
 
 } // namespace VE

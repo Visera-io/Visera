@@ -1,17 +1,16 @@
- module;
- #include <Visera.h>
+module;
+#include <Visera.h>
+export module Visera.Core.System.FileSystem:File;
 
- export module Visera.Core.System.FileSystem:File;
+import Visera.Core.Signal;
+import Visera.Core.Log;
 
- import Visera.Core.Signal;
- import Visera.Core.Log;
+export namespace VE
+{
 
- export namespace VE
- {
-
-     class FFile
-     {
-     public:
+    class FFile
+    {
+    public:
  	    virtual void SaveAs(StringView FilePath,   Int32 SaveModes)	throw(SIOFailure); //Check out the demo below
  	    virtual void LoadFrom(StringView FilePath, Int32 LoadModes)	throw(SIOFailure); //Check out the demo below
  	    virtual void Save(Int32 SaveModes = 0x0) throw(SIOFailure) { SaveAs(Path,   SaveModes); }
@@ -34,21 +33,21 @@
  	    FFile(const String& FilePath) noexcept : Path{ FilePath } {};
  	    virtual ~FFile() noexcept = default;
 
-     protected:
+    protected:
  	    auto OpenIStream(Int32 IModes) -> std::ifstream*;
  	    auto GetInputFileSize() const -> size_t;
  	    void CloseIStream();
  	    auto OpenOStream(Int32 OModes) -> std::ofstream*;
  	    void CloseOStream();
-     protected:
+    protected:
  	    String			Path;
  	    Array<Byte>		Data;
  	    union { void* Address = nullptr; std::ifstream* IStream; std::ofstream* OStream; } IOStream;
-     };
+    };
 
-     void FFile::
-     SaveAs(StringView FilePath, Int32 SaveModes)	throw(SIOFailure)
-     {
+    void FFile::
+    SaveAs(StringView FilePath, Int32 SaveModes)	throw(SIOFailure)
+    {
  	    //Tips: Add SaveModes via SaveModes |= NewMode
  	    if (auto* OutputFile = OpenOStream(SaveModes))
  	    {
@@ -60,11 +59,11 @@
  		    CloseOStream();
  	    }
  	    else throw SIOFailure(Text("Failed to open {}", FilePath));	
-     }
+    }
 
-     void FFile::
-     LoadFrom(StringView FilePath, Int32 LoadModes) throw(SIOFailure)
-     {
+    void FFile::
+    LoadFrom(StringView FilePath, Int32 LoadModes) throw(SIOFailure)
+    {
  	    //Tips: Add LoadModes via LoadModes |= NewMode
  	    if (auto* InputFile = OpenIStream(LoadModes))
  	    {
@@ -78,11 +77,11 @@
  		    CloseIStream();
  	    }
  	    else throw SIOFailure(Text("Failed to open {}", FilePath));
-     }
+    }
 
-     size_t FFile::
-     GetInputFileSize() const
-     {
+    size_t FFile::
+    GetInputFileSize() const
+    {
  	    VE_ASSERT(IsOpened());
  	    IOStream.IStream->seekg(0, std::ios_base::end);
 
@@ -93,42 +92,42 @@
  	    IOStream.IStream->seekg(0, std::ios_base::beg);
 
  	    return FileSize;
-     }
+    }
 
-     std::ifstream* FFile::
-     OpenIStream(Int32 IModes)
-     { 
+    std::ifstream* FFile::
+    OpenIStream(Int32 IModes)
+    { 
  	    if (IOStream.IStream) return nullptr;
  	    IOStream.IStream = new std::ifstream(Path, IModes);
  	    if (!IOStream.IStream->is_open()) return nullptr;
  	    return IOStream.IStream;
-     }
+    }
 
-     void FFile::
-     CloseIStream()
-     {
+    void FFile::
+    CloseIStream()
+    {
  	    VE_ASSERT(IOStream.IStream != nullptr);
  	    IOStream.IStream->close();
  	    delete IOStream.IStream;
  	    IOStream.IStream = nullptr;
-     }
+    }
 
-     std::ofstream* FFile::
-     OpenOStream(Int32 OModes)
-     {
+    std::ofstream* FFile::
+    OpenOStream(Int32 OModes)
+    {
  	    if (IOStream.OStream) return nullptr;
  	    IOStream.OStream = new std::ofstream(Path, OModes);
  	    if (!IOStream.OStream->is_open()) return nullptr;
  	    return IOStream.OStream;
-     }
+    }
 
-     void FFile::
-     CloseOStream()
-     {
+    void FFile::
+    CloseOStream()
+    {
  	    VE_ASSERT(IOStream.OStream != nullptr);
  	    IOStream.OStream->close();
  	    delete IOStream.OStream;
  	    IOStream.OStream = nullptr;
-     }
+    }
 
- } // namespace VE
+} // namespace VE

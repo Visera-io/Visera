@@ -134,6 +134,8 @@ using ANSIChar   = char;
 using WideChar   = wchar_t;
 using String	 = std::string;
 using StringView = std::string_view;
+using WideString = std::wstring;
+using WideStringView = std::wstring_view;
 using RawString  = const char*;
 
 template <class... _Types> inline
