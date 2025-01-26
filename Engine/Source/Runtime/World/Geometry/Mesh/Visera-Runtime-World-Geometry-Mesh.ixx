@@ -58,9 +58,9 @@ export namespace VE { namespace Runtime
 		if (!Handle) { throw SRuntimeError("Failed to create the FMesh!"); }
 
 		RTCFormat VertexFormat;
-		UInt64    VertexByteStide = 0;
+		UInt64    VertexByteSize = 0;
 		RTCFormat IndexFormat;
-		UInt64    IndexByteStide  = 0;
+		UInt64    IndexByteSize  = 0;
 
 		switch (Topology)
 		{
@@ -69,27 +69,29 @@ export namespace VE { namespace Runtime
 			VE_ASSERT(VertexCount % 3 == 0);
 
 			VertexFormat	= AutoCast(EEmbreeType::Vector3F);
-			VertexByteStide = sizeof(Vector3F);
+			VertexByteSize = sizeof(Vector3F);
 			IndexFormat		= AutoCast(EEmbreeType::TriangleIndices);
-			IndexByteStide  = sizeof(UInt32) * 3;
+			IndexByteSize  = sizeof(UInt32) * 3;
+
 			if (!Vertices)
 			{
-				Vertices = (Float*)Memory::MallocNow(VertexCount * VertexByteStide, 0);
+				Vertices = (Float*)Memory::MallocNow(VertexCount * VertexByteSize, 0);
 				if (!Vertices) { throw SRuntimeError("Failed to allocate Geometry Vertex Buffer!"); }
-				Memory::Memcpy(Vertices, _CreateInfo.Vertices, VertexCount * sizeof(Float));
+				Memory::Memcpy(Vertices, _CreateInfo.Vertices, VertexCount * VertexByteSize);
 			}
 
 			if (!Indices)
 			{ 
-				Indices = (UInt32*)Memory::MallocNow(IndexCount * IndexByteStide, 0);
+				Indices = (UInt32*)Memory::MallocNow(IndexCount * IndexByteSize, 0);
 				if (!Indices) { throw SRuntimeError("Failed to allocate Geometry Index Buffer!"); }
-				Memory::Memcpy(Indices, _CreateInfo.Indices, IndexCount * sizeof(UInt32));
-			}		
+				Memory::Memcpy(Indices, _CreateInfo.Indices, IndexCount * IndexByteSize);
+			}
 
 			break;
 		}
 		case ETopology::Quad:
 		{
+			VE_ASSERT(VertexCount % 4 == 0);
 			VE_WIP;
 			break;
 		}
@@ -109,7 +111,7 @@ export namespace VE { namespace Runtime
 			VertexFormat,
 			Vertices,
 			0,
-			VertexByteStide,
+			VertexByteSize,
 			VertexCount);
 
 		rtcSetSharedGeometryBuffer(
@@ -119,7 +121,7 @@ export namespace VE { namespace Runtime
 			IndexFormat,
 			Indices,
 			0,
-			IndexByteStide,
+			IndexByteSize,
 			IndexCount);
 
 		Update();
