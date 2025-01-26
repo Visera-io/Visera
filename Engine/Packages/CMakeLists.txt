@@ -110,7 +110,7 @@ if (NOT TARGET embree)
     )
 endif()
 
-# Intel Assimp
+# Assimp
 if (NOT TARGET assimp)
     message(STATUS "\nLoading Assimp (assimp)")
     find_package(assimp CONFIG REQUIRED)
@@ -124,6 +124,23 @@ if (NOT TARGET assimp)
     )
 endif()
 
+# Free Image
+if (NOT TARGET freeimage)
+    find_package(freeimage CONFIG REQUIRED)
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE
+            freeimage::FreeImage
+            freeimage::FreeImagePlus)
+    add_custom_command(
+        TARGET Visera-Packages
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:freeimage::FreeImage>
+        $<TARGET_FILE_DIR:${APP_NAME}>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:freeimage::FreeImagePlus>
+        $<TARGET_FILE_DIR:${APP_NAME}>
+    )
+endif()
 # # DXC
 # if (NOT TARGET Microsoft::DirectXShaderCompiler)
 #     message(STATUS "\nLoading DXC (Microsoft::DirectXShaderCompiler)")

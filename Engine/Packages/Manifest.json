@@ -11,6 +11,7 @@
             "spdlog",
             "eigen3",
             "assimp",
+            "freeimage",
             "volk",
             "glfw3",
             "vulkan-memory-allocator",
