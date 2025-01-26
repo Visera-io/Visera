@@ -6,7 +6,7 @@ export module Visera.Runtime.World.RTC.Embree:Enums;
 export namespace VE { namespace Runtime
 {
 
-	VE_ENUM_CLASS(EGeomtryBuffer, RTCBufferType)
+	VE_ENUM_CLASS(EEmbreeBuffer, RTCBufferType)
 	{
 		Index				= RTC_BUFFER_TYPE_INDEX,
 		Vertex				= RTC_BUFFER_TYPE_VERTEX,
@@ -26,6 +26,33 @@ export namespace VE { namespace Runtime
 		Hole				= RTC_BUFFER_TYPE_HOLE,
 
 		Transform			= RTC_BUFFER_TYPE_TRANSFORM,
+	};
+
+	VE_ENUM_CLASS(EEmbreeType, RTCFormat)
+	{
+		Float				= RTC_FORMAT_FLOAT,
+		UInt32				= RTC_FORMAT_UINT,
+
+		Index				= RTC_FORMAT_UINT,
+		TriangleIndices		= RTC_FORMAT_UINT3,
+		QuadIndices			= RTC_FORMAT_UINT4,
+
+		Vector2F			= RTC_FORMAT_FLOAT2,
+		Vector3F			= RTC_FORMAT_FLOAT3,
+		Vector4F			= RTC_FORMAT_FLOAT4,
+
+		Matrix2x2F			= RTC_FORMAT_FLOAT2X2_COLUMN_MAJOR,
+		Matrix3x3F			= RTC_FORMAT_FLOAT3X3_COLUMN_MAJOR,
+		Matrix4x4F			= RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR,
+	};
+
+	VE_ENUM_CLASS(EEmbreeTopology, RTCGeometryType)
+	{
+		Triangle = RTC_GEOMETRY_TYPE_TRIANGLE,		// triangle mesh
+		Quad     = RTC_GEOMETRY_TYPE_QUAD,			// quad (triangle pair) mesh
+		Grid     = RTC_GEOMETRY_TYPE_GRID,			// grid mesh
+
+		None     = ~0U,
 	};
 	
 } } // namespace Visera::Runtime

@@ -2,7 +2,8 @@ module;
 #include <Visera.h>
 
 export module Visera.Runtime.World;
-import Visera.Runtime.World.RTC;
+export import Visera.Runtime.World.RTC;
+export import Visera.Runtime.World.Geometry;
 import Visera.Runtime.World.Atlas;
 import Visera.Runtime.World.Object;
 import Visera.Runtime.World.Stage;

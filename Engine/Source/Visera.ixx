@@ -10,8 +10,10 @@ import Visera.Runtime;
 export namespace VE
 {
 	using RHI		= VE::Runtime::RHI;
+	using RTC		= VE::Runtime::RTC;
 	using Window	= VE::Runtime::Window;
 	using World		= VE::Runtime::World;
+	using Geometry  = VE::Runtime::Geometry;
 
 	class ViseraApp
 	{
