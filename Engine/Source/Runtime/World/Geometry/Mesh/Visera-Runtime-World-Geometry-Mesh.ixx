@@ -15,71 +15,76 @@ export namespace VE { namespace Runtime
 	{
 	public:
 		using ETopology = RTC::ETopology;
-		
+
+		void Update()	    const { rtcCommitGeometry(Handle); }
+		void Disable()		const { rtcDisableGeometry(Handle); bVisible = False; }
+		void Enable()		const { rtcEnableGeometry(Handle);  bVisible = True; }
+		Bool IsVisible()    const { return bVisible; }
+
 		auto GetTopology()	const -> ETopology { return Topology; }
 		auto GetHandle()	const -> const RTCGeometry const { return Handle; }
 
 		struct FCreateInfo
 		{
-			ETopology	  Topology  = ETopology::None;
+			ETopology	  Topology    = ETopology::None;
 			UInt64		  VertexCount = 0;
-			const Float*  Vertices    = nullptr;
+			Float*		  Vertices    = nullptr;
 			UInt64		  IndexCount  = 0;
-			const UInt32* Indices     = nullptr;
+			UInt32*		  Indices     = nullptr;
 		};
 		FMesh() = delete;
 		FMesh(const FCreateInfo& _CreateInfo);
 		~FMesh();
 
 	protected:
-		RTCGeometry Handle		= nullptr;
-		ETopology	Topology    = ETopology::None;
-		Float*		Vertices    = nullptr;
-		UInt64		VertexCount = 0;
-		UInt32*		Indices     = nullptr;
-		UInt64		IndexCount  = 0;
+		RTCGeometry  Handle		 = nullptr;
+		mutable Bool bVisible    = True;
+		ETopology	 Topology    = ETopology::None;
+		Float*		 Vertices    = nullptr;
+		UInt64		 VertexCount = 0;
+		UInt32*		 Indices     = nullptr;
+		UInt64		 IndexCount  = 0;
 	};
 
 	FMesh::
 	FMesh(const FCreateInfo& _CreateInfo):
 		Topology{_CreateInfo.Topology},
 		VertexCount{_CreateInfo.VertexCount},
-		IndexCount{_CreateInfo.IndexCount}
+		Vertices{_CreateInfo.Vertices},
+		IndexCount{_CreateInfo.IndexCount},
+		Indices{_CreateInfo.Indices}
 	{
-		Handle = RTC::CreateGeometry(Topology);
+		Handle = rtcNewGeometry(RTC::GetAPI()->GetDevice(), AutoCast(Topology));
 		if (!Handle) { throw SRuntimeError("Failed to create the FMesh!"); }
+
+		RTCFormat VertexFormat;
+		UInt64    VertexByteStide = 0;
+		RTCFormat IndexFormat;
+		UInt64    IndexByteStide  = 0;
 
 		switch (Topology)
 		{
 		case ETopology::Triangle:
 		{
-			VE_ASSERT(VertexCount % 3 == 0 && IndexCount % 3 == 0);
+			VE_ASSERT(VertexCount % 3 == 0);
 
-			Vertices = (Float*)rtcSetNewGeometryBuffer(
-						Handle,
-						AutoCast(RTC::EBuffer::Vertex),
-						0,
-						AutoCast(RTC::EType::Vector3F),
-						sizeof(Vector3F),
-						VertexCount / 3);
-			if (Vertices)
+			VertexFormat	= AutoCast(EEmbreeType::Vector3F);
+			VertexByteStide = sizeof(Vector3F);
+			IndexFormat		= AutoCast(EEmbreeType::TriangleIndices);
+			IndexByteStide  = sizeof(UInt32) * 3;
+			if (!Vertices)
 			{
+				Vertices = (Float*)Memory::MallocNow(VertexCount * VertexByteStide, 0);
+				if (!Vertices) { throw SRuntimeError("Failed to allocate Geometry Vertex Buffer!"); }
 				Memory::Memcpy(Vertices, _CreateInfo.Vertices, VertexCount * sizeof(Float));
 			}
-			else { throw SRuntimeError("Failed to allocate Embree Geometry Vertex Buffer!"); }
 
-			Indices  = (UInt32*)rtcSetNewGeometryBuffer(
-						Handle,
-						AutoCast(RTC::EBuffer::Index),
-						0,
-						AutoCast(RTC::EType::TriangleIndices),
-						sizeof(UInt32) * 3,
-						IndexCount / 3);
-			if (Indices)
-			{
+			if (!Indices)
+			{ 
+				Indices = (UInt32*)Memory::MallocNow(IndexCount * IndexByteStide, 0);
+				if (!Indices) { throw SRuntimeError("Failed to allocate Geometry Index Buffer!"); }
 				Memory::Memcpy(Indices, _CreateInfo.Indices, IndexCount * sizeof(UInt32));
-			}
-			else { throw SRuntimeError("Failed to allocate Embree Geometry Index Buffer!"); }
+			}		
 
 			break;
 		}
@@ -96,11 +101,36 @@ export namespace VE { namespace Runtime
 		default:
 			throw SRuntimeError("Unsupported Mesh Topology({})!", UInt32(Topology));
 		}
+					
+		rtcSetSharedGeometryBuffer(
+			Handle,
+			AutoCast(RTC::EBuffer::Vertex),
+			0,
+			VertexFormat,
+			Vertices,
+			0,
+			VertexByteStide,
+			VertexCount);
+
+		rtcSetSharedGeometryBuffer(
+			Handle,
+			AutoCast(RTC::EBuffer::Index),
+			0,
+			IndexFormat,
+			Indices,
+			0,
+			IndexByteStide,
+			IndexCount);
+
+		Update();
 	}
 
 	FMesh::~FMesh()
 	{
-		RTC::DestroyGeometry(Handle);
+		if (Handle)
+		{
+			rtcReleaseGeometry(Handle);
+		}
 	}
 
 } } // namespace Visera::Runtime
