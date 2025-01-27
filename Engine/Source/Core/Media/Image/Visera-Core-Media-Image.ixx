@@ -9,15 +9,6 @@ import Visera.Core.Type;
 
 export namespace VE
 {
-	class Media;
-
-	//FreeImagePlus Doc: https://freeimage.sourceforge.io/fip/index.html
-	class FreeImage
-	{		
-		friend class Media;
-		static inline void Bootstrap() { FreeImage_Initialise();   };
-		static inline void Terminate() { FreeImage_DeInitialise(); };
-	};
 
 	class FImage
 	{
@@ -61,7 +52,7 @@ export namespace VE
 		Bool IsValid()		const { return Handle.isValid(); }
 		Bool IsGrayScale()	const { return Handle.isGrayscale(); }
 
-		void Save() const { String Sink = Path.ToString(); if (!Handle.save(Sink.c_str())) { throw SIOFailure(Text("Failed to save the image({}) to {}!", Name.GetNameWithNumber(), Sink)); } }
+		void Save() const { /*String Sink = Path(); if (!Handle.save(Sink.c_str())) { throw SIOFailure(Text("Failed to save the image({}) to {}!", Name.GetNameWithNumber(), Sink)); }*/ }
 
 		FImage() = delete;
 		FImage(FName _Name, const FPath& _Path);
@@ -71,14 +62,24 @@ export namespace VE
 		FName  Name;
 		FPath  Path;
 		mutable fipImage Handle;
+
+		//FreeImagePlus Doc: https://freeimage.sourceforge.io/fip/index.html
+		struct FFreeImage
+		{		
+			FFreeImage()  { FreeImage_Initialise();   };
+			~FFreeImage() { FreeImage_DeInitialise(); };
+		};
+		;
 	};
 
 	FImage::
 	FImage(FName _Name, const FPath& _Path) : Name{_Name}, Path{_Path}
 	{
-		String Source = Path.ToString();
-		if (!Handle.load(Source.c_str()))
-		{ throw SIOFailure(Text("Failed to load the image from {}!", Source)); }
+		const static FFreeImage FreeImage;
+		//String Source = Path.ToUTF8String();
+		//Handle.loadFromMemory(std::ifstream{} )
+		//if (!Handle.load(Source.c_str()))
+		//{ throw SIOFailure(Text("Failed to load the image from {}!", Source)); }
 	}
 
 } // namespace VE

@@ -37,7 +37,7 @@ void FVulkanPipelineCache::
 Create()
 {
 	FileSystem::CreateFileIfNotExists(Path);
-	auto CacheFile = FileSystem::CreateBinaryFile(Path);
+	auto CacheFile = FileSystem::OpenBinaryFile(Path);
 	CacheFile->Load();
 
 	auto* CacheHeader = (VkPipelineCacheHeaderVersionOne*)(CacheFile->GetData().data());
@@ -68,7 +68,7 @@ Destroy()
 {
 	if (IsExpired())
 	{
-		auto CacheFile = FileSystem::CreateBinaryFile(Path);
+		auto CacheFile = FileSystem::OpenBinaryFile(Path);
 		UInt64 CacheSize = 0;
 		vkGetPipelineCacheData(GVulkan->Device->GetHandle(), Handle, &CacheSize, nullptr);
 		Array<Byte> CacheDate(CacheSize);

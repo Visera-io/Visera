@@ -12,6 +12,7 @@
 #define VE_ASSERT(Expression)	assert(Expression);
 #define VE_API public: static inline auto
 #define VE_WIP assert(false && "Work In Progress...")
+#define VE_PATH(Path) VE::PathStringView(L##Path)
 
 #define VE_REGISTER_AUTOCAST(IType, OType) constexpr OType AutoCast(IType src) { return static_cast<OType>(src); }
 
@@ -134,8 +135,6 @@ using ANSIChar   = char;
 using WideChar   = wchar_t;
 using String	 = std::string;
 using StringView = std::string_view;
-using WideString = std::wstring;
-using WideStringView = std::wstring_view;
 using RawString  = const char*;
 
 template <class... _Types> inline

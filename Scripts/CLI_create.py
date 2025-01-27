@@ -24,7 +24,7 @@ def Create(argv) -> int:
     makedirs(path.join(app_path, "Project"), exist_ok=True)
     makedirs(path.join(app_path, "Source"), exist_ok=True)
     
-    with open(path.join(app_path, "CMakeLists.txt"), 'w') as CMakeLists:
+    with open(path.join(app_path, "CMakeLists.txt"), 'w',encoding='UTF-8') as CMakeLists:
         CMakeLists.write(f'''
 cmake_minimum_required(VERSION 3.25.0 FATAL_ERROR)
 project("{app_name}"
@@ -65,13 +65,13 @@ set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${APP_NAM
 #[Install]
 #install(TARGETS ${VISERA} RUNTIME DESTINATION ${VISERA_BINARY_DIR})''')
         
-        with open(path.join(app_path, "Source", "Launcher.cpp"), 'w') as AppLauncher:
+        with open(path.join(app_path, "Source", "Launcher.cpp"), 'w',encoding='UTF-8') as AppLauncher:
             AppLauncher.write(f"import Visera;\nimport {app_name};\nusing namespace VISERA_APP_NAMESPACE;\n\nint main(int argc, char* argv[])")
             AppLauncher.write("\n{")
             AppLauncher.write("\tVE::Visera ViseraEngine( new App );\n\treturn ViseraEngine.Run();")
             AppLauncher.write("\n}")
             
-        with open(path.join(app_path, "Source", f"{app_name}.ixx"), 'w') as App:
+        with open(path.join(app_path, "Source", f"{app_name}.ixx"), 'w',encoding='UTF-8') as App:
             App.write(f"module;\n#include <Visera.h>\nexport module {app_name};\nimport Visera;\n")
             App.write("\nexport namespace VISERA_APP_NAMESPACE\n{")
             App.write("\n\tclass App final : public VE::ViseraApp")

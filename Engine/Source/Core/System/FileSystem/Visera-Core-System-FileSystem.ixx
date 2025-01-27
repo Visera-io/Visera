@@ -28,8 +28,8 @@ export namespace VE
 		};*/
 		VE_API IsExistedFile(StringView _Path)				-> Bool						{ return std::filesystem::exists(_Path); }
 		VE_API CreateFileIfNotExists(const String& _Path)	-> void;
-		VE_API CreateFile(const String& _FilePath)			-> SharedPtr<FFile>			{ return CreateSharedPtr<FFile>(_FilePath); };
-		VE_API CreateBinaryFile(const String& _FilePath)	-> SharedPtr<FBinaryFile>	{ return CreateSharedPtr<FBinaryFile>(_FilePath); };
+		VE_API OpenFile(const String& _FilePath)			-> SharedPtr<FFile>			{ return CreateSharedPtr<FFile>(_FilePath); };
+		VE_API OpenBinaryFile(const String& _FilePath)		-> SharedPtr<FBinaryFile>	{ return CreateSharedPtr<FBinaryFile>(_FilePath); };
 	};
 
 	void FileSystem::

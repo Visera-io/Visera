@@ -1,5 +1,8 @@
 module;
 #include <Visera.h>
+#if defined(VE_ON_WINDOWS_SYSTEM)
+#include <Windows.h>
+#endif
 export module Visera.Core;
 export import Visera.Core.Type;
 export import Visera.Core.Log;
@@ -23,13 +26,15 @@ export namespace VE
 	void ViseraCore::
 	Bootstrap()
 	{
-		Media::Bootstrap();
+#if defined(VE_ON_WINDOWS_SYSTEM)
+		SetConsoleOutputCP(65001); // Enable Terminal WideString Output
+#endif
 	}
 
 	void ViseraCore::
 	Terminate()
 	{
-		Media::Terminate();
+
 	}
 
 } // namespace VE
