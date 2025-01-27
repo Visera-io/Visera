@@ -52,7 +52,7 @@ export namespace VE
 		Bool IsValid()		const { return Handle.isValid(); }
 		Bool IsGrayScale()	const { return Handle.isGrayscale(); }
 
-		void Save() const { /*String Sink = Path(); if (!Handle.save(Sink.c_str())) { throw SIOFailure(Text("Failed to save the image({}) to {}!", Name.GetNameWithNumber(), Sink)); }*/ }
+		void Save() const { if (!Handle.saveU(Path.GetHandle().c_str())) { throw SIOFailure(Text("Failed to save the image({})!", Name.GetNameWithNumber())); } }
 
 		FImage() = delete;
 		FImage(FName _Name, const FPath& _Path);
@@ -76,10 +76,8 @@ export namespace VE
 	FImage(FName _Name, const FPath& _Path) : Name{_Name}, Path{_Path}
 	{
 		const static FFreeImage FreeImage;
-		//String Source = Path.ToUTF8String();
-		//Handle.loadFromMemory(std::ifstream{} )
-		//if (!Handle.load(Source.c_str()))
-		//{ throw SIOFailure(Text("Failed to load the image from {}!", Source)); }
+		if (!Handle.loadU(Path.GetHandle().c_str()))
+		{ throw SIOFailure(Text("Failed to load the image({})!", _Name.GetNameWithNumber())); }
 	}
 
 } // namespace VE

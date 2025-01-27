@@ -16,10 +16,10 @@ export namespace VE
 	class FPath
 	{
 	public:
-		auto GetHandle() { return Handle; }
+		auto GetHandle() const { return Handle; }
 
 		Bool HasFileName() const  { return Handle.has_filename(); }
-		//auto GetFileName() const -> StringView { if (HasFileName()) { return Handle.filename().c_str(); } else { return ""; } }
+		//auto GetFileName() const -> PathString { if (HasFileName()) { return Handle.filename().c_str(); } else { return L""; } }
 		Bool SetFileName(StringView _FileName) { if (HasFileName()) { Handle.replace_filename(_FileName); return True; } else { return False; } }
 		Bool RemoveFileName() { if (HasFileName()) { Handle.remove_filename(); return True; } return False; }
 		
