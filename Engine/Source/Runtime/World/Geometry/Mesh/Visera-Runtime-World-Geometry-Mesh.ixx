@@ -24,68 +24,64 @@ export namespace VE { namespace Runtime
 		auto GetTopology()	const -> ETopology { return Topology; }
 		auto GetHandle()	const -> const RTCGeometry const { return Handle; }
 
+		void SetVertices(const Float* _Vertices, UInt32 _VertexCount = 0, UInt32 _Offset = 0) { Memory::Memcpy((Vertices + _Offset), _Vertices, (_VertexCount ? _VertexCount : VertexCount) * VertexByteSize); }
+		void SetIndices(const UInt32* _Indices, UInt32 _IndexCount = 0, UInt32 _Offset = 0) { Memory::Memcpy((Indices + _Offset), _Indices, (_IndexCount ? _IndexCount : IndexCount) * IndexByteSize); }
+
 		struct FCreateInfo
 		{
-			ETopology	  Topology    = ETopology::None;
-			UInt64		  VertexCount = 0;
-			Float*		  Vertices    = nullptr;
-			UInt64		  IndexCount  = 0;
-			UInt32*		  Indices     = nullptr;
+			ETopology	  Topology		 = ETopology::None;
+			UInt64		  VertexCount	 = 0;
+			Float*		  Vertices		 = nullptr;
+			UInt64		  IndexCount	 = 0;
+			UInt32*		  Indices		 = nullptr;
+
 		};
 		FMesh() = delete;
 		FMesh(const FCreateInfo& _CreateInfo);
 		~FMesh();
 
 	protected:
-		RTCGeometry  Handle		 = nullptr;
-		mutable Bool bVisible    = True;
-		ETopology	 Topology    = ETopology::None;
-		Float*		 Vertices    = nullptr;
-		UInt64		 VertexCount = 0;
-		UInt32*		 Indices     = nullptr;
-		UInt64		 IndexCount  = 0;
+		RTCGeometry  Handle			= nullptr;
+		mutable Bool bVisible		= True;
+		ETopology	 Topology		= ETopology::None;
+
+		Float*		 Vertices		= nullptr;
+		RTCFormat	 VertexFormat;
+		UInt64		 VertexCount	= 0;
+		UInt32		 VertexByteSize = 0;
+		UInt32*		 Indices		= nullptr;
+		RTCFormat    IndexFormat;
+		UInt64		 IndexCount		= 0;
+		UInt32		 IndexByteSize  = 0;
 	};
 
 	FMesh::
 	FMesh(const FCreateInfo& _CreateInfo):
 		Topology{_CreateInfo.Topology},
 		VertexCount{_CreateInfo.VertexCount},
-		Vertices{_CreateInfo.Vertices},
-		IndexCount{_CreateInfo.IndexCount},
-		Indices{_CreateInfo.Indices}
+		IndexCount{_CreateInfo.IndexCount}
 	{
 		Handle = rtcNewGeometry(RTC::GetAPI()->GetDevice(), AutoCast(Topology));
 		if (!Handle) { throw SRuntimeError("Failed to create the FMesh!"); }
-
-		RTCFormat VertexFormat;
-		UInt64    VertexByteSize = 0;
-		RTCFormat IndexFormat;
-		UInt64    IndexByteSize  = 0;
 
 		switch (Topology)
 		{
 		case ETopology::Triangle:
 		{
-			VE_ASSERT(VertexCount % 3 == 0);
+			VE_ASSERT(VertexCount && VertexCount % 3 == 0);
 
 			VertexFormat	= AutoCast(EEmbreeType::Vector3F);
 			VertexByteSize = sizeof(Vector3F);
 			IndexFormat		= AutoCast(EEmbreeType::TriangleIndices);
 			IndexByteSize  = sizeof(UInt32) * 3;
 
-			if (!Vertices)
-			{
-				Vertices = (Float*)Memory::MallocNow(VertexCount * VertexByteSize, 0);
-				if (!Vertices) { throw SRuntimeError("Failed to allocate Geometry Vertex Buffer!"); }
-				Memory::Memcpy(Vertices, _CreateInfo.Vertices, VertexCount * VertexByteSize);
-			}
+			Vertices = (Float*)Memory::MallocNow(VertexCount * VertexByteSize, 0);
+			if (!Vertices) { throw SRuntimeError("Failed to allocate Geometry Vertex Buffer!"); }
+			if (_CreateInfo.Vertices) { Memory::Memcpy(Vertices, _CreateInfo.Vertices, VertexCount * VertexByteSize); }
 
-			if (!Indices)
-			{ 
-				Indices = (UInt32*)Memory::MallocNow(IndexCount * IndexByteSize, 0);
-				if (!Indices) { throw SRuntimeError("Failed to allocate Geometry Index Buffer!"); }
-				Memory::Memcpy(Indices, _CreateInfo.Indices, IndexCount * IndexByteSize);
-			}
+			Indices = (UInt32*)Memory::MallocNow(IndexCount * IndexByteSize, 0);
+			if (!Indices) { throw SRuntimeError("Failed to allocate Geometry Index Buffer!"); }
+			if (_CreateInfo.Indices)  { Memory::Memcpy(Indices, _CreateInfo.Indices, IndexCount * IndexByteSize); }
 
 			break;
 		}

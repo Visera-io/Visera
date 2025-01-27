@@ -23,9 +23,10 @@ export namespace VE
 		auto HasNumber() const -> Bool	 { return !!Number; }
 	
 		FName() = default;
-		FName(String _Name) { auto [Handle_, Number_] = NamePool.Register(_Name); Handle = Handle_; Number = Number_; }
+		FName(StringView _Name)					{ auto [Handle_, Number_] = NamePool.Register(String(_Name)); Handle = Handle_; Number = Number_; }
 		FName(const FName& _Another)			= default;
 		FName(FName&& _Another)					= default;
+		FName& operator=(StringView _Name)		{ auto [Handle_, Number_] = NamePool.Register(String(_Name)); Handle = Handle_; Number = Number_; };
 		FName& operator=(const FName& _Another) = default;
 		FName& operator=(FName&& _Another)		= default;
 		Bool operator==(const FName& _Another) const { return GetIdentifier() == _Another.GetIdentifier(); }

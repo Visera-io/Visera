@@ -3,6 +3,7 @@ module;
 
 export module Visera.Runtime.World;
 export import Visera.Runtime.World.RTC;
+export import Visera.Runtime.World.Ray;
 export import Visera.Runtime.World.Geometry;
 import Visera.Runtime.World.Atlas;
 import Visera.Runtime.World.Object;
@@ -11,6 +12,7 @@ import Visera.Runtime.World.Stage;
 import Visera.Core.Type;
 import Visera.Core.Log;
 import Visera.Core.System.Concurrency;
+import Visera.Core.System.FileSystem;
 
 export namespace VE { namespace Runtime
 {

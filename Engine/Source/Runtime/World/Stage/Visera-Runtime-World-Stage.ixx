@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 export module Visera.Runtime.World.Stage;
-import Visera.Runtime.World.Stage.Scene;
+export import Visera.Runtime.World.Stage.Scene;
 import Visera.Runtime.World.Object;
 import Visera.Runtime.Render.Camera;
 
@@ -22,13 +22,14 @@ export namespace VE { namespace Runtime
 		// Don't forget to Update() Stage after modification.
 		Bool AttachScene(FName _SceneName, const String& _SceneFile);
 		Bool DetachScene(FName _SceneName);
+		auto SearchScene(FName _SceneName) -> SharedPtr<FScene>;
 
 		FStage() = delete;
 		FStage(FName _Name, const String& _StageFile);
 		~FStage();
 
 	private:
-		FRWLock RWLock;
+		mutable FRWLock RWLock;
 		FName   Name;
 		SharedPtr<VCamera>				  Camera;
 		HashMap<FName, SharedPtr<FScene>> Scenes;
@@ -83,6 +84,24 @@ export namespace VE { namespace Runtime
 		return Result;
 	}
 
+	SharedPtr<FScene> FStage::
+	SearchScene(FName _SceneName)
+	{
+		SharedPtr<FScene> Result;
+
+		RWLock.StartReading();
+		{
+			auto Target = Scenes.find(_SceneName);
+			if (Target != Scenes.end())
+			{
+				Result = Target->second;
+			}
+		}
+		RWLock.StopReading();
+
+		return Result;
+	}
+
 	void FStage::
 	Update()
 	{
@@ -101,7 +120,10 @@ export namespace VE { namespace Runtime
 	{
 		RWLock.StartWriting();
 		{
-			
+			for (auto& [Name, Scene] : Scenes)
+			{
+				if (Scene) { Scene->Create(); }
+			}
 		}
 		RWLock.StopWriting();
 	}
@@ -111,7 +133,10 @@ export namespace VE { namespace Runtime
 	{
 		RWLock.StartWriting();
 		{
-			
+			for (auto& [Name, Scene] : Scenes)
+			{
+				if (Scene) { Scene->Destroy(); }
+			}
 		}
 		RWLock.StopWriting();
 	}

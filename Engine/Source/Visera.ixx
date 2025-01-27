@@ -11,6 +11,7 @@ export namespace VE
 {
 	using RHI		= VE::Runtime::RHI;
 	using RTC		= VE::Runtime::RTC;
+	using FRay		= VE::Runtime::FRay;
 	using Window	= VE::Runtime::Window;
 	using World		= VE::Runtime::World;
 	using Geometry  = VE::Runtime::Geometry;
