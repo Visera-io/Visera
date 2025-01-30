@@ -4,24 +4,43 @@ export module Visera.Runtime.Render.RHI.Vulkan:Enums;
 
 export namespace VE { namespace Runtime
 {
+	// VE_ENUM_CLASS(EDescriptorType, VkDescriptorType)
+	// VE_ENUM_CLASS(EQueueFamily, UInt32)
+	// VE_ENUM_CLASS(ECommandPool, VkCommandPoolCreateFlags)
+	// VE_ENUM_CLASS(ECommandLevel, VkCommandBufferLevel)
+	// VE_ENUM_CLASS(ESampleRate, VkSampleCountFlags)
+	// VE_ENUM_CLASS(EAccessibility,	VkAccessFlags)
+	// VE_ENUM_CLASS(EShaderStage,	VkShaderStageFlags)
+	// VE_ENUM_CLASS(EPipelineStage,	VkPipelineStageFlags)
+	// VE_ENUM_CLASS(EMemoryUsage,	VmaMemoryUsage)
+	// VE_ENUM_CLASS(EImageLayout,	VkImageLayout)
+	// VE_ENUM_CLASS(EImageUsage,	VkImageUsageFlags)
+	// VE_ENUM_CLASS(EBufferUsage,	VkBufferUsageFlags)
+	// VE_ENUM_CLASS(EAttachmentIO,	VkAttachmentLoadOp)
 
+	VE_ENUM_CLASS(EDescriptorType, VkDescriptorType)
+	{
+		Sampler					= VK_DESCRIPTOR_TYPE_SAMPLER,
+		CombinedImageSampler	= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 
-//VE_ENUM_CLASS(EQueueFamily, UInt32)
-//VE_ENUM_CLASS(ECommandPool, VkCommandPoolCreateFlags)
-//VE_ENUM_CLASS(ESampleRate, VkSampleCountFlags)
-//VE_ENUM_CLASS(EAccessibility,	VkAccessFlags)
-//VE_ENUM_CLASS(EShaderStage,	VkShaderStageFlags)
-//VE_ENUM_CLASS(EPipelineStage,	VkPipelineStageFlags)
-//VE_ENUM_CLASS(EMemoryUsage,	VmaMemoryUsage)
-//VE_ENUM_CLASS(EImageLayout,	VkImageLayout)
-//VE_ENUM_CLASS(EImageUsage,	VkImageUsageFlags)
-//VE_ENUM_CLASS(EBufferUsage,	VkBufferUsageFlags)
-//VE_ENUM_CLASS(EAttachmentIO,	VkAttachmentLoadOp)
+		SampledImage			= VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+		StorageImage			= VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+
+		UniformTexelBuffer		= VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER,
+		StorageTexelBuffer		= VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER,
+
+		UniformBuffer			= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		StorageBuffer			= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+		DynamicUniformBuffer	= VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
+		DynamicStorageBuffer	= VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC,
+
+		InputAttachment			= VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+		InlineUniformBlock		= VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK,
+	};
 
 	VE_ENUM_CLASS(EQueueFamily, UInt32)
 	{
 		Graphics = 0,
-		Present  = 1,
 		Transfer = 2,
 		Compute  = 3,
 		All		 = 4,
@@ -46,6 +65,11 @@ export namespace VE { namespace Runtime
 		Protected = VK_COMMAND_POOL_CREATE_PROTECTED_BIT,
 	};
 
+	VE_ENUM_CLASS(ECommandLevel, VkCommandBufferLevel)
+	{
+		Primary   = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+		Secondary = VK_COMMAND_BUFFER_LEVEL_SECONDARY,
+	};
 
 	VE_ENUM_CLASS(EAccessibility, VkAccessFlags)
 	{

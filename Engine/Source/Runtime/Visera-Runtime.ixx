@@ -64,11 +64,11 @@ export namespace VE { namespace Runtime
 					Drawcalls.clear();
 					std::exit(VISERA_APP_ERROR); // TEST
 
-					Array<RHI::CommandPool::SubmitInfo> SubmitInfos;
+					Array<RHI::FCommandPool::SubmitInfo> SubmitInfos;
 
 					for (const auto& [Name,CommandContext] : CurrentFrame.CommandContexts)
 					{
-						SubmitInfos.emplace_back(RHI::CommandPool::SubmitInfo
+						SubmitInfos.emplace_back(RHI::FCommandPool::SubmitInfo
 						{
 							.Deadlines = {AutoCast(RHI::EPipelineStage::ColorAttachmentOutput)},
 							.CommandBuffers = {CommandContext->Commands->GetHandle()},

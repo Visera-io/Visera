@@ -113,7 +113,7 @@ CreateBuffer(const Buffer::CreateInfo& _CreateInfo) const
 		&NewBuffer->Handle,
 		&NewBuffer->Allocation,
 		nullptr))
-	{ throw SRuntimeError("Failed to create VMA Buffer!"); }
+	{ throw SRuntimeError("Failed to create VMA FBuffer!"); }
 
 	return NewBuffer;
 }

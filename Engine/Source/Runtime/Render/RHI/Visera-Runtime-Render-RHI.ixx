@@ -1,8 +1,9 @@
 module;
 #include <Visera.h>
 export module Visera.Runtime.Render.RHI;
-
 import Visera.Runtime.Render.RHI.Vulkan;
+import Visera.Runtime.Render.RHI.RenderPass;
+
 import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
@@ -14,17 +15,20 @@ export namespace VE { namespace Runtime
 		VE_MODULE_MANAGER_CLASS(RHI);
 		friend class Render;
 	public:
-		using Semaphore			= FVulkanSemaphore;
-		using CommandPool		= FVulkanCommandPool;
-		using CommandBuffer		= FVulkanCommandPool::CommandBuffer;
-		using Fence				= FVulkanFence;
-		using Shader			= FVulkanShader;
-		using RenderPass		= FVulkanRenderPass;
-		using Buffer			= FVulkanAllocator::Buffer;
+		using FSemaphore		= FVulkanSemaphore;
+		using FCommandPool		= FVulkanCommandPool;
+		using FCommandBuffer	= FVulkanCommandPool::FVulkanCommandBuffer;
+		using FFence			= FVulkanFence;
+		using FShader			= FVulkanShader;
+		using FBuffer			= FVulkanAllocator::Buffer;
+		using FFramebuffer		= FVulkanFramebuffer;
+		using FRenderPipeline   = FVulkanRenderPipeline;
+		using FPipelineLayout   = FVulkanPipelineLayout;
 
 		using ESampleRate		= ESampleRate;
 		using EQueueFamily		= EQueueFamily;
 		using ECommandPool		= ECommandPool;
+		using ECommandLevel		= ECommandLevel;
 		using EShaderStage		= EShaderStage;
 		using EAccessibility	= EAccessibility;
 		using EPipelineStage	= EPipelineStage;
@@ -42,11 +46,11 @@ export namespace VE { namespace Runtime
 		VE_API RegisterCommandContext(const String& Name, EPipelineStage Deadline) -> void;
 		VE_API SearchCommandContext(StringView Name)	-> WeakPtr<CommandContext>;
 
-		VE_API CreateBuffer(const Buffer::CreateInfo& _CreateInfo) -> SharedPtr<Buffer> { return Vulkan->Allocator.CreateBuffer(_CreateInfo); }
-		VE_API CreateFence()				-> SharedPtr<Fence>		{ return CreateSharedPtr<Fence>(); }
-		VE_API CreateSignaledFence()		-> SharedPtr<Fence>		{ return CreateSharedPtr<Fence>(true); }
-		VE_API CreateSemaphore()			-> SharedPtr<Semaphore> { return CreateSharedPtr<Semaphore>(); }
-		VE_API CreateShader(EShaderStage Stage, const Array<Byte>& ShadingCode) -> SharedPtr<Shader> { return CreateSharedPtr<FVulkanShader>(Stage, ShadingCode);}
+		VE_API CreateBuffer(const FBuffer::CreateInfo& _CreateInfo) -> SharedPtr<FBuffer> { return Vulkan->Allocator.CreateBuffer(_CreateInfo); }
+		VE_API CreateFence()				-> SharedPtr<FFence>		{ return CreateSharedPtr<FFence>(); }
+		VE_API CreateSignaledFence()		-> SharedPtr<FFence>		{ return CreateSharedPtr<FFence>(true); }
+		VE_API CreateSemaphore()			-> SharedPtr<FSemaphore> { return CreateSharedPtr<FSemaphore>(); }
+		VE_API CreateShader(EShaderStage Stage, const Array<Byte>& ShadingCode) -> SharedPtr<FShader> { return CreateSharedPtr<FVulkanShader>(Stage, ShadingCode);}
 
 		VE_API WaitIdle() -> void { Vulkan->Device.WaitIdle(); }
 
@@ -58,17 +62,17 @@ export namespace VE { namespace Runtime
 			friend class RHI;
 		public:
 			StringView						 Name;
-			SharedPtr<CommandBuffer>		 Commands;
+			SharedPtr<FCommandBuffer>		 Commands;
 
 		//private:
-			void Create(StringView Name, EPipelineStage Deadline, SharedPtr<Fence> SignalFence);
+			void Create(StringView Name, EPipelineStage Deadline, SharedPtr<FFence> SignalFence);
 			void Destroy() noexcept {};
 
 		//private:
 			EPipelineStage					 Deadline;
 			Array<SharedPtr<CommandContext>> Dependencies;
-			Semaphore						 Semaphore_Compeleted;
-			SharedPtr<Fence>				 Fence_Executing;
+			FSemaphore						 Semaphore_Compeleted;
+			SharedPtr<FFence>				 Fence_Executing;
 		};
 
 
@@ -77,9 +81,9 @@ export namespace VE { namespace Runtime
 
 		struct Frame
 		{
-			Fence		Fence_Rendering{ True };
-			Semaphore	Semaphore_ReadyToRender;
-			Semaphore	Semaphore_ReadyToPresent;
+			FFence		Fence_Rendering{ True };
+			FSemaphore	Semaphore_ReadyToRender;
+			FSemaphore	Semaphore_ReadyToPresent;
 			HashMap<String, SharedPtr<CommandContext>> CommandContexts;
 		};
 		static inline Array<Frame> Frames;
@@ -129,7 +133,7 @@ export namespace VE { namespace Runtime
 	void RHI::CommandContext::
 	Create(	StringView				Name,
 			EPipelineStage			Deadline,
-			SharedPtr<Fence>		SignalFence)
+			SharedPtr<FFence>		SignalFence)
 	{
 		this->Name				= std::move(Name);
 		this->Deadline			= Deadline;
@@ -146,7 +150,7 @@ export namespace VE { namespace Runtime
 			NewCommandContext = CreateSharedPtr<CommandContext>();
 			NewCommandContext->Create(Name, Deadline, nullptr);
 			//[FIXME]: Create Buffer based on Create(X_para)
-			NewCommandContext->Commands = ResetableGraphicsCommandPool.Allocate(CommandBuffer::Level::Primary);
+			NewCommandContext->Commands = ResetableGraphicsCommandPool.Allocate(ECommandLevel::Primary);
 		}
 		auto& CurrentFrame = GetCurrentFrame();
 	}

@@ -9,46 +9,46 @@ export namespace VE { namespace Runtime
 {
 
 
-class FVulkanLoader
-{
-	friend class FVulkan;
-private:
-	void LoadInstance(VkInstance Instance);
-	void LoadDevice(VkDevice Device);
+	class FVulkanLoader
+	{
+		friend class FVulkan;
+	private:
+		void LoadInstance(VkInstance Instance);
+		void LoadDevice(VkDevice Device);
 
-	void Create();
-	void Destroy();
+		void Create();
+		void Destroy();
 
-public:
-	FVulkanLoader() noexcept = default;
-	~FVulkanLoader() noexcept = default;
-};
+	public:
+		FVulkanLoader() noexcept = default;
+		~FVulkanLoader() noexcept = default;
+	};
 
-void FVulkanLoader::
-Create()
-{
-	if (VK_SUCCESS != volkInitialize())
-	{ Log::Fatal("Failed to initialize Volk!"); }
-}
+	void FVulkanLoader::
+	Create()
+	{
+		if (VK_SUCCESS != volkInitialize())
+		{ Log::Fatal("Failed to initialize Volk!"); }
+	}
 
-void FVulkanLoader::
-Destroy()
-{
-	volkFinalize();
-}
+	void FVulkanLoader::
+	Destroy()
+	{
+		volkFinalize();
+	}
 		
-void FVulkanLoader::
-LoadInstance(VkInstance Instance)
-{
-	VE_ASSERT(Instance != VK_NULL_HANDLE);
-	volkLoadInstance(Instance);
-}
+	void FVulkanLoader::
+	LoadInstance(VkInstance Instance)
+	{
+		VE_ASSERT(Instance != VK_NULL_HANDLE);
+		volkLoadInstance(Instance);
+	}
 
-void FVulkanLoader::
-LoadDevice(VkDevice Device)
-{
-	VE_ASSERT(Device != VK_NULL_HANDLE);
-	volkLoadDevice(Device);
-}
+	void FVulkanLoader::
+	LoadDevice(VkDevice Device)
+	{
+		VE_ASSERT(Device != VK_NULL_HANDLE);
+		volkLoadDevice(Device);
+	}
 
 } } // namespace VE::Runtime

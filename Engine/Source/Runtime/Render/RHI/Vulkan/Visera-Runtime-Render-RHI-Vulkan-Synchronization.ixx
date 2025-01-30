@@ -56,7 +56,7 @@ FVulkanSemaphore(Bool bSignaled/* = False*/)
 		&CreateInfo,
 		GVulkan->AllocationCallbacks,
 		&Handle))
-	{ throw SRuntimeError("Failed to create Vulkan Semaphore!"); }
+	{ throw SRuntimeError("Failed to create Vulkan FSemaphore!"); }
 }
 
 FVulkanSemaphore::
@@ -79,7 +79,7 @@ FVulkanFence(Bool bSignaled/* = False*/)
 		&CreateInfo,
 		GVulkan->AllocationCallbacks,
 		&Handle))
-	{ throw SRuntimeError("Failed to create Vulkan Fence!"); }
+	{ throw SRuntimeError("Failed to create Vulkan FFence!"); }
 }
 
 FVulkanFence::

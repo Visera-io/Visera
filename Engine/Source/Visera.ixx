@@ -11,10 +11,12 @@ export namespace VE
 {
 	using RHI		= VE::Runtime::RHI;
 	using RTC		= VE::Runtime::RTC;
-	using FRay		= VE::Runtime::FRay;
 	using Window	= VE::Runtime::Window;
 	using World		= VE::Runtime::World;
 	using Geometry  = VE::Runtime::Geometry;
+
+	using FRay		= VE::Runtime::FRay;
+
 
 	class ViseraApp
 	{
@@ -42,8 +44,13 @@ export namespace VE
 			{
 				if (App)
 				{
-					Log::Debug("App Started Running");
-					do { App->Tick(); } while (RuntimeTick());
+					Log::Debug("Bootstrapping the " VISERA_APP_NAME "...");
+					App->Bootstrap();
+					{
+						do { App->Tick(); } while (RuntimeTick());
+					}
+					App->Terminate();
+					delete App;
 				}
 				else Log::Error("Visera App is not created");
 			}
@@ -68,12 +75,11 @@ export namespace VE
 			Runtime::ViseraRuntime::Bootstrap();
 			RuntimeTick = Runtime::ViseraRuntime::Tick;
 	#endif
-			if (App) App->Bootstrap();
+
 		}
 
 		~Visera()
 		{
-			if (App) { App->Terminate(); delete App; }
 	#if defined(VISERA_RUNTIME)
 			Log::Debug("Terminating Visera Runtime...");
 			Runtime::ViseraRuntime::Terminate();
