@@ -20,8 +20,7 @@ export namespace VE { namespace Runtime
 		auto EnumerateAvailableGPUs() const -> Array<FVulkanGPU>;
 		auto GetVulkanAPIVersion() const -> UInt32 { return AppVersion; }
 
-		auto GetHandle() const		-> VkInstance { return  Handle; }
-		operator VkInstance() const { return Handle; }
+		auto GetHandle() const -> const VkInstance { return  Handle; }
 
 	private:
 		RawString				AppName		= VISERA_ENGINE_NAME;

@@ -4,6 +4,7 @@ export module Visera.Runtime.RHI.Vulkan:DescriptorPool;
 
 import :Enums;
 import :Device;
+import :GPU;
 import :DescriptorSet;
 import :DescriptorSetLayout;
 
@@ -15,7 +16,8 @@ export namespace VE { namespace Runtime
 	class FVulkanDescriptorPool
 	{
 	public:
-		auto CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _Layout) -> SharedPtr<FVulkanDescriptorSet> { return CreateSharedPtr<FVulkanDescriptorSet>(Handle, _Layout); }
+		// Return nullptr when exceeded MaxSets Limit.
+		auto CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _Layout) -> SharedPtr<FVulkanDescriptorSet> { static UInt32 SetCount = 0; if (++SetCount > MaxSets) { return nullptr; } else { return CreateSharedPtr<FVulkanDescriptorSet>(Handle, _Layout); } }
 
 		struct FDescriptorEntry
 		{
@@ -23,23 +25,25 @@ export namespace VE { namespace Runtime
 			UInt32			Count = 0;
 		};
 
-		// MaxSets is device specified (usually 32), please check it via vulkanCapsViewer
-		FVulkanDescriptorPool(const Array<FDescriptorEntry>& _DescriptorEntries, UInt32 _MaxSets = 32);
+		FVulkanDescriptorPool(const Array<FDescriptorEntry>& _DescriptorEntries, UInt32 _MaxSets);
 		FVulkanDescriptorPool() = delete;
-
+		~FVulkanDescriptorPool();
 	private:
 		VkDescriptorPool				 Handle{ VK_NULL_HANDLE };
+		UInt32							 MaxSets{ 0 };
 		HashMap<EDescriptorType, UInt32> DescriptorTable;
 	};
 
 	FVulkanDescriptorPool::
 	FVulkanDescriptorPool(
 		const Array<FDescriptorEntry>& _DescriptorEntries,
-		UInt32 _MaxSets/* = 32*/)
+		UInt32 _MaxSets/* = GVulkan->GPU->GetProperties().limits.maxBoundDescriptorSets */)
+		: MaxSets{ _MaxSets }
 	{
 		static_assert(sizeof(FDescriptorEntry)  == sizeof(VkDescriptorPoolSize)  &&
 			          alignof(FDescriptorEntry) == alignof(VkDescriptorPoolSize) &&
 			          sizeof(FDescriptorEntry::Type) == sizeof(VkDescriptorPoolSize::type));
+		VE_ASSERT(MaxSets > 0);
 
 		for (auto& Entry : _DescriptorEntries)
 		{
@@ -60,7 +64,14 @@ export namespace VE { namespace Runtime
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
-			throw SRuntimeError("Failed to create the Vulkan Descriptor Pool!");
+		{ throw SRuntimeError("Failed to create the Vulkan Descriptor Pool!"); }
+	}
+
+	FVulkanDescriptorPool::
+	~FVulkanDescriptorPool()
+	{
+		vkDestroyDescriptorPool(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
+		Handle = VK_NULL_HANDLE;
 	}
 	
 } } // namespace VE::Runtime

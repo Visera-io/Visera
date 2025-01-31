@@ -4,6 +4,9 @@ export module Visera.Runtime.RHI.Vulkan;
 
 export import :CommandPool;
 export import :CommandBuffer;
+export import :DescriptorPool;
+export import :DescriptorSet;
+export import :DescriptorSetLayout;
 export import :Shader;
 export import :PipelineLayout;
 export import :RenderPass;
@@ -41,7 +44,7 @@ export namespace VE { namespace Runtime
 		FVulkanAllocator	Allocator	{};
 		FVulkanSwapchain	Swapchain	{};
 
-		FVulkanPipelineCache GraphicsPipelineCache{VISERA_APP_CACHE_DIR "/.GraphicsPipelineCache.bin"};
+		FVulkanPipelineCache GraphicsPipelineCache{FPath{ StringView(VISERA_APP_CACHE_DIR"/.GraphicsPipelineCache.bin") }};
 		//VulkanPipelineCache ComputeCache	{VISERA_APP_ASSETS_DIR "/.ComputeCache.bin"};
 
 		VulkanAllocationCallbacks AllocationCallbacks {nullptr};

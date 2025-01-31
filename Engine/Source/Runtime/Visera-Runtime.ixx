@@ -54,33 +54,34 @@ export namespace VE { namespace Runtime
 		{
 			try
 			{
-				RHI::WaitForCurrentFrame();
-				{
-					auto& CurrentFrame = RHI::GetCurrentFrame();
-					VE_ASSERT(Drawcalls.size() > 0);
-					//[TODO]: CommandList is submitted via App;
-					auto& DrawCall = Drawcalls.front();
-					DrawCall();
-					Drawcalls.clear();
-					std::exit(VISERA_APP_ERROR); // TEST
+				VE_WIP;
+				//RHI::WaitForCurrentFrame();
+				//{
+				//	auto& CurrentFrame = RHI::GetCurrentFrame();
+				//	VE_ASSERT(Drawcalls.size() > 0);
+				//	//[TODO]: CommandList is submitted via App;
+				//	auto& DrawCall = Drawcalls.front();
+				//	DrawCall();
+				//	Drawcalls.clear();
+				//	std::exit(VISERA_APP_ERROR); // TEST
 
-					Array<RHI::FCommandPool::SubmitInfo> SubmitInfos;
+				//	Array<RHI::FCommandPool::SubmitInfo> SubmitInfos;
 
-					for (const auto& [Name,CommandContext] : CurrentFrame.CommandContexts)
-					{
-						SubmitInfos.emplace_back(RHI::FCommandPool::SubmitInfo
-						{
-							.Deadlines = {AutoCast(RHI::EPipelineStage::ColorAttachmentOutput)},
-							.CommandBuffers = {CommandContext->Commands->GetHandle()},
-							.WaitSemaphores = {CurrentFrame.Semaphore_ReadyToRender},//[FIXME] Temp
-							.SignalSemaphores = { /*TEST*/ CurrentFrame.Semaphore_ReadyToPresent },
-							.Fence = CurrentFrame.Fence_Rendering
-						});
-					}
-					VE_ASSERT(SubmitInfos.size() == 1, "TESTING"); //Visera Render is controled by a singlton cmd
-					RHI::ResetableGraphicsCommandPool.Submit(SubmitInfos[0]);
-				}
-				RHI::PresentCurrentFrame();
+				//	for (const auto& [Name,CommandContext] : CurrentFrame.CommandContexts)
+				//	{
+				//		SubmitInfos.emplace_back(RHI::FCommandPool::SubmitInfo
+				//		{
+				//			.Deadlines = {AutoCast(RHI::EPipelineStage::ColorAttachmentOutput)},
+				//			.CommandBuffers = {CommandContext->Commands->GetHandle()},
+				//			.WaitSemaphores = {CurrentFrame.Semaphore_ReadyToRender},//[FIXME] Temp
+				//			.SignalSemaphores = { /*TEST*/ CurrentFrame.Semaphore_ReadyToPresent },
+				//			.Fence = CurrentFrame.Fence_Rendering
+				//		});
+				//	}
+				//	VE_ASSERT(SubmitInfos.size() == 1, "TESTING"); //Visera Render is controled by a singlton cmd
+				//	RHI::ResetableGraphicsCommandPool.Submit(SubmitInfos[0]);
+				//}
+				//RHI::PresentCurrentFrame();
 			}
 			catch (const RHI::SwapchainRecreateSignal&)
 			{

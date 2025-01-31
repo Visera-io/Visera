@@ -30,6 +30,7 @@ export namespace VE { namespace Runtime
 		  Layout { std::move(_Layout) }
 	{
 		auto LayoutHandle = Layout->GetHandle();
+		VE_ASSERT(LayoutHandle != VK_NULL_HANDLE);
 
 		VkDescriptorSetAllocateInfo CreateInfo
 		{

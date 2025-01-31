@@ -15,28 +15,32 @@ export namespace VE { namespace Runtime
 		VE_MODULE_MANAGER_CLASS(RHI);
 		friend class Render;
 	public:
-		using FSemaphore		= FVulkanSemaphore;
-		using FCommandPool		= FVulkanCommandPool;
-		using FCommandBuffer	= FVulkanCommandBuffer;
-		using FFence			= FVulkanFence;
-		using FShader			= FVulkanShader;
-		using FBuffer			= FVulkanAllocator::Buffer;
-		using FFramebuffer		= FVulkanFramebuffer;
-		using FRenderPipeline   = FVulkanRenderPipeline;
-		using FPipelineLayout   = FVulkanPipelineLayout;
+		using FSemaphore			= FVulkanSemaphore;
+		using FCommandPool			= FVulkanCommandPool;
+		using FCommandBuffer		= FVulkanCommandBuffer;
+		using FDescriptorPool		= FVulkanDescriptorPool;
+		using FDescriptorSet		= FVulkanDescriptorSet;
+		using FDescriptorSetLayout  = FVulkanDescriptorSetLayout;
+		using FFence				= FVulkanFence;
+		using FShader				= FVulkanShader;
+		using FBuffer				= FVulkanAllocator::FBuffer;
+		using FFramebuffer			= FVulkanFramebuffer;
+		using FRenderPipeline		= FVulkanRenderPipeline;
+		using FPipelineLayout		= FVulkanPipelineLayout;
 
-		using ESampleRate		= ESampleRate;
-		using EQueueFamily		= EQueueFamily;
-		using ECommandPool		= ECommandPool;
-		using ECommandLevel		= ECommandLevel;
-		using EShaderStage		= EShaderStage;
-		using EAccessibility	= EAccessibility;
-		using EPipelineStage	= EPipelineStage;
-		using EMemoryUsage		= EMemoryUsage;
-		using EBufferUsage		= EBufferUsage;
-		using EImageLayout		= EImageLayout;
-		using EPipelineStage	= EPipelineStage;
-		using EAttachmentIO		= EAttachmentIO;
+		using ESampleRate			= ESampleRate;
+		using EQueueFamily			= EQueueFamily;
+		using ECommandPool			= ECommandPool;
+		using ECommandLevel			= ECommandLevel;
+		using EShaderStage			= EShaderStage;
+		using EAccessibility		= EAccessibility;
+		using EPipelineStage		= EPipelineStage;
+		using EMemoryUsage			= EMemoryUsage;
+		using EBufferUsage			= EBufferUsage;
+		using EImageLayout			= EImageLayout;
+		using EPipelineStage		= EPipelineStage;
+		using EAttachmentIO			= EAttachmentIO;
+		using EDescriptorType		= EDescriptorType;
 
 		using SwapchainRecreateSignal = FVulkanSwapchain::RecreateSignal;
 
@@ -108,10 +112,10 @@ export namespace VE { namespace Runtime
 			Vulkan->Swapchain.PresentCurrentImage(CurrentFrame.Semaphore_ReadyToPresent);
 		}
 
-	//private:
+	private:
 		static inline FVulkanCommandPool ResetableGraphicsCommandPool{};
 		static inline FVulkanCommandPool TransientGraphicsCommandPool{};
-
+		
 	private:
 		static void
 		Bootstrap()
@@ -119,6 +123,7 @@ export namespace VE { namespace Runtime
 			Vulkan = new FVulkan();
 			ResetableGraphicsCommandPool.Create(EQueueFamily::Graphics, ECommandPool::Resetable);
 			TransientGraphicsCommandPool.Create(EQueueFamily::Graphics, ECommandPool::Transient);
+
 			Frames.resize(Vulkan->Swapchain.GetSize());
 		}
 		static void

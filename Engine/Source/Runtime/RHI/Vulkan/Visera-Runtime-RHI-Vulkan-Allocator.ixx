@@ -18,7 +18,7 @@ class FVulkanAllocator
 {
 	friend class FVulkan;
 public:
-	class Buffer
+	class FBuffer
 	{
 		friend class FVulkanAllocator;
 	public:
@@ -39,11 +39,11 @@ public:
 		VmaAllocation	Allocation;
 
 	public:	
-		~Buffer() noexcept;
+		~FBuffer() noexcept;
 	};
 
 public:
-	auto CreateBuffer(const Buffer::CreateInfo& _CreateInfo) const -> SharedPtr<Buffer>;
+	auto CreateBuffer(const FBuffer::CreateInfo& _CreateInfo) const -> SharedPtr<FBuffer>;
 
 	auto GetHandle() const -> VmaAllocator { return Handle; }
 	operator VmaAllocator() const { return Handle; }
@@ -81,13 +81,13 @@ private:
 	VmaAllocator	Handle{ VMA_NULL };
 };
 
-SharedPtr<FVulkanAllocator::Buffer>
+SharedPtr<FVulkanAllocator::FBuffer>
 FVulkanAllocator::
-CreateBuffer(const Buffer::CreateInfo& _CreateInfo) const
+CreateBuffer(const FBuffer::CreateInfo& _CreateInfo) const
 {
 	VE_ASSERT(_CreateInfo.Size > 0);
 
-	auto NewBuffer = CreateSharedPtr<Buffer>();
+	auto NewBuffer = CreateSharedPtr<FBuffer>();
 	VkBufferCreateInfo CreateInfo
 	{
 		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -118,8 +118,8 @@ CreateBuffer(const Buffer::CreateInfo& _CreateInfo) const
 	return NewBuffer;
 }
 
-FVulkanAllocator::Buffer::
-~Buffer() noexcept
+FVulkanAllocator::FBuffer::
+~FBuffer() noexcept
 {
 	vmaDestroyBuffer(GVulkan->Allocator->GetHandle(), Handle, Allocation);
 	Handle = VK_NULL_HANDLE;

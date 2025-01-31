@@ -17,19 +17,18 @@ export namespace VE { namespace Runtime
 		friend class FVulkan;
 	public:
 		Bool IsExpired() const { return bExpired; }
-		auto GetHandle() const -> VkPipelineCache { return Handle; }
-		operator VkPipelineCache() const { return Handle; }
+		auto GetHandle() const -> const VkPipelineCache { return Handle; }
 
 	private:
 		VkPipelineCache Handle{ VK_NULL_HANDLE };
-		RawString		Path;
+		FPath			Path;
 		Bool			bExpired = False;
 		
 	private:
 		void Create();
 		void Destroy();
 		FVulkanPipelineCache() noexcept = delete;
-		FVulkanPipelineCache(RawString CachePath) noexcept : Path{ CachePath } {};
+		FVulkanPipelineCache(FPath _CachePath) noexcept : Path{ std::move(_CachePath) } {};
 		~FVulkanPipelineCache() noexcept = default;
 	};
 

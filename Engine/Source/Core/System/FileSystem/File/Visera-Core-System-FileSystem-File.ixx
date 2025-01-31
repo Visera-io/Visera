@@ -2,6 +2,7 @@ module;
 #include <Visera.h>
 export module Visera.Core.System.FileSystem:File;
 
+import Visera.Core.System.FileSystem.Path;
 import Visera.Core.Signal;
 import Visera.Core.Log;
 
@@ -11,8 +12,8 @@ export namespace VE
     class FFile
     {
     public:
- 	    virtual void SaveAs(StringView FilePath,   Int32 SaveModes)	throw(SIOFailure); //Check out the demo below
- 	    virtual void LoadFrom(StringView FilePath, Int32 LoadModes)	throw(SIOFailure); //Check out the demo below
+ 	    virtual void SaveAs(const FPath& FilePath,   Int32 SaveModes) throw(SIOFailure); //Check out the demo below
+ 	    virtual void LoadFrom(const FPath& FilePath, Int32 LoadModes) throw(SIOFailure); //Check out the demo below
  	    virtual void Save(Int32 SaveModes = 0x0) throw(SIOFailure) { SaveAs(Path,   SaveModes); }
  	    virtual void Load(Int32 LoadModes = 0x0) throw(SIOFailure) { LoadFrom(Path, LoadModes); }
 
@@ -25,12 +26,12 @@ export namespace VE
  	    Bool IsEmpty()  const { return Data.empty(); }
  	    Bool IsOpened() const { return IOStream.Address != nullptr; }
  	    auto GetSize() const -> size_t { return Data.size(); }
- 	    auto GetPath() const -> StringView { return Path; }
+ 	    auto GetPath() const -> const FPath& { return Path; }
  	    auto GetData() const -> const Array<Byte>& { return Data; }
 
- 	    void SetPath(const String& NewPath) { Path = NewPath; }
+ 	    void SetPath(const FPath& NewPath) { Path = NewPath; }
 
- 	    FFile(const String& FilePath) noexcept : Path{ FilePath } {};
+ 	    FFile(const FPath& FilePath) noexcept : Path{ FilePath } {};
  	    virtual ~FFile() noexcept = default;
 
     protected:
@@ -40,13 +41,13 @@ export namespace VE
  	    auto OpenOStream(Int32 OModes) -> std::ofstream*;
  	    void CloseOStream();
     protected:
- 	    String			Path;
+ 	    FPath			Path;
  	    Array<Byte>		Data;
  	    union { void* Address = nullptr; std::ifstream* IStream; std::ofstream* OStream; } IOStream;
     };
 
     void FFile::
-    SaveAs(StringView FilePath, Int32 SaveModes)	throw(SIOFailure)
+    SaveAs(const FPath& FilePath, Int32 SaveModes)	throw(SIOFailure)
     {
  	    //Tips: Add SaveModes via SaveModes |= NewMode
  	    if (auto* OutputFile = OpenOStream(SaveModes))
@@ -54,15 +55,15 @@ export namespace VE
  		    OutputFile->write(reinterpret_cast<char*>(Data.data()), Data.size());
 
  		    if (OutputFile->fail())
- 		    { throw SIOFailure(Text("Failed to write to {}", FilePath)); }
+ 		    { throw SIOFailure(Text("Failed to write to {}", "FilePath.GetHandle().c_str()")); }
 
  		    CloseOStream();
  	    }
- 	    else throw SIOFailure(Text("Failed to open {}", FilePath));	
+ 	    else throw SIOFailure(Text("Failed to open {}", "FilePath.GetHandle().c_str()"));	
     }
 
     void FFile::
-    LoadFrom(StringView FilePath, Int32 LoadModes) throw(SIOFailure)
+    LoadFrom(const FPath& FilePath, Int32 LoadModes) throw(SIOFailure)
     {
  	    //Tips: Add LoadModes via LoadModes |= NewMode
  	    if (auto* InputFile = OpenIStream(LoadModes))
@@ -72,11 +73,11 @@ export namespace VE
  		    InputFile->read(reinterpret_cast<char*>(Data.data()), Data.size());
 
  		    if (InputFile->fail() || InputFile->gcount() != Data.size())
- 		    { throw SIOFailure(Text("Failed to read from {}", FilePath)); }
+ 		    { throw SIOFailure(Text("Failed to read from {}", "FilePath.GetHandle().c_str()")); }
 
  		    CloseIStream();
  	    }
- 	    else throw SIOFailure(Text("Failed to open {}", FilePath));
+ 	    else throw SIOFailure(Text("Failed to open {}", "FilePath.GetHandle().c_str()"));
     }
 
     size_t FFile::
@@ -98,7 +99,7 @@ export namespace VE
     OpenIStream(Int32 IModes)
     { 
  	    if (IOStream.IStream) return nullptr;
- 	    IOStream.IStream = new std::ifstream(Path, IModes);
+ 	    IOStream.IStream = new std::ifstream(Path.GetHandle(), IModes);
  	    if (!IOStream.IStream->is_open()) return nullptr;
  	    return IOStream.IStream;
     }
@@ -116,7 +117,7 @@ export namespace VE
     OpenOStream(Int32 OModes)
     {
  	    if (IOStream.OStream) return nullptr;
- 	    IOStream.OStream = new std::ofstream(Path, OModes);
+ 	    IOStream.OStream = new std::ofstream(Path.GetHandle(), OModes);
  	    if (!IOStream.OStream->is_open()) return nullptr;
  	    return IOStream.OStream;
     }

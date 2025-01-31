@@ -12,7 +12,7 @@ class FVulkanGPU
 	friend class FVulkan;
 public:
 	auto GetName()					const -> RawString								{ return Properties.deviceName; }
-	auto GetHandle()				const -> VkPhysicalDevice						{ return Handle; }
+	auto GetHandle()				const -> const VkPhysicalDevice					{ return Handle; }
 	auto GetFeatures()				const -> const VkPhysicalDeviceFeatures&		{ return Features; }
 	auto GetProperties()			const -> const VkPhysicalDeviceProperties&		{ return Properties; }
 	auto GetMemoryProperties()		const -> const VkPhysicalDeviceMemoryProperties&{ return MemoryProperties; }
@@ -22,8 +22,6 @@ public:
 	auto QueryFormatProperties(VkFormat Format)			const -> VkFormatProperties { VkFormatProperties Properties; vkGetPhysicalDeviceFormatProperties(Handle, Format, &Properties); return Properties; }
 
 	Bool IsDiscreteGPU() const { return Properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU; }
-
-	operator VkPhysicalDevice() const { return Handle; }
 		
 private:
 	VkPhysicalDevice					Handle { VK_NULL_HANDLE };

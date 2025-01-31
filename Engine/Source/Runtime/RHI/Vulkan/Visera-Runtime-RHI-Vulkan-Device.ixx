@@ -16,9 +16,8 @@ class FVulkanDevice
 {
 	friend class FVulkan;
 public:
-	void WaitIdle() const { vkDeviceWaitIdle(Handle); }
-	auto GetHandle() const	-> VkDevice	{ return Handle; }
-	operator VkDevice() const	{ return Handle; }
+	void WaitIdle()  const { vkDeviceWaitIdle(Handle); }
+	auto GetHandle() const -> const VkDevice { return Handle; }
 
 private:
 	VkDevice				Handle{ VK_NULL_HANDLE };
@@ -71,7 +70,7 @@ Create(FVulkanGPU* GPU, FVulkanSurface* Surface)
 				{ GraphicsQueueFamilies.emplace(Index); }
 
 				VkBool32 bPresentSupported = VK_FALSE;
-				vkGetPhysicalDeviceSurfaceSupportKHR(GPUCandidate, Index, Surface->GetHandle(), &bPresentSupported);
+				vkGetPhysicalDeviceSurfaceSupportKHR(GPUCandidate.GetHandle(), Index, Surface->GetHandle(), &bPresentSupported);
 				if (bPresentSupported)
 				{ PresentQueueFamilies.emplace(Index); }
 
@@ -129,16 +128,16 @@ Create(FVulkanGPU* GPU, FVulkanSurface* Surface)
 		//Surface Supports
 		{
 			UInt32 FormatCount = 0;
-			vkGetPhysicalDeviceSurfaceFormatsKHR(GPUCandidate, Surface->GetHandle(), &FormatCount, nullptr);
+			vkGetPhysicalDeviceSurfaceFormatsKHR(GPUCandidate.GetHandle(), Surface->GetHandle(), &FormatCount, nullptr);
 			if (!FormatCount) continue;
 			Array<VkSurfaceFormatKHR> Formats(FormatCount);
-			vkGetPhysicalDeviceSurfaceFormatsKHR(GPUCandidate, Surface->GetHandle(), &FormatCount, Formats.data());
+			vkGetPhysicalDeviceSurfaceFormatsKHR(GPUCandidate.GetHandle(), Surface->GetHandle(), &FormatCount, Formats.data());
 
 			UInt32 PresentModeCount = 0;
-			vkGetPhysicalDeviceSurfacePresentModesKHR(GPUCandidate, Surface->GetHandle(), &PresentModeCount, nullptr);
+			vkGetPhysicalDeviceSurfacePresentModesKHR(GPUCandidate.GetHandle(), Surface->GetHandle(), &PresentModeCount, nullptr);
 			if (!PresentModeCount) continue;
 			Array<VkPresentModeKHR> PresentModes(PresentModeCount);
-			vkGetPhysicalDeviceSurfacePresentModesKHR(GPUCandidate, Surface->GetHandle(), &PresentModeCount, PresentModes.data());
+			vkGetPhysicalDeviceSurfacePresentModesKHR(GPUCandidate.GetHandle(), Surface->GetHandle(), &PresentModeCount, PresentModes.data());
 			Surface->SetFormats(std::move(Formats));
 			Surface->SetPresentModes(std::move(PresentModes));
 		}
