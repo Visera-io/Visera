@@ -11,16 +11,18 @@ import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
+	class FVulkan;
+	class RHI;
 
 	class FVulkanCommandPool
 	{
-		friend class RHI;
 		friend class FVulkan;
+		friend class RHI;
 	public:
 		auto GetType() const -> ECommandPool { return ECommandPool(Type); }
 		Bool IsResetable() const { return Type == ECommandPool::Resetable; }
-		auto Allocate(ECommandLevel _CommandLevel) const -> SharedPtr<FVulkanCommandBuffer>;
-		void Free(VkCommandBuffer CommandBuffer)  const;
+		auto CreateCommandBuffer(ECommandLevel _CommandLevel) const -> SharedPtr<FVulkanCommandBuffer> { auto Result = CreateSharedPtr<FVulkanCommandBuffer>(Handle, _CommandLevel); Result->bIsResettable = IsResetable(); return Result; }
+
 		struct SubmitInfo
 		{
 			Array<VkPipelineStageFlags> Deadlines;
@@ -37,7 +39,6 @@ export namespace VE { namespace Runtime
 	private:
 		void Create(EQueueFamily QueueFamilyType, ECommandPool Type);
 		void Destroy();
-		void EmptyRecycleBin();
 
 	public:
 		FVulkanCommandPool()  noexcept = default;
@@ -47,7 +48,6 @@ export namespace VE { namespace Runtime
 		VkCommandPool				Handle{ VK_NULL_HANDLE };
 		ECommandPool				Type;
 		EQueueFamily				QueueFamilyType;
-		mutable Array<VkCommandBuffer> RecycleBin;
 	};
 
 	void FVulkanCommandPool::
@@ -74,44 +74,8 @@ export namespace VE { namespace Runtime
 	void FVulkanCommandPool::
 	Destroy()
 	{
-		EmptyRecycleBin();
 		vkDestroyCommandPool(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
-	}
-
-	void FVulkanCommandPool::
-	EmptyRecycleBin()
-	{
-		if (!RecycleBin.empty())
-		{
-			vkFreeCommandBuffers(GVulkan->Device->GetHandle(), Handle, RecycleBin.size(), RecycleBin.data());
-		}
-	}
-
-	SharedPtr<FVulkanCommandBuffer> FVulkanCommandPool::
-	Allocate(ECommandLevel _CommandLevel) const
-	{
-		auto CommandBuffer = CreateSharedPtr<FVulkanCommandBuffer>(_CommandLevel);
-		VkCommandBufferAllocateInfo AllocateInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-			.commandPool = Handle,
-			.level = AutoCast(CommandBuffer->GetLevel()),
-			.commandBufferCount = 1
-		};
-		if(VK_SUCCESS != vkAllocateCommandBuffers(
-			GVulkan->Device->GetHandle(),
-			&AllocateInfo,
-			&CommandBuffer->Handle))
-		{ throw SRuntimeError("Failed to create Vulkan FCommandBuffer!"); }
-
-		return CommandBuffer;
-	}
-
-	void FVulkanCommandPool::
-	Free(VkCommandBuffer CommandBuffer)  const
-	{
-		RecycleBin.emplace_back(CommandBuffer);
 	}
 
 	void FVulkanCommandPool::
@@ -130,7 +94,6 @@ export namespace VE { namespace Runtime
 		};
 		
 		VkQueue Queue = GVulkan->Device->GetQueueFamily(QueueFamilyType).Queues.front();
-		//[FIXME]: Revise the last parameter.
 		vkQueueSubmit(Queue, 1, &FinalSubmitInfo, SubmitInfo.Fence);
 	}
 

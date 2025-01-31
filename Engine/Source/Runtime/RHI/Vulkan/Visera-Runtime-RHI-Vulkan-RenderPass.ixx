@@ -7,7 +7,6 @@ import Visera.Core.Signal;
 import :Enums;
 import :Device;
 import :Shader;
-import :CommandBuffer;
 import :Swapchain;
 import :PipelineCache;
 import :Framebuffer;
@@ -22,10 +21,6 @@ export namespace VE { namespace Runtime
 		friend class FVulkan;
 		class FSubpass;
 	public:
-		virtual void Start(SharedPtr<FVulkanCommandBuffer> CommandBuffer) const;
-		virtual void Render(SharedPtr<FVulkanCommandBuffer> CommandBuffer) = 0;
-		virtual void Stop(SharedPtr<FVulkanCommandBuffer>  CommandBuffer) const;
-
 		auto GetSubpasses() const -> const Array<UniquePtr<FSubpass>>&  { return Subpasses; }
 		auto GetHandle()	const -> VkRenderPass			{ return Handle; }
 		operator VkRenderPass()	const { return Handle; }
@@ -86,35 +81,6 @@ export namespace VE { namespace Runtime
 		virtual ~FVulkanRenderPass() noexcept;
 	};
 
-	void FVulkanRenderPass::
-	Start(SharedPtr<FVulkanCommandBuffer> CommandBuffer) const
-	{
-		VE_ASSERT(CommandBuffer->IsRecording());
-
-		auto& CurrentFrameBuffer = FrameBuffers[GVulkan->Swapchain->GetCursor()];
-		VkRenderPassBeginInfo BeginInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-			.renderPass		= Handle,
-			.framebuffer	= CurrentFrameBuffer.Handle,
-			.renderArea		= RenderArea,
-			.clearValueCount= UInt32(CurrentFrameBuffer.ClearColors.size()),
-			.pClearValues	= CurrentFrameBuffer.ClearColors.data()
-		};
-		VkSubpassContents SubpassContents =
-			CommandBuffer->IsPrimary() ?
-			VK_SUBPASS_CONTENTS_INLINE : VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS;
-
-		vkCmdBeginRenderPass(CommandBuffer->GetHandle(), &BeginInfo, SubpassContents);
-	}
-
-	void FVulkanRenderPass::
-	Stop(SharedPtr<FVulkanCommandBuffer> CommandBuffer) const
-	{
-		VE_ASSERT(CommandBuffer->IsRecording());
-		vkCmdEndRenderPass(CommandBuffer->GetHandle());
-	}
-
 	FVulkanRenderPass::
 	FVulkanRenderPass(UInt32 SubpassCount) noexcept
 		:RenderArea{{0,0}, { GVulkan->Swapchain->GetExtent() }},
@@ -123,7 +89,7 @@ export namespace VE { namespace Runtime
 			SubpassDependencies(SubpassCount),
 			FrameBuffers(GVulkan->Swapchain->GetImages().size())
 	{
-		//!!!Remeber to call VulkanRenderPass::Create() in the Derived Renderpass!!!
+		
 	}
 
 	FVulkanRenderPass::
@@ -192,7 +158,8 @@ export namespace VE { namespace Runtime
 		{ throw SRuntimeError("Failed to create Vulkan FRenderPass!"); }
 	
 		//Create FrameBuffers
-		for (auto& FrameBuffer : FrameBuffers)
+		VE_WIP;
+		/*for (auto& FrameBuffer : FrameBuffers)
 		{
 			VE_ASSERT(!FrameBuffer.RenderTargets.empty());
 			VkFramebufferCreateInfo FrameBufferCreateInfo
@@ -211,7 +178,7 @@ export namespace VE { namespace Runtime
 				GVulkan->AllocationCallbacks,
 				&FrameBuffer.Handle))
 			{ throw SRuntimeError("Failed to create Vulkan Framebuffer!"); }
-		}
+		}*/
 	}
 
 	void FVulkanRenderPass::

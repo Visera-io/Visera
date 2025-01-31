@@ -25,17 +25,17 @@ private:
 	Array<RawString>		Extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 										VK_KHR_MAINTENANCE1_EXTENSION_NAME };
 public:
-	struct QueueFamily
+	struct FQueueFamily
 	{
 		UInt32				Index = UINT32_MAX;
 		Array<VkQueue>		Queues;
 		Array<Float>		QueuePriorities{ 1.0 };
 		Bool IsValid() const { return Index != UINT32_MAX; }
 	};
-	auto GetQueueFamily(EQueueFamily Type) const -> const QueueFamily& { return QueueFamilies[AutoCast(Type)]; }
+	auto GetQueueFamily(EQueueFamily Type) const -> const FQueueFamily& { return QueueFamilies[AutoCast(Type)]; }
 
 private:
-	Array<QueueFamily> QueueFamilies;
+	Array<FQueueFamily> QueueFamilies;
 
 	auto Create(FVulkanGPU* GPU, FVulkanSurface* Surface) -> VkDevice;
 	void Destroy();

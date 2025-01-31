@@ -31,7 +31,6 @@ export namespace VE { namespace Runtime
 
 	protected:
 		Array<VkPipelineShaderStageCreateInfo>		ShaderStages;
-		//[TODO]: Add Builders to subsitute CreateInfo
 		/*1*/VkPipelineVertexInputStateCreateInfo	VertexInputState;
 		/*2*/VkPipelineTessellationStateCreateInfo	TessellationState;
 		/*3*/VkPipelineInputAssemblyStateCreateInfo	InputAssemblyState;

@@ -46,6 +46,8 @@ export namespace VE { namespace Runtime
 		VE_API RegisterCommandContext(const String& Name, EPipelineStage Deadline) -> void;
 		VE_API SearchCommandContext(StringView Name)	-> WeakPtr<CommandContext>;
 
+		VE_API CreateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)			-> SharedPtr<FCommandBuffer> { return ResetableGraphicsCommandPool.CreateCommandBuffer(_Level); };
+		VE_API CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FCommandBuffer> { return TransientGraphicsCommandPool.CreateCommandBuffer(_Level); };
 		VE_API CreateBuffer(const FBuffer::CreateInfo& _CreateInfo) -> SharedPtr<FBuffer> { return Vulkan->Allocator.CreateBuffer(_CreateInfo); }
 		VE_API CreateFence()				-> SharedPtr<FFence>		{ return CreateSharedPtr<FFence>(); }
 		VE_API CreateSignaledFence()		-> SharedPtr<FFence>		{ return CreateSharedPtr<FFence>(true); }
@@ -149,8 +151,7 @@ export namespace VE { namespace Runtime
 			auto& NewCommandContext = Frame.CommandContexts[Name];
 			NewCommandContext = CreateSharedPtr<CommandContext>();
 			NewCommandContext->Create(Name, Deadline, nullptr);
-			//[FIXME]: Create Buffer based on Create(X_para)
-			NewCommandContext->Commands = ResetableGraphicsCommandPool.Allocate(ECommandLevel::Primary);
+			NewCommandContext->Commands = ResetableGraphicsCommandPool.CreateCommandBuffer(ECommandLevel::Primary);
 		}
 		auto& CurrentFrame = GetCurrentFrame();
 	}

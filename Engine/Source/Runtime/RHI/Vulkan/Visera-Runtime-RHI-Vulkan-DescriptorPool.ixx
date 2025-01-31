@@ -4,6 +4,8 @@ export module Visera.Runtime.RHI.Vulkan:DescriptorPool;
 
 import :Enums;
 import :Device;
+import :DescriptorSet;
+import :DescriptorSetLayout;
 
 import Visera.Core.Signal;
 
@@ -13,7 +15,7 @@ export namespace VE { namespace Runtime
 	class FVulkanDescriptorPool
 	{
 	public:
-		auto CreateDescriptorSet();
+		auto CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _Layout) -> SharedPtr<FVulkanDescriptorSet> { return CreateSharedPtr<FVulkanDescriptorSet>(Handle, _Layout); }
 
 		struct FDescriptorEntry
 		{

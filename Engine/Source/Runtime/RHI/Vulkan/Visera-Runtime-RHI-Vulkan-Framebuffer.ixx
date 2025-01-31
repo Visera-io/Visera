@@ -12,12 +12,16 @@ export namespace VE { namespace Runtime
 	{
 	public:
 		using TextureIndex = UInt32;
+		
+		auto GetHandle()			{ return Handle; }
+		operator VkFramebuffer()	{ return Handle; }
+		FVulkanFramebuffer() = default;
+		~FVulkanFramebuffer() { vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks); Handle = VK_NULL_HANDLE; }
+		
+	private:
 		VkFramebuffer		Handle{ VK_NULL_HANDLE };
 		Array<VkImageView>	RenderTargets;
 		Array<VkClearValue>	ClearColors;
-
-		operator VkFramebuffer() const { return Handle; }
-		~FVulkanFramebuffer() { vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks); Handle = VK_NULL_HANDLE; }
 	};
 
 } } // namespace VE::Runtime
