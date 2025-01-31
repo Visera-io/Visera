@@ -14,7 +14,7 @@ class ViseraCLI:
         self.bSaveHistory= False
         self.CommandSets= {
             "Visera" :{"setup":Setup, "create":Create, "open":self.Open, "help":self.Help, "exit":self.Exit},
-            "App"    :{"generate":Generate, "build":Build, "run":Run, "help":self.Help, "exit":self.Exit}
+            "App"    :{"setup":Setup, "generate":Generate, "build":Build, "run":Run, "help":self.Help, "exit":self.Exit}
         }
         
     def Listen(self) -> bool:
@@ -40,17 +40,18 @@ class ViseraCLI:
                 target = command[1:]
                 if target != "":
                     if '.' not in target and VISERA_OS_TYPE == "Windows": target += ".exe"
-                    for path_family, paths in VISERA_ENV_PATH.items():
+                    for path_family in VISERA_ENV_PATH.keys():
+                        paths = VISERA_ENV_PATH[path_family]
                         for _path in paths:
-                            target = path.join(_path, target)
-                            if path.isfile(target):
-                                arguments = [target] + arguments
+                            candidate = path.join(_path, target)
+                            if path.isfile(candidate):
+                                arguments = [candidate] + arguments
                                 rc = subprocess.run(
                                     args = arguments,
                                     shell= True,
                                     cwd  = self.WorkDir).returncode
                                 return True
-                    Log.Error(f"Failed to find {target} in VISERA_ENV_PATH!")
+                    Log.Error(f"Failed to find {candidate} in VISERA_ENV_PATH!")
                     return True
                 else:
                     print(VISERA_ENV_PATH) #Help

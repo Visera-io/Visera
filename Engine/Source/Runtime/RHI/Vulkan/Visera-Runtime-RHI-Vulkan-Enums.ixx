@@ -4,19 +4,19 @@ export module Visera.Runtime.RHI.Vulkan:Enums;
 
 export namespace VE { namespace Runtime
 {
-	// VE_ENUM_CLASS(EDescriptorType, VkDescriptorType)
-	// VE_ENUM_CLASS(EQueueFamily, UInt32)
-	// VE_ENUM_CLASS(ECommandPool, VkCommandPoolCreateFlags)
-	// VE_ENUM_CLASS(ECommandLevel, VkCommandBufferLevel)
-	// VE_ENUM_CLASS(ESampleRate, VkSampleCountFlags)
+	// VE_ENUM_CLASS(EDescriptorType,	VkDescriptorType)
+	// VE_ENUM_CLASS(EQueueFamily,		UInt32)
+	// VE_ENUM_CLASS(ECommandPool,		VkCommandPoolCreateFlags)
+	// VE_ENUM_CLASS(ECommandLevel,		VkCommandBufferLevel)
+	// VE_ENUM_CLASS(ESampleRate,		VkSampleCountFlags)
 	// VE_ENUM_CLASS(EAccessibility,	VkAccessFlags)
-	// VE_ENUM_CLASS(EShaderStage,	VkShaderStageFlags)
+	// VE_ENUM_CLASS(EShaderStage,		VkShaderStageFlags)
 	// VE_ENUM_CLASS(EPipelineStage,	VkPipelineStageFlags)
-	// VE_ENUM_CLASS(EMemoryUsage,	VmaMemoryUsage)
-	// VE_ENUM_CLASS(EImageLayout,	VkImageLayout)
-	// VE_ENUM_CLASS(EImageUsage,	VkImageUsageFlags)
-	// VE_ENUM_CLASS(EBufferUsage,	VkBufferUsageFlags)
-	// VE_ENUM_CLASS(EAttachmentIO,	VkAttachmentLoadOp)
+	// VE_ENUM_CLASS(EMemoryUsage,		VmaMemoryUsage)
+	// VE_ENUM_CLASS(EImageLayout,		VkImageLayout)
+	// VE_ENUM_CLASS(EImageUsage,		VkImageUsageFlags)
+	// VE_ENUM_CLASS(EBufferUsage,		VkBufferUsageFlags)
+	// VE_ENUM_CLASS(EAttachmentIO,		VkAttachmentLoadOp)
 
 	VE_ENUM_CLASS(EDescriptorType, VkDescriptorType)
 	{

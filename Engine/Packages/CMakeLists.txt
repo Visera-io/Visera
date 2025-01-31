@@ -53,6 +53,17 @@ if (NOT TARGET GPUOpen::VulkanMemoryAllocator)
     target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE GPUOpen::VulkanMemoryAllocator)
 endif()
 
+# Slang
+if (NOT TARGET slang)
+    message(STATUS "\nLoading Slang (slang::slang)")
+    add_library(slang UNKNOWN IMPORTED)
+    set_target_properties(slang
+        PROPERTIES
+        IMPORTED_LOCATION "$ENV{VK_SDK_PATH}/Lib/slang.lib"
+        INTERFACE_INCLUDE_DIRECTORIES "$ENV{VK_SDK_PATH}/Include/slang")
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE slang)
+endif()
+
 # GLFW3
 if (NOT TARGET glfw)
     message(STATUS "\nLoading GLFW3 (glfw)")
@@ -142,44 +153,3 @@ if (NOT TARGET freeimage)
         $<TARGET_FILE_DIR:${APP_NAME}>
     )
 endif()
-
-# # ICU
-# if (NOT TARGET ICU)
-#     message(STATUS "\nLoading ICU (ICU::uc, ICU::i18n)")
-#     find_package(ICU REQUIRED COMPONENTS uc i18n)
-#     #target_include_directories(VISERA_ENGINE_EXTERN INTERFACE ${ICU_INCLUDE_DIRS})
-#     target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE ICU::uc ICU::i18n)
-#     add_custom_command(
-#         TARGET Visera-Packages
-#         POST_BUILD
-#         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#         $<TARGET_FILE:ICU::i18n>
-#         $<TARGET_FILE_DIR:${APP_NAME}>
-#         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#         $<TARGET_FILE:ICU::uc>
-#         $<TARGET_FILE_DIR:${APP_NAME}>
-#     )
-# endif()
-
-# # DXC
-# if (NOT TARGET Microsoft::DirectXShaderCompiler)
-#     message(STATUS "\nLoading DXC (Microsoft::DirectXShaderCompiler)")
-#     FIND_PACKAGE(directx-dxc CONFIG REQUIRED)
-#     target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE Microsoft::DirectXShaderCompiler)
-#     add_custom_command(
-#         TARGET Visera-Packages
-#         POST_BUILD
-#         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#         $<TARGET_FILE:Microsoft::DirectXShaderCompiler>
-#         $<TARGET_FILE_DIR:${APP_NAME}>
-#     )
-#     # << DXIL used in DX12 API : https://docs.vulkan.org/guide/latest/hlsl.html>>
-#     # target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE Microsoft::DXIL)
-#     # add_custom_command(
-#     #     TARGET Visera-Packages
-#     #     POST_BUILD
-#     #     COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#     #     $<TARGET_FILE:Microsoft::DXIL>
-#     #     $<TARGET_FILE_DIR:${APP_NAME}>
-#     # )
-# endif()

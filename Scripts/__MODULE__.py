@@ -13,7 +13,8 @@ VISERA_ENGINE_PATH  =   path.join(VISERA_ROOT_PATH, "Engine")
 
 VISERA_OS_TYPE      =   system()
 VISERA_ENV_PATH     =   {
-                            "Vulkan" : [path.join(environ["VK_SDK_PATH"], "bin")] #vulkanCapsViewer, vkconfig, vkcube [TODO]:Alias
+                            "Vulkan" : [path.join(environ["VK_SDK_PATH"], "bin")], #vulkanCapsViewer, vkconfig, vkcube [TODO]:Alias
+                            "Vcpkg"  : [path.join(VISERA_ENGINE_PATH, "Packages", "Vcpkg")]
                         }
 
 VISERA_SUCCESS      =   0
