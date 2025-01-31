@@ -4,6 +4,55 @@ add_library(VISERA_ENGINE_EXTERN INTERFACE)
 add_custom_target(Visera-Packages ALL) # For adding denpendencies
 #set_target_properties(Visera-Packages PROPERTIES FOLDER "${PROJECT_NAME}")
 
+
+# Vulkan
+if (NOT TARGET Vulkan::Vulkan)
+    message(STATUS "\nLoading Vulkan (Vulkan::Vulkan)")
+    if(NOT DEFINED ENV{VULKAN_SDK})
+        message(FATAL_ERROR "Failed to find VulkanSDK on your system!")
+    else()
+        # Extract the version from the path
+        string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" VULKAN_VERSION "$ENV{VULKAN_SDK}")
+        message("Found VulkanSDK ${VULKAN_VERSION} on current system.")
+        if(VULKAN_VERSION)
+            # Compare with required version (1.4.0)
+            if(VULKAN_VERSION VERSION_LESS "1.4.0")
+                message(FATAL_ERROR "VulkanSDK version is required: >=1.4.0, Found: ${VULKAN_VERSION}")
+            endif()
+        else()
+            message(WARNING "Could not determine Vulkan SDK version.")
+        endif()
+    endif()
+    FIND_PACKAGE(Vulkan REQUIRED)
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE Vulkan::Vulkan)
+endif()
+
+# Volk
+if (NOT TARGET volk::volk)
+    message(STATUS "\nLoading Volk (volk::volk_headers)")
+    FIND_PACKAGE(volk CONFIG REQUIRED)
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE volk::volk_headers)
+endif()
+
+#VMA
+if (NOT TARGET GPUOpen::VulkanMemoryAllocator)
+    message(STATUS "\nLoading VMA (GPUOpen::VulkanMemoryAllocator)")
+    FIND_PACKAGE(VulkanMemoryAllocator CONFIG REQUIRED)
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE GPUOpen::VulkanMemoryAllocator)
+endif()
+
+# Slang
+if (NOT TARGET slang)
+    message(STATUS "\nLoading Slang (slang)")
+    # Make sure that Version(VulkanSDK) >= "1.4.0"
+    add_library(slang UNKNOWN IMPORTED)
+    set_target_properties(slang
+        PROPERTIES
+        IMPORTED_LOCATION "$ENV{VULKAN_SDK}/Lib/slang.lib"
+        INTERFACE_INCLUDE_DIRECTORIES "$ENV{VULKAN_SDK}/Include/slang")
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE slang)
+endif()
+
 # Spdlog
 if (NOT TARGET spdlog)
     message(STATUS "\nLoading Spdlog (spdlog::spdlog)")
@@ -30,38 +79,6 @@ if (NOT TARGET Eigen3::Eigen)
     message(STATUS "\nLoading Eigen3 (Eigen3::Eigen)")
     FIND_PACKAGE(Eigen3 REQUIRED)
     target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE Eigen3::Eigen)
-endif()
-
-# Vulkan
-if (NOT TARGET Vulkan::Vulkan)
-    message(STATUS "\nLoading Vulkan (Vulkan::Vulkan)")
-    FIND_PACKAGE(Vulkan REQUIRED)
-    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE Vulkan::Vulkan)
-endif()
-
-# Volk
-if (NOT TARGET volk::volk)
-    message(STATUS "\nLoading Volk (volk::volk_headers)")
-    FIND_PACKAGE(volk CONFIG REQUIRED)
-    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE volk::volk_headers)
-endif()
-
-#VMA
-if (NOT TARGET GPUOpen::VulkanMemoryAllocator)
-    message(STATUS "\nLoading VMA (GPUOpen::VulkanMemoryAllocator)")
-    FIND_PACKAGE(VulkanMemoryAllocator CONFIG REQUIRED)
-    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE GPUOpen::VulkanMemoryAllocator)
-endif()
-
-# Slang
-if (NOT TARGET slang)
-    message(STATUS "\nLoading Slang (slang::slang)")
-    add_library(slang UNKNOWN IMPORTED)
-    set_target_properties(slang
-        PROPERTIES
-        IMPORTED_LOCATION "$ENV{VK_SDK_PATH}/Lib/slang.lib"
-        INTERFACE_INCLUDE_DIRECTORIES "$ENV{VK_SDK_PATH}/Include/slang")
-    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE slang)
 endif()
 
 # GLFW3
