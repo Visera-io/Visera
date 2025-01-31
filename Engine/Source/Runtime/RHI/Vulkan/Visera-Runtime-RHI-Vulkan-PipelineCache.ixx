@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:PipelineCache;
+export module Visera.Runtime.RHI.Vulkan:PipelineCache;
 
 import :Device;
 import :GPU;

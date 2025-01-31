@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:Framebuffer;
+export module Visera.Runtime.RHI.Vulkan:Framebuffer;
 
 import :Device;
 

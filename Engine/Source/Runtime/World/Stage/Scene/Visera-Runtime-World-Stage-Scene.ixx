@@ -13,7 +13,7 @@ import Visera.Core.System;
 import Visera.Runtime.World.Object;
 import Visera.Runtime.World.Geometry;
 import Visera.Runtime.World.RTC;
-import Visera.Runtime.Render.RHI;
+import Visera.Runtime.RHI;
 
 export namespace VE { namespace Runtime
 {

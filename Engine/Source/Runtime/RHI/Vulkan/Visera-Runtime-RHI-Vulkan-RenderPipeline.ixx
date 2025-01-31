@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:RenderPipeline;
+export module Visera.Runtime.RHI.Vulkan:RenderPipeline;
 
 import :Enums;
 import :Device;

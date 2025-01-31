@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:CommandBuffer;
+export module Visera.Runtime.RHI.Vulkan:CommandBuffer;
 
 import :Enums;
 import :Device;

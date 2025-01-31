@@ -1,6 +1,6 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.Render.RHI.RenderPass;
+export module Visera.Runtime.RHI.RenderPass;
 export import :Postprocessing;
 
 export namespace VE { namespace Runtime

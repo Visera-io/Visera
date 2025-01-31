@@ -1,8 +1,8 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.Render.RHI;
-import Visera.Runtime.Render.RHI.Vulkan;
-import Visera.Runtime.Render.RHI.RenderPass;
+export module Visera.Runtime.RHI;
+import Visera.Runtime.RHI.Vulkan;
+import Visera.Runtime.RHI.RenderPass;
 
 import Visera.Core.Signal;
 

@@ -1,8 +1,8 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.Render.RHI.RenderPass:Postprocessing;
+export module Visera.Runtime.RHI.RenderPass:Postprocessing;
 
-import Visera.Runtime.Render.RHI.Vulkan;
+import Visera.Runtime.RHI.Vulkan;
 
 export namespace VE { namespace Runtime
 {

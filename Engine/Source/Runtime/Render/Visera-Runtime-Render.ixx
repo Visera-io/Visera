@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 export module Visera.Runtime.Render;
-export import Visera.Runtime.Render.RHI;
+export import Visera.Runtime.RHI;
 
 export namespace VE { namespace Runtime
 {

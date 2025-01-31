@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:DescriptorPool;
+export module Visera.Runtime.RHI.Vulkan:DescriptorPool;
 
 import :Enums;
 import :Device;
