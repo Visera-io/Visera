@@ -3,6 +3,7 @@ module;
 export module Visera.Runtime.Render.RHI.Vulkan;
 
 export import :CommandPool;
+export import :CommandBuffer;
 export import :Shader;
 export import :PipelineLayout;
 export import :RenderPass;

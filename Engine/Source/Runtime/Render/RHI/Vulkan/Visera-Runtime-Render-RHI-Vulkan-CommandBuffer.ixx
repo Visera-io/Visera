@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.Render.RHI.Vulkan:DescriptorSetLayout;
+export module Visera.Runtime.Render.RHI.Vulkan:CommandBuffer;
 
 import :Enums;
 import :Device;
@@ -19,21 +19,22 @@ export namespace VE { namespace Runtime
 		void StopRecording();
 		void Reset()			  { VE_ASSERT(!IsRecording() && IsResettable()); vkResetCommandBuffer(Handle, 0x0); }
 
-		Bool IsRecording()	const { return Flags & RecordingMask;    }
-		Bool IsResettable() const { return Flags & ResettableMask;   }
-		Bool IsPrimary()	const { return Flags & PrimaryLevelMask; }
+		Bool IsRecording()	const { return bIsRecording;    }
+		Bool IsResettable() const { return bIsResettable;   }
+		Bool IsPrimary()	const { return bIsPrimary;		}
 		auto GetLevel()		const -> ECommandLevel { return IsPrimary()? ECommandLevel::Primary : ECommandLevel::Secondary; }
-		auto GetHandle()    const -> VkCommandBuffer { return Handle; }
-		operator VkCommandBuffer() const { return Handle; }
+		auto GetHandle()		  -> VkCommandBuffer { return Handle; }
+		operator VkCommandBuffer() { return Handle; }
 
 	private:
 		VkCommandBuffer				  Handle{ VK_NULL_HANDLE };
 		SharedPtr<FVulkanCommandPool> HostCommandPool;
-		Byte bHasPipeline : 1;
-		Byte bHasPipeline : 1;
-		Byte bHasPipeline : 1;
-		Byte bHasPipeline : 1;
-		Byte bHasPipeline : 1;
+		Array<VkViewport>			  CurrentViewports;
+		Array<VkRect2D>				  CurrentScissors;
+
+		Byte bIsRecording	: 1;
+		Byte bIsResettable  : 1;
+		Byte bIsPrimary		: 1;
 
 	public:
 		FVulkanCommandBuffer(ECommandLevel _Level) noexcept;
@@ -44,9 +45,9 @@ export namespace VE { namespace Runtime
 	
 	FVulkanCommandBuffer::
 	FVulkanCommandBuffer(ECommandLevel _Level) noexcept
-		: Flags { ECommandLevel::Primary == _Level? PrimaryLevelMask : 0x0 }
+		: bIsPrimary { ECommandLevel::Primary == _Level? True : False }
 	{
-
+		
 	}
 
 	FVulkanCommandBuffer::
@@ -69,7 +70,7 @@ export namespace VE { namespace Runtime
 		if (VK_SUCCESS != vkBeginCommandBuffer(Handle, &BeginInfo))
 		{ throw SRuntimeError("Failed to begin recording Vulkan Command FBuffer!"); }
 
-		Flags ^= RecordingMask;
+		bIsRecording = True;
 	}
 
 	void FVulkanCommandBuffer::
@@ -80,7 +81,7 @@ export namespace VE { namespace Runtime
 		if (VK_SUCCESS != vkEndCommandBuffer(Handle))
 		{ throw SRuntimeError("Failed to stop recording Vulkan Command FBuffer!"); }
 
-		Flags ^= RecordingMask;
+		bIsRecording = False;
 	}
 	
 } } // namespace VE::Runtime

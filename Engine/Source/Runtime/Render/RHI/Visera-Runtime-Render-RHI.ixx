@@ -17,7 +17,7 @@ export namespace VE { namespace Runtime
 	public:
 		using FSemaphore		= FVulkanSemaphore;
 		using FCommandPool		= FVulkanCommandPool;
-		using FCommandBuffer	= FVulkanCommandPool::FVulkanCommandBuffer;
+		using FCommandBuffer	= FVulkanCommandBuffer;
 		using FFence			= FVulkanFence;
 		using FShader			= FVulkanShader;
 		using FBuffer			= FVulkanAllocator::Buffer;

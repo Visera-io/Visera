@@ -23,8 +23,10 @@ export namespace VE { namespace Runtime
 			operator VkPushConstantRange() { return VkPushConstantRange{ .stageFlags = AutoCast(ShaderStage), .offset = Offset, .size = Size }; }
 		};
 
-		auto GetHandle()			 const -> VkPipelineLayout { return Handle; }
+		auto GetHandle()		    -> VkPipelineLayout { return Handle; }
 		auto GetPushConstantRange() const -> const FPushConstantRange& { return PushConstantRange; }
+
+		FVulkanPipelineLayout();
 
 	private:
 		VkPipelineLayout   Handle { VK_NULL_HANDLE };

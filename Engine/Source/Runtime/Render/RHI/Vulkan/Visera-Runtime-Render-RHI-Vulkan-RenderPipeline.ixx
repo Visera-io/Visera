@@ -27,7 +27,7 @@ export namespace VE { namespace Runtime
 		auto GetDepthStencilState() const -> const VkPipelineDepthStencilStateCreateInfo&  { return DepthStencilState; };
 		
 		auto GetColorBlendAttachments() const -> const Array<VkPipelineColorBlendAttachmentState>& { return ColorBlendAttachments; }
-		auto GetDynamicStates() const -> const Array<VkDynamicState>& {};
+		auto GetDynamicStates() const -> const Array<VkDynamicState>& { return DynamicStates; };
 
 	protected:
 		Array<VkPipelineShaderStageCreateInfo>		ShaderStages;
@@ -160,8 +160,9 @@ export namespace VE { namespace Runtime
 	void FVulkanRenderPipeline::
 	Destroy() noexcept
 	{
-		vkDestroyPipelineLayout(GVulkan->Device->GetHandle(), Layout, GVulkan->AllocationCallbacks);
-		Layout = VK_NULL_HANDLE;
+		VE_WIP;
+		/*vkDestroyPipelineLayout(GVulkan->Device->GetHandle(), Layout, GVulkan->AllocationCallbacks);
+		Layout = VK_NULL_HANDLE;*/
 	}
 
 } } // namespace VE::Runtime

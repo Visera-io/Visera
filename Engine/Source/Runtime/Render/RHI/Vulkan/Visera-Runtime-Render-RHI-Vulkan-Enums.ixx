@@ -41,6 +41,7 @@ export namespace VE { namespace Runtime
 	VE_ENUM_CLASS(EQueueFamily, UInt32)
 	{
 		Graphics = 0,
+		Present  = 1,
 		Transfer = 2,
 		Compute  = 3,
 		All		 = 4,

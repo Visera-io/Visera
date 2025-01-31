@@ -31,8 +31,8 @@ public:
 		auto GetSize() const -> VkDeviceSize { return Allocation->GetSize(); }
 		auto GetDetails() const -> VmaAllocationInfo { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
 
-		auto GetHandle() const -> VkBuffer { return Handle; }
-		operator VkBuffer() const { return Handle; }
+		auto GetHandle() -> VkBuffer { return Handle; }
+		operator VkBuffer()  { return Handle; }
 
 	private:
 		VkBuffer		Handle;

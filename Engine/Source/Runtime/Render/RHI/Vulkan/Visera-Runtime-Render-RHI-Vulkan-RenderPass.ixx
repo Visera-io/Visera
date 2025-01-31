@@ -7,7 +7,7 @@ import Visera.Core.Signal;
 import :Enums;
 import :Device;
 import :Shader;
-import :CommandPool;
+import :CommandBuffer;
 import :Swapchain;
 import :PipelineCache;
 import :Framebuffer;
@@ -20,13 +20,13 @@ export namespace VE { namespace Runtime
 	class FVulkanRenderPass
 	{
 		friend class FVulkan;
-		class Subpass;
+		class FSubpass;
 	public:
-		virtual void Start(SharedPtr<FVulkanCommandPool::FVulkanCommandBuffer> CommandBuffer) const;
-		virtual void Render(SharedPtr<FVulkanCommandPool::FVulkanCommandBuffer> CommandBuffer) = 0;
-		virtual void Stop(SharedPtr<FVulkanCommandPool::FVulkanCommandBuffer>  CommandBuffer) const;
+		virtual void Start(SharedPtr<FVulkanCommandBuffer> CommandBuffer) const;
+		virtual void Render(SharedPtr<FVulkanCommandBuffer> CommandBuffer) = 0;
+		virtual void Stop(SharedPtr<FVulkanCommandBuffer>  CommandBuffer) const;
 
-		auto GetSubpasses() const -> const Array<UniquePtr<Subpass>>&  { return Subpasses; }
+		auto GetSubpasses() const -> const Array<UniquePtr<FSubpass>>&  { return Subpasses; }
 		auto GetHandle()	const -> VkRenderPass			{ return Handle; }
 		operator VkRenderPass()	const { return Handle; }
 
@@ -72,7 +72,7 @@ export namespace VE { namespace Runtime
 			EPipelineStage	DestinationStage;
 			EAccessibility	DestinationStageAccessPermissions;
 		};
-		Array<UniquePtr<Subpass>>		Subpasses;
+		Array<UniquePtr<FSubpass>>		Subpasses;
 		Array<SubpassDescription>		SubpassDescriptions;
 		Array<SubpassDependency>		SubpassDependencies;
 
@@ -87,7 +87,7 @@ export namespace VE { namespace Runtime
 	};
 
 	void FVulkanRenderPass::
-	Start(SharedPtr<FVulkanCommandPool::FVulkanCommandBuffer> CommandBuffer) const
+	Start(SharedPtr<FVulkanCommandBuffer> CommandBuffer) const
 	{
 		VE_ASSERT(CommandBuffer->IsRecording());
 
@@ -109,7 +109,7 @@ export namespace VE { namespace Runtime
 	}
 
 	void FVulkanRenderPass::
-	Stop(SharedPtr<FVulkanCommandPool::FVulkanCommandBuffer> CommandBuffer) const
+	Stop(SharedPtr<FVulkanCommandBuffer> CommandBuffer) const
 	{
 		VE_ASSERT(CommandBuffer->IsRecording());
 		vkCmdEndRenderPass(CommandBuffer->GetHandle());
@@ -136,7 +136,7 @@ export namespace VE { namespace Runtime
 	Create()
 	{
 		VE_ASSERT(!Subpasses.empty() &&
-				Subpasses.size() == SubpassDescriptions.size() == SubpassDependencies.size());
+				   Subpasses.size() == SubpassDescriptions.size() == SubpassDependencies.size());
 		
 		Array<VkSubpassDescription> SubpassDescriptionInfos(Subpasses.size());
 		Array<VkSubpassDependency>  SubpassDependencyInfos(Subpasses.size());
@@ -217,7 +217,8 @@ export namespace VE { namespace Runtime
 	void FVulkanRenderPass::
 	Destroy()
 	{
-		for (auto& Subpass : Subpasses) { Subpass->Destroy(); }
+		VE_WIP;
+		//for (auto& Subpass : Subpasses) { Subpass->Destroy(); }
 		vkDestroyRenderPass(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
@@ -254,6 +255,7 @@ export namespace VE { namespace Runtime
 			.blendConstants		= {0.0f, 0.0f, 0.0f, 0.0f}
 		};
 
+		VE_WIP;
 		VkGraphicsPipelineCreateInfo CreateInfo =
 		{
 			.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -267,7 +269,7 @@ export namespace VE { namespace Runtime
 			.pDepthStencilState		= &Pipeline->GetDepthStencilState(),	// Optional
 			.pColorBlendState		= &ColorBlendState,
 			.pDynamicState			= &DyncmicStateCreateInfo,
-			.layout					= Pipeline->GetLayout(),
+			//.layout					= Pipeline->GetLayout(),
 			.renderPass				= HostPass.GetHandle(),
 			.basePipelineHandle		= VK_NULL_HANDLE,		// Optional
 			.basePipelineIndex		= -1,					// Optional

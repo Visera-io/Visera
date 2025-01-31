@@ -5,6 +5,7 @@ export module Visera.Runtime.Render.RHI.Vulkan:CommandPool;
 import :Enums;
 import :Device;
 import :Synchronization;
+import :CommandBuffer;
 
 import Visera.Core.Signal;
 
@@ -30,8 +31,8 @@ export namespace VE { namespace Runtime
 		};
 		void Submit(const SubmitInfo& SubmitInfo) const;
 
-		auto GetHandle() const { return Handle; }
-		operator VkCommandPool() const { return Handle; }
+		auto GetHandle()		  { return Handle; }
+		operator VkCommandPool()  { return Handle; }
 
 	private:
 		void Create(EQueueFamily QueueFamilyType, ECommandPool Type);
@@ -59,7 +60,7 @@ export namespace VE { namespace Runtime
 		{
 			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
 			.flags = AutoCast(Type),
-			.queueFamilyIndex = GVulkan->Device->GetQueueFamily(QueueFamilyType).Index,
+			.queueFamilyIndex = GVulkan->Device->GetQueueFamily(_QueueFamilyType).Index,
 		};
 
 		if(VK_SUCCESS != vkCreateCommandPool(
@@ -87,15 +88,15 @@ export namespace VE { namespace Runtime
 		}
 	}
 
-	SharedPtr<FVulkanCommandPool::FVulkanCommandBuffer> FVulkanCommandPool::
+	SharedPtr<FVulkanCommandBuffer> FVulkanCommandPool::
 	Allocate(ECommandLevel _CommandLevel) const
 	{
-		auto CommandBuffer = CreateSharedPtr<FVulkanCommandPool::FVulkanCommandBuffer>(*this, _CommandLevel);
+		auto CommandBuffer = CreateSharedPtr<FVulkanCommandBuffer>(_CommandLevel);
 		VkCommandBufferAllocateInfo AllocateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 			.commandPool = Handle,
-			.level = CommandBuffer->GetLevel(),
+			.level = AutoCast(CommandBuffer->GetLevel()),
 			.commandBufferCount = 1
 		};
 		if(VK_SUCCESS != vkAllocateCommandBuffers(
