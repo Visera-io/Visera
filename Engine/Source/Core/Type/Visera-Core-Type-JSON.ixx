@@ -68,7 +68,7 @@ export namespace VE
 			case kParseErrorUnspecificSyntaxError:
 				ErrorMessage = "Unspecific syntax error."; break;
 			default:
-				throw SEngineStop("Unexcepted JSON Parsing Error!");
+				throw SRuntimeError("Unexcepted JSON Parsing Error!");
 			}
 			throw SRuntimeError(Text("Failed to parse JSON - {}!", ErrorMessage));
 		}
