@@ -33,13 +33,13 @@ export namespace VE { namespace Runtime
 		
 		void AttachTransformComponent() { TransformComponent	= CreateSharedPtr<OCTransform>(FName("Component::Transform"), shared_from_this()); }
 		void AttachMeshComponent()		{ MeshComponent			= CreateSharedPtr<OCMesh>(FName("Component::Mesh"), shared_from_this()); }
-		void AttachCustomizedComponent(SharedPtr<OCComponent> _Component) { CustomizedComponents.push_back(_Component); };
+		void AttachCustomizedComponent(SharedPtr<OCBasicComponent> _Component) { CustomizedComponents.push_back(_Component); };
 
 	protected:
-		FRWLock							RWLock;
-		SharedPtr<OCTransform>			TransformComponent;
-		SharedPtr<OCMesh>				MeshComponent;
-		Array<SharedPtr<OCComponent>>	CustomizedComponents;
+		FRWLock								RWLock;
+		SharedPtr<OCTransform>				TransformComponent;
+		SharedPtr<OCMesh>					MeshComponent;
+		Array<SharedPtr<OCBasicComponent>>	CustomizedComponents;
 
 	private:
 		FName	Name;

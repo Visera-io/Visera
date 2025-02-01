@@ -25,9 +25,9 @@ export namespace VE { namespace Internal
             MaxNameNumber       = INT32_MAX,
         };
     public:
-        auto Register(StringView _Name) throw (SRuntimeError) -> ResultPackage<UInt32, UInt32>; //[Handle_, Number_]
-        auto Search(UInt32 _NameHandle /*NameEntryHandle*/) const->StringView;
-        auto Search(EName _PreservedName) const -> StringView;
+        auto Register(String _Name) throw (SRuntimeError) -> ResultPackage<UInt32, UInt32>; //[Handle_, Number_]
+        auto FetchNameString(UInt32 _NameHandle /*NameEntryHandle*/) const->StringView;
+        auto FetchNameString(EName _PreservedName) const -> StringView;
 
         FNamePool();
         ~FNamePool() = default;
@@ -43,11 +43,11 @@ export namespace VE { namespace Internal
     FNamePool()
     {
         // Pre-Register ENames (Do NOT use String Literal here -- Read-Only Segment Fault!)
-        /*None*/ auto [Handle_, Number_] = Register(String("none")); VE_ASSERT(Handle_ == 0);
+        /*None*/ auto [Handle_, Number_] = Register("none"); VE_ASSERT(Handle_ == 0);
     }
 
     ResultPackage<UInt32, UInt32> FNamePool::
-    Register(StringView _Name)
+    Register(String _Name)
     {
         auto [Number, NameLength] = ParseName(_Name.data(), _Name.size());
         if (Number < 0) { throw SRuntimeError("Bad Name! -- Naming Convention:([#Name][_#Number]?)."); }
@@ -61,7 +61,7 @@ export namespace VE { namespace Internal
     }
 
     StringView FNamePool::
-    Search(UInt32 _NameHandle /*NameEntryHandle*/) const
+    FetchNameString(UInt32 _NameHandle /*NameEntryHandle*/) const
     {
         FNameEntryHandle NameEntryHandle;
         NameEntryHandle.Value = _NameHandle;
@@ -106,12 +106,12 @@ export namespace VE { namespace Internal
     }
 
     StringView FNamePool::
-    Search(EName _PreservedName) const
+    FetchNameString(EName _PreservedName) const
     {
         switch (_PreservedName)
         {
         case EName::None:
-            return "";
+            return "none";
         default:
             throw SRuntimeError("Unexpected EName!");
         }

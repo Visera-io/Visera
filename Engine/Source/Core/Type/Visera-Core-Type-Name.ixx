@@ -11,11 +11,11 @@ export namespace VE
 	/* Case-Ignored String */
 	class FName
 	{
-		VE_API Search(EName _Name) -> StringView { if (_Name == EName::None) { return "None"; }; return ""; }
-		VE_API Search(FName _Name) -> String	 { return Text("{}_{}", NamePool.Search(_Name.Handle), _Name.Number); }
+		VE_API FetchNameString(EName _Name) -> StringView	 { return NamePool.FetchNameString(_Name); }
+		VE_API FetchNameString(FName _Name) -> StringView	 { return NamePool.FetchNameString(_Name.Handle); }
 	public:
-		auto GetName()			 const -> StringView { return NamePool.Search(Handle); }
-		auto GetNameWithNumber() const -> String	 { return FName::Search(*this); }
+		auto GetName()			 const -> StringView { return NamePool.FetchNameString(Handle); }
+		auto GetNameWithNumber() const -> String	 { return Text("{}_{}", GetName(), Number); }
 		auto GetHandle() const -> UInt32 { return Handle; }
 		auto GetNumber() const -> UInt32 { return Number; }
 		auto GetIdentifier() const -> UInt64 { return (UInt64(Handle) << 32) | Number; }

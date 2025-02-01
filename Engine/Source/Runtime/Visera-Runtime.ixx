@@ -27,7 +27,7 @@ export namespace VE { namespace Runtime
 				if (Window::ShouldClose()) { throw SEngineStop("Window has been closed."); }
 			}
 			catch(const SRuntimeError& RuntimeError)
-			{ Log::Fatal(Text("Visera Runtime Error:\n{}{}", RuntimeError.What(), RuntimeError.Where())); }
+			{ Log::Fatal(Text("Visera Engine Internal Runtime Error:\n{}{}", RuntimeError.What(), RuntimeError.Where())); }
 			return True;
 		}
 

@@ -5,7 +5,6 @@ export module Visera.Core.Type:Char;
 export namespace VE
 {
 
-	/* Case-Ignored String */
 	class FChar
 	{
 		VE_API ToLower(const unsigned char _Char) -> FChar { return FChar{ char(std::tolower(_Char)) }; }

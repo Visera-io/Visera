@@ -36,7 +36,7 @@ export namespace VE { namespace Runtime
 	Create()
 	{
 		FileSystem::CreateFileIfNotExists(Path);
-		auto CacheFile = FileSystem::OpenBinaryFile(Path);
+		auto CacheFile = FileSystem::CreateBinaryFile(Path);
 		CacheFile->Load();
 
 		auto* CacheHeader = (VkPipelineCacheHeaderVersionOne*)(CacheFile->GetData().data());
@@ -47,7 +47,7 @@ export namespace VE { namespace Runtime
 					CacheHeader->vendorID != GPUProperties.vendorID ||
 					memcmp(CacheHeader->pipelineCacheUUID, GPUProperties.pipelineCacheUUID, VK_UUID_SIZE));
 		
-		if (IsExpired()) CacheFile->ClearData();
+		if (IsExpired()) { CacheFile->Clear(); }
 		VkPipelineCacheCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
@@ -67,12 +67,10 @@ export namespace VE { namespace Runtime
 	{
 		if (IsExpired())
 		{
-			auto CacheFile = FileSystem::OpenBinaryFile(Path);
+			auto CacheFile = FileSystem::CreateBinaryFile(Path);
 			UInt64 CacheSize = 0;
 			vkGetPipelineCacheData(GVulkan->Device->GetHandle(), Handle, &CacheSize, nullptr);
-			Array<Byte> CacheDate(CacheSize);
-			vkGetPipelineCacheData(GVulkan->Device->GetHandle(), Handle, &CacheSize, CacheDate.data());
-			CacheFile->WriteAll(std::move(CacheDate));
+			vkGetPipelineCacheData(GVulkan->Device->GetHandle(), Handle, &CacheSize, CacheFile->Access());
 			CacheFile->Save();
 		}
 		vkDestroyPipelineCache(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);

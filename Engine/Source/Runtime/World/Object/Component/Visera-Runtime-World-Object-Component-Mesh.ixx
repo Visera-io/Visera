@@ -2,12 +2,12 @@ module;
 #include <Visera.h>
 export module Visera.Runtime.World.Object.Component:Mesh;
 
-import :Interface;
+import :BasicComponent;
 
 export namespace VE { namespace Runtime
 {
 
-	class OCMesh : public OCComponent
+	class OCMesh : public OCBasicComponent
 	{
 	public:
 		auto GetVertices() const -> const Array<Float>& { return Vertices; }
@@ -28,7 +28,7 @@ export namespace VE { namespace Runtime
 	public:
 		OCMesh() = delete;
 		OCMesh(FName _Name, SharedPtr<VObject> _Owner)
-			:OCComponent(_Name, _Owner)
+			:OCBasicComponent(_Name, _Owner)
 		{
 			
 		}

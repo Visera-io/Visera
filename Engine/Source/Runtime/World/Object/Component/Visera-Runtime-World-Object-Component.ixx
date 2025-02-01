@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 export module Visera.Runtime.World.Object.Component;
-export import :Interface;
+export import :BasicComponent;
 export import :Mesh;
 export import :Transform;
 

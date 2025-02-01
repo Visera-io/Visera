@@ -1,6 +1,6 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.World.Object.Component:Interface;
+export module Visera.Runtime.World.Object.Component:BasicComponent;
 
 import Visera.Core.Type;
 import Visera.Core.Signal;
@@ -9,7 +9,7 @@ export namespace VE { namespace Runtime
 {
 	class VObject;
 
-	class OCComponent
+	class OCBasicComponent
 	{
 		friend class VObject; // Object Components are managed by the VObject.
 	public:
@@ -23,8 +23,8 @@ export namespace VE { namespace Runtime
 		virtual void Destroy() = 0;
 
 	public:
-		OCComponent() = delete;
-		OCComponent(FName _Name, SharedPtr<VObject> _Owner)
+		OCBasicComponent() = delete;
+		OCBasicComponent(FName _Name, SharedPtr<VObject> _Owner)
 			:Name{ _Name }, Owner{ _Owner }
 		{ VE_ASSERT(!Name.IsNone() && _Owner != nullptr); }
 				

@@ -1,0 +1,15 @@
+{
+    "Engine":
+    {
+        "Version": "1.0.0",
+        "Path":
+        {
+            "Assets" :"Engine/Assets/",
+            "Shaders":"Engine/Shaders/"
+        },
+        "PlugIns":
+        {
+            
+        }
+    }
+}

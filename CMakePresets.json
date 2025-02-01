@@ -10,7 +10,7 @@
             "name": "basic-settings",
             "hidden": true,
             "cacheVariables": {
-                "VISERA_SETUP_TIME": "2025-01-31 18:57:01.846219",
+                "VISERA_SETUP_TIME": "2025-02-01 15:43:35.056793",
                 "CMAKE_C_FLAGS": "/D_UNICODE /DUNICODE",
                 "CMAKE_CXX_FLAGS": "/D_UNICODE /DUNICODE",
                 "CMAKE_TOOLCHAIN_FILE": "${sourceDir}\\Engine\\Packages\\Vcpkg\\scripts\\buildsystems\\vcpkg.cmake",

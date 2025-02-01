@@ -42,7 +42,8 @@ export namespace VE
 			Int32 StateCode = EXIT_SUCCESS;
 			try
 			{
-				if (App)
+				if (!App) { throw SEngineStop("Visera App is not created!"); }
+				try
 				{
 					Log::Debug("Bootstrapping the " VISERA_APP_NAME "...");
 					App->Bootstrap();
@@ -52,7 +53,10 @@ export namespace VE
 					App->Terminate();
 					delete App;
 				}
-				else Log::Error("Visera App is not created");
+				catch (const SRuntimeError& Signal)
+				{
+					Log::Fatal(Text("Visera Engine External Runtime Error:\n{}{}", Signal.What(), Signal.Where()));
+				}
 			}
 			catch (const SAppStop& Signal)
 			{

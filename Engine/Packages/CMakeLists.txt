@@ -2,8 +2,7 @@ add_library(VISERA_ENGINE_EXTERN INTERFACE)
 
 #[Manager]
 add_custom_target(Visera-Packages ALL) # For adding denpendencies
-#set_target_properties(Visera-Packages PROPERTIES FOLDER "${PROJECT_NAME}")
-
+set_target_properties(Visera-Packages PROPERTIES FOLDER "Visera/Rules")
 
 # Vulkan
 if (NOT TARGET Vulkan::Vulkan)
@@ -167,6 +166,21 @@ if (NOT TARGET freeimage)
         $<TARGET_FILE_DIR:${APP_NAME}>
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:freeimage::FreeImagePlus>
+        $<TARGET_FILE_DIR:${APP_NAME}>
+    )
+endif()
+
+# Rapid JSON
+if (NOT TARGET rapidjson)
+    message(STATUS "\nLoading Rapid JSON (rapidjson)")
+    find_package(RapidJSON CONFIG REQUIRED)
+    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE rapidjson)
+
+    add_custom_command(
+        TARGET Visera-Packages
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:rapidjson>
         $<TARGET_FILE_DIR:${APP_NAME}>
     )
 endif()
