@@ -6,6 +6,7 @@ export import Visera.Core;
 #if defined(VISERA_RUNTIME)
 import Visera.Runtime;
 export import Visera.Editor;
+export import Visera.Template;
 #endif
 
 export namespace VE

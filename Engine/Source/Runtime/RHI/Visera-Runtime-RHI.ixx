@@ -2,7 +2,6 @@ module;
 #include <Visera.h>
 export module Visera.Runtime.RHI;
 import Visera.Runtime.RHI.Vulkan;
-import Visera.Runtime.RHI.RenderPass;
 
 import Visera.Core.Signal;
 
@@ -47,9 +46,6 @@ export namespace VE { namespace Runtime
 		class CommandContext;
 
 	public:
-		VE_API RegisterCommandContext(const String& Name, EPipelineStage Deadline) -> void;
-		VE_API SearchCommandContext(StringView Name)	-> WeakPtr<CommandContext>;
-
 		VE_API CreateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)			-> SharedPtr<FCommandBuffer> { return ResetableGraphicsCommandPool.CreateCommandBuffer(_Level); };
 		VE_API CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FCommandBuffer> { return TransientGraphicsCommandPool.CreateCommandBuffer(_Level); };
 		VE_API CreateBuffer(const FBuffer::CreateInfo& _CreateInfo) -> SharedPtr<FBuffer> { return Vulkan->Allocator.CreateBuffer(_CreateInfo); }
@@ -62,60 +58,38 @@ export namespace VE { namespace Runtime
 
 		VE_API GetAPI() -> const FVulkan* { return Vulkan; }
 
-	public:
-		class CommandContext
-		{
-			friend class RHI;
-		public:
-			StringView						 Name;
-			SharedPtr<FCommandBuffer>		 Commands;
-
-		//private:
-			void Create(StringView Name, EPipelineStage Deadline, SharedPtr<FFence> SignalFence);
-			void Destroy() noexcept {};
-
-		//private:
-			EPipelineStage					 Deadline;
-			Array<SharedPtr<CommandContext>> Dependencies;
-			FSemaphore						 Semaphore_Compeleted;
-			SharedPtr<FFence>				 Fence_Executing;
-		};
-
-
-	private:	
-		static inline FVulkan*	 Vulkan;
-
-		struct Frame
-		{
-			FFence		Fence_Rendering{ True };
-			FSemaphore	Semaphore_ReadyToRender;
-			FSemaphore	Semaphore_ReadyToPresent;
-			HashMap<String, SharedPtr<CommandContext>> CommandContexts;
-		};
-		static inline Array<Frame> Frames;
-
-		VE_API GetCurrentFrame() -> Frame& { return Frames[Vulkan->Swapchain.GetCursor()]; }
-
-		static inline void
-		WaitForCurrentFrame() throw(SwapchainRecreateSignal)
-		{
-			auto& CurrentFrame = GetCurrentFrame();
-			CurrentFrame.Fence_Rendering.Wait();
-			Vulkan->Swapchain.WaitForCurrentImage(CurrentFrame.Semaphore_ReadyToRender, nullptr);
-			CurrentFrame.Fence_Rendering.Lock(); //Reset to Unsignaled (Lock)
-		}
-
-		static inline void
-		PresentCurrentFrame()	throw(SwapchainRecreateSignal)
-		{
-			auto& CurrentFrame = GetCurrentFrame();
-			Vulkan->Swapchain.PresentCurrentImage(CurrentFrame.Semaphore_ReadyToPresent);
-		}
-
 	private:
+		static inline FVulkan*			 Vulkan;
 		static inline FVulkanCommandPool ResetableGraphicsCommandPool{};
 		static inline FVulkanCommandPool TransientGraphicsCommandPool{};
 		
+		//struct Frame
+		//{
+		//	FFence		Fence_Rendering{ True };
+		//	FSemaphore	Semaphore_ReadyToRender;
+		//	FSemaphore	Semaphore_ReadyToPresent;
+		//	HashMap<String, SharedPtr<CommandContext>> CommandContexts;
+		//};
+		//static inline Array<Frame> Frames;
+
+		//VE_API GetCurrentFrame() -> Frame& { return Frames[Vulkan->Swapchain.GetCursor()]; }
+
+		//static inline void
+		//WaitForCurrentFrame() throw(SwapchainRecreateSignal)
+		//{
+		//	auto& CurrentFrame = GetCurrentFrame();
+		//	CurrentFrame.Fence_Rendering.Wait();
+		//	Vulkan->Swapchain.WaitForCurrentImage(CurrentFrame.Semaphore_ReadyToRender, nullptr);
+		//	CurrentFrame.Fence_Rendering.Lock(); //Reset to Unsignaled (Lock)
+		//}
+
+		//static inline void
+		//PresentCurrentFrame()	throw(SwapchainRecreateSignal)
+		//{
+		//	auto& CurrentFrame = GetCurrentFrame();
+		//	Vulkan->Swapchain.PresentCurrentImage(CurrentFrame.Semaphore_ReadyToPresent);
+		//}
+
 	private:
 		static void
 		Bootstrap()
@@ -123,54 +97,20 @@ export namespace VE { namespace Runtime
 			Vulkan = new FVulkan();
 			ResetableGraphicsCommandPool.Create(EQueueFamily::Graphics, ECommandPool::Resetable);
 			TransientGraphicsCommandPool.Create(EQueueFamily::Graphics, ECommandPool::Transient);
+		}
+		static void
+		Tick()
+		{
 
-			Frames.resize(Vulkan->Swapchain.GetSize());
 		}
 		static void
 		Terminate()
 		{
 			WaitIdle();
-			Frames.clear();
 			TransientGraphicsCommandPool.Destroy();
 			ResetableGraphicsCommandPool.Destroy();
 			delete Vulkan;
 		}
 	};
-
-	void RHI::CommandContext::
-	Create(	StringView				Name,
-			EPipelineStage			Deadline,
-			SharedPtr<FFence>		SignalFence)
-	{
-		this->Name				= std::move(Name);
-		this->Deadline			= Deadline;
-		this->Fence_Executing	= std::move(SignalFence);
-	}
-
-	void RHI::
-	RegisterCommandContext(const String& Name, EPipelineStage Deadline)
-	{
-		for (auto& Frame : Frames)
-		{
-			VE_ASSERT(!Frame.CommandContexts.count(Name));
-			auto& NewCommandContext = Frame.CommandContexts[Name];
-			NewCommandContext = CreateSharedPtr<CommandContext>();
-			NewCommandContext->Create(Name, Deadline, nullptr);
-			NewCommandContext->Commands = ResetableGraphicsCommandPool.CreateCommandBuffer(ECommandLevel::Primary);
-		}
-		auto& CurrentFrame = GetCurrentFrame();
-	}
-
-	WeakPtr<RHI::CommandContext> RHI::
-	SearchCommandContext(StringView Name)
-	{
-		auto& CurrentFrame = GetCurrentFrame();
-		auto Result = CurrentFrame.CommandContexts.find(Name.data());
-
-		if(Result == CurrentFrame.CommandContexts.end())
-		{ throw SRuntimeError(Text("Failed to search Command Context ({})", Name)); }
-
-		return Result->second;
-	}
 
 } } // namespace VE::Runtime

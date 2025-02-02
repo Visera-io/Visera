@@ -1,6 +1,5 @@
 module;
 #include <Visera.h>
-
 export module Visera.Runtime;
 //Runtime Modules [TODO]: remove exports and export Runtime in Visera.ixx
 export import Visera.Runtime.Window;
@@ -25,6 +24,7 @@ export namespace VE { namespace Runtime
 				World::Tick();
 				Window::Tick();
 				Render::Tick();
+				RHI::Tick();
 				if (Window::ShouldClose()) { throw SEngineStop("Window has been closed."); }
 			}
 			catch(const SRuntimeError& RuntimeError)

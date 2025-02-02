@@ -1,14 +1,13 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.RHI.RenderPass:Postprocessing;
+export module Visera.Template.RenderPass:Postprocessing;
 
 import Visera.Runtime.RHI.Vulkan;
 
-export namespace VE { namespace Runtime
+export namespace VE { namespace Template
 {
 
-
-	class FPostprocessingPass : FVulkanRenderPass
+	class FPostprocessingPass : Runtime::FVulkanRenderPass
 	{
 	public:
 		
@@ -21,4 +20,4 @@ export namespace VE { namespace Runtime
 		};
 	};
 
-} } // namespace VE::Runtime
+} } // namespace VE::Template
