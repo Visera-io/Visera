@@ -22,6 +22,7 @@ def Create(argv) -> int:
     makedirs(path.join(app_path, "Cache"), exist_ok=True)
     makedirs(path.join(app_path, "Packages"), exist_ok=True)
     makedirs(path.join(app_path, "Project"), exist_ok=True)
+    makedirs(path.join(app_path, "Shaders"), exist_ok=True)
     makedirs(path.join(app_path, "Source"), exist_ok=True)
     
     with open(path.join(app_path, "CMakeLists.txt"), 'w',encoding='UTF-8') as CMakeLists:

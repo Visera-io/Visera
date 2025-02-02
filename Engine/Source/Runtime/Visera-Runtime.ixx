@@ -2,9 +2,10 @@ module;
 #include <Visera.h>
 
 export module Visera.Runtime;
-//Runtime Modules
-export import Visera.Runtime.Render;
+//Runtime Modules [TODO]: remove exports and export Runtime in Visera.ixx
 export import Visera.Runtime.Window;
+export import Visera.Runtime.RHI;
+export import Visera.Runtime.Render;
 export import Visera.Runtime.World;
 
 import Visera.Core.Log;
@@ -35,12 +36,14 @@ export namespace VE { namespace Runtime
 		{
 			World::Bootstrap();
 			Window::Bootstrap();
+			RHI::Bootstrap();
 			Render::Bootstrap();
 		}
 
 		VE_API Terminate() -> void
 		{
 			Render::Terminate();
+			RHI::Terminate();
 			Window::Terminate();
 			World::Terminate();
 		}
@@ -89,7 +92,5 @@ export namespace VE { namespace Runtime
 			}
 		}
 	};
-
 	
-
 } } // namespace VE::Runtime

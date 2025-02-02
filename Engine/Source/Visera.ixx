@@ -5,18 +5,19 @@ export module Visera;
 export import Visera.Core;
 #if defined(VISERA_RUNTIME)
 import Visera.Runtime;
+export import Visera.Editor;
 #endif
 
 export namespace VE
 {
 	using RHI		= VE::Runtime::RHI;
 	using RTC		= VE::Runtime::RTC;
+	using Render	= VE::Runtime::Render;
 	using Window	= VE::Runtime::Window;
 	using World		= VE::Runtime::World;
 	using Geometry  = VE::Runtime::Geometry;
 
 	using FRay		= VE::Runtime::FRay;
-
 
 	class ViseraApp
 	{
@@ -78,6 +79,8 @@ export namespace VE
 			Log::Debug("Bootstrapping Visera Runtime...");
 			Runtime::ViseraRuntime::Bootstrap();
 			RuntimeTick = Runtime::ViseraRuntime::Tick;
+			Log::Debug("Bootstrapping Visera Edtior...");
+			Editor::ViseraEditor::Bootstrap();
 	#endif
 
 		}
@@ -85,6 +88,8 @@ export namespace VE
 		~Visera()
 		{
 	#if defined(VISERA_RUNTIME)
+			Log::Debug("Terminating Visera Editor...");
+			Editor::ViseraEditor::Terminate();
 			Log::Debug("Terminating Visera Runtime...");
 			Runtime::ViseraRuntime::Terminate();
 	#endif

@@ -8,12 +8,12 @@ import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
-	class Render;
+	class ViseraRuntime;
 
 	class RHI
 	{
 		VE_MODULE_MANAGER_CLASS(RHI);
-		friend class Render;
+		friend class ViseraRuntime;
 	public:
 		using FSemaphore			= FVulkanSemaphore;
 		using FCommandPool			= FVulkanCommandPool;

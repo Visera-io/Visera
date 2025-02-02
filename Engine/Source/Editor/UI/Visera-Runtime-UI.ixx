@@ -5,18 +5,19 @@ export module Visera.Editor.UI;
 import Visera.Runtime.RHI;
 import :ImGui;
 
-export namespace VE { namespace Runtime
+export namespace VE { namespace Editor
 {
 
 	class UI
 	{
 		VE_MODULE_MANAGER_CLASS(UI);
 	public:
+		VE_API Hello() -> StringView { return "Hello Editor"; }
 
 	private:
 		VE_API Bootstrap()
 		{
-			auto* API = RHI::GetAPI();
+			auto* API = Runtime::RHI::GetAPI();
 			//[TODO]
 			//ImGui = new FImGui(FImGui::CreateInfo
 			//{
@@ -47,4 +48,4 @@ export namespace VE { namespace Runtime
 		static inline FImGui* ImGui;
 	};
 
-} } // namespace VE::Runtime
+} } // namespace VE::Editor
