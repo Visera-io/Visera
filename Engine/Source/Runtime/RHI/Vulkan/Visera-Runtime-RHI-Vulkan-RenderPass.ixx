@@ -4,7 +4,7 @@ export module Visera.Runtime.RHI.Vulkan:RenderPass;
 
 import Visera.Core.Signal;
 
-import :Enums;
+import :Common;
 import :Allocator;
 import :Device;
 import :PipelineCache;

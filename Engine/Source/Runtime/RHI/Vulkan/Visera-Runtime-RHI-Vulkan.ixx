@@ -13,7 +13,7 @@ export import :RenderPass;
 export import :RenderPassLayout;
 export import :RenderPipeline;
 export import :Synchronization;
-export import :Enums;
+export import :Common;
 export import :Loader;
 export import :Allocator;
 export import :PipelineCache;

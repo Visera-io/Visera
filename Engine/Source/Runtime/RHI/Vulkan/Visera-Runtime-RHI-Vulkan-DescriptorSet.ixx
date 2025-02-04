@@ -2,7 +2,7 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:DescriptorSet;
 
-import :Enums;
+import :Common;
 import :Device;
 import :DescriptorSetLayout;
 

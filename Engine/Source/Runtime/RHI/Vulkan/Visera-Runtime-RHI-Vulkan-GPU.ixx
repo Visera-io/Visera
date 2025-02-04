@@ -2,7 +2,7 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:GPU;
 
-import :Enums;
+import :Common;
 
 import Visera.Core.Log;
 

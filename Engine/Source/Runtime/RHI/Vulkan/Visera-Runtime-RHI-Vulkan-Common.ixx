@@ -1,9 +1,10 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.RHI.Vulkan:Enums;
+export module Visera.Runtime.RHI.Vulkan:Common;
 
 export namespace VE { namespace Runtime
 {
+
 	// VE_ENUM_CLASS(EImageViewType,	VkImageViewType)
 	// VE_ENUM_CLASS(EImageType,		VkImageType)
 	// VE_ENUM_CLASS(EImageAspect,		VkImageAspectFlags)
@@ -24,6 +25,19 @@ export namespace VE { namespace Runtime
 	// VE_ENUM_CLASS(EBufferUsage,		VkBufferUsageFlags)
 	// VE_ENUM_CLASS(EAttachmentIO,		VkAttachmentLoadOp)
 
+	// struct FVulkanComponentMapping
+
+	VE_ENUM_CLASS(EComponentMapping, VkComponentSwizzle)
+	{
+		Identity  = VK_COMPONENT_SWIZZLE_IDENTITY,
+		Zero	  = VK_COMPONENT_SWIZZLE_ZERO,
+		One		  = VK_COMPONENT_SWIZZLE_ONE,
+		R		  = VK_COMPONENT_SWIZZLE_R,
+		G	      = VK_COMPONENT_SWIZZLE_G,
+		B	      = VK_COMPONENT_SWIZZLE_B,
+		A	      = VK_COMPONENT_SWIZZLE_A,
+	};
+
 	VE_ENUM_CLASS(EImageViewType, VkImageViewType)
 	{
 		Image1D		=	VK_IMAGE_VIEW_TYPE_1D,
@@ -33,6 +47,8 @@ export namespace VE { namespace Runtime
 		Array1D		= 	VK_IMAGE_VIEW_TYPE_1D_ARRAY,
 		Array2D		= 	VK_IMAGE_VIEW_TYPE_2D_ARRAY,
 		ArrayCube	=	VK_IMAGE_VIEW_TYPE_CUBE_ARRAY,
+
+		Undefined,
 	};
 
 	VE_ENUM_CLASS(EImageType, VkImageType)
@@ -44,9 +60,11 @@ export namespace VE { namespace Runtime
 
 	VE_ENUM_CLASS(EImageAspect, VkImageAspectFlags)
 	{
-		Color	= VK_IMAGE_ASPECT_COLOR_BIT,
-		Depth	= VK_IMAGE_ASPECT_DEPTH_BIT,
-		Stencil	= VK_IMAGE_ASPECT_STENCIL_BIT,
+		Color		= VK_IMAGE_ASPECT_COLOR_BIT,
+		Depth		= VK_IMAGE_ASPECT_DEPTH_BIT,
+		Stencil		= VK_IMAGE_ASPECT_STENCIL_BIT,
+
+		Undefined,
 	};
 
 	VE_ENUM_CLASS(EImageTiling, VkImageTiling)
@@ -395,6 +413,14 @@ export namespace VE { namespace Runtime
 		O_Store	 	= VK_ATTACHMENT_STORE_OP_STORE,
 		O_None	 	= VK_ATTACHMENT_STORE_OP_NONE,
 		O_Whatever 	= VK_ATTACHMENT_STORE_OP_DONT_CARE,
+	};
+
+	struct FVulkanComponentMapping
+	{
+		EComponentMapping RMapping = EComponentMapping::Identity;
+		EComponentMapping GMapping = EComponentMapping::Identity;
+		EComponentMapping BMapping = EComponentMapping::Identity;
+		EComponentMapping AMapping = EComponentMapping::Identity;
 	};
 
 } } // namespace VE::Runtime

@@ -3,7 +3,7 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:RenderPipeline;
 
-import :Enums;
+import :Common;
 import :Device;
 import :Shader;
 import :Swapchain;

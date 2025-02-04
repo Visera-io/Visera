@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 #include <embree4/rtcore.h>
-export module Visera.Runtime.World.RTC.Embree:Enums;
+export module Visera.Runtime.World.RTC.Embree:Common;
 
 export namespace VE { namespace Runtime
 {

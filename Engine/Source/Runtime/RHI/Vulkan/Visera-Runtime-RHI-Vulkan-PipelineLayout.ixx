@@ -2,7 +2,7 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:PipelineLayout;
 
-import :Enums;
+import :Common;
 import :Device;
 
 import Visera.Core.Signal;
