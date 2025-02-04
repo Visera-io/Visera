@@ -10,6 +10,7 @@ export import :DescriptorSetLayout;
 export import :Shader;
 export import :PipelineLayout;
 export import :RenderPass;
+export import :RenderPassLayout;
 export import :RenderPipeline;
 export import :Synchronization;
 export import :Enums;

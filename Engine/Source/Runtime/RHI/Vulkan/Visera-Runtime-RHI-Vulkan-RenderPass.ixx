@@ -5,6 +5,7 @@ export module Visera.Runtime.RHI.Vulkan:RenderPass;
 import Visera.Core.Signal;
 
 import :Enums;
+import :Allocator;
 import :Device;
 import :PipelineCache;
 import :Framebuffer;
@@ -41,20 +42,18 @@ export namespace VE { namespace Runtime
 		Array<FSubpass>					Subpasses;
 		FVulkanFramebuffer				Framebuffer;
 
-	public:
 		void Create();
 		void Destroy();
 
 	public:
-		FVulkanRenderPass() noexcept = delete;
-		FVulkanRenderPass(UInt32 SubpassCount) noexcept;
+		FVulkanRenderPass() noexcept;
 		virtual ~FVulkanRenderPass() noexcept;
 	};
 
 	FVulkanRenderPass::
-	FVulkanRenderPass(UInt32 SubpassCount) noexcept
+	FVulkanRenderPass() noexcept
 	{
-		VE_WIP;
+		
 	}
 
 	FVulkanRenderPass::
@@ -119,17 +118,47 @@ export namespace VE { namespace Runtime
 		{ throw SRuntimeError("Failed to create Vulkan FRenderPass!"); }
 
 		// Create Framebuffers
+		Array<VkImageView> AttachmentViews(Layout.AttachmentDescriptions.size());
+		
 
-		/*VkFramebufferCreateInfo CreateInfo
+		//VkImageViewCreateInfo CreateInfo
+		//	{
+		//		.sType		= VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+		//		.image		= Images[Idx],
+		//		.viewType	= VK_IMAGE_VIEW_TYPE_2D,
+		//		.format		= AutoCast(EFormat::U32_sRGB_R8_G8_B8_A8),
+		//		.components{
+		//					.r = VK_COMPONENT_SWIZZLE_IDENTITY,
+		//					.g = VK_COMPONENT_SWIZZLE_IDENTITY,
+		//					.b = VK_COMPONENT_SWIZZLE_IDENTITY,
+		//					.a = VK_COMPONENT_SWIZZLE_IDENTITY
+		//					},
+
+		//		.subresourceRange{
+		//					.aspectMask		= VK_IMAGE_ASPECT_COLOR_BIT,
+		//					.baseMipLevel	= 0,
+		//					.levelCount		= 1,
+		//					.baseArrayLayer = 0,
+		//					.layerCount		= 1
+		//					}
+		//	};
+		//if(vkCreateImageView(
+		//	GVulkan->Device->GetHandle(),
+		//	&CreateInfo,
+		//	GVulkan->AllocationCallbacks,
+		//	&ImageViews[Idx]) != VK_SUCCESS)
+		//{ throw SRuntimeError("Failed to create Vulkan Image View!"); }
+
+		VkFramebufferCreateInfo CreateInfo
 		{
-			.sType			= VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-			.renderPass		= Handle,
-			.attachmentCount= UInt32(Framebuffer.Color.size()),
-			.pAttachments = m_framebuffers[i].render_targets.data(),
-			.width		  = m_render_area.extent.width,
-			.height		  = m_render_area.extent.height,
-			.layers		  = 1
-		};*/
+			.sType			 = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+			.renderPass		 = Handle,
+			.attachmentCount = UInt32(Framebuffer.A.size()),
+			.pAttachments    = m_framebuffers[i].render_targets.data(),
+			.width		     = Layout.GetExtent2D().width,
+			.height		     = Layout.GetExtent2D().height,
+			.layers		     = 1
+		};
 	}
 
 	void FVulkanRenderPass::

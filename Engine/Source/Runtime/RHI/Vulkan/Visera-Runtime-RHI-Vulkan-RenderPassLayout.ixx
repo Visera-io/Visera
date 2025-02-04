@@ -3,7 +3,6 @@ module;
 export module Visera.Runtime.RHI.Vulkan:RenderPassLayout;
 
 import :Enums;
-import :RenderPipeline;
 
 export namespace VE { namespace Runtime
 {
@@ -19,10 +18,8 @@ export namespace VE { namespace Runtime
 		auto GetExtent2D() const -> const VkExtent2D& { return Extent.Extent2D; }
 		auto GetExtent3D() const -> const VkExtent3D& { return Extent.Extent3D; }
 
-		FVulkanRenderPassLayout()  noexcept = default;
-		~FVulkanRenderPassLayout() noexcept = default;
-
 	private:
+		// Depth Attachments in the odd slot (+1)
 		Array<VkAttachmentDescription>			AttachmentDescriptions;
 		VkAttachmentDescriptionStencilLayout	StencilDescription;
 		

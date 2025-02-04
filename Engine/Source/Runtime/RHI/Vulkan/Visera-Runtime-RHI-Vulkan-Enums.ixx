@@ -4,6 +4,9 @@ export module Visera.Runtime.RHI.Vulkan:Enums;
 
 export namespace VE { namespace Runtime
 {
+	// VE_ENUM_CLASS(EImageViewType,	VkImageViewType)
+	// VE_ENUM_CLASS(EImageType,		VkImageType)
+	// VE_ENUM_CLASS(EImageAspect,		VkImageAspectFlags)
 	// VE_ENUM_CLASS(EImageTiling,		VkImageTiling)
 	// VE_ENUM_CLASS(EFormat,			VkFormat)
 	// VE_ENUM_CLASS(EPresentMode,		VkPresentModeKHR)
@@ -20,6 +23,31 @@ export namespace VE { namespace Runtime
 	// VE_ENUM_CLASS(EImageUsage,		VkImageUsageFlags)
 	// VE_ENUM_CLASS(EBufferUsage,		VkBufferUsageFlags)
 	// VE_ENUM_CLASS(EAttachmentIO,		VkAttachmentLoadOp)
+
+	VE_ENUM_CLASS(EImageViewType, VkImageViewType)
+	{
+		Image1D		=	VK_IMAGE_VIEW_TYPE_1D,
+		Image2D		= 	VK_IMAGE_VIEW_TYPE_2D,
+		Image3D		= 	VK_IMAGE_VIEW_TYPE_3D,
+		Cube		= 	VK_IMAGE_VIEW_TYPE_CUBE,
+		Array1D		= 	VK_IMAGE_VIEW_TYPE_1D_ARRAY,
+		Array2D		= 	VK_IMAGE_VIEW_TYPE_2D_ARRAY,
+		ArrayCube	=	VK_IMAGE_VIEW_TYPE_CUBE_ARRAY,
+	};
+
+	VE_ENUM_CLASS(EImageType, VkImageType)
+	{
+		Image1D = VK_IMAGE_TYPE_1D,
+		Image2D = VK_IMAGE_TYPE_2D,
+		Image3D = VK_IMAGE_TYPE_3D,
+	};
+
+	VE_ENUM_CLASS(EImageAspect, VkImageAspectFlags)
+	{
+		Color	= VK_IMAGE_ASPECT_COLOR_BIT,
+		Depth	= VK_IMAGE_ASPECT_DEPTH_BIT,
+		Stencil	= VK_IMAGE_ASPECT_STENCIL_BIT,
+	};
 
 	VE_ENUM_CLASS(EImageTiling, VkImageTiling)
 	{
@@ -328,8 +356,8 @@ export namespace VE { namespace Runtime
 
 	VE_ENUM_CLASS(EImageUsage, VkImageUsageFlags)
 	{
-		None	= 0x0,
-		All			= VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM,
+		None						= 0x0,
+		All							= VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM,
 
 		TransferSource				= VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
 		TransferDestination			= VK_IMAGE_USAGE_TRANSFER_DST_BIT,

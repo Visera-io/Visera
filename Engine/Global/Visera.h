@@ -190,6 +190,9 @@ using HashMap  = std::unordered_map<Key, Value>;
 template<typename T, size_t Length>
 using Segment  = std::array<T, Length>;
 
+template<typename T1, typename T2>
+using Pair      = std::pair<T1, T2>;
+
 template <typename... Args>
 using ResultPackage = std::tuple<Args...>;
 

@@ -18,9 +18,6 @@ export namespace VE { namespace Runtime
 
 		auto GetHandle()			 { return Handle; }
 
-		FVulkanFramebuffer()  noexcept = default;
-		~FVulkanFramebuffer() noexcept { vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks); Handle = VK_NULL_HANDLE; }
-		
 	private:
 		VkFramebuffer				   Handle{ VK_NULL_HANDLE };
 
@@ -31,6 +28,22 @@ export namespace VE { namespace Runtime
 
 		Array<VkAttachmentDescription>		 ImageDescriptions;
 		VkAttachmentDescriptionStencilLayout StencilDescription;
+
+		FVulkanFramebuffer();
+		~FVulkanFramebuffer();
 	};
+
+	FVulkanFramebuffer::
+	FVulkanFramebuffer()
+	{
+
+	}
+
+	FVulkanFramebuffer::
+	~FVulkanFramebuffer()
+	{	
+		vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
+		Handle = VK_NULL_HANDLE;
+	}
 
 } } // namespace VE::Runtime
