@@ -14,7 +14,7 @@ export namespace VE { namespace Runtime
 	{
 		friend class FVulkan;
 	public:
-		auto GetEntryPoint()	const -> RawString		{ return "main"; }
+		auto GetEntryPoint()	const -> RawString				{ VE_WIP; return "main"; }
 		auto GetSize()			const -> VkDeviceSize			{ return Data.size(); }
 		auto GetData()			const -> const Array<Byte>&		{ return Data; }
 		auto GetStage()			const -> VkShaderStageFlagBits	{ return Stage; }

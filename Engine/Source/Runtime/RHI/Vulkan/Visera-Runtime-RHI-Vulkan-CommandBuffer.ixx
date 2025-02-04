@@ -16,19 +16,20 @@ export namespace VE { namespace Runtime
 	{
 		friend class FVulkanCommandPool;
 	public:
-		enum class EStatus { Zombie, Idle, Recording, InsideRenderPass };
+		enum class EStatus { Expired, Idle, Recording, InsideRenderPass, Submitted };
 
 		void StartRecording();
 		void StopRecording();
 		void StartRenderPass(SharedPtr<FVulkanRenderPass> _RenderPass);
 		void StopRenderPass()	  { VE_ASSERT(IsInsideRenderPass()); vkCmdEndRenderPass(Handle); Status = EStatus::Recording; }
 		void Reset()			  { VE_ASSERT(IsIdle() && IsResettable()); vkResetCommandBuffer(Handle, 0x0); }
-		void Free()				  { Status = EStatus::Zombie; }
+		void Free()				  { Status = EStatus::Expired; }
 
-		Bool IsZombie()				const { return Status == EStatus::Zombie; }
-		Bool IsIdle()				const { return Status == EStatus::Idle; }
-		Bool IsRecording()			const { return Status >= EStatus::Recording; }
-		Bool IsInsideRenderPass()	const { return Status >= EStatus::InsideRenderPass; }
+		Bool IsExpired()			const { return Status == EStatus::Expired;			}
+		Bool IsSubmitted()			const { return Status == EStatus::Submitted;		}
+		Bool IsIdle()				const { return Status == EStatus::Idle;				}
+		Bool IsRecording()			const { return Status == EStatus::Recording;		}
+		Bool IsInsideRenderPass()	const { return Status == EStatus::InsideRenderPass; }
 		Bool IsResettable()			const { return bIsResettable;   }
 		Bool IsPrimary()			const { return bIsPrimary;		}
 		auto GetLevel()				const -> ECommandLevel		{ return IsPrimary()? ECommandLevel::Primary : ECommandLevel::Secondary; }
@@ -54,7 +55,7 @@ export namespace VE { namespace Runtime
 	void FVulkanCommandBuffer::
 	StartRenderPass(SharedPtr<FVulkanRenderPass> _RenderPass)
 	{ 
-		VE_ASSERT(!IsInsideRenderPass());
+		VE_ASSERT(IsRecording());
 		
 		VE_WIP;//Framebuffer
 		VkRenderPassBeginInfo RenderPassBeginInfo
@@ -92,7 +93,7 @@ export namespace VE { namespace Runtime
 	void FVulkanCommandBuffer::
 	StartRecording()
 	{
-		VE_ASSERT(!IsRecording() && !IsZombie());
+		VE_ASSERT(!IsRecording() && !IsExpired());
 
 		VkCommandBufferBeginInfo BeginInfo
 		{
@@ -101,7 +102,7 @@ export namespace VE { namespace Runtime
 			.pInheritanceInfo = nullptr
 		};
 		if (VK_SUCCESS != vkBeginCommandBuffer(Handle, &BeginInfo))
-		{ throw SRuntimeError("Failed to begin recording Vulkan Command FBuffer!"); }
+		{ throw SRuntimeError("Failed to begin recording Vulkan Command FVulkanBuffer!"); }
 
 		Status = EStatus::Recording;
 	}
@@ -112,7 +113,7 @@ export namespace VE { namespace Runtime
 		VE_ASSERT(IsRecording());
 
 		if (VK_SUCCESS != vkEndCommandBuffer(Handle))
-		{ throw SRuntimeError("Failed to stop recording Vulkan Command FBuffer!"); }
+		{ throw SRuntimeError("Failed to stop recording Vulkan Command FVulkanBuffer!"); }
 
 		Status = EStatus::Idle;
 	}

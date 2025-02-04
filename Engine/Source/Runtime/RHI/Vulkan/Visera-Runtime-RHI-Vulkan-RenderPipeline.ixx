@@ -12,9 +12,11 @@ import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
+	class FVulkanRenderPass;
 
 	class FVulkanRenderPipeline
 	{
+		friend class FVulkanRenderPass;
 	public:
 		auto GetShaderStages()		const -> const Array<VkPipelineShaderStageCreateInfo>& { return ShaderStages; }
 		auto GetVertexInputState()	const -> const VkPipelineVertexInputStateCreateInfo&   { return VertexInputState; }
@@ -27,10 +29,13 @@ export namespace VE { namespace Runtime
 		auto GetDepthStencilState() const -> const VkPipelineDepthStencilStateCreateInfo&  { return DepthStencilState; };
 		
 		auto GetColorBlendAttachments() const -> const Array<VkPipelineColorBlendAttachmentState>& { return ColorBlendAttachments; }
-		auto GetDynamicStates() const -> const Array<VkDynamicState>& { return DynamicStates; };
+		auto GetDynamicStates()			const -> const Array<VkDynamicState>& { return DynamicStates; };
 
 	protected:
+		VkPipeline									Handle{ VK_NULL_HANDLE };
+
 		Array<VkPipelineShaderStageCreateInfo>		ShaderStages;
+
 		/*1*/VkPipelineVertexInputStateCreateInfo	VertexInputState;
 		/*2*/VkPipelineTessellationStateCreateInfo	TessellationState;
 		/*3*/VkPipelineInputAssemblyStateCreateInfo	InputAssemblyState;
@@ -41,10 +46,8 @@ export namespace VE { namespace Runtime
 		/*7*/VkPipelineDepthStencilStateCreateInfo	DepthStencilState;
 		/*8*/Array<VkPipelineColorBlendAttachmentState> ColorBlendAttachments; //Default(1)
 		/*9*/Array<VkDynamicState>					DynamicStates{/*VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR*/};
-	
+
 	public:
-		void Create(const Array<SharedPtr<FVulkanShader>>& Shaders);
-		void Destroy() noexcept;
 		FVulkanRenderPipeline();
 		~FVulkanRenderPipeline() noexcept { }
 	};
@@ -71,13 +74,13 @@ export namespace VE { namespace Runtime
 			.topology	= VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.primitiveRestartEnable = VK_FALSE,
 		} },
-		Viewports{ {
+		/*Viewports{ {
 			.x		= 0.0f, 
 			.y		=	Float(GVulkan->Swapchain->GetExtent().height),
 			.width	=	Float(GVulkan->Swapchain->GetExtent().width),
 			.height	= - Float(GVulkan->Swapchain->GetExtent().height),
 			.minDepth = 0.0f,
-			.maxDepth = 1.0f,} },
+			.maxDepth = 1.0f,} },*/
 		Scissors{{
 			.offset = { 0, 0 },
 			.extent = GVulkan->Swapchain->GetExtent(),
@@ -135,33 +138,7 @@ export namespace VE { namespace Runtime
 									  VK_COLOR_COMPONENT_A_BIT,
 		} }
 	{
-		
-	}
-
-	void FVulkanRenderPipeline::
-	Create(const Array<SharedPtr<FVulkanShader>>& Shaders)
-	{
-		
-		ShaderStages.resize(Shaders.size());
-		for(UInt32 Idx = 0; Idx < ShaderStages.size(); ++Idx)
-		{
-			ShaderStages[Idx] = VkPipelineShaderStageCreateInfo
-			{
-				.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-				.stage  = Shaders[Idx]->GetStage(),
-				.module = Shaders[Idx]->GetHandle(),
-				.pName	= Shaders[Idx]->GetEntryPoint(),
-			};
-		}
 		VE_WIP;
-	}
-
-	void FVulkanRenderPipeline::
-	Destroy() noexcept
-	{
-		VE_WIP;
-		/*vkDestroyPipelineLayout(GVulkan->Device->GetHandle(), Layout, GVulkan->AllocationCallbacks);
-		Layout = VK_NULL_HANDLE;*/
 	}
 
 } } // namespace VE::Runtime

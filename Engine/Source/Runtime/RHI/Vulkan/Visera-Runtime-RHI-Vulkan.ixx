@@ -28,16 +28,21 @@ export namespace VE { namespace Runtime
 	using VulkanAllocationCallbacks = VkAllocationCallbacks*;
 
 	class RHI;
-	class UI;
 
 	class FVulkan
 	{
 		friend class RHI;
-		friend class UI;
+	public:
+		auto GetInstance()		const -> const FVulkanInstance& { return Instance; }
+		auto GetSurface()		const -> const FVulkanSurface&  { return Surface; }
+		auto GetSwapchain()		const -> const FVulkanSwapchain&{ return Swapchain; }
+		auto GetGPU()			const -> const FVulkanGPU&		{ return GPU; }
+		auto GetDevice()		const -> const FVulkanDevice&	{ return Device; }
+		
 	private:
 		/* << Vulkan Objects >>*/
 		FVulkanLoader		Loader		{};
-		FVulkanInstance		Instance	{};
+		FVulkanInstance		Instance	{VK_API_VERSION_1_3};
 		FVulkanSurface		Surface		{};
 		FVulkanGPU			GPU			{};
 		FVulkanDevice		Device		{};

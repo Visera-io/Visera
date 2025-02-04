@@ -12,117 +12,128 @@ import :GPU;
 
 export namespace VE { namespace Runtime
 {
+	class FVulkanBuffer;
+	class FVulkanImage;
 
+	class FVulkanAllocator
+	{
+		friend class FVulkan;
+	public:
+		auto CreateBuffer(VkDeviceSize _Size, EBufferUsage _Usages, EMemoryUsage Location = EMemoryUsage::Auto) const -> SharedPtr<FVulkanBuffer>;
 
-class FVulkanAllocator
-{
-	friend class FVulkan;
-public:
-	class FBuffer
+		auto GetHandle() const -> VmaAllocator { return Handle; }
+		operator VmaAllocator() const { return Handle; }
+	
+	private:
+		void Create()
+		{
+			VmaVulkanFunctions VulkanFunctions
+			{
+				.vkGetInstanceProcAddr = vkGetInstanceProcAddr,
+				.vkGetDeviceProcAddr = vkGetDeviceProcAddr,
+				.vkGetDeviceBufferMemoryRequirements = vkGetDeviceBufferMemoryRequirements,
+				.vkGetDeviceImageMemoryRequirements = vkGetDeviceImageMemoryRequirements
+			};
+			
+			VmaAllocatorCreateInfo CreateInfo
+			{
+				.physicalDevice = GVulkan->GPU->GetHandle(),
+				.device = GVulkan->Device->GetHandle(),
+				.pVulkanFunctions = &VulkanFunctions,
+				.instance = GVulkan->Instance->GetHandle(),
+				.vulkanApiVersion = GVulkan->Instance->GetVulkanAPIVersion()
+			};
+			if (VK_SUCCESS != vmaCreateAllocator(&CreateInfo, &Handle))
+			{ throw SRuntimeError("Failed to create VMA Allocator!"); }
+		}
+
+		void Destory()
+		{
+			vmaDestroyAllocator(Handle);
+			Handle = VMA_NULL;
+		}
+
+	private:
+		VmaAllocator	Handle{ VMA_NULL };
+	};
+
+	class FVulkanBuffer
 	{
 		friend class FVulkanAllocator;
 	public:
-		struct CreateInfo
-		{
-			EBufferUsage Usages   = EBufferUsage::None;
-			EMemoryUsage Location = EMemoryUsage::Auto;
-			VkDeviceSize Size = 0;
-		};
 		auto GetSize() const -> VkDeviceSize { return Allocation->GetSize(); }
 		auto GetDetails() const -> VmaAllocationInfo { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
 
 		auto GetHandle() -> VkBuffer { return Handle; }
-		operator VkBuffer()  { return Handle; }
 
 	private:
 		VkBuffer		Handle;
 		VmaAllocation	Allocation;
 
 	public:	
-		~FBuffer() noexcept;
+		~FVulkanBuffer() noexcept;
 	};
 
-public:
-	auto CreateBuffer(const FBuffer::CreateInfo& _CreateInfo) const -> SharedPtr<FBuffer>;
-
-	auto GetHandle() const -> VmaAllocator { return Handle; }
-	operator VmaAllocator() const { return Handle; }
-	
-private:
-	void Create()
+	class FVulkanImage
 	{
-		VmaVulkanFunctions VulkanFunctions
+		friend class FVulkanAllocator;
+	public:
+		auto GetSize() const -> VkDeviceSize { return Allocation->GetSize(); }
+		auto GetDetails() const -> VmaAllocationInfo { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
+
+		auto GetHandle() -> VkImage { return Handle; }
+
+	private:
+		VkImage			Handle;
+		VmaAllocation	Allocation;
+
+	public:	
+		~FVulkanImage() noexcept;
+	};
+
+
+	SharedPtr<FVulkanBuffer>
+	FVulkanAllocator::
+	CreateBuffer(VkDeviceSize _Size, EBufferUsage _Usages, EMemoryUsage Location/* = EMemoryUsage::Auto*/) const
+	{
+		VE_ASSERT(_Size > 0);
+
+		auto NewBuffer = CreateSharedPtr<FVulkanBuffer>();
+		VkBufferCreateInfo CreateInfo
 		{
-			.vkGetInstanceProcAddr = vkGetInstanceProcAddr,
-			.vkGetDeviceProcAddr = vkGetDeviceProcAddr,
-			.vkGetDeviceBufferMemoryRequirements = vkGetDeviceBufferMemoryRequirements,
-			.vkGetDeviceImageMemoryRequirements = vkGetDeviceImageMemoryRequirements
+			.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+			.pNext = nullptr,
+			.flags = 0x0,
+			.size  = _Size,
+			.usage = AutoCast(_Usages),
+			.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+			.queueFamilyIndexCount = 0,
+			.pQueueFamilyIndices = nullptr,
 		};
-			
-		VmaAllocatorCreateInfo CreateInfo
+
+		VmaAllocationCreateInfo AllocationCreateInfo
 		{
-			.physicalDevice = GVulkan->GPU->GetHandle(),
-			.device = GVulkan->Device->GetHandle(),
-			.pVulkanFunctions = &VulkanFunctions,
-			.instance = GVulkan->Instance->GetHandle(),
-			.vulkanApiVersion = GVulkan->Instance->GetVulkanAPIVersion()
+			.flags = 0x0,
+			.usage = AutoCast(Location)
 		};
-		if (VK_SUCCESS != vmaCreateAllocator(&CreateInfo, &Handle))
-		{ throw SRuntimeError("Failed to create VMA Allocator!"); }
+
+		if(VK_SUCCESS != vmaCreateBuffer(
+			Handle,
+			&CreateInfo,
+			&AllocationCreateInfo,
+			&NewBuffer->Handle,
+			&NewBuffer->Allocation,
+			nullptr))
+		{ throw SRuntimeError("Failed to create VMA FVulkanBuffer!"); }
+
+		return NewBuffer;
 	}
 
-	void Destory()
+	FVulkanBuffer::
+	~FVulkanBuffer() noexcept
 	{
-		vmaDestroyAllocator(Handle);
-		Handle = VMA_NULL;
+		vmaDestroyBuffer(GVulkan->Allocator->GetHandle(), Handle, Allocation);
+		Handle = VK_NULL_HANDLE;
 	}
-
-private:
-	VmaAllocator	Handle{ VMA_NULL };
-};
-
-SharedPtr<FVulkanAllocator::FBuffer>
-FVulkanAllocator::
-CreateBuffer(const FBuffer::CreateInfo& _CreateInfo) const
-{
-	VE_ASSERT(_CreateInfo.Size > 0);
-
-	auto NewBuffer = CreateSharedPtr<FBuffer>();
-	VkBufferCreateInfo CreateInfo
-	{
-		.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-		.pNext = nullptr,
-		.flags = 0x0,
-		.size = _CreateInfo.Size,
-		.usage = AutoCast(_CreateInfo.Usages),
-		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-		.queueFamilyIndexCount = 0,
-		.pQueueFamilyIndices = nullptr,
-	};
-
-	VmaAllocationCreateInfo AllocationCreateInfo
-	{
-		.flags = 0x0,
-		.usage = VmaMemoryUsage(_CreateInfo.Location)
-	};
-
-	if(VK_SUCCESS != vmaCreateBuffer(
-		Handle,
-		&CreateInfo,
-		&AllocationCreateInfo,
-		&NewBuffer->Handle,
-		&NewBuffer->Allocation,
-		nullptr))
-	{ throw SRuntimeError("Failed to create VMA FBuffer!"); }
-
-	return NewBuffer;
-}
-
-FVulkanAllocator::FBuffer::
-~FBuffer() noexcept
-{
-	vmaDestroyBuffer(GVulkan->Allocator->GetHandle(), Handle, Allocation);
-	Handle = VK_NULL_HANDLE;
-}
 
 } } // namespace VE::Runtime

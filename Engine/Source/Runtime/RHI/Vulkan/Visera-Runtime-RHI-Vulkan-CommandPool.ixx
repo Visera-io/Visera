@@ -11,20 +11,18 @@ import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
-	class FVulkan;
 	class RHI;
 
 	class FVulkanCommandPool : public std::enable_shared_from_this<FVulkanCommandPool>
 	{
-		friend class FVulkan;
 		friend class RHI;
 	public:
 		auto CreateCommandBuffer(ECommandLevel _CommandLevel) -> SharedPtr<FVulkanCommandBuffer>;
 
-		auto GetType() const -> ECommandPool { return ECommandPool(Type); }
-		Bool IsResetable() const { return Type == ECommandPool::Resetable; }
+		auto GetType()		const -> ECommandPool { return ECommandPool(Type); }
+		Bool IsResetable()	const				  { return Type == ECommandPool::Resetable; }
 
-		auto GetHandle() { return Handle; }
+		auto GetHandle()						  { return Handle; }
 
 	private:
 		void Create(EQueueFamily QueueFamilyType, ECommandPool Type);
@@ -108,7 +106,7 @@ export namespace VE { namespace Runtime
 				{ Trashbin.resize(Trashbin.size() << 1); }
 
 				Trashbin[CollectionCount++] = Child->Handle;
-				Child->Status = FVulkanCommandBuffer::EStatus::Zombie;
+				Child->Status = FVulkanCommandBuffer::EStatus::Expired;
 				Child->Handle = VK_NULL_HANDLE;
 			}
 		}
@@ -117,7 +115,7 @@ export namespace VE { namespace Runtime
 			for (auto It = Children.begin(); It != Children.end(); )
 			{
 				auto& Child = *It;
-				if (Child->IsZombie() || Child.use_count() == 1)
+				if (Child->IsExpired() || Child.use_count() == 1)
 				{
 					if (CollectionCount >= Trashbin.size())
 					{ Trashbin.resize(Trashbin.size() << 1); }

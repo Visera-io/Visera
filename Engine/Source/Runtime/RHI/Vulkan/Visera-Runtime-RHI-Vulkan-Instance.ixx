@@ -17,17 +17,17 @@ export namespace VE { namespace Runtime
 	{
 		friend class FVulkan;
 	public:
-		auto EnumerateAvailableGPUs() const -> Array<FVulkanGPU>;
-		auto GetVulkanAPIVersion() const -> UInt32 { return AppVersion; }
+		auto EnumerateAvailableGPUs()	const -> Array<FVulkanGPU>;
+		auto GetVulkanAPIVersion()		const -> UInt32 { return APIVersion; }
 
-		auto GetHandle() const -> const VkInstance { return  Handle; }
+		auto GetHandle()				const -> const VkInstance { return  Handle; }
 
 	private:
 		RawString				AppName		= VISERA_ENGINE_NAME;
 		UInt32					AppVersion	= VK_MAKE_VERSION(1, 0, 0);
 		VkInstance				Handle		{ VK_NULL_HANDLE };
 			
-		UInt32					APIVersion  = VK_API_VERSION_1_3;
+		UInt32					APIVersion;
 		Array<RawString>		Layers;
 		Array<RawString>		Extensions;
 			
@@ -41,7 +41,7 @@ export namespace VE { namespace Runtime
 		void Destroy();
 
 	public:
-		FVulkanInstance() noexcept = default;
+		FVulkanInstance(UInt32 _APIVersion) noexcept : APIVersion{ _APIVersion } {};
 		~FVulkanInstance() noexcept = default;
 
 		static VKAPI_ATTR VkBool32 VKAPI_CALL

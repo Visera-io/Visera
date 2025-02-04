@@ -4,7 +4,6 @@ export module Visera.Runtime.RHI.Vulkan:DescriptorPool;
 
 import :Enums;
 import :Device;
-import :GPU;
 import :DescriptorSet;
 import :DescriptorSetLayout;
 
@@ -38,6 +37,7 @@ export namespace VE { namespace Runtime
 	private:
 		void Create(const Array<FDescriptorEntry>& _DescriptorEntries, UInt32 _MaxSets);
 		void Destroy();
+		void CollectGarbages(Bool _bDestroyMode = False);
 	};
 
 	void FVulkanDescriptorPool::
@@ -74,8 +74,50 @@ export namespace VE { namespace Runtime
 	void FVulkanDescriptorPool::
 	Destroy()
 	{
+		CollectGarbages(True);
 		vkDestroyDescriptorPool(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
+	}
+
+	void FVulkanDescriptorPool::
+	CollectGarbages(Bool _bDestroyMode/* = False*/)
+	{
+		static Array<VkDescriptorSet> Trashbin(8);
+		UInt32 CollectionCount = 0;
+		
+		if (_bDestroyMode)
+		{
+			for (auto& Child : Children)
+			{
+				if (CollectionCount >= Trashbin.size())
+				{ Trashbin.resize(Trashbin.size() << 1); }
+
+				Trashbin[CollectionCount++] = Child->Handle;
+				Child->Status				= FVulkanDescriptorSet::EStatus::Expired;
+				Child->Handle				= VK_NULL_HANDLE;
+			}
+		}
+		else
+		{
+			for (auto It = Children.begin(); It != Children.end(); )
+			{
+				auto& Child = *It;
+				if (Child->IsExpired() || Child.use_count() == 1)
+				{
+					if (CollectionCount >= Trashbin.size())
+					{ Trashbin.resize(Trashbin.size() << 1); }
+
+					Trashbin[CollectionCount++] = Child->Handle;
+					Child->Handle = VK_NULL_HANDLE;
+				
+					Children.erase(It);
+				}
+				else { ++It; }
+			}
+		}
+
+		if (CollectionCount)
+		{ vkFreeDescriptorSets(GVulkan->Device->GetHandle(), Handle, CollectionCount, Trashbin.data()); }
 	}
 
 	SharedPtr<FVulkanDescriptorSet> FVulkanDescriptorPool::

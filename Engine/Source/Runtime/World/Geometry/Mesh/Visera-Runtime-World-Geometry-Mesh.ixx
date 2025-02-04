@@ -76,11 +76,11 @@ export namespace VE { namespace Runtime
 			IndexByteSize  = sizeof(UInt32) * 3;
 
 			Vertices = (Float*)Memory::MallocNow(VertexCount * VertexByteSize, 0);
-			if (!Vertices) { throw SRuntimeError("Failed to allocate Geometry Vertex FBuffer!"); }
+			if (!Vertices) { throw SRuntimeError("Failed to allocate Geometry Vertex FVulkanBuffer!"); }
 			if (_CreateInfo.Vertices) { Memory::Memcpy(Vertices, _CreateInfo.Vertices, VertexCount * VertexByteSize); }
 
 			Indices = (UInt32*)Memory::MallocNow(IndexCount * IndexByteSize, 0);
-			if (!Indices) { throw SRuntimeError("Failed to allocate Geometry Index FBuffer!"); }
+			if (!Indices) { throw SRuntimeError("Failed to allocate Geometry Index FVulkanBuffer!"); }
 			if (_CreateInfo.Indices)  { Memory::Memcpy(Indices, _CreateInfo.Indices, IndexCount * IndexByteSize); }
 
 			break;
