@@ -18,11 +18,11 @@ export namespace VE { namespace Runtime
 
 		auto GetHandle()			 { return Handle; }
 
-		FVulkanFramebuffer();
-		~FVulkanFramebuffer() { vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks); Handle = VK_NULL_HANDLE; }
+		FVulkanFramebuffer()  noexcept = default;
+		~FVulkanFramebuffer() noexcept { vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks); Handle = VK_NULL_HANDLE; }
 		
 	private:
-		VkFramebuffer		Handle{ VK_NULL_HANDLE };
+		VkFramebuffer				   Handle{ VK_NULL_HANDLE };
 
 		Array<SharedPtr<FVulkanImage>> ColorImages;
 		Array<SharedPtr<FVulkanImage>> ResolveColorImages; // MSAA Result
@@ -32,12 +32,5 @@ export namespace VE { namespace Runtime
 		Array<VkAttachmentDescription>		 ImageDescriptions;
 		VkAttachmentDescriptionStencilLayout StencilDescription;
 	};
-
-	FVulkanFramebuffer::
-	FVulkanFramebuffer()
-	{
-		// Create Color Images
-
-	}
 
 } } // namespace VE::Runtime

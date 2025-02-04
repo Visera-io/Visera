@@ -35,7 +35,7 @@ export namespace VE { namespace Runtime
 	private:
 		VkSwapchainKHR			Handle{ VK_NULL_HANDLE };
 		
-		VkPresentModeKHR		PresentMode		= AutoCast(EPresentMode::Mailbox);
+		EPresentMode			PresentMode		= EPresentMode::Mailbox;
 
 		UInt32					Cursor{ 0 };	// Current Frame Index
 		void MoveCursor(UInt32 Stride) { Cursor = (Cursor + Stride) % Images.size(); }
@@ -78,7 +78,7 @@ export namespace VE { namespace Runtime
 			//Check Image Format Support
 			for(const auto& SurfacePresentMode : GVulkan->Surface->GetPresentModes())
 			{
-				if (SurfacePresentMode != PresentMode) continue;
+				if (SurfacePresentMode != AutoCast(PresentMode)) continue;
 				bPresentModeSupport = True;
 			}
 			if (!bPresentModeSupport) throw SRuntimeError("Failed to create the Swapchain since required Present Mode is unsupported!");
@@ -163,7 +163,7 @@ export namespace VE { namespace Runtime
 			.pQueueFamilyIndices	= GVulkan->GPU->IsDiscreteGPU()? nullptr : QueuefamilyIndices.data(),
 			.preTransform			= SurfaceCapabilities.currentTransform, // Do not want any pretransformation
 			.compositeAlpha			= VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-			.presentMode			= PresentMode,
+			.presentMode			= AutoCast(PresentMode),
 			.clipped				= VK_TRUE, // Means that we do not care about the color of pixels that are obscured for the best performance. (P89)
 			.oldSwapchain			= VK_NULL_HANDLE //[TODO] Add Old Swapchain
 		};

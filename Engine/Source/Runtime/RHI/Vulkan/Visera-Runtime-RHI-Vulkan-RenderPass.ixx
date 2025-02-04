@@ -21,7 +21,12 @@ export namespace VE { namespace Runtime
 		{
 			friend class FVulkanRenderPass;
 			FVulkanRenderPipeline	Pipeline;
-			FVulkanRenderPassLayout	Layout;
+			Array<VkAttachmentReference>	InputImageReferences;    // Input Image References from Previous Subpasses.
+			Array<UInt32>					PreserveImageReferences; // Const Image References Used in Subpasses.
+			Array<VkAttachmentReference>	ColorImageReferences;
+			Array<VkAttachmentReference>	ResolveImageReferences;
+			Optional<VkAttachmentReference> DepthImageReference;
+			Optional<VkAttachmentReference> StencilImageReference;
 			EPipelineStage			SourceStage							{ EPipelineStage::None };
 			EAccessibility			SourceStageAccessPermissions		{ EAccessibility::None };
 			EPipelineStage			DestinationStage					{ EPipelineStage::None };
@@ -32,8 +37,9 @@ export namespace VE { namespace Runtime
 	protected:
 		VkRenderPass					Handle{ VK_NULL_HANDLE };
 		UInt32							Priority { 0 }; // Less is More
-		FVulkanFramebuffer				Framebuffer;
+		FVulkanRenderPassLayout			Layout;
 		Array<FSubpass>					Subpasses;
+		FVulkanFramebuffer				Framebuffer;
 
 	public:
 		void Create();
@@ -71,14 +77,14 @@ export namespace VE { namespace Runtime
 			{
 				.flags					= 0x0,
 				.pipelineBindPoint		= VK_PIPELINE_BIND_POINT_GRAPHICS,
-				.inputAttachmentCount	= UInt32(CurrentSubpass.Layout.InputImageReferences.size()),
-				.pInputAttachments		= CurrentSubpass.Layout.InputImageReferences.data(),
-				.colorAttachmentCount	= UInt32(CurrentSubpass.Layout.ColorImageReferences.size()),
-				.pColorAttachments		= CurrentSubpass.Layout.ColorImageReferences.data(),
-				.pResolveAttachments	= CurrentSubpass.Layout.ResolveImageReferences.data(),
-				.pDepthStencilAttachment= CurrentSubpass.Layout.HasDepth()? &(CurrentSubpass.Layout.DepthImageReference.value()) : nullptr,
-				.preserveAttachmentCount= UInt32(CurrentSubpass.Layout.PreserveImageReferences.size()),
-				.pPreserveAttachments	= CurrentSubpass.Layout.PreserveImageReferences.data(),
+				.inputAttachmentCount	= UInt32(CurrentSubpass.InputImageReferences.size()),
+				.pInputAttachments		= CurrentSubpass.InputImageReferences.data(),
+				.colorAttachmentCount	= UInt32(CurrentSubpass.ColorImageReferences.size()),
+				.pColorAttachments		= CurrentSubpass.ColorImageReferences.data(),
+				.pResolveAttachments	= CurrentSubpass.ResolveImageReferences.data(),
+				.pDepthStencilAttachment= CurrentSubpass.DepthImageReference.has_value()? &(CurrentSubpass.DepthImageReference.value()) : nullptr,
+				.preserveAttachmentCount= UInt32(CurrentSubpass.PreserveImageReferences.size()),
+				.pPreserveAttachments	= CurrentSubpass.PreserveImageReferences.data(),
 			};
 
 			static_assert(VK_SUBPASS_EXTERNAL == UInt32(0 - 1));
@@ -94,6 +100,7 @@ export namespace VE { namespace Runtime
 			};
 		}
 
+		VE_WIP;
 		VkRenderPassCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
@@ -104,12 +111,25 @@ export namespace VE { namespace Runtime
 			.dependencyCount = UInt32(Subpasses.size()),
 			.pDependencies	 = SubpassDependencies.data(),
 		};
-		if(VK_SUCCESS != vkCreateRenderPass(
+		if(vkCreateRenderPass(
 			GVulkan->Device->GetHandle(),
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
-			&Handle))
+			&Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan FRenderPass!"); }
+
+		// Create Framebuffers
+
+		/*VkFramebufferCreateInfo CreateInfo
+		{
+			.sType			= VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+			.renderPass		= Handle,
+			.attachmentCount= UInt32(Framebuffer.Color.size()),
+			.pAttachments = m_framebuffers[i].render_targets.data(),
+			.width		  = m_render_area.extent.width,
+			.height		  = m_render_area.extent.height,
+			.layers		  = 1
+		};*/
 	}
 
 	void FVulkanRenderPass::

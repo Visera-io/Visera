@@ -19,20 +19,10 @@ export namespace VE { namespace Runtime
 		auto GetExtent2D() const -> const VkExtent2D& { return Extent.Extent2D; }
 		auto GetExtent3D() const -> const VkExtent3D& { return Extent.Extent3D; }
 
-		Bool HasDepth()    const  { return DepthImageReference.has_value(); }
-		Bool HasStencil()  const  { return StencilImageReference.has_value(); }
-
 		FVulkanRenderPassLayout()  noexcept = default;
 		~FVulkanRenderPassLayout() noexcept = default;
 
 	private:
-		Array<VkAttachmentReference>	InputImageReferences;    // Input Image References from Previous Subpasses.
-		Array<UInt32>					PreserveImageReferences; // Const Image References Used in Subpasses.
-		Array<VkAttachmentReference>	ColorImageReferences;
-		Array<VkAttachmentReference>	ResolveImageReferences;
-		Optional<VkAttachmentReference> DepthImageReference;
-		Optional<VkAttachmentReference> StencilImageReference;
-
 		Array<VkAttachmentDescription>			AttachmentDescriptions;
 		VkAttachmentDescriptionStencilLayout	StencilDescription;
 		
