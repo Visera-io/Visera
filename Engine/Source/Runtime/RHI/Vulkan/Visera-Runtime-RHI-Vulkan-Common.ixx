@@ -47,8 +47,6 @@ export namespace VE { namespace Runtime
 		Array1D		= 	VK_IMAGE_VIEW_TYPE_1D_ARRAY,
 		Array2D		= 	VK_IMAGE_VIEW_TYPE_2D_ARRAY,
 		ArrayCube	=	VK_IMAGE_VIEW_TYPE_CUBE_ARRAY,
-
-		Undefined,
 	};
 
 	VE_ENUM_CLASS(EImageType, VkImageType)

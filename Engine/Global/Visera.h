@@ -193,6 +193,9 @@ using Segment  = std::array<T, Length>;
 template<typename T1, typename T2>
 using Pair      = std::pair<T1, T2>;
 
+template<typename T1, typename T2> constexpr
+Bool IsOrderedPair(const Pair<T1, T2>& _Pair) { return _Pair.second >= _Pair.first; }
+
 template <typename... Args>
 using ResultPackage = std::tuple<Args...>;
 

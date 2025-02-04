@@ -91,17 +91,21 @@ export namespace VE { namespace Runtime
 	{
 		friend class FVulkanImage;
 	public:
-		auto GetImage()  const  -> WeakPtr<FVulkanImage> { return Image; }
-		Bool IsExpired() const							 { return Image.expired(); }
+		auto GetImage()  const  -> WeakPtr<const FVulkanImage>	{ return Image; }
+		Bool IsExpired() const									{ return Image.expired(); }
+
+		FImageView() = delete;
+		FImageView(SharedPtr<const FVulkanImage> _SourceImage) : Image{ _SourceImage } {}
+		~FImageView() { vkDestroyImageView(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks); Handle = VK_NULL_HANDLE; }
 
 	private:
-		VkImageView				Handle{ VK_NULL_HANDLE };
-		WeakPtr<FVulkanImage>	Image;
-		EImageViewType			TypeView;
-		EImageAspect			AspectView;
-		EFormat					FormatView;
-		Pair<UInt8, UInt8>		MipmapLevelRange{ 0, 0 };
-		Pair<UInt8, UInt8>		ArrayLayerRange	{ 0, 0 };
+		VkImageView					Handle{ VK_NULL_HANDLE };
+		WeakPtr<const FVulkanImage>	Image;
+		EImageViewType				TypeView;
+		EImageAspect				AspectView;
+		EFormat						FormatView;
+		Pair<UInt8, UInt8>			MipmapLevelRange{ 0, 0 };
+		Pair<UInt8, UInt8>			ArrayLayerRange	{ 0, 0 };
 	};
 
 	class FVulkanImage : public std::enable_shared_from_this<FVulkanImage>
@@ -114,7 +118,7 @@ export namespace VE { namespace Runtime
 			EImageAspect		_Aspect = EImageAspect::Undefined,
 			Pair<UInt8, UInt8> _MipmapLevelRange = {0,0},
 			Pair<UInt8, UInt8> _ArrayLayerRange  = {0,0},
-			const FVulkanComponentMapping& _ComponentMapping/* = {}*/) const->SharedPtr<FImageView>;
+			const FVulkanComponentMapping& _ComponentMapping = {}) const->SharedPtr<FImageView>;
 
 		auto GetExtent()    const -> const FImageExtent&{ return Extent; }
 		auto GetSize()		const -> VkDeviceSize   { return Allocation->GetSize(); }
@@ -158,6 +162,15 @@ export namespace VE { namespace Runtime
 			.flags = 0x0,
 			.imageType,
 		}*/
+
+		return NewImage;
+	}
+
+	FVulkanImage::
+	~FVulkanImage()
+	{
+		vmaDestroyImage(GVulkan->Allocator->GetHandle(), Handle, Allocation);
+		Handle = VK_NULL_HANDLE;
 	}
 	
 	SharedPtr<FImageView> FVulkanImage::
@@ -168,20 +181,22 @@ export namespace VE { namespace Runtime
 					Pair<UInt8, UInt8> _ArrayLayerRange /* = { 0,0 }*/,
 					const FVulkanComponentMapping& _ComponentMapping/* = {}*/) const
 	{
-		//[TODO]: Check View Validity.
-		auto ImageView = CreateSharedPtr<FImageView>();
-		ImageView->TypeView   = _Type;
-		ImageView->FormatView = (_Format == EFormat::None)? this->Format : _Format;
-		ImageView->AspectView = (_Aspect == EImageAspect::Undefined) ? this->Aspect : _Aspect;
-		ImageView->MipmapLevelRange = std::move(_MipmapLevelRange);
-		ImageView->ArrayLayerRange  = std::move(_ArrayLayerRange);
-		
+		//[TODO]: Check more ImageView validity.
+		VE_ASSERT(IsOrderedPair(_MipmapLevelRange) && IsOrderedPair(_ArrayLayerRange));
+
+		auto NewImageView = CreateSharedPtr<FImageView>(shared_from_this());
+		NewImageView->TypeView   = _Type;
+		NewImageView->FormatView = (_Format == EFormat::None)? this->Format : _Format;
+		NewImageView->AspectView = (_Aspect == EImageAspect::Undefined) ? this->Aspect : _Aspect;
+		NewImageView->MipmapLevelRange = std::move(_MipmapLevelRange);
+		NewImageView->ArrayLayerRange  = std::move(_ArrayLayerRange);
+
 		VkImageViewCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 			.image = this->Handle,
-			.viewType = AutoCast(ImageView->TypeView),
-			.format   = AutoCast(ImageView->FormatView),
+			.viewType = AutoCast(NewImageView->TypeView),
+			.format   = AutoCast(NewImageView->FormatView),
 			.components
 			{
 				 .r = AutoCast(_ComponentMapping.RMapping),
@@ -191,28 +206,21 @@ export namespace VE { namespace Runtime
 			},
 			.subresourceRange
 			{
-				.aspectMask		= AutoCast(ImageView->AspectView),
-				.baseMipLevel	= ImageView->MipmapLevelRange.first,
-				.levelCount		= ImageView->MipmapLevelRange.second - ImageView->MipmapLevelRange.first + 1,
-				.baseArrayLayer = ImageView->ArrayLayerRange.first,
-				.layerCount     = ImageView->ArrayLayerRange.second - ImageView->ArrayLayerRange.first + 1,
+				.aspectMask		= AutoCast(NewImageView->AspectView),
+				.baseMipLevel	= NewImageView->MipmapLevelRange.first,
+				.levelCount		= UInt32(NewImageView->MipmapLevelRange.second - NewImageView->MipmapLevelRange.first) + 1,
+				.baseArrayLayer = NewImageView->ArrayLayerRange.first,
+				.layerCount     = UInt32(NewImageView->ArrayLayerRange.second - NewImageView->ArrayLayerRange.first) + 1,
 			}
 		};
 		if (vkCreateImageView(
 			GVulkan->Device->GetHandle(),
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
-			&(ImageView->Handle)) != VK_SUCCESS)
+			&(NewImageView->Handle)) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan Image View!"); }
 
-		return ImageView;
-	}
-
-	FVulkanImage::
-	~FVulkanImage()
-	{
-		vmaDestroyImage(GVulkan->Allocator->GetHandle(), Handle, Allocation);
-		Handle = VK_NULL_HANDLE;
+		return NewImageView;
 	}
 
 	SharedPtr<FVulkanBuffer> FVulkanAllocator::

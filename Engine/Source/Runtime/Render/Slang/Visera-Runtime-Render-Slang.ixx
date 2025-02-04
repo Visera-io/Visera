@@ -75,7 +75,7 @@ export namespace VE { namespace Runtime
 			Compiler = &VulkanSPIRVCompiler;
 			break;
 		default:
-			throw SRuntimeError("Unkonwn Shader Type!");
+			throw SRuntimeError("Unkonwn Shader TypeView!");
 		}
 
 		// Create Shader Module

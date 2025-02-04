@@ -72,7 +72,7 @@ export namespace VE { namespace Runtime
 					continue;
 				bImageFormatSupport = True;
 			}
-			if (!bImageFormatSupport) throw SRuntimeError("Failed to create the Swapchain since required Image Format is unsupported!");
+			if (!bImageFormatSupport) throw SRuntimeError("Failed to create the Swapchain since required Image FormatView is unsupported!");
 
 			Bool bPresentModeSupport = False;
 			//Check Image Format Support
@@ -97,7 +97,7 @@ export namespace VE { namespace Runtime
 				break;
 			default: break;
 			}
-			if(!bZBufferFormatSupport) throw SRuntimeError("Failed to create the Swapchain since required ZBuffer Format is unsupported!");
+			if(!bZBufferFormatSupport) throw SRuntimeError("Failed to create the Swapchain since required ZBuffer FormatView is unsupported!");
 		}
 		
 		auto& SurfaceCapabilities = GVulkan->Surface->GetCapabilities();

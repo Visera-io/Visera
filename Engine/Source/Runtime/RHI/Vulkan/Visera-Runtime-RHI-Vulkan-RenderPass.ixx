@@ -149,16 +149,16 @@ export namespace VE { namespace Runtime
 		//	&ImageViews[Idx]) != VK_SUCCESS)
 		//{ throw SRuntimeError("Failed to create Vulkan Image View!"); }
 
-		VkFramebufferCreateInfo CreateInfo
-		{
-			.sType			 = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-			.renderPass		 = Handle,
-			.attachmentCount = UInt32(Framebuffer.A.size()),
-			.pAttachments    = m_framebuffers[i].render_targets.data(),
-			.width		     = Layout.GetExtent2D().width,
-			.height		     = Layout.GetExtent2D().height,
-			.layers		     = 1
-		};
+		//VkFramebufferCreateInfo CreateInfo
+		//{
+		//	.sType			 = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+		//	.renderPass		 = Handle,
+		//	.attachmentCount = UInt32(Framebuffer.A.size()),
+		//	.pAttachments    = m_framebuffers[i].render_targets.data(),
+		//	.width		     = Layout.GetExtent2D().width,
+		//	.height		     = Layout.GetExtent2D().height,
+		//	.layers		     = 1
+		//};
 	}
 
 	void FVulkanRenderPass::
