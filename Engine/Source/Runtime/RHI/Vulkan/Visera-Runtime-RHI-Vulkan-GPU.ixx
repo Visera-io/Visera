@@ -2,6 +2,8 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:GPU;
 
+import :Enums;
+
 import Visera.Core.Log;
 
 export namespace VE { namespace Runtime
@@ -19,7 +21,7 @@ public:
 	auto GetQueueFamilyProperties() const -> const Array<VkQueueFamilyProperties>&	{ return QueueFamilyProperties; }
 	auto GetExtensionProperties()	const -> const Array<VkExtensionProperties>&	{ return ExtensionProperties; }
 
-	auto QueryFormatProperties(VkFormat Format)			const -> VkFormatProperties { VkFormatProperties Properties; vkGetPhysicalDeviceFormatProperties(Handle, Format, &Properties); return Properties; }
+	auto QueryFormatProperties(EFormat Format)			const -> VkFormatProperties { VkFormatProperties Properties; vkGetPhysicalDeviceFormatProperties(Handle, AutoCast(Format), &Properties); return Properties; }
 
 	Bool IsDiscreteGPU() const { return Properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU; }
 		

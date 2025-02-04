@@ -4,6 +4,7 @@ export module Visera.Runtime.RHI.Vulkan:Enums;
 
 export namespace VE { namespace Runtime
 {
+	// VE_ENUM_CLASS(EImageTiling,		VkImageTiling)
 	// VE_ENUM_CLASS(EFormat,			VkFormat)
 	// VE_ENUM_CLASS(EPresentMode,		VkPresentModeKHR)
 	// VE_ENUM_CLASS(EDescriptorType,	VkDescriptorType)
@@ -19,6 +20,7 @@ export namespace VE { namespace Runtime
 	// VE_ENUM_CLASS(EImageUsage,		VkImageUsageFlags)
 	// VE_ENUM_CLASS(EBufferUsage,		VkBufferUsageFlags)
 	// VE_ENUM_CLASS(EAttachmentIO,		VkAttachmentLoadOp)
+
 	VE_ENUM_CLASS(EImageTiling, VkImageTiling)
 	{
 		Optimal = VK_IMAGE_TILING_OPTIMAL,

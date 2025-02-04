@@ -98,7 +98,7 @@ export namespace VE { namespace Runtime
 		{
 			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
 			.attachmentCount = UInt32(Framebuffer.ColorImages.size()),
-			.pAttachments	 = Attachments.data(),
+			//.pAttachments	 = Attachments.data(),
 			.subpassCount	 = UInt32(Subpasses.size()),
 			.pSubpasses		 = SubpassDescriptions.data(),
 			.dependencyCount = UInt32(Subpasses.size()),
@@ -121,73 +121,73 @@ export namespace VE { namespace Runtime
 		Handle = VK_NULL_HANDLE;
 	}
 
-	void FVulkanRenderPass::FSubpass::
-	Create(const FVulkanRenderPass& HostPass)
-	{
-		VE_ASSERT(HostPass.GetHandle() != VK_NULL_HANDLE &&
-				  Pipeline != nullptr);
-		
-		VkPipelineDynamicStateCreateInfo DyncmicStateCreateInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-			.dynamicStateCount = UInt32(Pipeline->GetDynamicStates().size()),
-			.pDynamicStates    = Pipeline->GetDynamicStates().data()
-		};
+	//void FVulkanRenderPass::FSubpass::
+	//Create(const FVulkanRenderPass& HostPass)
+	//{
+	//	VE_ASSERT(HostPass.GetHandle() != VK_NULL_HANDLE &&
+	//			  Pipeline != nullptr);
+	//	
+	//	VkPipelineDynamicStateCreateInfo DyncmicStateCreateInfo
+	//	{
+	//		.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+	//		.dynamicStateCount = UInt32(Pipeline->GetDynamicStates().size()),
+	//		.pDynamicStates    = Pipeline->GetDynamicStates().data()
+	//	};
 
-		auto ViewportState = VkPipelineViewportStateCreateInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-			.viewportCount	= UInt32(Pipeline->GetViewports().size()),
-			.pViewports		= Pipeline->GetViewports().data(),
-			.scissorCount	= UInt32(Pipeline->GetScissors().size()),
-			.pScissors		= Pipeline->GetScissors().data(),
-		};
+	//	auto ViewportState = VkPipelineViewportStateCreateInfo
+	//	{
+	//		.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+	//		.viewportCount	= UInt32(Pipeline->GetViewports().size()),
+	//		.pViewports		= Pipeline->GetViewports().data(),
+	//		.scissorCount	= UInt32(Pipeline->GetScissors().size()),
+	//		.pScissors		= Pipeline->GetScissors().data(),
+	//	};
 
-		auto ColorBlendState = VkPipelineColorBlendStateCreateInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-			.logicOpEnable		= VK_FALSE, // VK_FALSE: Mix Mode | VK_TRUE: Combine Mode
-			.logicOp			= VK_LOGIC_OP_COPY,
-			.attachmentCount	= UInt32(Pipeline->GetColorBlendAttachments().size()),
-			.pAttachments		= Pipeline->GetColorBlendAttachments().data(),
-			.blendConstants		= {0.0f, 0.0f, 0.0f, 0.0f}
-		};
+	//	auto ColorBlendState = VkPipelineColorBlendStateCreateInfo
+	//	{
+	//		.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+	//		.logicOpEnable		= VK_FALSE, // VK_FALSE: Mix Mode | VK_TRUE: Combine Mode
+	//		.logicOp			= VK_LOGIC_OP_COPY,
+	//		.attachmentCount	= UInt32(Pipeline->GetColorBlendAttachments().size()),
+	//		.pAttachments		= Pipeline->GetColorBlendAttachments().data(),
+	//		.blendConstants		= {0.0f, 0.0f, 0.0f, 0.0f}
+	//	};
 
-		VE_WIP;
-		VkGraphicsPipelineCreateInfo CreateInfo =
-		{
-			.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-			.stageCount				= UInt32(Pipeline->GetShaderStages().size()),
-			.pStages				= Pipeline->GetShaderStages().data(),
-			.pVertexInputState		= &Pipeline->GetVertexInputState(),
-			.pInputAssemblyState	= &Pipeline->GetInputAssemblyState(),
-			.pViewportState			= &ViewportState,
-			.pRasterizationState	= &Pipeline->GetRasterizationState(),
-			.pMultisampleState		= &Pipeline->GetMultisampleState(),
-			.pDepthStencilState		= &Pipeline->GetDepthStencilState(),	// Optional
-			.pColorBlendState		= &ColorBlendState,
-			.pDynamicState			= &DyncmicStateCreateInfo,
-			//.layout					= Pipeline->GetLayout(),
-			.renderPass				= HostPass.GetHandle(),
-			.basePipelineHandle		= VK_NULL_HANDLE,		// Optional
-			.basePipelineIndex		= -1,					// Optional
-		};
-		
-		if(VK_SUCCESS != vkCreateGraphicsPipelines(
-			GVulkan->Device->GetHandle(),
-			GVulkan->GraphicsPipelineCache->GetHandle(),
-			1,
-			&CreateInfo,
-			GVulkan->AllocationCallbacks,
-			&Handle))
-		{ throw SRuntimeError("Failed to create Vulkan Graphics Pipeline!"); }
-	}
+	//	VE_WIP;
+	//	VkGraphicsPipelineCreateInfo CreateInfo =
+	//	{
+	//		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+	//		.stageCount				= UInt32(Pipeline->GetShaderStages().size()),
+	//		.pStages				= Pipeline->GetShaderStages().data(),
+	//		.pVertexInputState		= &Pipeline->GetVertexInputState(),
+	//		.pInputAssemblyState	= &Pipeline->GetInputAssemblyState(),
+	//		.pViewportState			= &ViewportState,
+	//		.pRasterizationState	= &Pipeline->GetRasterizationState(),
+	//		.pMultisampleState		= &Pipeline->GetMultisampleState(),
+	//		.pDepthStencilState		= &Pipeline->GetDepthStencilState(),	// Optional
+	//		.pColorBlendState		= &ColorBlendState,
+	//		.pDynamicState			= &DyncmicStateCreateInfo,
+	//		//.layout					= Pipeline->GetLayout(),
+	//		.renderPass				= HostPass.GetHandle(),
+	//		.basePipelineHandle		= VK_NULL_HANDLE,		// Optional
+	//		.basePipelineIndex		= -1,					// Optional
+	//	};
+	//	
+	//	if(VK_SUCCESS != vkCreateGraphicsPipelines(
+	//		GVulkan->Device->GetHandle(),
+	//		GVulkan->GraphicsPipelineCache->GetHandle(),
+	//		1,
+	//		&CreateInfo,
+	//		GVulkan->AllocationCallbacks,
+	//		&Handle))
+	//	{ throw SRuntimeError("Failed to create Vulkan Graphics Pipeline!"); }
+	//}
 
-	void FVulkanRenderPass::FSubpass::
+	/*void FVulkanRenderPass::FSubpass::
 	Destory(const FVulkanRenderPass& HostPass)
 	{
 		vkDestroyPipeline(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
-	}
+	}*/
 
 } } // namespace VE::Runtime

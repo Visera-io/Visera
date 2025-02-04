@@ -25,7 +25,7 @@ export namespace VE { namespace Runtime
 		auto GetCursor()			const   -> UInt32					{ return Cursor; }
 		auto GetSize()				const	-> size_t					{ return Images.size(); }
 		auto GetExtent()			const	-> const VkExtent2D&		{ return ImageExtent; }
-		auto GetFormat()			const	-> VkFormat					{ return ImageFormat; }
+		auto GetFormat()			const	-> EFormat					{ return ImageFormat; }
 		auto GetColorSpace()		const	-> VkColorSpaceKHR			{ return ImageColorSpace; }
 		auto GetImages()			const	-> const Array<VkImage>&	{ return Images; }
 		auto GetImageViews()		const	-> const Array<VkImageView> { return ImageViews; }
@@ -43,11 +43,11 @@ export namespace VE { namespace Runtime
 		Array<VkImage>			Images;			// Size: Clamp(minImageCount + 1, maxImageCount)
 		Array<VkImageView>		ImageViews;
 		VkExtent2D				ImageExtent;
-		VkFormat				ImageFormat		= AutoCast(EFormat::U32_sRGB_B8_G8_R8_A8);
+		EFormat					ImageFormat		= EFormat::U32_sRGB_B8_G8_R8_A8;
 		VkColorSpaceKHR			ImageColorSpace	= VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 
-		VkFormat				ZBufferFormat	= AutoCast(EFormat::S32_Float_Depth32);
-		VkImageTiling			ZBufferTiling	= AutoCast(EImageTiling::Optimal);
+		EFormat					DepthImageFormat= EFormat::S32_Float_Depth32;
+		EImageTiling			DepthImageTiling= EImageTiling::Optimal;
 
 		void Create();
 		void Destroy();
@@ -67,7 +67,7 @@ export namespace VE { namespace Runtime
 			//Check Image Format Support
 			for(const auto& SurfaceFormat : GVulkan->Surface->GetFormats())
 			{
-				if (SurfaceFormat.format	 != ImageFormat ||
+				if (SurfaceFormat.format	 != AutoCast(ImageFormat) ||
 					SurfaceFormat.colorSpace != ImageColorSpace)
 					continue;
 				bImageFormatSupport = True;
@@ -86,13 +86,13 @@ export namespace VE { namespace Runtime
 			Bool bZBufferFormatSupport = False;
 			//Check Depth Buffer (ZBuffer) Format
 			//- 1. Tiling Linear
-			auto ZBufferProperties = GVulkan->GPU->QueryFormatProperties(ZBufferFormat);
-			switch (ZBufferTiling)
+			auto ZBufferProperties = GVulkan->GPU->QueryFormatProperties(DepthImageFormat);
+			switch (DepthImageTiling)
 			{
-			case VK_IMAGE_TILING_LINEAR:
+			case EImageTiling::Linear:
 				bZBufferFormatSupport = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT & ZBufferProperties.linearTilingFeatures;
 				break;
-			case VK_IMAGE_TILING_OPTIMAL:
+			case EImageTiling::Optimal:
 				bZBufferFormatSupport = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT & ZBufferProperties.optimalTilingFeatures;
 				break;
 			default: break;
@@ -151,7 +151,7 @@ export namespace VE { namespace Runtime
 			.sType					= VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 			.surface				= GVulkan->Surface->GetHandle(),
 			.minImageCount			= UInt32(Images.size()), // Note that, this is just a minimum number of images in the swap chain, the implementation could make it more.
-			.imageFormat			= ImageFormat,
+			.imageFormat			= AutoCast(ImageFormat),
 			.imageColorSpace		= ImageColorSpace,
 			.imageExtent			= ImageExtent,
 			.imageArrayLayers		= 1,
@@ -185,7 +185,7 @@ export namespace VE { namespace Runtime
 				.sType		= VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 				.image		= Images[Idx],
 				.viewType	= VK_IMAGE_VIEW_TYPE_2D,
-				.format		= ImageFormat,
+				.format		= AutoCast(ImageFormat),
 				.components{
 							.r = VK_COMPONENT_SWIZZLE_IDENTITY,
 							.g = VK_COMPONENT_SWIZZLE_IDENTITY,
