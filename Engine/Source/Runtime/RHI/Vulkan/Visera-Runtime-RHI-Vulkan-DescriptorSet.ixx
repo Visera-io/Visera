@@ -10,41 +10,29 @@ import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
+	class FVulkanDescriptorPool;
 
 	class FVulkanDescriptorSet
 	{
+		friend class FVulkanDescriptorPool;
 	public:
 
 		FVulkanDescriptorSet() = delete;
-		FVulkanDescriptorSet(VkDescriptorPool _Owner, SharedPtr<FVulkanDescriptorSetLayout> _Layout);
+		FVulkanDescriptorSet(SharedPtr<FVulkanDescriptorPool> _Owner, SharedPtr<FVulkanDescriptorSetLayout> _Layout);
 		~FVulkanDescriptorSet() = default; // Recollected via its owner automatically.
 	private:
 		VkDescriptorSet  Handle{ VK_NULL_HANDLE };
-		VkDescriptorPool Owner { VK_NULL_HANDLE };
+		SharedPtr<FVulkanDescriptorPool>	  Owner;
 		SharedPtr<FVulkanDescriptorSetLayout> Layout;
 	};
 
 	FVulkanDescriptorSet::
-	FVulkanDescriptorSet(VkDescriptorPool _Owner, SharedPtr<FVulkanDescriptorSetLayout> _Layout)
-		: Owner{ _Owner },
+	FVulkanDescriptorSet(SharedPtr<FVulkanDescriptorPool> _Owner, SharedPtr<FVulkanDescriptorSetLayout> _Layout)
+		: Owner{ std::move(_Owner) },
 		  Layout { std::move(_Layout) }
 	{
-		auto LayoutHandle = Layout->GetHandle();
-		VE_ASSERT(LayoutHandle != VK_NULL_HANDLE);
+		VE_ASSERT(Layout->GetHandle() != VK_NULL_HANDLE);
 
-		VkDescriptorSetAllocateInfo CreateInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-			.descriptorPool		= Owner,
-			.descriptorSetCount = 1,
-			.pSetLayouts		= &LayoutHandle,
-		};
-
-		if (vkAllocateDescriptorSets(
-			GVulkan->Device->GetHandle(),
-			&CreateInfo,
-			&Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create the Vulkan Descriptor Sets!"); }
 	}
 	
 } } // namespace VE::Runtime

@@ -16,27 +16,28 @@ export namespace VE { namespace Runtime
 	{
 		friend class FVulkanCommandPool;
 	public:
-		enum class EStatus { Idle, Recording, InsideRenderPass };
+		enum class EStatus { Zombie, Idle, Recording, InsideRenderPass };
 
 		void StartRecording();
 		void StopRecording();
 		void StartRenderPass(SharedPtr<FVulkanRenderPass> _RenderPass);
 		void StopRenderPass()	  { VE_ASSERT(IsInsideRenderPass()); vkCmdEndRenderPass(Handle); Status = EStatus::Recording; }
 		void Reset()			  { VE_ASSERT(IsIdle() && IsResettable()); vkResetCommandBuffer(Handle, 0x0); }
+		void Free()				  { Status = EStatus::Zombie; }
 
+		Bool IsZombie()				const { return Status == EStatus::Zombie; }
 		Bool IsIdle()				const { return Status == EStatus::Idle; }
 		Bool IsRecording()			const { return Status >= EStatus::Recording; }
 		Bool IsInsideRenderPass()	const { return Status >= EStatus::InsideRenderPass; }
 		Bool IsResettable()			const { return bIsResettable;   }
 		Bool IsPrimary()			const { return bIsPrimary;		}
-		auto GetLevel()				const -> ECommandLevel { return IsPrimary()? ECommandLevel::Primary : ECommandLevel::Secondary; }
-		auto GetHandle()				  -> VkCommandBuffer		{ return Handle; }
-		auto GetOwner()				const -> const VkCommandPool	{ return Owner; }
+		auto GetLevel()				const -> ECommandLevel		{ return IsPrimary()? ECommandLevel::Primary : ECommandLevel::Secondary; }
+		auto GetHandle()				  -> VkCommandBuffer	{ return Handle; }
 		operator VkCommandBuffer() { return Handle; }
 
 	private:
 		VkCommandBuffer				  Handle{ VK_NULL_HANDLE };
-		VkCommandPool				  Owner { VK_NULL_HANDLE };
+		SharedPtr<FVulkanCommandPool> Owner;
 		Array<VkViewport>			  CurrentViewports;
 		Array<VkRect2D>				  CurrentScissors;
 
@@ -45,7 +46,7 @@ export namespace VE { namespace Runtime
 		Byte bIsPrimary		: 1;
 
 	public:
-		FVulkanCommandBuffer(VkCommandPool _Owner, ECommandLevel _Level) noexcept;
+		FVulkanCommandBuffer(SharedPtr<FVulkanCommandPool> _Owner, ECommandLevel _Level) noexcept;
 		FVulkanCommandBuffer() noexcept = delete;
 		~FVulkanCommandBuffer() noexcept;
 	};
@@ -75,36 +76,23 @@ export namespace VE { namespace Runtime
 
 	
 	FVulkanCommandBuffer::
-	FVulkanCommandBuffer(VkCommandPool _Owner, ECommandLevel _Level) noexcept
-		: Owner { _Owner },
+	FVulkanCommandBuffer(SharedPtr<FVulkanCommandPool> _Owner, ECommandLevel _Level) noexcept
+		: Owner { std::move(_Owner) },
 		  bIsPrimary { ECommandLevel::Primary == _Level? True : False }
 	{
-		VkCommandBufferAllocateInfo AllocateInfo
-		{
-			.sType			= VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-			.commandPool	= Owner,
-			.level			= AutoCast(GetLevel()),
-			.commandBufferCount = 1
-		};
 
-		if(vkAllocateCommandBuffers(
-			GVulkan->Device->GetHandle(),
-			&AllocateInfo,
-			&Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create FCommandBuffer!"); }
 	}
 
 	FVulkanCommandBuffer::
 	~FVulkanCommandBuffer() noexcept
 	{
-		vkFreeCommandBuffers(GVulkan->Device->GetHandle(), Owner, 1, &Handle);
-		Handle = VK_NULL_HANDLE;
+
 	}
 
 	void FVulkanCommandBuffer::
 	StartRecording()
 	{
-		VE_ASSERT(!IsRecording());
+		VE_ASSERT(!IsRecording() && !IsZombie());
 
 		VkCommandBufferBeginInfo BeginInfo
 		{

@@ -9,6 +9,7 @@ export namespace VE { namespace Runtime
 {
 	class ViseraRuntime;
 
+	/* This is not a thread-safe RHI! */
 	class RHI
 	{
 		VE_MODULE_MANAGER_CLASS(RHI);
@@ -43,25 +44,28 @@ export namespace VE { namespace Runtime
 
 		using SwapchainRecreateSignal = FVulkanSwapchain::RecreateSignal;
 
-		class CommandContext;
-
 	public:
-		VE_API CreateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)			-> SharedPtr<FCommandBuffer> { return ResetableGraphicsCommandPool.CreateCommandBuffer(_Level); };
-		VE_API CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FCommandBuffer> { return TransientGraphicsCommandPool.CreateCommandBuffer(_Level); };
-		VE_API CreateBuffer(const FBuffer::CreateInfo& _CreateInfo) -> SharedPtr<FBuffer> { return Vulkan->Allocator.CreateBuffer(_CreateInfo); }
-		VE_API CreateFence()				-> SharedPtr<FFence>		{ return CreateSharedPtr<FFence>(); }
-		VE_API CreateSignaledFence()		-> SharedPtr<FFence>		{ return CreateSharedPtr<FFence>(true); }
-		VE_API CreateSemaphore()			-> SharedPtr<FSemaphore> { return CreateSharedPtr<FSemaphore>(); }
-		VE_API CreateShader(EShaderStage Stage, const Array<Byte>& ShadingCode) -> SharedPtr<FShader> { return CreateSharedPtr<FVulkanShader>(Stage, ShadingCode);}
+		VE_API CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _SetLayout)		-> SharedPtr<FDescriptorSet> { return GlobalDescriptorPool.CreateDescriptorSet(_SetLayout);		}
+		VE_API CreateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)			-> SharedPtr<FCommandBuffer> { return ResetableGraphicsCommandPool.CreateCommandBuffer(_Level); }
+		VE_API CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FCommandBuffer> { return TransientGraphicsCommandPool.CreateCommandBuffer(_Level); }
+		VE_API CreateBuffer(const FBuffer::CreateInfo& _CreateInfo)							-> SharedPtr<FBuffer>		 { return Vulkan->Allocator.CreateBuffer(_CreateInfo);				}
+		VE_API CreateFence()																-> SharedPtr<FFence>		 { return CreateSharedPtr<FFence>();								}
+		VE_API CreateSignaledFence()														-> SharedPtr<FFence>		 { return CreateSharedPtr<FFence>(true);							}
+		VE_API CreateSemaphore()															-> SharedPtr<FSemaphore>	 { return CreateSharedPtr<FSemaphore>();							}
+		VE_API CreateShader(EShaderStage Stage, const Array<Byte>& ShadingCode)				-> SharedPtr<FShader>		 { return CreateSharedPtr<FVulkanShader>(Stage, ShadingCode);		}
 
-		VE_API WaitIdle() -> void { Vulkan->Device.WaitIdle(); }
+		VE_API SubmitCommandBuffer(SharedPtr<FCommandBuffer> _CommandBuffer);
 
-		VE_API GetAPI() -> const FVulkan* { return Vulkan; }
+		VE_API WaitIdle()	-> void				{ Vulkan->Device.WaitIdle(); }
+
+		VE_API GetAPI()		-> const FVulkan*	{ return Vulkan; }
 
 	private:
 		static inline FVulkan*			 Vulkan;
-		static inline FVulkanCommandPool ResetableGraphicsCommandPool{};
-		static inline FVulkanCommandPool TransientGraphicsCommandPool{};
+		//[TODO]: ThreadSafe Paradigm
+		static inline FDescriptorPool	GlobalDescriptorPool{};
+		static inline FCommandPool		ResetableGraphicsCommandPool{};
+		static inline FCommandPool		TransientGraphicsCommandPool{};
 		
 		//struct Frame
 		//{
@@ -95,6 +99,20 @@ export namespace VE { namespace Runtime
 		Bootstrap()
 		{
 			Vulkan = new FVulkan();
+			GlobalDescriptorPool.Create(
+				{
+					{EDescriptorType::UniformBuffer,		1000},
+					{EDescriptorType::StorageBuffer,		1000},
+					{EDescriptorType::DynamicStorageBuffer, 1000},
+					{EDescriptorType::DynamicUniformBuffer, 1000},
+					{EDescriptorType::CombinedImageSampler, 1000},
+					{EDescriptorType::InputAttachment,		1000},
+					{EDescriptorType::SampledImage,			1000},
+					{EDescriptorType::StorageImage,			1000},
+					{EDescriptorType::StorageTexelBuffer,	1000},
+					{EDescriptorType::UniformTexelBuffer,	1000},
+					{EDescriptorType::Sampler,				1000},
+				}, 10000);
 			ResetableGraphicsCommandPool.Create(EQueueFamily::Graphics, ECommandPool::Resetable);
 			TransientGraphicsCommandPool.Create(EQueueFamily::Graphics, ECommandPool::Transient);
 		}
@@ -109,6 +127,7 @@ export namespace VE { namespace Runtime
 			WaitIdle();
 			TransientGraphicsCommandPool.Destroy();
 			ResetableGraphicsCommandPool.Destroy();
+			GlobalDescriptorPool.Destroy();
 			delete Vulkan;
 		}
 	};

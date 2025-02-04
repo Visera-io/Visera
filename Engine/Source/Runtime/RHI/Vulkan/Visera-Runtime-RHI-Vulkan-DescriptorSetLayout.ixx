@@ -9,9 +9,11 @@ import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
+	class FVulkanDescriptorPool;
 
-	class FVulkanDescriptorSetLayout
+	class FVulkanDescriptorSetLayout //[TODO]: DesciptorSetLayout Hashing
 	{
+		friend class FVulkanDescriptorPool;
 	public:
 		struct FBinding
 		{

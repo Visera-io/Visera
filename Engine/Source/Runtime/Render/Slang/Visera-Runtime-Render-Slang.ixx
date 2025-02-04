@@ -9,7 +9,7 @@ import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
-
+	
 	template<class T>
 	using COMPtr = Slang::ComPtr<T>;
 
@@ -87,6 +87,8 @@ export namespace VE { namespace Runtime
 		if (ShaderModule->findEntryPointByName(_Shader->GetEntryPoint().data(), ShaderEntryPoint.writeRef()) != SLANG_OK)
 		{ throw SRuntimeError(Text("Failed to find the EntryPoint({}) from Shader({})!", _Shader->GetEntryPoint(), _Shader->GetName())); }
 
+		
+		
 		slang::IComponentType* ShaderComponents[2] = 
 		{ 
 			reinterpret_cast<slang::IComponentType*>(ShaderModule.get()),

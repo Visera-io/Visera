@@ -12,12 +12,14 @@ import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
+	class RHI;
 
-	class FVulkanDescriptorPool
+	class FVulkanDescriptorPool : public std::enable_shared_from_this<FVulkanDescriptorPool>
 	{
+		friend class RHI;
 	public:
 		// Return nullptr when exceeded MaxSets Limit.
-		auto CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _Layout) -> SharedPtr<FVulkanDescriptorSet> { static UInt32 SetCount = 0; if (++SetCount > MaxSets) { return nullptr; } else { return CreateSharedPtr<FVulkanDescriptorSet>(Handle, _Layout); } }
+		auto CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _Layout) -> SharedPtr<FVulkanDescriptorSet>;
 
 		struct FDescriptorEntry
 		{
@@ -25,29 +27,31 @@ export namespace VE { namespace Runtime
 			UInt32			Count = 0;
 		};
 
-		FVulkanDescriptorPool(const Array<FDescriptorEntry>& _DescriptorEntries, UInt32 _MaxSets);
-		FVulkanDescriptorPool() = delete;
-		~FVulkanDescriptorPool();
+		FVulkanDescriptorPool() noexcept = default;
+		~FVulkanDescriptorPool() = default;
 	private:
-		VkDescriptorPool				 Handle{ VK_NULL_HANDLE };
-		UInt32							 MaxSets{ 0 };
-		HashMap<EDescriptorType, UInt32> DescriptorTable;
+		VkDescriptorPool						Handle{ VK_NULL_HANDLE };
+		UInt32									MaxSets{ 0 };
+		HashMap<EDescriptorType, Int32>			DescriptorTable;
+		List<SharedPtr<FVulkanDescriptorSet>>	Children;
+
+	private:
+		void Create(const Array<FDescriptorEntry>& _DescriptorEntries, UInt32 _MaxSets);
+		void Destroy();
 	};
 
-	FVulkanDescriptorPool::
-	FVulkanDescriptorPool(
-		const Array<FDescriptorEntry>& _DescriptorEntries,
-		UInt32 _MaxSets/* = GVulkan->GPU->GetProperties().limits.maxBoundDescriptorSets */)
-		: MaxSets{ _MaxSets }
+	void FVulkanDescriptorPool::
+	Create(const Array<FDescriptorEntry>&_DescriptorEntries, UInt32 _MaxSets)
 	{
 		static_assert(sizeof(FDescriptorEntry)  == sizeof(VkDescriptorPoolSize)  &&
 			          alignof(FDescriptorEntry) == alignof(VkDescriptorPoolSize) &&
 			          sizeof(FDescriptorEntry::Type) == sizeof(VkDescriptorPoolSize::type));
-		VE_ASSERT(MaxSets > 0);
+
+		MaxSets = _MaxSets; VE_ASSERT(MaxSets > 0);
 
 		for (auto& Entry : _DescriptorEntries)
 		{
-			DescriptorTable[Entry.Type] = Entry.Count;
+			DescriptorTable[Entry.Type] += Entry.Count;
 		}
 
 		VkDescriptorPoolCreateInfo CreateInfo
@@ -67,11 +71,44 @@ export namespace VE { namespace Runtime
 		{ throw SRuntimeError("Failed to create the Vulkan Descriptor Pool!"); }
 	}
 
-	FVulkanDescriptorPool::
-	~FVulkanDescriptorPool()
+	void FVulkanDescriptorPool::
+	Destroy()
 	{
 		vkDestroyDescriptorPool(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
+	}
+
+	SharedPtr<FVulkanDescriptorSet> FVulkanDescriptorPool::
+	CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _Layout)
+	{
+		if (Children.size() >= MaxSets)
+		{ throw SRuntimeError(Text("Cannot create more DescriptorSet from this DescriptorPool! -- (MaxSets:{})", MaxSets)); }
+
+		for (auto& Binding : _Layout->BindingSlots)
+		{
+			auto& Resource = DescriptorTable[Binding.DescriptorType];
+			Resource -= Binding.DescriptorCount;
+			if (Resource < 0)
+			{ throw SRuntimeError(Text("Failed to allocate Descriptor({}) from current DescriptorPool!", UInt32(Binding.DescriptorType))); }
+		}
+
+		auto DescriptorSet = CreateSharedPtr<FVulkanDescriptorSet>(shared_from_this(), _Layout);
+
+		VkDescriptorSetAllocateInfo AllocateInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+			.descriptorPool		= Handle,
+			.descriptorSetCount = 1,
+			.pSetLayouts		= &_Layout->Handle,
+		};
+
+		if (vkAllocateDescriptorSets(
+			GVulkan->Device->GetHandle(),
+			&AllocateInfo,
+			&DescriptorSet->Handle) != VK_SUCCESS)
+		{ throw SRuntimeError("Failed to create the Vulkan Descriptor Sets!"); }
+		
+		return Children.emplace_back(std::move(DescriptorSet));
 	}
 	
 } } // namespace VE::Runtime
