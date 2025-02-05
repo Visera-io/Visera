@@ -15,20 +15,17 @@ export namespace VE { namespace Runtime
 	class FVulkanBuffer;
 	class FVulkanImage;
 
-	union FImageExtent
-	{
-		VkExtent2D Extent2D;
-		VkExtent3D Extent3D{ 0 };
-	};
-
 	class FVulkanAllocator
 	{
 		friend class FVulkan;
 	public:
-		auto CreateBuffer(VkDeviceSize _Size, EBufferUsage _Usages, EMemoryUsage _Location = EMemoryUsage::Auto) const -> SharedPtr<FVulkanBuffer>;
+		auto CreateBuffer(VkDeviceSize _Size,
+						  EBufferUsage _Usages,
+						  ESharingMode _SharingMode = ESharingMode::Exclusive,
+						  EMemoryUsage _Location    = EMemoryUsage::Auto) const -> SharedPtr<FVulkanBuffer>;
 		auto CreateImage(EImageType		_Type,
-						FImageExtent	_Extent,
-						EImageAspect	_Aspect,
+						FVulkanExtent	_Extent,
+						EImageAspect	_Aspects,
 						EImageUsage		_Usages,
 						EImageTiling	_Tiling = EImageTiling::Optimal,
 						ESampleRate     _SampleRate = ESampleRate::X1,
@@ -87,16 +84,18 @@ export namespace VE { namespace Runtime
 		~FVulkanBuffer() noexcept;
 	};
 		
-	class FImageView
+	class FVulkanImageView
 	{
 		friend class FVulkanImage;
 	public:
 		auto GetImage()  const  -> WeakPtr<const FVulkanImage>	{ return Image; }
+		auto GetHandle() const  -> const VkImageView			{ return Handle;}
+
 		Bool IsExpired() const									{ return Image.expired(); }
 
-		FImageView() = delete;
-		FImageView(SharedPtr<const FVulkanImage> _SourceImage) : Image{ _SourceImage } {}
-		~FImageView() { vkDestroyImageView(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks); Handle = VK_NULL_HANDLE; }
+		FVulkanImageView() = delete;
+		FVulkanImageView(SharedPtr<const FVulkanImage> _SourceImage) : Image{ _SourceImage } {}
+		~FVulkanImageView() { vkDestroyImageView(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks); Handle = VK_NULL_HANDLE; }
 
 	private:
 		VkImageView					Handle{ VK_NULL_HANDLE };
@@ -118,11 +117,17 @@ export namespace VE { namespace Runtime
 			EImageAspect		_Aspect = EImageAspect::Undefined,
 			Pair<UInt8, UInt8> _MipmapLevelRange = {0,0},
 			Pair<UInt8, UInt8> _ArrayLayerRange  = {0,0},
-			const FVulkanComponentMapping& _ComponentMapping = {}) const->SharedPtr<FImageView>;
+			const FVulkanComponentMapping& _ComponentMapping = {}) const->SharedPtr<FVulkanImageView>;
 
-		auto GetExtent()    const -> const FImageExtent&{ return Extent; }
-		auto GetSize()		const -> VkDeviceSize   { return Allocation->GetSize(); }
-		auto GetDetails()	const -> VmaAllocationInfo { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
+		auto GetExtent()    const -> const FVulkanExtent&	{ return Extent; }
+		auto GetSize()		const -> VkDeviceSize			{ return Allocation->GetSize(); }
+		auto GetAspects()   const -> EImageAspect			{ return Aspects; }
+		auto GetUsages()	const -> EImageUsage			{ return Usages; }
+		auto GetTiling()	const -> EImageTiling			{ return Tiling; }
+		auto GetMipmapLevels()	const -> UInt8				{ return MipmapLevels; }
+		auto GetArrayLayers()	const -> UInt8				{ return ArrayLayers; }
+		auto GetSampleRate()	const -> ESampleRate		{ return SampleRate;}
+		auto GetDetails()	const -> VmaAllocationInfo  { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
 
 		auto GetHandle()		  -> VkImage { return Handle; }
 
@@ -130,9 +135,9 @@ export namespace VE { namespace Runtime
 		VkImage			Handle;
 		EImageType		Type;
 		EFormat			Format;
-		FImageExtent	Extent;
-		EImageAspect    Aspect;
-		EImageUsage		Usage;
+		FVulkanExtent	Extent;
+		EImageAspect    Aspects;
+		EImageUsage		Usages;
 		EImageTiling	Tiling;
 		UInt8			MipmapLevels = 0;
 		UInt8			ArrayLayers	 = 0;
@@ -146,8 +151,8 @@ export namespace VE { namespace Runtime
 
 	SharedPtr<FVulkanImage> FVulkanAllocator::
 	CreateImage(EImageType		_Type,
-				FImageExtent	_Extent,
-				EImageAspect	_Aspect,
+				FVulkanExtent	_Extent,
+				EImageAspect	_Aspects,
 				EImageUsage		_Usages,
 				EImageTiling	_Tiling		/*= EImageTiling::Optimal*/,
 				ESampleRate     _SampleRate /*= ESampleRate::X1*/,
@@ -173,7 +178,7 @@ export namespace VE { namespace Runtime
 		Handle = VK_NULL_HANDLE;
 	}
 	
-	SharedPtr<FImageView> FVulkanImage::
+	SharedPtr<FVulkanImageView> FVulkanImage::
 	CreateImageView(EImageViewType	   _Type,
 					EFormat			   _Format/* = EFormat::None*/,
 					EImageAspect	   _Aspect/* = EImageAspect::Undefined*/,
@@ -184,10 +189,10 @@ export namespace VE { namespace Runtime
 		//[TODO]: Check more ImageView validity.
 		VE_ASSERT(IsOrderedPair(_MipmapLevelRange) && IsOrderedPair(_ArrayLayerRange));
 
-		auto NewImageView = CreateSharedPtr<FImageView>(shared_from_this());
+		auto NewImageView = CreateSharedPtr<FVulkanImageView>(shared_from_this());
 		NewImageView->TypeView   = _Type;
 		NewImageView->FormatView = (_Format == EFormat::None)? this->Format : _Format;
-		NewImageView->AspectView = (_Aspect == EImageAspect::Undefined) ? this->Aspect : _Aspect;
+		NewImageView->AspectView = (_Aspect == EImageAspect::Undefined)? this->Aspects : _Aspect;
 		NewImageView->MipmapLevelRange = std::move(_MipmapLevelRange);
 		NewImageView->ArrayLayerRange  = std::move(_ArrayLayerRange);
 
@@ -224,7 +229,10 @@ export namespace VE { namespace Runtime
 	}
 
 	SharedPtr<FVulkanBuffer> FVulkanAllocator::
-	CreateBuffer(VkDeviceSize _Size, EBufferUsage _Usages, EMemoryUsage Location/* = EMemoryUsage::Auto*/) const
+	CreateBuffer(VkDeviceSize _Size,
+				 EBufferUsage _Usages,
+				 ESharingMode _SharingMode/* = ESharingMode::Exclusive*/,
+				 EMemoryUsage _Location/* = EMemoryUsage::Auto*/) const
 	{
 		VE_ASSERT(_Size > 0);
 
@@ -236,7 +244,7 @@ export namespace VE { namespace Runtime
 			.flags = 0x0,
 			.size  = _Size,
 			.usage = AutoCast(_Usages),
-			.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+			.sharingMode = AutoCast(_SharingMode),
 			.queueFamilyIndexCount = 0,
 			.pQueueFamilyIndices = nullptr,
 		};
@@ -244,16 +252,16 @@ export namespace VE { namespace Runtime
 		VmaAllocationCreateInfo AllocationCreateInfo
 		{
 			.flags = 0x0,
-			.usage = AutoCast(Location)
+			.usage = AutoCast(_Location)
 		};
 
-		if(VK_SUCCESS != vmaCreateBuffer(
+		if(vmaCreateBuffer(
 			Handle,
 			&CreateInfo,
 			&AllocationCreateInfo,
 			&NewBuffer->Handle,
 			&NewBuffer->Allocation,
-			nullptr))
+			nullptr) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create VMA FVulkanBuffer!"); }
 
 		return NewBuffer;

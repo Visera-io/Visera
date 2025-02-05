@@ -18,20 +18,19 @@ export namespace VE { namespace Runtime
 	class FVulkanRenderPass
 	{
 	public:
-		class FSubpass
+		struct FSubpass
 		{
-			friend class FVulkanRenderPass;
-			FVulkanRenderPipeline	Pipeline;
+			FVulkanRenderPipeline			Pipeline;
 			Array<VkAttachmentReference>	InputImageReferences;    // Input Image References from Previous Subpasses.
 			Array<UInt32>					PreserveImageReferences; // Const Image References Used in Subpasses.
 			Array<VkAttachmentReference>	ColorImageReferences;
 			Array<VkAttachmentReference>	ResolveImageReferences;
 			Optional<VkAttachmentReference> DepthImageReference;
 			Optional<VkAttachmentReference> StencilImageReference;
-			EPipelineStage			SourceStage							{ EPipelineStage::None };
-			EAccessibility			SourceStageAccessPermissions		{ EAccessibility::None };
-			EPipelineStage			DestinationStage					{ EPipelineStage::None };
-			EAccessibility			DestinationStageAccessPermissions	{ EAccessibility::None };
+			EPipelineStage					SourceStage							{ EPipelineStage::None };
+			EAccessibility					SourceStageAccessPermissions		{ EAccessibility::None };
+			EPipelineStage					DestinationStage					{ EPipelineStage::None };
+			EAccessibility					DestinationStageAccessPermissions	{ EAccessibility::None };
 		};
 		auto GetHandle() -> VkRenderPass { return Handle; }
 	
@@ -39,22 +38,22 @@ export namespace VE { namespace Runtime
 		VkRenderPass					Handle{ VK_NULL_HANDLE };
 		UInt32							Priority { 0 }; // Less is More
 		FVulkanRenderPassLayout			Layout;
-		Array<FSubpass>					Subpasses;
 		FVulkanFramebuffer				Framebuffer;
+		Array<FSubpass>					Subpasses;
 
 		void Create();
 		void Destroy();
 
 	public:
-		FVulkanRenderPass() noexcept;
+		FVulkanRenderPass() noexcept = default;
 		virtual ~FVulkanRenderPass() noexcept;
 	};
 
-	FVulkanRenderPass::
+	/*FVulkanRenderPass::
 	FVulkanRenderPass() noexcept
 	{
 		
-	}
+	}*/
 
 	FVulkanRenderPass::
 	~FVulkanRenderPass() noexcept
@@ -98,13 +97,12 @@ export namespace VE { namespace Runtime
 				.dependencyFlags= 0x0,
 			};
 		}
-
 		VE_WIP;
 		VkRenderPassCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-			.attachmentCount = UInt32(Framebuffer.ColorImages.size()),
-			//.pAttachments	 = Attachments.data(),
+			.attachmentCount = UInt32(Layout.AttachmentDescriptions.size()),
+			//.pAttachments	 = Layout.AttachmentDescriptions.data(),
 			.subpassCount	 = UInt32(Subpasses.size()),
 			.pSubpasses		 = SubpassDescriptions.data(),
 			.dependencyCount = UInt32(Subpasses.size()),
@@ -115,33 +113,11 @@ export namespace VE { namespace Runtime
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create Vulkan FRenderPass!"); }
+		{ throw SRuntimeError("Failed to create Vulkan RenderPass!"); }
 
 		// Create Framebuffers
 		Array<VkImageView> AttachmentViews(Layout.AttachmentDescriptions.size());
 		
-
-		//VkImageViewCreateInfo CreateInfo
-		//	{
-		//		.sType		= VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-		//		.image		= Images[Idx],
-		//		.viewType	= VK_IMAGE_VIEW_TYPE_2D,
-		//		.format		= AutoCast(EFormat::U32_sRGB_R8_G8_B8_A8),
-		//		.components{
-		//					.r = VK_COMPONENT_SWIZZLE_IDENTITY,
-		//					.g = VK_COMPONENT_SWIZZLE_IDENTITY,
-		//					.b = VK_COMPONENT_SWIZZLE_IDENTITY,
-		//					.a = VK_COMPONENT_SWIZZLE_IDENTITY
-		//					},
-
-		//		.subresourceRange{
-		//					.aspectMask		= VK_IMAGE_ASPECT_COLOR_BIT,
-		//					.baseMipLevel	= 0,
-		//					.levelCount		= 1,
-		//					.baseArrayLayer = 0,
-		//					.layerCount		= 1
-		//					}
-		//	};
 		//if(vkCreateImageView(
 		//	GVulkan->Device->GetHandle(),
 		//	&CreateInfo,

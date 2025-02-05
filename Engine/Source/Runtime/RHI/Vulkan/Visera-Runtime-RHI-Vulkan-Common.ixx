@@ -25,8 +25,16 @@ export namespace VE { namespace Runtime
 	// VE_ENUM_CLASS(EBufferUsage,		VkBufferUsageFlags)
 	// VE_ENUM_CLASS(EAttachmentIO,		VkAttachmentLoadOp)
 
-	// struct FVulkanComponentMapping
+	// struct	FVulkanComponentMapping
+	// union	FVulkanExtent
+	// union	FVulkanOffset
 
+	VE_ENUM_CLASS(ESharingMode, VkSharingMode)
+	{
+		Exclusive	= VK_SHARING_MODE_EXCLUSIVE,
+		Concurrent	= VK_SHARING_MODE_CONCURRENT,
+	};
+    
 	VE_ENUM_CLASS(EComponentMapping, VkComponentSwizzle)
 	{
 		Identity  = VK_COMPONENT_SWIZZLE_IDENTITY,
@@ -54,6 +62,8 @@ export namespace VE { namespace Runtime
 		Image1D = VK_IMAGE_TYPE_1D,
 		Image2D = VK_IMAGE_TYPE_2D,
 		Image3D = VK_IMAGE_TYPE_3D,
+
+		Undefined,
 	};
 
 	VE_ENUM_CLASS(EImageAspect, VkImageAspectFlags)
@@ -419,6 +429,18 @@ export namespace VE { namespace Runtime
 		EComponentMapping GMapping = EComponentMapping::Identity;
 		EComponentMapping BMapping = EComponentMapping::Identity;
 		EComponentMapping AMapping = EComponentMapping::Identity;
+	};
+
+	union FVulkanExtent
+	{
+		VkExtent2D Extent2D;
+		VkExtent3D Extent3D{ 0, 0, 1 };
+	};
+	
+	union FVulkanOffset
+	{
+		VkOffset2D Offset2D;
+		VkOffset3D Offset3D{ 0, 0, 1 };
 	};
 
 } } // namespace VE::Runtime

@@ -3,40 +3,59 @@ module;
 export module Visera.Runtime.RHI.Vulkan:RenderPassLayout;
 
 import :Common;
+import :Allocator;
 
 export namespace VE { namespace Runtime
 {
 
 	class FVulkanRenderPass;
+	class FVulkanFramebuffer;
 
 	class FVulkanRenderPassLayout
 	{
 		friend class FVulkanRenderPass;
+		friend class FVulkanFramebuffer;
 	public:
-		auto GetOffset2D() const -> const VkOffset2D& { return Offset.Offset2D; }
-		auto GetOffset3D() const -> const VkOffset3D& { return Offset.Offset3D; }
-		auto GetExtent2D() const -> const VkExtent2D& { return Extent.Extent2D; }
-		auto GetExtent3D() const -> const VkExtent3D& { return Extent.Extent3D; }
+		enum { MaxSimultaneousRenderTargets = 8 };
+		struct FAttachmentDescription
+		{
+			SharedPtr<FVulkanImage> Image;
+			EImageViewType  ImageViewType;
+			EAttachmentIO	LoadOp;
+			EAttachmentIO	StoreOp;
+			EImageLayout	InitialLayout;
+			EImageLayout	FinalLayout;
+			EAttachmentIO	StencilLoadOp	{ EAttachmentIO::I_Whatever	};
+			EAttachmentIO	StencilStoreOp	{ EAttachmentIO::O_Whatever };
+		};
+
+		struct FStencilDescription
+		{
+			EImageLayout	InitialLayout;
+			EImageLayout	FinalLayout;
+		};
+
+		Bool HasDepthImage()				const { return AttachmentCount > ColorImageCount; }
+
+		auto GetRenderAreaOffset()			const -> const FVulkanOffset&	{ return RenderAreaOffset; }
+		auto GetRenderAreaOffset2D()		const -> const VkOffset2D&		{ return GetRenderAreaOffset().Offset2D; }
+		auto GetRenderAreaOffset3D()		const -> const VkOffset3D&		{ return GetRenderAreaOffset().Offset3D; }
+		auto GetRenderAreaExtent()			const -> const FVulkanExtent&	{ return RenderAreaExtent; }
+		auto GetRenderAreaExtent2D()		const -> const VkExtent2D&		{ return GetRenderAreaExtent().Extent2D; }
+		auto GetRenderAreaExtent3D()		const -> const VkExtent3D&		{ return GetRenderAreaExtent().Extent3D; }
 
 	private:
-		// Depth Attachments in the odd slot (+1)
-		Array<VkAttachmentDescription>			AttachmentDescriptions;
-		VkAttachmentDescriptionStencilLayout	StencilDescription;
+		// (UE5) [(0)ColorImage, (1)ResolvedImage, ..., (N-1)ColorImage, (N)ResolvedImage, (N+1)DepthImage, (N+2)ShadingRateImage].
+		UInt8 AttachmentCount = 0;
+		UInt8 ColorImageCount = 0;
+		Segment<FAttachmentDescription, 2 * MaxSimultaneousRenderTargets + 2> AttachmentDescriptions;
+		Optional<FStencilDescription>	StencilDescription;
 		
-		UInt8 ClearValueCount = 0;
-		UInt8 SampleCount     = 0;
+		//UInt8 ClearValueCount = 0;
+		//UInt8 SampleCount     = 0;
 
-		union
-		{
-			VkOffset3D Offset3D;
-			VkOffset2D Offset2D;
-		} Offset;
-
-		union
-		{
-			VkExtent3D	Extent3D;
-			VkExtent2D	Extent2D;
-		} Extent;
+		FVulkanOffset RenderAreaOffset;
+		FVulkanExtent RenderAreaExtent;
 	};
 
 } } // namespace VE::Runtime

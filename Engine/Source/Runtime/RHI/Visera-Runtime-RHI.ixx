@@ -48,7 +48,7 @@ export namespace VE { namespace Runtime
 		VE_API CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _SetLayout)		-> SharedPtr<FDescriptorSet> { return GlobalDescriptorPool.CreateDescriptorSet(_SetLayout);		}
 		VE_API CreateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)			-> SharedPtr<FCommandBuffer> { return ResetableGraphicsCommandPool.CreateCommandBuffer(_Level); }
 		VE_API CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FCommandBuffer> { return TransientGraphicsCommandPool.CreateCommandBuffer(_Level); }
-		VE_API CreateBuffer(UInt64 _Size, EBufferUsage _Usages, EMemoryUsage _Location = EMemoryUsage::Auto)			 -> SharedPtr<FBuffer> { return Vulkan->Allocator.CreateBuffer(_Size, _Usages, _Location); }
+		VE_API CreateBuffer(UInt64 _Size, EBufferUsage _Usages, ESharingMode _SharingMode = ESharingMode::Exclusive, EMemoryUsage _Location = EMemoryUsage::Auto)			 -> SharedPtr<FBuffer> { return Vulkan->Allocator.CreateBuffer(_Size, _Usages, _SharingMode, _Location); }
 		VE_API CreateFence()																-> SharedPtr<FFence>		 { return CreateSharedPtr<FFence>();								}
 		VE_API CreateSignaledFence()														-> SharedPtr<FFence>		 { return CreateSharedPtr<FFence>(true);							}
 		VE_API CreateSemaphore()															-> SharedPtr<FSemaphore>	 { return CreateSharedPtr<FSemaphore>();							}
