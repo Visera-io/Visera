@@ -422,6 +422,7 @@ export namespace VE { namespace Runtime
 		O_None	 	= VK_ATTACHMENT_STORE_OP_NONE,
 		O_Whatever 	= VK_ATTACHMENT_STORE_OP_DONT_CARE,
 	};
+	VE_REGISTER_AUTOCAST(VkAttachmentLoadOp, VkAttachmentStoreOp);
 
 	struct FVulkanComponentMapping
 	{

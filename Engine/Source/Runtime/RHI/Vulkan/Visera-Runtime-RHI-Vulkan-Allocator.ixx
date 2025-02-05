@@ -121,6 +121,7 @@ export namespace VE { namespace Runtime
 
 		auto GetExtent()    const -> const FVulkanExtent&	{ return Extent; }
 		auto GetSize()		const -> VkDeviceSize			{ return Allocation->GetSize(); }
+		auto GetFormat()	const -> EFormat				{ return Format; }
 		auto GetAspects()   const -> EImageAspect			{ return Aspects; }
 		auto GetUsages()	const -> EImageUsage			{ return Usages; }
 		auto GetTiling()	const -> EImageTiling			{ return Tiling; }

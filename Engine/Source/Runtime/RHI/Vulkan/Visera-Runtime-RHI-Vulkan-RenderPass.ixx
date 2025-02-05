@@ -49,12 +49,6 @@ export namespace VE { namespace Runtime
 		virtual ~FVulkanRenderPass() noexcept;
 	};
 
-	/*FVulkanRenderPass::
-	FVulkanRenderPass() noexcept
-	{
-		
-	}*/
-
 	FVulkanRenderPass::
 	~FVulkanRenderPass() noexcept
 	{
@@ -85,7 +79,7 @@ export namespace VE { namespace Runtime
 				.pPreserveAttachments	= CurrentSubpass.PreserveImageReferences.data(),
 			};
 
-			static_assert(VK_SUBPASS_EXTERNAL == UInt32(0 - 1));
+			static_assert(VK_SUBPASS_EXTERNAL == (0U - 1));
 			SubpassDependencies[Idx] =
 			{
 				.srcSubpass		= Idx - 1,
@@ -97,12 +91,30 @@ export namespace VE { namespace Runtime
 				.dependencyFlags= 0x0,
 			};
 		}
-		VE_WIP;
+		
+		Array<VkAttachmentDescription> AttachmentDescriptions(Layout.AttachmentCount);
+		for (UInt8 Idx = 0; Idx < AttachmentDescriptions.size(); ++Idx)
+		{
+			auto& Description = Layout.AttachmentDescriptions[Idx];
+			AttachmentDescriptions[Idx] = VkAttachmentDescription
+			{ 
+				.flags			= 0x0,
+				.format			= AutoCast(Description.Image->GetFormat()),
+				.samples		= AutoCast(AutoCast(Description.Image->GetSampleRate())),
+				.loadOp			= AutoCast(Description.LoadOp),
+				.storeOp		= AutoCast(AutoCast(Description.StoreOp)),
+				.stencilLoadOp	= AutoCast(Description.StencilLoadOp),
+				.stencilStoreOp = AutoCast(AutoCast(Description.StencilStoreOp)),
+				.initialLayout	= AutoCast(Description.InitialLayout),
+				.finalLayout	= AutoCast(Description.FinalLayout),
+			};
+		}
+
 		VkRenderPassCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-			.attachmentCount = UInt32(Layout.AttachmentDescriptions.size()),
-			//.pAttachments	 = Layout.AttachmentDescriptions.data(),
+			.attachmentCount = UInt32(AttachmentDescriptions.size()),
+			.pAttachments	 = AttachmentDescriptions.data(),
 			.subpassCount	 = UInt32(Subpasses.size()),
 			.pSubpasses		 = SubpassDescriptions.data(),
 			.dependencyCount = UInt32(Subpasses.size()),
@@ -116,32 +128,14 @@ export namespace VE { namespace Runtime
 		{ throw SRuntimeError("Failed to create Vulkan RenderPass!"); }
 
 		// Create Framebuffers
-		Array<VkImageView> AttachmentViews(Layout.AttachmentDescriptions.size());
-		
-		//if(vkCreateImageView(
-		//	GVulkan->Device->GetHandle(),
-		//	&CreateInfo,
-		//	GVulkan->AllocationCallbacks,
-		//	&ImageViews[Idx]) != VK_SUCCESS)
-		//{ throw SRuntimeError("Failed to create Vulkan Image View!"); }
-
-		//VkFramebufferCreateInfo CreateInfo
-		//{
-		//	.sType			 = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-		//	.renderPass		 = Handle,
-		//	.attachmentCount = UInt32(Framebuffer.A.size()),
-		//	.pAttachments    = m_framebuffers[i].render_targets.data(),
-		//	.width		     = Layout.GetExtent2D().width,
-		//	.height		     = Layout.GetExtent2D().height,
-		//	.layers		     = 1
-		//};
+		Framebuffer.Create(Layout);
 	}
 
 	void FVulkanRenderPass::
 	Destroy()
 	{
-		VE_WIP;
-		//for (auto& Subpass : Subpasses) { Subpass->Destroy(); }
+		Framebuffer.Destroy();
+
 		vkDestroyRenderPass(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}

@@ -110,20 +110,20 @@ export namespace VE { namespace Runtime
 																EImageUsage::DepthStencilAttachment);*/
 		}
 
-		Array<VkImageView> AttachmentViews(ColorImages.size() * 2 + HasDepthStencil());
+		Array<VkImageView> AttachmentViews(ColorImages.size() * 2 + (HasDepthStencil()? 1 : 0));
 		for (UInt8 Idx = 0; Idx < ColorImages.size(); Idx++)
 		{
 			AttachmentViews[Idx * 2]	 = ColorImageViews[Idx]->GetHandle();
 			AttachmentViews[Idx * 2 + 1] = ResolveColorImageViews[Idx]->GetHandle();
 		}
-		if (HasDepthStencil) { AttachmentViews.back() = DepthStencilImageView->GetHandle(); }
+		if (HasDepthStencil()) { AttachmentViews.back() = DepthStencilImageView->GetHandle(); }
 
 		VkFramebufferCreateInfo CreateInfo
 		{
-			.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-			.pNext = nullptr,
-			.flags = 0x0,
-			.renderPass = Owner,
+			.sType			 = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+			.pNext			 = nullptr,
+			.flags			 = 0x0,
+			.renderPass		 = Owner,
 			.attachmentCount = UInt32(AttachmentViews.size()),
 			.pAttachments	 = AttachmentViews.data(),
 			.width  = _OwnerLayout.GetRenderAreaExtent3D().width,
