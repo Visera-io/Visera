@@ -53,4 +53,5 @@ export namespace VE { namespace Runtime
 			&Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan Pipeline Layout!"); }
 	}
+
 } } // namespace VE::Runtime

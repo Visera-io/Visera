@@ -8,7 +8,6 @@ import Visera.Core.Log;
 export namespace VE { namespace Runtime
 {
 
-
 	class FVulkanLoader
 	{
 		friend class FVulkan;

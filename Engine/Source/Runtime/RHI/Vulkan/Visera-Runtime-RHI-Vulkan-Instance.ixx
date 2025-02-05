@@ -12,7 +12,6 @@ import Visera.Core.Signal;
 export namespace VE { namespace Runtime
 {
 
-
 	class FVulkanInstance
 	{
 		friend class FVulkan;

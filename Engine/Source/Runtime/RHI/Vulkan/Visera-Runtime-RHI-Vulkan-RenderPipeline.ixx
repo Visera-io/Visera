@@ -24,7 +24,7 @@ export namespace VE { namespace Runtime
 		const VkRenderPass const				Owner;
 		SharedPtr<FVulkanRenderPipelineLayout>	Layout;
 
-		Segment<FVulkanShader, EShaderSlot::MaxShaderSlot> Shaders;
+		Segment<FVulkanShader, MaxShaderSlot> Shaders;
 
 	public:
 		FVulkanRenderPipeline() = delete;
@@ -41,11 +41,11 @@ export namespace VE { namespace Runtime
 	{
 		VE_ASSERT(Owner != VK_NULL_HANDLE);
 
-		auto ShaderStageCreateInfo = Segment<VkPipelineShaderStageCreateInfo, EShaderSlot::MaxShaderSlot>
+		auto ShaderStageCreateInfo = Segment<VkPipelineShaderStageCreateInfo, MaxShaderSlot>
 		{
 
 		};
-		VE_WIP;
+		VE_WIP; //[TODO]: Slang Shader Reflect
 
 		VkGraphicsPipelineCreateInfo CreateInfo =
 		{
