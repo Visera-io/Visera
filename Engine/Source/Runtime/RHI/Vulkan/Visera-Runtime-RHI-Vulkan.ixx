@@ -11,7 +11,7 @@ export import :Shader;
 export import :PipelineLayout;
 export import :RenderPass;
 export import :RenderPassLayout;
-export import :RenderPipeline;
+export import :RenderPipelineLayout;
 export import :Synchronization;
 export import :Common;
 export import :Loader;

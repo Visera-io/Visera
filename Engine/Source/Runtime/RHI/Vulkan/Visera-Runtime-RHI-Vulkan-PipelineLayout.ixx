@@ -23,12 +23,12 @@ export namespace VE { namespace Runtime
 			operator VkPushConstantRange() { return VkPushConstantRange{ .stageFlags = AutoCast(ShaderStage), .offset = Offset, .size = Size }; }
 		};
 
-		auto GetHandle()				  -> VkPipelineLayout { return Handle; }
-		auto GetPushConstantRange() const -> const FPushConstantRange& { return PushConstantRange; }
+		auto GetHandle()			const -> const VkPipelineLayout		{ return Handle; }
+		auto GetPushConstantRange() const -> const FPushConstantRange&	{ return PushConstantRange; }
 
 		FVulkanPipelineLayout();
 
-	private:
+	protected:
 		VkPipelineLayout   Handle { VK_NULL_HANDLE };
 		FPushConstantRange PushConstantRange;
 	};
@@ -46,11 +46,11 @@ export namespace VE { namespace Runtime
 			.pPushConstantRanges	= &PCRange,
 		};
 
-		if(VK_SUCCESS != vkCreatePipelineLayout(
+		if(vkCreatePipelineLayout(
 			GVulkan->Device->GetHandle(),
 			&LayoutCreateInfo,
 			GVulkan->AllocationCallbacks,
-			&Handle))
+			&Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan Pipeline Layout!"); }
 	}
 } } // namespace VE::Runtime

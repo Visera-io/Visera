@@ -23,7 +23,7 @@ export namespace VE { namespace Runtime
 		operator VkShaderModule()	const { return Handle; }
 
 	public:
-		FVulkanShader() noexcept = delete;
+		FVulkanShader() noexcept = default;
 		FVulkanShader(EShaderStage ShaderType, const Array<Byte>& ShadingCode);
 		~FVulkanShader() noexcept;
 		
