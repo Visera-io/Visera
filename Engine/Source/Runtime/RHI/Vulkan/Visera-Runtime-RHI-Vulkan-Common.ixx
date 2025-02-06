@@ -28,6 +28,8 @@ export namespace VE { namespace Runtime
 	// struct	FVulkanComponentMapping
 	// union	FVulkanExtent
 	// union	FVulkanOffset
+	
+	using FClearValue = VkClearValue;
 
 	VE_ENUM_CLASS(ESharingMode, VkSharingMode)
 	{

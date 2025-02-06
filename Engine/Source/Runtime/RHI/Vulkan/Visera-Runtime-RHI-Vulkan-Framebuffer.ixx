@@ -49,8 +49,7 @@ export namespace VE { namespace Runtime
 		SharedPtr<const FVulkanRenderPassResource> _OwnerRenderTargets)
 		: Owner{ _Owner }
 	{
-		VE_ASSERT(_OwnerLayout->ColorImageCount && _OwnerLayout->ColorImageCount % 2 == 0);
-		VE_ASSERT(_OwnerLayout->ColorImageCount <= _OwnerRenderTargets->ColorAttachments.size());
+		VE_ASSERT(_OwnerLayout->GetColorAttachmentCount() <= _OwnerRenderTargets->ColorAttachments.size());
 		VE_ASSERT(!_OwnerLayout->HasDepthImage() ||
 				 ( _OwnerLayout->HasDepthImage() && _OwnerRenderTargets->HasDepthAttachment()));
 
@@ -58,28 +57,28 @@ export namespace VE { namespace Runtime
 		RenderArea.extent = _OwnerLayout->GetRenderAreaExtent2D();
 
 		// Color Images & Resolve Color Images
-		ColorImageViews.resize(_OwnerLayout->ColorImageCount);
-		ResolveImageViews.resize(_OwnerLayout->ColorImageCount);
+		ColorImageViews.resize(_OwnerLayout->GetColorAttachmentCount());
+		ResolveImageViews.resize(_OwnerLayout->GetColorAttachmentCount());
 		
-		for (UInt32 ColorImageIdx = 0; ColorImageIdx < _OwnerLayout->ColorImageCount; ColorImageIdx++)
+		for (UInt32 ColorImageIdx = 0; ColorImageIdx < _OwnerLayout->GetColorAttachmentCount(); ColorImageIdx++)
 		{
-			auto& ColorAttachmentDescription = 
-				_OwnerLayout->AttachmentDescriptions[ColorImageIdx];
+			auto& ColorAttachmentDesc = 
+				_OwnerLayout->ColorAttachmentDescriptions[ColorImageIdx];
 			ColorImageViews[ColorImageIdx] = 
-				_OwnerRenderTargets->ColorAttachments[ColorImageIdx].
-				Image->CreateImageView(ColorAttachmentDescription.ImageViewType);
+				_OwnerRenderTargets->ColorAttachments[ColorImageIdx]
+				->CreateImageView(ColorAttachmentDesc.ImageViewType);
 			
 			auto& ResolveAttachmentDescription = 
-				_OwnerLayout->AttachmentDescriptions[_OwnerLayout->ColorImageCount + ColorImageIdx];
+				_OwnerLayout->ColorAttachmentDescriptions[_OwnerLayout->GetColorAttachmentCount() + ColorImageIdx];
 			ResolveImageViews[ColorImageIdx] = 
-				_OwnerRenderTargets->ColorAttachments[ColorImageIdx].
-				ResolveImage->CreateImageView(ResolveAttachmentDescription.ImageViewType);
+				_OwnerRenderTargets->ColorAttachments[ColorImageIdx]
+				->CreateImageView(ResolveAttachmentDescription.ImageViewType);
 		}
 
 		if (_OwnerLayout->HasDepthImage())
 		{
-			auto& DepthImageDescription = _OwnerLayout->AttachmentDescriptions[2 * _OwnerLayout->ColorImageCount + 1];
-			DepthStencilImageView = _OwnerRenderTargets->DepthAttachment->CreateImageView(DepthImageDescription.ImageViewType);
+			auto& DepthImageDesc = _OwnerLayout->DepthAttachmentDescription.value();
+			DepthStencilImageView = _OwnerRenderTargets->DepthAttachment->CreateImageView(DepthImageDesc.ImageViewType);
 		}
 
 		if (_OwnerLayout->StencilDescription.has_value())

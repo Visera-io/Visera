@@ -16,18 +16,13 @@ export namespace VE { namespace Runtime
 		friend class FVulkanRenderPass;
 		friend class FVulkanFramebuffer;
 	public:
-		struct FColorAttachment
-		{
-			UniquePtr<FVulkanImage>	Image;
-			UniquePtr<FVulkanImage>	ResolveImage; // MSAA Result
-		};
-		auto GetColorAttachment(UInt8 _Binding) const -> const FColorAttachment& { VE_ASSERT(_Binding < ColorAttachments.size()); return ColorAttachments[_Binding]; }
-
 		Bool HasDepthAttachment() const { return DepthAttachment != nullptr; }
 
 	private:
-		Array<FColorAttachment>		ColorAttachments;
-		UniquePtr<FVulkanImage>		DepthAttachment;
+		Array<UniquePtr<FVulkanImage>> ColorAttachments;
+		Array<UniquePtr<FVulkanImage>> ResolveAttachments;
+		
+		UniquePtr<FVulkanImage>		   DepthAttachment;
 	};
 
 

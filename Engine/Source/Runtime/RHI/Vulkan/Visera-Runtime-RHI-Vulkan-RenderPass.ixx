@@ -99,17 +99,18 @@ export namespace VE { namespace Runtime
 			};
 		}
 		
-		Array<VkAttachmentDescription> AttachmentDescriptions(Layout->AttachmentCount + (Layout->HasDepthImage()? 1 : 0));
-		for (UInt8 Idx = 0; Idx < Layout->ColorImageCount; ++Idx)
+		auto AttachmentDescriptions = Array<VkAttachmentDescription>(2 * Layout->GetColorAttachmentCount() + (Layout->HasDepthImage()? 1 : 0));
+		
+		for (UInt8 Idx = 0; Idx < Layout->GetColorAttachmentCount(); ++Idx)
 		{
-			auto& ColorDesc    = Layout->AttachmentDescriptions[Idx];
+			auto& ColorDesc    = Layout->ColorAttachmentDescriptions[Idx];
 			auto& RenderTarget = RenderTargets->ColorAttachments[Idx];
 			// Color Attachments
 			AttachmentDescriptions[Idx] = VkAttachmentDescription
 			{ 
 				.flags			= 0x0,
-				.format			= AutoCast(RenderTarget.Image->GetFormat()),
-				.samples		= AutoCast(AutoCast(RenderTarget.Image->GetSampleRate())),
+				.format			= AutoCast(RenderTarget->GetFormat()),
+				.samples		= AutoCast(AutoCast(RenderTarget->GetSampleRate())),
 				.loadOp			= AutoCast(ColorDesc.LoadOp),
 				.storeOp		= AutoCast(AutoCast(ColorDesc.StoreOp)),
 				.stencilLoadOp	= AutoCast(ColorDesc.StencilLoadOp),
@@ -118,24 +119,26 @@ export namespace VE { namespace Runtime
 				.finalLayout	= AutoCast(ColorDesc.FinalLayout),
 			};
 			// Resolve Attachments
-			AttachmentDescriptions[Layout->ColorImageCount + Idx] = VkAttachmentDescription
+			auto& ResolveDesc   = Layout->ResolveAttachmentDescriptions[Idx];
+			auto& ResolveTarget = RenderTargets->ResolveAttachments[Idx];
+			AttachmentDescriptions[Layout->GetColorAttachmentCount() + Idx] = VkAttachmentDescription
 			{ 
 				.flags			= 0x0,
-				.format			= AutoCast(RenderTarget.Image->GetFormat()),
-				.samples		= AutoCast(AutoCast(RenderTarget.Image->GetSampleRate())),
-				.loadOp			= AutoCast(ColorDesc.LoadOp),
-				.storeOp		= AutoCast(AutoCast(ColorDesc.StoreOp)),
-				.stencilLoadOp	= AutoCast(ColorDesc.StencilLoadOp),
-				.stencilStoreOp = AutoCast(AutoCast(ColorDesc.StencilStoreOp)),
-				.initialLayout	= AutoCast(ColorDesc.InitialLayout),
-				.finalLayout	= AutoCast(ColorDesc.FinalLayout),
+				.format			= AutoCast(RenderTarget->GetFormat()),
+				.samples		= AutoCast(AutoCast(RenderTarget->GetSampleRate())),
+				.loadOp			= AutoCast(ResolveDesc.LoadOp),
+				.storeOp		= AutoCast(AutoCast(ResolveDesc.StoreOp)),
+				.stencilLoadOp	= AutoCast(ResolveDesc.StencilLoadOp),
+				.stencilStoreOp = AutoCast(AutoCast(ResolveDesc.StencilStoreOp)),
+				.initialLayout	= AutoCast(ResolveDesc.InitialLayout),
+				.finalLayout	= AutoCast(ResolveDesc.FinalLayout),
 			};
 		}
 		// Depth Attachment
 		VE_ASSERT(Layout->HasDepthImage()); // Current Visera Pipeline will automatically create depth image!
 		if (Layout->HasDepthImage())
 		{
-			auto& DepthDesc   = Layout->AttachmentDescriptions[Layout->AttachmentCount];
+			auto& DepthDesc   = Layout->DepthAttachmentDescription.value();
 			auto& DepthTarget = RenderTargets->DepthAttachment;
 			AttachmentDescriptions.back() = VkAttachmentDescription
 			{
