@@ -26,7 +26,7 @@ export namespace VE { namespace Runtime
 	void FVulkanLoader::
 	Create()
 	{
-		if (VK_SUCCESS != volkInitialize())
+		if (volkInitialize() != VK_SUCCESS)
 		{ Log::Fatal("Failed to initialize Volk!"); }
 	}
 

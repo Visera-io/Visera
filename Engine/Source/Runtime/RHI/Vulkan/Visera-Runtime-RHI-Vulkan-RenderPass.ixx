@@ -1,9 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:RenderPass;
-
-import Visera.Core.Signal;
-
 import :Common;
 import :Allocator;
 import :Device;
@@ -11,6 +8,8 @@ import :PipelineCache;
 import :Framebuffer;
 import :RenderPipeline;
 import :RenderPassLayout;
+
+import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
@@ -21,6 +20,7 @@ export namespace VE { namespace Runtime
 		struct FSubpass
 		{
 			FVulkanRenderPipeline			Pipeline;
+
 			Array<VkAttachmentReference>	InputImageReferences;    // Input Image References from Previous Subpasses.
 			Array<UInt32>					PreserveImageReferences; // Const Image References Used in Subpasses.
 			Array<VkAttachmentReference>	ColorImageReferences;
@@ -32,7 +32,7 @@ export namespace VE { namespace Runtime
 			EPipelineStage					DestinationStage					{ EPipelineStage::None };
 			EAccessibility					DestinationStageAccessPermissions	{ EAccessibility::None };
 		};
-		auto GetHandle() -> VkRenderPass { return Handle; }
+		auto GetHandle() const -> const VkRenderPass { return Handle; }
 	
 	protected:
 		VkRenderPass					Handle{ VK_NULL_HANDLE };

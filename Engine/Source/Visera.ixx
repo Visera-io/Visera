@@ -44,6 +44,15 @@ export namespace VE
 			Int32 StateCode = EXIT_SUCCESS;
 			try
 			{
+				ViseraCore::Bootstrap();
+#if defined(VISERA_RUNTIME)
+				Log::Debug("Bootstrapping Visera Runtime...");
+				Runtime::ViseraRuntime::Bootstrap();
+				RuntimeTick = Runtime::ViseraRuntime::Tick;
+				Log::Debug("Bootstrapping Visera Edtior...");
+				Editor::ViseraEditor::Bootstrap();
+#endif
+
 				if (!App) { throw SEngineStop("Visera App is not created!"); }
 				try
 				{
@@ -52,18 +61,26 @@ export namespace VE
 					{
 						do { App->Tick(); } while (RuntimeTick());
 					}
-					App->Terminate();
-					delete App;
 				}
 				catch (const SRuntimeError& Signal)
 				{
 					Log::Fatal(Text("Visera Engine External Runtime Error:\n{}{}", Signal.What(), Signal.Where()));
 				}
-			}
-			catch (const SAppStop& Signal)
-			{
-				Log::Debug(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
-				StateCode = Signal.StateCode;
+				catch (const SAppStop& Signal)
+				{
+					Log::Debug(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
+					StateCode = Signal.StateCode;
+				}
+				App->Terminate();
+				delete App;
+
+#if defined(VISERA_RUNTIME)
+				Log::Debug("Terminating Visera Editor...");
+				Editor::ViseraEditor::Terminate();
+				Log::Debug("Terminating Visera Runtime...");
+				Runtime::ViseraRuntime::Terminate();
+#endif
+				ViseraCore::Terminate();
 			}
 			catch (const SEngineStop& Signal)
 			{
@@ -73,29 +90,9 @@ export namespace VE
 			return StateCode;
 		}
 
-		Visera(ViseraApp* App) : App{ App }
-		{
-			ViseraCore::Bootstrap();
-	#if defined(VISERA_RUNTIME)
-			Log::Debug("Bootstrapping Visera Runtime...");
-			Runtime::ViseraRuntime::Bootstrap();
-			RuntimeTick = Runtime::ViseraRuntime::Tick;
-			Log::Debug("Bootstrapping Visera Edtior...");
-			Editor::ViseraEditor::Bootstrap();
-	#endif
+		Visera(ViseraApp* App) : App{ App }{ }
+		~Visera(){ }
 
-		}
-
-		~Visera()
-		{
-	#if defined(VISERA_RUNTIME)
-			Log::Debug("Terminating Visera Editor...");
-			Editor::ViseraEditor::Terminate();
-			Log::Debug("Terminating Visera Runtime...");
-			Runtime::ViseraRuntime::Terminate();
-	#endif
-			ViseraCore::Terminate();
-		}
 	private:
 		ViseraApp* const App = nullptr;
 		static inline std::function<Bool()> RuntimeTick = []() -> Bool { return False; };

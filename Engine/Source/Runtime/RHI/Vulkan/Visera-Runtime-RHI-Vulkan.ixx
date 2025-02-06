@@ -1,7 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan;
-
 export import :CommandPool;
 export import :CommandBuffer;
 export import :DescriptorPool;
@@ -12,6 +11,7 @@ export import :PipelineLayout;
 export import :RenderPass;
 export import :RenderPassLayout;
 export import :RenderPipelineLayout;
+export import :RenderPassResource;
 export import :Synchronization;
 export import :Common;
 export import :Loader;
@@ -75,7 +75,7 @@ export namespace VE { namespace Runtime
 		
 		Loader.Create();
 		Loader.LoadInstance(Instance.Create());
-
+		
 		Surface.Create();
 		
 		Loader.LoadDevice(Device.Create(&GPU, &Surface));

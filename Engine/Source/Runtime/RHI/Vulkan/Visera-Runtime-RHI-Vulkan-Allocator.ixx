@@ -2,13 +2,12 @@ module;
 #define VMA_IMPLEMENTATION
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:Allocator;
-
-import Visera.Core.Signal;
-
 import :Common;
 import :Instance;
 import :Device;
 import :GPU;
+
+import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {

@@ -1,9 +1,10 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:RenderPassLayout;
-
 import :Common;
-import :Allocator;
+import :RenderPassResource;
+
+import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
@@ -16,10 +17,8 @@ export namespace VE { namespace Runtime
 		friend class FVulkanRenderPass;
 		friend class FVulkanFramebuffer;
 	public:
-		enum { MaxSimultaneousRenderTargets = 8 };
 		struct FAttachmentDescription
 		{
-			SharedPtr<FVulkanImage> Image;
 			EImageViewType  ImageViewType;
 			EAttachmentIO	LoadOp;
 			EAttachmentIO	StoreOp;
@@ -45,7 +44,7 @@ export namespace VE { namespace Runtime
 		auto GetRenderAreaExtent3D()		const -> const VkExtent3D&		{ return GetRenderAreaExtent().Extent3D; }
 
 	private:
-		// (UE5) [(0)ColorImage, (1)ResolvedImage, ..., (N-1)ColorImage, (N)ResolvedImage, (N+1)DepthImage, (N+2)ShadingRateImage].
+		// (UE5) [[0]ColorImage, [1]ResolvedImage, ..., [N-1]ColorImage,  [N]ResolvedImage, [(Auto)N+1]DepthImage, [(Auto)N+2]ShadingRateImage].
 		UInt8 AttachmentCount = 0;
 		UInt8 ColorImageCount = 0;
 		Segment<FAttachmentDescription, 2 * MaxSimultaneousRenderTargets + 2> AttachmentDescriptions;

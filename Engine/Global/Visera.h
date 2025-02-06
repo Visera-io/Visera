@@ -23,9 +23,9 @@
 #define VE_ENUM_CLASS(Name, Super)		\
 		enum class Name : EnumBit;		\
 		VE_REGISTER_AUTOCAST(Name,Super)\
-		VE_OP_BITOR(Name, Name)			\
-		VE_OP_BITXOR(Name, Name)		\
-		VE_OP_BITAND(Name, Name);		\
+		VE_OP_BITOR(Name, EnumBit)		\
+		VE_OP_BITXOR(Name, EnumBit)		\
+		VE_OP_BITAND(Name, EnumBit);	\
 		enum class Name : EnumBit
 
 #define VE_NOT_COPYABLE(ClassName) \

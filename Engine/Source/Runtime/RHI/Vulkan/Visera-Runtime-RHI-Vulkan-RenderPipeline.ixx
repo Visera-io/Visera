@@ -46,7 +46,7 @@ export namespace VE { namespace Runtime
 
 		};
 		VE_WIP; //[TODO]: Slang Shader Reflect
-
+        
 		VkGraphicsPipelineCreateInfo CreateInfo =
 		{
 			.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,

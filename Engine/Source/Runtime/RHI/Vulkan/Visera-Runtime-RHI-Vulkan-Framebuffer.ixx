@@ -31,11 +31,8 @@ export namespace VE { namespace Runtime
 		const VkRenderPass const			 Owner { VK_NULL_HANDLE };
 		VkRect2D							 RenderArea{};
 
-		Array<SharedPtr<FVulkanImage>>		 ColorImages;
 		Array<SharedPtr<FVulkanImageView>>	 ColorImageViews;
-		Array<SharedPtr<FVulkanImage>>		 ResolveColorImages; // MSAA Result
 		Array<SharedPtr<FVulkanImageView>>	 ResolveColorImageViews;
-		SharedPtr<FVulkanImage>				 DepthStencilImage;
 		SharedPtr<FVulkanImageView>			 DepthStencilImageView;
 		//[TODO]: Shading Rate Image
 		Array<VkClearValue>					 ClearColors;
