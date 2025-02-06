@@ -16,6 +16,7 @@ export namespace VE { namespace Runtime
 	{
 		friend class FVulkanRenderPass;
 		friend class FVulkanFramebuffer;
+		enum { MaxSimultaneousRenderTargets = 8 };
 	public:
 		struct FAttachmentDescription
 		{
@@ -44,17 +45,15 @@ export namespace VE { namespace Runtime
 		auto GetRenderAreaExtent3D()		const -> const VkExtent3D&		{ return GetRenderAreaExtent().Extent3D; }
 
 	private:
-		// (UE5) [[0]ColorImage, [1]ResolvedImage, ..., [N-1]ColorImage,  [N]ResolvedImage, [(Auto)N+1]DepthImage, [(Auto)N+2]ShadingRateImage].
-		UInt8 AttachmentCount = 0;
-		UInt8 ColorImageCount = 0;
+		// (UE5) [[0]ColorImage, [1]ColorImage, ..., [N]ColorImage, [(Auto)N+1]ResolvedImage, ..., [(Auto)N+N]ResolvedImage, [(Auto)2N+1]DepthImage, [(Auto)2N+2]ShadingRateImage].
 		Segment<FAttachmentDescription, 2 * MaxSimultaneousRenderTargets + 2> AttachmentDescriptions;
 		Optional<FStencilDescription>	StencilDescription;
-		
-		//UInt8 ClearValueCount = 0;
-		//UInt8 SampleCount     = 0;
+		UInt8							AttachmentCount = 0;
+		UInt8							ColorImageCount = 0;
 
-		FVulkanOffset RenderAreaOffset;
-		FVulkanExtent RenderAreaExtent;
+		FVulkanOffset					RenderAreaOffset;
+		FVulkanExtent					RenderAreaExtent;
+		Array<VkClearValue>				ClearColors;
 	};
 
 } } // namespace VE::Runtime

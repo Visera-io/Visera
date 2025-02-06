@@ -129,7 +129,7 @@ export namespace VE { namespace Runtime
 		auto GetSampleRate()	const -> ESampleRate		{ return SampleRate;}
 		auto GetDetails()	const -> VmaAllocationInfo  { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
 
-		auto GetHandle()		  -> VkImage { return Handle; }
+		auto GetHandle()	const -> const VkImage { return Handle; }
 
 	protected:
 		VkImage			Handle;

@@ -8,6 +8,7 @@ import :Common;
 import :Device;
 import :Swapchain;
 import :RenderPassLayout;
+import :RenderPassResource;
 
 import Visera.Core.Signal;
 
@@ -19,86 +20,69 @@ export namespace VE { namespace Runtime
 	{
 		friend class FVulkanRenderPass;
 	public:
-		Bool HasDepthStencil()		const { return DepthStencilImage != nullptr; }
+		Bool HasDepthStencil()		const { return DepthStencilImageView != nullptr; }
 	
-		auto GetRenderArea()		const -> VkRect2D						{ return RenderArea; }
-		auto GetDepthStencil()		const -> SharedPtr<const FVulkanImage>	{ return DepthStencilImage; }
+		auto GetRenderArea()		const -> VkRect2D				{ return RenderArea; }
 
-		auto GetHandle()				  -> VkFramebuffer					{ return Handle; }
+		auto GetHandle()			const -> const VkFramebuffer	{ return Handle; }
 
 	private:
 		VkFramebuffer						 Handle{ VK_NULL_HANDLE };
-		const VkRenderPass const			 Owner { VK_NULL_HANDLE };
+		const VkRenderPass	const			 Owner { VK_NULL_HANDLE };
 		VkRect2D							 RenderArea{};
 
 		Array<SharedPtr<FVulkanImageView>>	 ColorImageViews;
-		Array<SharedPtr<FVulkanImageView>>	 ResolveColorImageViews;
+		Array<SharedPtr<FVulkanImageView>>	 ResolveImageViews;
 		SharedPtr<FVulkanImageView>			 DepthStencilImageView;
 		//[TODO]: Shading Rate Image
-		Array<VkClearValue>					 ClearColors;
-
 		VkAttachmentDescriptionStencilLayout StencilDescription;
 
-		void Create(const FVulkanRenderPassLayout& _OwnerLayout);
-		void Destroy();
-		
 	public:
-		FVulkanFramebuffer(const VkRenderPass const _Owner);
+		FVulkanFramebuffer(const VkRenderPass const _Owner, SharedPtr<const FVulkanRenderPassLayout> _OwnerLayout, SharedPtr<const FVulkanRenderPassResource> _OwnerRenderTargets);
 		~FVulkanFramebuffer();
 	};
 
 	FVulkanFramebuffer::
-	FVulkanFramebuffer(const VkRenderPass const _Owner)
+	FVulkanFramebuffer(
+		const VkRenderPass const _Owner,
+		SharedPtr<const FVulkanRenderPassLayout>   _OwnerLayout,
+		SharedPtr<const FVulkanRenderPassResource> _OwnerRenderTargets)
 		: Owner{ _Owner }
 	{
-		VE_ASSERT(Owner != VK_NULL_HANDLE);
-	}
+		VE_ASSERT(_OwnerLayout->ColorImageCount && _OwnerLayout->ColorImageCount % 2 == 0);
+		VE_ASSERT(_OwnerLayout->ColorImageCount <= _OwnerRenderTargets->ColorAttachments.size());
+		VE_ASSERT(!_OwnerLayout->HasDepthImage() ||
+				 ( _OwnerLayout->HasDepthImage() && _OwnerRenderTargets->HasDepthAttachment()));
 
-	FVulkanFramebuffer::
-	~FVulkanFramebuffer()
-	{	
-		Destroy();
-	}
+		RenderArea.offset = _OwnerLayout->GetRenderAreaOffset2D();
+		RenderArea.extent = _OwnerLayout->GetRenderAreaExtent2D();
 
-	void FVulkanFramebuffer::
-	Create(const FVulkanRenderPassLayout& _OwnerLayout)
-	{
-		RenderArea.offset = _OwnerLayout.GetRenderAreaOffset2D();
-		RenderArea.extent = _OwnerLayout.GetRenderAreaExtent2D();
-
-		VE_ASSERT(_OwnerLayout.ColorImageCount && _OwnerLayout.ColorImageCount % 2 == 0);
-
-		ColorImages.resize(_OwnerLayout.ColorImageCount);
-		ColorImageViews.resize(ColorImages.size());
-		ResolveColorImages.resize(ColorImages.size());
-		ResolveColorImageViews.resize(ResolveColorImages.size());
-
-		for (UInt32 ColorImageIdx = 0; ColorImageIdx < _OwnerLayout.ColorImageCount; ColorImageIdx++)
+		// Color Images & Resolve Color Images
+		ColorImageViews.resize(_OwnerLayout->ColorImageCount);
+		ResolveImageViews.resize(_OwnerLayout->ColorImageCount);
+		
+		for (UInt32 ColorImageIdx = 0; ColorImageIdx < _OwnerLayout->ColorImageCount; ColorImageIdx++)
 		{
-			// Color Images
-			auto& ColorAttachmentDescription = _OwnerLayout.AttachmentDescriptions[ColorImageIdx << 1];
-			VE_ASSERT(ColorAttachmentDescription.Image != nullptr);
-
-			ColorImages[ColorImageIdx] = ColorAttachmentDescription.Image;
-			ColorImageViews[ColorImageIdx] = ColorImages[ColorImageIdx]->CreateImageView(ColorAttachmentDescription.ImageViewType);
+			auto& ColorAttachmentDescription = 
+				_OwnerLayout->AttachmentDescriptions[ColorImageIdx];
+			ColorImageViews[ColorImageIdx] = 
+				_OwnerRenderTargets->ColorAttachments[ColorImageIdx].
+				Image->CreateImageView(ColorAttachmentDescription.ImageViewType);
 			
-			// Resolve Color Images
-			auto& ResolveColorAttachmentDescription = _OwnerLayout.AttachmentDescriptions[(ColorImageIdx << 1) + 1];
-			VE_ASSERT(ResolveColorAttachmentDescription.Image != nullptr);
-
-			ResolveColorImages[ColorImageIdx] = ResolveColorAttachmentDescription.Image;
-			ResolveColorImageViews[ColorImageIdx] = ResolveColorImages[ColorImageIdx]->CreateImageView(ResolveColorAttachmentDescription.ImageViewType);
+			auto& ResolveAttachmentDescription = 
+				_OwnerLayout->AttachmentDescriptions[_OwnerLayout->ColorImageCount + ColorImageIdx];
+			ResolveImageViews[ColorImageIdx] = 
+				_OwnerRenderTargets->ColorAttachments[ColorImageIdx].
+				ResolveImage->CreateImageView(ResolveAttachmentDescription.ImageViewType);
 		}
 
-		if (_OwnerLayout.HasDepthImage())
+		if (_OwnerLayout->HasDepthImage())
 		{
-			auto& DepthImageDescription = _OwnerLayout.AttachmentDescriptions[_OwnerLayout.ColorImageCount];
-			DepthStencilImage = DepthImageDescription.Image;
-			VE_ASSERT(DepthStencilImage != nullptr);
-			DepthStencilImageView = DepthStencilImage->CreateImageView(DepthImageDescription.ImageViewType);
+			auto& DepthImageDescription = _OwnerLayout->AttachmentDescriptions[2 * _OwnerLayout->ColorImageCount + 1];
+			DepthStencilImageView = _OwnerRenderTargets->DepthAttachment->CreateImageView(DepthImageDescription.ImageViewType);
 		}
 
-		if (_OwnerLayout.StencilDescription.has_value())
+		if (_OwnerLayout->StencilDescription.has_value())
 		{
 			VE_WIP;
 			/*DepthStencilImage = GVulkan->Allocator->CreateImage(EImageType::Image2D,
@@ -107,13 +91,10 @@ export namespace VE { namespace Runtime
 																EImageUsage::DepthStencilAttachment);*/
 		}
 
-		Array<VkImageView> AttachmentViews(ColorImages.size() * 2 + (HasDepthStencil()? 1 : 0));
-		for (UInt8 Idx = 0; Idx < ColorImages.size(); Idx++)
-		{
-			AttachmentViews[Idx * 2]	 = ColorImageViews[Idx]->GetHandle();
-			AttachmentViews[Idx * 2 + 1] = ResolveColorImageViews[Idx]->GetHandle();
-		}
-		if (HasDepthStencil()) { AttachmentViews.back() = DepthStencilImageView->GetHandle(); }
+		Array<VkImageView> AttachmentViews;
+		for (auto& ColorImageView   : ColorImageViews)	 { AttachmentViews.emplace_back(ColorImageView->GetHandle()); }
+		for (auto& ResolveImageView : ResolveImageViews) { AttachmentViews.emplace_back(ResolveImageView->GetHandle()); }
+		if (HasDepthStencil()) { AttachmentViews.emplace_back(DepthStencilImageView->GetHandle()); }
 
 		VkFramebufferCreateInfo CreateInfo
 		{
@@ -123,9 +104,9 @@ export namespace VE { namespace Runtime
 			.renderPass		 = Owner,
 			.attachmentCount = UInt32(AttachmentViews.size()),
 			.pAttachments	 = AttachmentViews.data(),
-			.width  = _OwnerLayout.GetRenderAreaExtent3D().width,
-			.height = _OwnerLayout.GetRenderAreaExtent3D().height,
-			.layers = _OwnerLayout.GetRenderAreaExtent3D().depth,
+			.width  = _OwnerLayout->GetRenderAreaExtent3D().width,
+			.height = _OwnerLayout->GetRenderAreaExtent3D().height,
+			.layers = _OwnerLayout->GetRenderAreaExtent3D().depth,
 		};
 
 		if (vkCreateFramebuffer(
@@ -136,13 +117,12 @@ export namespace VE { namespace Runtime
 		{ throw SRuntimeError("Failed to create Vulkan Framebuffer!"); }
 	}
 
-	void FVulkanFramebuffer::
-	Destroy()
-	{
+	FVulkanFramebuffer::
+	~FVulkanFramebuffer()
+	{	
 		ColorImageViews.clear();
-		ColorImages.clear();
+		ResolveImageViews.clear();
 		DepthStencilImageView.reset();
-		DepthStencilImage.reset();
 
 		vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
