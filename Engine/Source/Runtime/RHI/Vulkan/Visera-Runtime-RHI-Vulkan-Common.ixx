@@ -259,7 +259,7 @@ export namespace VE { namespace Runtime
 		All		 = 4,
 	};
 
-	VE_ENUM_CLASS(ESampleRate, VkSampleCountFlags)
+	VE_ENUM_CLASS(ESampleRate, VkSampleCountFlagBits)
 	{
 		X1	= VK_SAMPLE_COUNT_1_BIT,
 		X2	= VK_SAMPLE_COUNT_2_BIT,
@@ -269,7 +269,7 @@ export namespace VE { namespace Runtime
 		X32 = VK_SAMPLE_COUNT_32_BIT,
 		X64 = VK_SAMPLE_COUNT_64_BIT,
 	};
-	VE_REGISTER_AUTOCAST(VkSampleCountFlags, VkSampleCountFlagBits);
+	VE_REGISTER_AUTOCAST(VkSampleCountFlagBits, VkSampleCountFlags);
 
 	VE_ENUM_CLASS(ECommandPool, VkCommandPoolCreateFlags)
 	{

@@ -5,18 +5,19 @@ import :Common;
 import :Allocator;
 import :Device;
 import :PipelineCache;
-import :Framebuffer;
 import :RenderPipeline;
 import :RenderPassLayout;
-import :RenderPassResource;
+import :RenderTargets;
 
 import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
+	class RHI;
 
 	class FVulkanRenderPass
 	{
+		friend class RHI;
 	public:
 		struct FSubpass
 		{
@@ -33,16 +34,29 @@ export namespace VE { namespace Runtime
 			EPipelineStage					DestinationStage					{ EPipelineStage::None };
 			EAccessibility					DestinationStageAccessPermissions	{ EAccessibility::None };
 		};
+		struct FFramebuffer
+		{
+			VkFramebuffer						 Handle{ VK_NULL_HANDLE };
+			SharedPtr<FVulkanRenderTargets>		 RenderTargets;
+			Array<SharedPtr<FVulkanImageView>>	 ColorImageViews;
+			Array<SharedPtr<FVulkanImageView>>	 ResolveImageViews;
+			SharedPtr<FVulkanImageView>			 DepthStencilImageView;
+			//[TODO]: Shading Rate Image
+			VkAttachmentDescriptionStencilLayout StencilDescription;
+			~FFramebuffer(){ vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks); Handle = VK_NULL_HANDLE;}
+		};
+
 		auto GetHandle() const -> const VkRenderPass { return Handle; }
 	
 	protected:
 		VkRenderPass						 Handle{ VK_NULL_HANDLE };
 		UInt32								 Priority { 0 }; // Less is More
 		SharedPtr<FVulkanRenderPassLayout>	 Layout;
-		SharedPtr<FVulkanRenderPassResource> RenderTargets;
-		UniquePtr<FVulkanFramebuffer>		 Framebuffer;
+		FFramebuffer						 Framebuffer;
 		Array<FSubpass>						 Subpasses;
 
+	private:
+		// Created by RHI
 		void Create();
 		void Destroy();
 
@@ -60,6 +74,10 @@ export namespace VE { namespace Runtime
 	void FVulkanRenderPass::
 	Create()
 	{
+		VE_ASSERT(Layout->GetColorAttachmentCount() <= RenderTargets->ColorImages.size());
+		VE_ASSERT(!Layout->HasDepthImage() ||
+				 ( Layout->HasDepthImage() && RenderTargets->HasDepthImage()));
+
 		// Create Subpasses
 		for (auto& Subpass : Subpasses)
 		{ Subpass.Pipeline.Create(); }
@@ -103,14 +121,14 @@ export namespace VE { namespace Runtime
 		
 		for (UInt8 Idx = 0; Idx < Layout->GetColorAttachmentCount(); ++Idx)
 		{
-			auto& ColorDesc    = Layout->ColorAttachmentDescriptions[Idx];
-			auto& RenderTarget = RenderTargets->ColorAttachments[Idx];
+			auto& ColorDesc    = Layout->ColorDescs[Idx];
+			auto& RenderTarget = RenderTargets->ColorImages[Idx];
 			// Color Attachments
 			AttachmentDescriptions[Idx] = VkAttachmentDescription
 			{ 
 				.flags			= 0x0,
 				.format			= AutoCast(RenderTarget->GetFormat()),
-				.samples		= AutoCast(AutoCast(RenderTarget->GetSampleRate())),
+				.samples		= AutoCast(RenderTarget->GetSampleRate()),
 				.loadOp			= AutoCast(ColorDesc.LoadOp),
 				.storeOp		= AutoCast(AutoCast(ColorDesc.StoreOp)),
 				.stencilLoadOp	= AutoCast(ColorDesc.StencilLoadOp),
@@ -119,13 +137,13 @@ export namespace VE { namespace Runtime
 				.finalLayout	= AutoCast(ColorDesc.FinalLayout),
 			};
 			// Resolve Attachments
-			auto& ResolveDesc   = Layout->ResolveAttachmentDescriptions[Idx];
-			auto& ResolveTarget = RenderTargets->ResolveAttachments[Idx];
+			auto& ResolveDesc   = Layout->ResolveDescs[Idx];
+			auto& ResolveTarget = RenderTargets->ResolveImages[Idx];
 			AttachmentDescriptions[Layout->GetColorAttachmentCount() + Idx] = VkAttachmentDescription
 			{ 
 				.flags			= 0x0,
 				.format			= AutoCast(RenderTarget->GetFormat()),
-				.samples		= AutoCast(AutoCast(RenderTarget->GetSampleRate())),
+				.samples		= AutoCast(RenderTarget->GetSampleRate()),
 				.loadOp			= AutoCast(ResolveDesc.LoadOp),
 				.storeOp		= AutoCast(AutoCast(ResolveDesc.StoreOp)),
 				.stencilLoadOp	= AutoCast(ResolveDesc.StencilLoadOp),
@@ -138,13 +156,13 @@ export namespace VE { namespace Runtime
 		VE_ASSERT(Layout->HasDepthImage()); // Current Visera Pipeline will automatically create depth image!
 		if (Layout->HasDepthImage())
 		{
-			auto& DepthDesc   = Layout->DepthAttachmentDescription.value();
-			auto& DepthTarget = RenderTargets->DepthAttachment;
+			auto& DepthDesc   = Layout->DepthDesc.value();
+			auto& DepthTarget = RenderTargets->DepthImage;
 			AttachmentDescriptions.back() = VkAttachmentDescription
 			{
 				.flags			= 0x0,
 				.format			= AutoCast(DepthTarget->GetFormat()),
-				.samples		= AutoCast(AutoCast(DepthTarget->GetSampleRate())),
+				.samples		= AutoCast(DepthTarget->GetSampleRate()),
 				.loadOp			= AutoCast(DepthDesc.LoadOp),
 				.storeOp		= AutoCast(AutoCast(DepthDesc.StoreOp)),
 				.stencilLoadOp	= AutoCast(DepthDesc.StencilLoadOp),
@@ -171,8 +189,60 @@ export namespace VE { namespace Runtime
 			&Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan RenderPass!"); }
 
-		// Create Framebuffers
-		Framebuffer = CreateUniquePtr<FVulkanFramebuffer>(Handle, Layout, RenderTargets);
+		// Create Framebuffer
+		Framebuffer.ColorImageViews.resize(Layout->GetColorAttachmentCount());
+		Framebuffer.ResolveImageViews.resize(Layout->GetColorAttachmentCount());
+		
+		for (UInt32 Idx = 0; Idx < Layout->GetColorAttachmentCount(); Idx++)
+		{
+			auto& ColorDesc = Layout->ColorDescs[Idx];
+			Framebuffer.ColorImageViews[Idx]   = RenderTargets->ColorImages[Idx]
+											     ->CreateImageView(ColorDesc.ImageViewType);
+			
+			auto& ResolveDesc = Layout->ResolveDescs[Idx];
+			Framebuffer.ResolveImageViews[Idx] = RenderTargets->ResolveImages[Idx]
+												 ->CreateImageView(ResolveDesc.ImageViewType);
+		}
+
+		if (Layout->HasDepthImage())
+		{
+			auto& DepthDesc = Layout->DepthDesc.value();
+			Framebuffer.DepthStencilImageView = RenderTargets->DepthImage->CreateImageView(DepthDesc.ImageViewType);
+		}
+
+		if (Layout->StencilDesc.has_value())
+		{
+			VE_WIP;
+			/*DepthStencilImage = GVulkan->Allocator->CreateImage(EImageType::Image2D,
+																_OwnerLayout->GetExtent(),
+																EImageAspect::Depth | EImageAspect::Stencil,
+																EImageUsage::DepthStencilAttachment);*/
+		}
+
+		Array<VkImageView> FrambufferImageViews;
+		for (auto& ColorImageView   : Framebuffer.ColorImageViews)	 { FrambufferImageViews.emplace_back(ColorImageView->GetHandle()); }
+		for (auto& ResolveImageView : Framebuffer.ResolveImageViews) { FrambufferImageViews.emplace_back(ResolveImageView->GetHandle()); }
+		if (Framebuffer.DepthStencilImageView) { FrambufferImageViews.emplace_back(Framebuffer.DepthStencilImageView->GetHandle()); }
+
+		VkFramebufferCreateInfo FramebufferCreateInfo
+		{
+			.sType			 = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+			.pNext			 = nullptr,
+			.flags			 = 0x0,
+			.renderPass		 = Handle,
+			.attachmentCount = UInt32(FrambufferImageViews.size()),
+			.pAttachments	 = FrambufferImageViews.data(),
+			.width  = Layout->GetRenderAreaExtent3D().width,
+			.height = Layout->GetRenderAreaExtent3D().height,
+			.layers = Layout->GetRenderAreaExtent3D().depth,
+		};
+
+		if (vkCreateFramebuffer(
+			GVulkan->Device->GetHandle(),
+			&FramebufferCreateInfo,
+			GVulkan->AllocationCallbacks,
+			&Framebuffer.Handle) != VK_SUCCESS)
+		{ throw SRuntimeError("Failed to create Vulkan Framebuffer!"); }
 	}
 
 	void FVulkanRenderPass::
@@ -180,8 +250,6 @@ export namespace VE { namespace Runtime
 	{
 		for (auto& Subpass : Subpasses)
 		{ Subpass.Pipeline.Destroy(); }
-		
-		Framebuffer.reset();
 
 		vkDestroyRenderPass(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;

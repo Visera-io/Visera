@@ -11,7 +11,7 @@ export import :PipelineLayout;
 export import :RenderPass;
 export import :RenderPassLayout;
 export import :RenderPipelineLayout;
-export import :RenderPassResource;
+export import :RenderTargets;
 export import :Synchronization;
 export import :Common;
 export import :Loader;

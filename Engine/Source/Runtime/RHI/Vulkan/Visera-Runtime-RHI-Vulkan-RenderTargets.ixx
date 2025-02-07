@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.RHI.Vulkan:RenderPassResource;
+export module Visera.Runtime.RHI.Vulkan:RenderTargets;
 import :Common;
 import :Allocator;
 
@@ -11,18 +11,18 @@ export namespace VE { namespace Runtime
 	class FVulkanRenderPass;
 	class FVulkanFramebuffer;
 
-	class FVulkanRenderPassResource
+	class FVulkanRenderTargets
 	{
 		friend class FVulkanRenderPass;
 		friend class FVulkanFramebuffer;
 	public:
-		Bool HasDepthAttachment() const { return DepthAttachment != nullptr; }
+		Bool HasDepthImage() const { return DepthImage != nullptr; }
 
 	private:
-		Array<UniquePtr<FVulkanImage>> ColorAttachments;
-		Array<UniquePtr<FVulkanImage>> ResolveAttachments;
+		Array<SharedPtr<FVulkanImage>> ColorImages;
+		Array<SharedPtr<FVulkanImage>> ResolveImages;
 		
-		UniquePtr<FVulkanImage>		   DepthAttachment;
+		SharedPtr<FVulkanImage>		   DepthImage;
 	};
 
 

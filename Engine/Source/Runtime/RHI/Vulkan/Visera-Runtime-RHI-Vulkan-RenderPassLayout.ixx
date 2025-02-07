@@ -2,7 +2,7 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:RenderPassLayout;
 import :Common;
-import :RenderPassResource;
+import :RenderTargets;
 
 import Visera.Core.Signal;
 
@@ -36,9 +36,9 @@ export namespace VE { namespace Runtime
 		};
 
 		auto AddColorAttachment(FAttachmentDescription _ColorDesc) -> FVulkanRenderPassLayout&;
-		auto GetColorAttachmentCount() const -> UInt8 { return ColorAttachmentDescriptions.size(); }
+		auto GetColorAttachmentCount() const -> UInt8 { return ColorDescs.size(); }
 
-		Bool HasDepthImage()				const { return DepthAttachmentDescription.has_value(); }
+		Bool HasDepthImage()				const { return DepthDesc.has_value(); }
 
 		auto GetRenderAreaOffset()			const -> const FVulkanOffset&	{ return RenderAreaOffset; }
 		auto GetRenderAreaOffset2D()		const -> const VkOffset2D&		{ return GetRenderAreaOffset().Offset2D; }
@@ -52,12 +52,12 @@ export namespace VE { namespace Runtime
 
 	private:
 		// (UE5) [[0]ColorImage, [1]ColorImage, ..., [N]ColorImage, [(Auto)N+1]ResolvedImage, ..., [(Auto)N+N]ResolvedImage, [(Auto)Len-1]DepthImage, [(Auto)Len]ShadingRateImage].
-		Array<FAttachmentDescription>   ColorAttachmentDescriptions;
-		Array<FAttachmentDescription>   ResolveAttachmentDescriptions;
-		Optional<FAttachmentDescription>DepthAttachmentDescription;
-		Optional<FAttachmentDescription>ShadingRateAttachmentDescription;
 		//Segment<FAttachmentDescription, 2 * MaxSimultaneousRenderTargets + 2> AttachmentDescriptions;
-		Optional<FStencilDescription>	StencilDescription;
+		Array<FAttachmentDescription>   ColorDescs;
+		Array<FAttachmentDescription>   ResolveDescs;
+		Optional<FAttachmentDescription>DepthDesc;
+		Optional<FAttachmentDescription>ShadingRateDesc;
+		Optional<FStencilDescription>	StencilDesc;
 	
 		FVulkanOffset					RenderAreaOffset;
 		FVulkanExtent					RenderAreaExtent;
@@ -67,7 +67,7 @@ export namespace VE { namespace Runtime
 	FVulkanRenderPassLayout::
 	FVulkanRenderPassLayout()
 	{
-		DepthAttachmentDescription = FAttachmentDescription
+		DepthDesc = FAttachmentDescription
 		{
 			.ImageViewType	= EImageViewType::Image2D,
 			.LoadOp			= EAttachmentIO::I_Whatever,
@@ -86,8 +86,8 @@ export namespace VE { namespace Runtime
 	FVulkanRenderPassLayout& FVulkanRenderPassLayout::
 	AddColorAttachment(FAttachmentDescription _ColorDesc)
 	{
-		ColorAttachmentDescriptions.emplace_back(std::move(_ColorDesc));
-		ResolveAttachmentDescriptions.emplace_back(FAttachmentDescription
+		ColorDescs.emplace_back(std::move(_ColorDesc));
+		ResolveDescs.emplace_back(FAttachmentDescription
 			{
 				.ImageViewType	= EImageViewType::Image2D,
 				.LoadOp			= EAttachmentIO::I_Whatever,
