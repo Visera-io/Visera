@@ -155,8 +155,8 @@ export namespace VE { namespace Runtime
 			.imageColorSpace		= ImageColorSpace,
 			.imageExtent			= ImageExtent,
 			.imageArrayLayers		= 1,
-			.imageUsage				= EImageUsage::ColorAttachment |
-									  EImageUsage::TransferDestination,
+			.imageUsage				= AutoCast( EImageUsage::ColorAttachment |
+												EImageUsage::TransferDestination),
 			.imageSharingMode		= GVulkan->GPU->IsDiscreteGPU()? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT,
 			.queueFamilyIndexCount	= GVulkan->GPU->IsDiscreteGPU()? 0U : 2U,
 			.pQueueFamilyIndices	= GVulkan->GPU->IsDiscreteGPU()? nullptr : QueuefamilyIndices.data(),

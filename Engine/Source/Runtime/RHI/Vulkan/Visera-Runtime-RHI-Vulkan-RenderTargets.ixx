@@ -18,11 +18,48 @@ export namespace VE { namespace Runtime
 	public:
 		Bool HasDepthImage() const { return DepthImage != nullptr; }
 
+		FVulkanRenderTargets() = delete;
+		FVulkanRenderTargets(const Array<SharedPtr<FVulkanImage>>& _ColorImages, SharedPtr<FVulkanImage> _DepthImage = nullptr);
+
 	private:
-		Array<UniquePtr<FVulkanImage>>	ColorImages;
-		Array<UniquePtr<FVulkanImage>>	ResolveImages;
-		UniquePtr<FVulkanImage>			DepthImage;
+		Array<SharedPtr<FVulkanImage>>	ColorImages;
+		Array<SharedPtr<FVulkanImage>>	ResolveImages;
+		SharedPtr<FVulkanImage>			DepthImage;
 	};
 
+	FVulkanRenderTargets::
+	FVulkanRenderTargets(const Array<SharedPtr<FVulkanImage>>&	_ColorImages,
+						 SharedPtr<FVulkanImage>				_DepthImage/* = nullptr*/)
+		:ColorImages {_ColorImages},
+		 DepthImage  {_DepthImage}
+	{
+		if (ColorImages.empty())
+		{ throw SRuntimeError("Failed to create Vulkan Render Targets! -- No Color Images."); }
+
+		// Create Resolve Images for each Color Image
+		ResolveImages.resize(ColorImages.size());
+		for (UInt8 Idx = 0; Idx < ColorImages.size(); ++Idx)
+		{
+			ResolveImages[Idx] = GVulkan->Allocator->CreateImage(
+				ColorImages[Idx]->GetType(),
+				ColorImages[Idx]->GetExtent(),
+				ColorImages[Idx]->GetFormat(),
+				EImageAspect::Color,
+				EImageUsage::ColorAttachment | EImageUsage::InputAttachment
+			);
+		}
+
+		// Create the Depth Image if not provided
+		if (DepthImage == nullptr)
+		{
+			DepthImage = GVulkan->Allocator->CreateImage(
+				EImageType::Image2D,
+				ColorImages.front()->GetExtent(),
+				EFormat::S32_Float_Depth32,
+				EImageAspect::Depth,
+				EImageUsage::DepthStencilAttachment
+			);
+		}
+	}
 
 } } // namespace VE::Runtime
