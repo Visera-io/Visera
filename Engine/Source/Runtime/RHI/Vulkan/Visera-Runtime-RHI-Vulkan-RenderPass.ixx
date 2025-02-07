@@ -36,14 +36,12 @@ export namespace VE { namespace Runtime
 		};
 		struct FFramebuffer
 		{
-			VkFramebuffer						 Handle{ VK_NULL_HANDLE };
-			SharedPtr<FVulkanRenderTargets>		 RenderTargets;
-			Array<SharedPtr<FVulkanImageView>>	 ColorImageViews;
-			Array<SharedPtr<FVulkanImageView>>	 ResolveImageViews;
-			SharedPtr<FVulkanImageView>			 DepthStencilImageView;
-			//[TODO]: Shading Rate Image
-			VkAttachmentDescriptionStencilLayout StencilDescription;
-			~FFramebuffer(){ vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks); Handle = VK_NULL_HANDLE;}
+			VkFramebuffer					Handle{ VK_NULL_HANDLE };
+			SharedPtr<FVulkanRenderTargets>	RenderTargets;
+			Array<VkImageView>				RenderTargetViews;
+			//[TODO]: Shading Rate Image & VkAttachmentDescriptionStencilLayout StencilDescription;
+			Bool HasDepthImage() const { return RenderTargets->HasDepthImage(); }
+			~FFramebuffer();
 		};
 
 		auto GetHandle() const -> const VkRenderPass { return Handle; }
@@ -74,9 +72,9 @@ export namespace VE { namespace Runtime
 	void FVulkanRenderPass::
 	Create()
 	{
-		VE_ASSERT(Layout->GetColorAttachmentCount() <= RenderTargets->ColorImages.size());
+		VE_ASSERT(Layout->GetColorAttachmentCount() <= Framebuffer.RenderTargets->ColorImages.size());
 		VE_ASSERT(!Layout->HasDepthImage() ||
-				 ( Layout->HasDepthImage() && RenderTargets->HasDepthImage()));
+				 ( Layout->HasDepthImage() && Framebuffer.RenderTargets->HasDepthImage()));
 
 		// Create Subpasses
 		for (auto& Subpass : Subpasses)
@@ -122,7 +120,7 @@ export namespace VE { namespace Runtime
 		for (UInt8 Idx = 0; Idx < Layout->GetColorAttachmentCount(); ++Idx)
 		{
 			auto& ColorDesc    = Layout->ColorDescs[Idx];
-			auto& RenderTarget = RenderTargets->ColorImages[Idx];
+			auto& RenderTarget = Framebuffer.RenderTargets->ColorImages[Idx];
 			// Color Attachments
 			AttachmentDescriptions[Idx] = VkAttachmentDescription
 			{ 
@@ -138,7 +136,7 @@ export namespace VE { namespace Runtime
 			};
 			// Resolve Attachments
 			auto& ResolveDesc   = Layout->ResolveDescs[Idx];
-			auto& ResolveTarget = RenderTargets->ResolveImages[Idx];
+			auto& ResolveTarget = Framebuffer.RenderTargets->ResolveImages[Idx];
 			AttachmentDescriptions[Layout->GetColorAttachmentCount() + Idx] = VkAttachmentDescription
 			{ 
 				.flags			= 0x0,
@@ -157,7 +155,7 @@ export namespace VE { namespace Runtime
 		if (Layout->HasDepthImage())
 		{
 			auto& DepthDesc   = Layout->DepthDesc.value();
-			auto& DepthTarget = RenderTargets->DepthImage;
+			auto& DepthTarget = Framebuffer.RenderTargets->DepthImage;
 			AttachmentDescriptions.back() = VkAttachmentDescription
 			{
 				.flags			= 0x0,
@@ -190,24 +188,31 @@ export namespace VE { namespace Runtime
 		{ throw SRuntimeError("Failed to create Vulkan RenderPass!"); }
 
 		// Create Framebuffer
-		Framebuffer.ColorImageViews.resize(Layout->GetColorAttachmentCount());
-		Framebuffer.ResolveImageViews.resize(Layout->GetColorAttachmentCount());
+		Framebuffer.RenderTargetViews.resize(Layout->GetTotalAttachmentCount());
+		VE_ASSERT(Framebuffer.RenderTargetViews.size() % 1 == 1); // Currently, Visera's each renderpass must have 2N + 1 attachments.
 		
-		for (UInt32 Idx = 0; Idx < Layout->GetColorAttachmentCount(); Idx++)
+		for (UInt8 Idx = 0; Idx < Layout->GetColorAttachmentCount(); Idx++)
 		{
 			auto& ColorDesc = Layout->ColorDescs[Idx];
-			Framebuffer.ColorImageViews[Idx]   = RenderTargets->ColorImages[Idx]
-											     ->CreateImageView(ColorDesc.ImageViewType);
+			auto& ColorView = Framebuffer.RenderTargetViews[Idx];
+			ColorView		= Framebuffer.RenderTargets->ColorImages[Idx]
+							  ->CreateImageView(ColorDesc.ImageViewType)
+							  ->Release();
 			
 			auto& ResolveDesc = Layout->ResolveDescs[Idx];
-			Framebuffer.ResolveImageViews[Idx] = RenderTargets->ResolveImages[Idx]
-												 ->CreateImageView(ResolveDesc.ImageViewType);
+			auto& ResolveView = Framebuffer.RenderTargetViews[Layout->GetColorAttachmentCount() + Idx];
+			ResolveView		  = Framebuffer.RenderTargets->ResolveImages[Idx]
+								->CreateImageView(ResolveDesc.ImageViewType)
+								->Release();
 		}
 
 		if (Layout->HasDepthImage())
 		{
 			auto& DepthDesc = Layout->DepthDesc.value();
-			Framebuffer.DepthStencilImageView = RenderTargets->DepthImage->CreateImageView(DepthDesc.ImageViewType);
+			auto& DepthView = Framebuffer.RenderTargetViews.back();
+			DepthView = Framebuffer.RenderTargets->DepthImage
+						->CreateImageView(DepthDesc.ImageViewType)
+						->Release();
 		}
 
 		if (Layout->StencilDesc.has_value())
@@ -219,19 +224,14 @@ export namespace VE { namespace Runtime
 																EImageUsage::DepthStencilAttachment);*/
 		}
 
-		Array<VkImageView> FrambufferImageViews;
-		for (auto& ColorImageView   : Framebuffer.ColorImageViews)	 { FrambufferImageViews.emplace_back(ColorImageView->GetHandle()); }
-		for (auto& ResolveImageView : Framebuffer.ResolveImageViews) { FrambufferImageViews.emplace_back(ResolveImageView->GetHandle()); }
-		if (Framebuffer.DepthStencilImageView) { FrambufferImageViews.emplace_back(Framebuffer.DepthStencilImageView->GetHandle()); }
-
 		VkFramebufferCreateInfo FramebufferCreateInfo
 		{
 			.sType			 = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
 			.pNext			 = nullptr,
 			.flags			 = 0x0,
 			.renderPass		 = Handle,
-			.attachmentCount = UInt32(FrambufferImageViews.size()),
-			.pAttachments	 = FrambufferImageViews.data(),
+			.attachmentCount = UInt32(Framebuffer.RenderTargetViews.size()),
+			.pAttachments	 = Framebuffer.RenderTargetViews.data(),
 			.width  = Layout->GetRenderAreaExtent3D().width,
 			.height = Layout->GetRenderAreaExtent3D().height,
 			.layers = Layout->GetRenderAreaExtent3D().depth,
@@ -254,5 +254,18 @@ export namespace VE { namespace Runtime
 		vkDestroyRenderPass(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}
+
+	FVulkanRenderPass::FFramebuffer::
+	~FFramebuffer()
+	{ 
+		for (auto& RenderTargetView : RenderTargetViews)
+		{
+			VE_ASSERT(RenderTargetView != VK_NULL_HANDLE);
+			vkDestroyImageView(GVulkan->Device->GetHandle(), RenderTargetView, GVulkan->AllocationCallbacks);
+		}
+		vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
+		Handle = VK_NULL_HANDLE;
+	}
+
 
 } } // namespace VE::Runtime

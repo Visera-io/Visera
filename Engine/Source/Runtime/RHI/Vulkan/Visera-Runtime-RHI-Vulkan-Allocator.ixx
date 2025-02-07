@@ -21,7 +21,7 @@ export namespace VE { namespace Runtime
 		auto CreateBuffer(VkDeviceSize _Size,
 						  EBufferUsage _Usages,
 						  ESharingMode _SharingMode = ESharingMode::Exclusive,
-						  EMemoryUsage _Location    = EMemoryUsage::Auto) const -> FVulkanBuffer;
+						  EMemoryUsage _Location    = EMemoryUsage::Auto) const -> SharedPtr<FVulkanBuffer>;
 		auto CreateImage(EImageType		_Type,
 						FVulkanExtent	_Extent,
 						EFormat			_Format,
@@ -32,7 +32,7 @@ export namespace VE { namespace Runtime
 						UInt8			_MipLevels = 1,
 						UInt8			_ArrayLayers = 1,
 						ESharingMode	_SharingMode = ESharingMode::Exclusive,
-						EMemoryUsage	_Location = EMemoryUsage::Auto) const -> FVulkanImage;
+						EMemoryUsage	_Location = EMemoryUsage::Auto) const -> SharedPtr<FVulkanImage>;
 
 		auto GetHandle() const -> VmaAllocator { return Handle; }
 		operator VmaAllocator() const { return Handle; }
@@ -72,42 +72,41 @@ export namespace VE { namespace Runtime
 
 	class FVulkanBuffer
 	{
+		VE_NOT_COPYABLE(FVulkanBuffer);
 		friend class FVulkanAllocator;
 	public:
-		auto Release() -> VkBuffer { VkBuffer RawHandle = Handle; Handle = VK_NULL_HANDLE; return RawHandle; }
+		auto GetSize()		const	-> VkDeviceSize { return Allocation->GetSize(); }
+		auto GetDetails()	const	-> VmaAllocationInfo { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
+		auto GetHandle()			-> VkBuffer { return Handle; }
+		Bool IsReleased()	const { return Handle == VK_NULL_HANDLE && Allocation == VK_NULL_HANDLE; }
 
-		auto GetSize() const -> VkDeviceSize { return Allocation->GetSize(); }
-		auto GetDetails() const -> VmaAllocationInfo { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
-		auto GetHandle() -> VkBuffer { return Handle; }
-
-		Bool IsReleased() const { return Handle == VK_NULL_HANDLE; }
-
+		VE_API Free(VkBuffer* _pHandle, VmaAllocation* _pAllocation) { VE_ASSERT(_pHandle && _pAllocation); vmaDestroyBuffer(GVulkan->Allocator->GetHandle(), *_pHandle, *_pAllocation); *_pHandle = VK_NULL_HANDLE;  *_pAllocation = VK_NULL_HANDLE; }
+		auto   Release() -> ResultPackage<VkBuffer, VmaAllocation> { VkBuffer RawHandle = Handle; VmaAllocation RawAlloc = Allocation; Handle = VK_NULL_HANDLE; Allocation = VK_NULL_HANDLE; return { RawHandle, RawAlloc }; }
 	private:
 		VkBuffer		Handle{ VK_NULL_HANDLE };
 		VmaAllocation	Allocation;
 
 	public:	
 		FVulkanBuffer() = default;
-		FVulkanBuffer(const FVulkanBuffer& _Another)			= default;
 		FVulkanBuffer(FVulkanBuffer&& _Another)					= default;
-		FVulkanBuffer& operator=(const FVulkanBuffer& _Another) = default;
 		FVulkanBuffer& operator=(FVulkanBuffer&& _Another)		= default;
 		~FVulkanBuffer() noexcept;
 	};
 		
 	class FVulkanImageView
 	{
+		VE_NOT_COPYABLE(FVulkanImageView);
 		friend class FVulkanImage;
 	public:
-		auto Release()			-> VkImageView { VkImageView RawHandle = Handle; Handle = VK_NULL_HANDLE; return RawHandle; }
-
+		
 		auto GetImage()	  const -> WeakPtr<const FVulkanImage>	{ return Image; }
 		auto GetHandle()		-> VkImageView			{ return Handle;}
 
 		Bool IsReleased() const { return Handle == VK_NULL_HANDLE; }
 		Bool IsExpired()  const	{ return Image.expired(); }
 
-
+		VE_API Free(VkImageView* _pHandle) { VE_ASSERT(_pHandle); if (*_pHandle) { vkDestroyImageView(GVulkan->Device->GetHandle(), *_pHandle, GVulkan->AllocationCallbacks); *_pHandle = VK_NULL_HANDLE; } }
+		auto   Release() -> VkImageView { VkImageView RawHandle = Handle; Handle = VK_NULL_HANDLE; return RawHandle; }
 	private:
 		VkImageView					Handle{ VK_NULL_HANDLE };
 		WeakPtr<const FVulkanImage>	Image;
@@ -120,15 +119,14 @@ export namespace VE { namespace Runtime
 	public:
 		FVulkanImageView() = delete;
 		FVulkanImageView(SharedPtr<const FVulkanImage> _SourceImage) : Image{ _SourceImage } {}
-		FVulkanImageView(const FVulkanImageView& _Another)				= default;
 		FVulkanImageView(FVulkanImageView&& _Another)					= default;
-		FVulkanImageView& operator=(const FVulkanImageView& _Another)	= default;
 		FVulkanImageView& operator=(FVulkanImageView&& _Another)		= default;
-		~FVulkanImageView() { if (!IsReleased()) { vkDestroyImageView(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks); Handle = VK_NULL_HANDLE; } }
+		~FVulkanImageView() { if (!IsReleased()) { Free(&Handle); } }
 	};
 
 	class FVulkanImage : public std::enable_shared_from_this<FVulkanImage>
 	{
+		VE_NOT_COPYABLE(FVulkanImage);
 		friend class FVulkanAllocator;
 	public:
 		auto CreateImageView(
@@ -137,9 +135,7 @@ export namespace VE { namespace Runtime
 			EImageAspect		_Aspect = EImageAspect::Undefined,
 			Pair<UInt8, UInt8> _MipmapLevelRange = {0,0},
 			Pair<UInt8, UInt8> _ArrayLayerRange  = {0,0},
-			const FVulkanComponentMapping& _ComponentMapping = {}) const -> FVulkanImageView;
-
-		auto Release() -> VkImage { VkImage RawHandle = Handle; Handle = VK_NULL_HANDLE; return RawHandle; }
+			const FVulkanComponentMapping& _ComponentMapping = {}) const -> SharedPtr<FVulkanImageView>;
 
 		auto GetExtent()		const -> const FVulkanExtent&	{ return Extent; }
 		auto GetSize()			const -> VkDeviceSize			{ return Allocation->GetSize(); }
@@ -153,8 +149,10 @@ export namespace VE { namespace Runtime
 		auto GetDetails()		const -> VmaAllocationInfo  { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
 		auto GetHandle()			  -> VkImage { return Handle; }
 
-		Bool IsReleased() const { return Handle == VK_NULL_HANDLE; }
-
+		Bool IsReleased() const { return Handle == VK_NULL_HANDLE && Allocation == VK_NULL_HANDLE; }
+		
+		VE_API Free(VkImage* _pHandle, VmaAllocation* _pAllocation) { VE_ASSERT(_pHandle && _pAllocation); vmaDestroyImage(GVulkan->Allocator->GetHandle(), *_pHandle, *_pAllocation); *_pHandle = VK_NULL_HANDLE;  *_pAllocation = VK_NULL_HANDLE; }
+		auto   Release() -> ResultPackage<VkImage, VmaAllocation> { VkImage RawHandle = Handle; VmaAllocation RawAlloc = Allocation; Handle = VK_NULL_HANDLE; Allocation = VK_NULL_HANDLE; return { RawHandle, RawAlloc }; }
 	protected:
 		VkImage			Handle;
 		EImageType		Type;
@@ -170,14 +168,12 @@ export namespace VE { namespace Runtime
 		VmaAllocation	Allocation;
 	public:	
 		FVulkanImage()  = default;
-		FVulkanImage(const FVulkanImage& _Another)				= default;
 		FVulkanImage(FVulkanImage&& _Another)					= default;
-		FVulkanImage& operator=(const FVulkanImage& _Another)	= default;
 		FVulkanImage& operator=(FVulkanImage&& _Another)		= default;
 		~FVulkanImage();
 	};
 
-	FVulkanImage FVulkanAllocator::
+	SharedPtr<FVulkanImage> FVulkanAllocator::
 	CreateImage(EImageType		_Type,
 				FVulkanExtent	_Extent,
 				EFormat			_Format,
@@ -190,7 +186,7 @@ export namespace VE { namespace Runtime
 				ESharingMode	_SharingMode/* = ESharingMode::Exclusive*/,
 				EMemoryUsage	_Location	/*= EMemoryUsage::Auto*/) const
 	{
-		FVulkanImage NewImage{};
+		auto NewImage = CreateSharedPtr<FVulkanImage>();
 		
 		VkImageCreateInfo CreateInfo
 		{
@@ -221,8 +217,8 @@ export namespace VE { namespace Runtime
 			Handle,
 			&CreateInfo,
 			&AllocationCreateInfo,
-			&NewImage.Handle,
-			&NewImage.Allocation,
+			&NewImage->Handle,
+			&NewImage->Allocation,
 			nullptr) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan Image!"); }
 
@@ -233,13 +229,10 @@ export namespace VE { namespace Runtime
 	~FVulkanImage()
 	{
 		if (!IsReleased())
-		{
-			vmaDestroyImage(GVulkan->Allocator->GetHandle(), Handle, Allocation);
-			Handle = VK_NULL_HANDLE;
-		}
+		{ Free(&Handle, &Allocation); }
 	}
 	
-	FVulkanImageView FVulkanImage::
+	SharedPtr<FVulkanImageView> FVulkanImage::
 	CreateImageView(EImageViewType	   _Type,
 					EFormat			   _Format/* = EFormat::None*/,
 					EImageAspect	   _Aspect/* = EImageAspect::Undefined*/,
@@ -250,19 +243,19 @@ export namespace VE { namespace Runtime
 		//[TODO]: Check more ImageView validity.
 		VE_ASSERT(IsOrderedPair(_MipmapLevelRange) && IsOrderedPair(_ArrayLayerRange));
 
-		FVulkanImageView NewImageView{ shared_from_this() };
-		NewImageView.TypeView   = _Type;
-		NewImageView.FormatView = (_Format == EFormat::None)? this->Format : _Format;
-		NewImageView.AspectView = (_Aspect == EImageAspect::Undefined)? this->Aspects : _Aspect;
-		NewImageView.MipmapLevelRange = std::move(_MipmapLevelRange);
-		NewImageView.ArrayLayerRange  = std::move(_ArrayLayerRange);
+		auto NewImageView = CreateSharedPtr<FVulkanImageView>(shared_from_this());
+		NewImageView->TypeView   = _Type;
+		NewImageView->FormatView = (_Format == EFormat::None)? this->Format : _Format;
+		NewImageView->AspectView = (_Aspect == EImageAspect::Undefined)? this->Aspects : _Aspect;
+		NewImageView->MipmapLevelRange = std::move(_MipmapLevelRange);
+		NewImageView->ArrayLayerRange  = std::move(_ArrayLayerRange);
 		
 		VkImageViewCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 			.image = this->Handle,
-			.viewType = AutoCast(NewImageView.TypeView),
-			.format   = AutoCast(NewImageView.FormatView),
+			.viewType = AutoCast(NewImageView->TypeView),
+			.format   = AutoCast(NewImageView->FormatView),
 			.components
 			{
 				 .r = AutoCast(_ComponentMapping.RMapping),
@@ -272,24 +265,24 @@ export namespace VE { namespace Runtime
 			},
 			.subresourceRange
 			{
-				.aspectMask		= AutoCast(NewImageView.AspectView),
-				.baseMipLevel	= NewImageView.MipmapLevelRange.first,
-				.levelCount		= UInt32(NewImageView.MipmapLevelRange.second - NewImageView.MipmapLevelRange.first) + 1,
-				.baseArrayLayer = NewImageView.ArrayLayerRange.first,
-				.layerCount     = UInt32(NewImageView.ArrayLayerRange.second - NewImageView.ArrayLayerRange.first) + 1,
+				.aspectMask		= AutoCast(NewImageView->AspectView),
+				.baseMipLevel	= NewImageView->MipmapLevelRange.first,
+				.levelCount		= UInt32(NewImageView->MipmapLevelRange.second - NewImageView->MipmapLevelRange.first) + 1,
+				.baseArrayLayer = NewImageView->ArrayLayerRange.first,
+				.layerCount     = UInt32(NewImageView->ArrayLayerRange.second - NewImageView->ArrayLayerRange.first) + 1,
 			}
 		};
 		if (vkCreateImageView(
 			GVulkan->Device->GetHandle(),
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
-			&(NewImageView.Handle)) != VK_SUCCESS)
+			&(NewImageView->Handle)) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan Image View!"); }
 
 		return NewImageView;
 	}
 
-	FVulkanBuffer FVulkanAllocator::
+	SharedPtr<FVulkanBuffer> FVulkanAllocator::
 	CreateBuffer(VkDeviceSize _Size,
 				 EBufferUsage _Usages,
 				 ESharingMode _SharingMode/* = ESharingMode::Exclusive*/,
@@ -297,7 +290,7 @@ export namespace VE { namespace Runtime
 	{
 		VE_ASSERT(_Size > 0);
 
-		FVulkanBuffer NewBuffer = {};
+		auto NewBuffer = CreateSharedPtr<FVulkanBuffer>();
 		VkBufferCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -320,8 +313,8 @@ export namespace VE { namespace Runtime
 			Handle,
 			&CreateInfo,
 			&AllocationCreateInfo,
-			&NewBuffer.Handle,
-			&NewBuffer.Allocation,
+			&NewBuffer->Handle,
+			&NewBuffer->Allocation,
 			nullptr) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create VMA FVulkanBuffer!"); }
 
@@ -332,10 +325,7 @@ export namespace VE { namespace Runtime
 	~FVulkanBuffer() noexcept
 	{
 		if (!IsReleased())
-		{
-			vmaDestroyBuffer(GVulkan->Allocator->GetHandle(), Handle, Allocation);
-			Handle = VK_NULL_HANDLE;
-		}
+		{ Free(&Handle, &Allocation); }
 	}
 
 } } // namespace VE::Runtime

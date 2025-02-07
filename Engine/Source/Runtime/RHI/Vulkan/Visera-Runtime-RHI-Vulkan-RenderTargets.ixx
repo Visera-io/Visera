@@ -19,10 +19,9 @@ export namespace VE { namespace Runtime
 		Bool HasDepthImage() const { return DepthImage != nullptr; }
 
 	private:
-		Array<SharedPtr<FVulkanImage>> ColorImages;
-		Array<SharedPtr<FVulkanImage>> ResolveImages;
-		
-		SharedPtr<FVulkanImage>		   DepthImage;
+		Array<UniquePtr<FVulkanImage>>	ColorImages;
+		Array<UniquePtr<FVulkanImage>>	ResolveImages;
+		UniquePtr<FVulkanImage>			DepthImage;
 	};
 
 

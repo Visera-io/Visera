@@ -17,7 +17,6 @@ export import :Common;
 export import :Loader;
 export import :Allocator;
 export import :PipelineCache;
-export import :Framebuffer;
 export import :Instance;
 export import :Device;
 export import :GPU;

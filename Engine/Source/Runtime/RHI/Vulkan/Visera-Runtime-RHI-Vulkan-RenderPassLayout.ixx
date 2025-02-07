@@ -37,6 +37,7 @@ export namespace VE { namespace Runtime
 
 		auto AddColorAttachment(FAttachmentDescription _ColorDesc) -> FVulkanRenderPassLayout&;
 		auto GetColorAttachmentCount() const -> UInt8 { return ColorDescs.size(); }
+		auto GetTotalAttachmentCount() const -> UInt8 { return ColorDescs.size() + ResolveDescs.size() + (DepthDesc.has_value()? 1 : 0); }
 
 		Bool HasDepthImage()				const { return DepthDesc.has_value(); }
 
@@ -52,7 +53,6 @@ export namespace VE { namespace Runtime
 
 	private:
 		// (UE5) [[0]ColorImage, [1]ColorImage, ..., [N]ColorImage, [(Auto)N+1]ResolvedImage, ..., [(Auto)N+N]ResolvedImage, [(Auto)Len-1]DepthImage, [(Auto)Len]ShadingRateImage].
-		//Segment<FAttachmentDescription, 2 * MaxSimultaneousRenderTargets + 2> AttachmentDescriptions;
 		Array<FAttachmentDescription>   ColorDescs;
 		Array<FAttachmentDescription>   ResolveDescs;
 		Optional<FAttachmentDescription>DepthDesc;
