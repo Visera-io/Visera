@@ -232,9 +232,9 @@ export namespace VE { namespace Runtime
 			.renderPass		 = Handle,
 			.attachmentCount = UInt32(Framebuffer.RenderTargetViews.size()),
 			.pAttachments	 = Framebuffer.RenderTargetViews.data(),
-			.width  = Layout->GetRenderAreaExtent3D().width,
-			.height = Layout->GetRenderAreaExtent3D().height,
-			.layers = Layout->GetRenderAreaExtent3D().depth,
+			.width  = Layout->GetRenderAreaExtent().width,
+			.height = Layout->GetRenderAreaExtent().height,
+			.layers = Layout->GetRenderAreaExtent().depth,
 		};
 
 		if (vkCreateFramebuffer(

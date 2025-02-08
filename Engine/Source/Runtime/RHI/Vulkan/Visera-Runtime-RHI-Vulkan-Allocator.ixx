@@ -23,16 +23,16 @@ export namespace VE { namespace Runtime
 						  ESharingMode _SharingMode = ESharingMode::Exclusive,
 						  EMemoryUsage _Location    = EMemoryUsage::Auto) const -> SharedPtr<FVulkanBuffer>;
 		auto CreateImage(EImageType		_Type,
-						FVulkanExtent	_Extent,
+						VkExtent3D		_Extent,
 						EFormat			_Format,
 						EImageAspect	_Aspects,
 						EImageUsage		_Usages,
-						EImageTiling	_Tiling = EImageTiling::Optimal,
-						ESampleRate     _SampleRate = ESampleRate::X1,
-						UInt8			_MipLevels = 1,
-						UInt8			_ArrayLayers = 1,
-						ESharingMode	_SharingMode = ESharingMode::Exclusive,
-						EMemoryUsage	_Location = EMemoryUsage::Auto) const -> SharedPtr<FVulkanImage>;
+						EImageTiling	_Tiling		  = EImageTiling::Optimal,
+						ESampleRate     _SampleRate	  = ESampleRate::X1,
+						UInt8			_MipmapLevels = 1,
+						UInt8			_ArrayLayers  = 1,
+						ESharingMode	_SharingMode  = ESharingMode::Exclusive,
+						EMemoryUsage	_Location	  = EMemoryUsage::Auto) const -> SharedPtr<FVulkanImage>;
 
 		auto GetHandle() const -> VmaAllocator { return Handle; }
 		operator VmaAllocator() const { return Handle; }
@@ -137,7 +137,7 @@ export namespace VE { namespace Runtime
 			Pair<UInt8, UInt8> _ArrayLayerRange  = {0,0},
 			const FVulkanComponentMapping& _ComponentMapping = {}) const -> SharedPtr<FVulkanImageView>;
 
-		auto GetExtent()		const -> const FVulkanExtent&	{ return Extent; }
+		auto GetExtent()		const -> const FVulkanExtent3D&	{ return Extent; }
 		auto GetSize()			const -> VkDeviceSize			{ return Allocation->GetSize(); }
 		auto GetType()			const -> EImageType				{ return Type; }
 		auto GetFormat()		const -> EFormat				{ return Format; }
@@ -158,7 +158,7 @@ export namespace VE { namespace Runtime
 		VkImage			Handle;
 		EImageType		Type;
 		EFormat			Format;
-		FVulkanExtent	Extent;
+		FVulkanExtent3D	Extent;
 		EImageAspect    Aspects;
 		EImageUsage		Usages;
 		EImageTiling	Tiling;
@@ -168,7 +168,7 @@ export namespace VE { namespace Runtime
 
 		VmaAllocation	Allocation;
 	public:	
-		FVulkanImage()  = default;
+		FVulkanImage() = default;
 		FVulkanImage(FVulkanImage&& _Another)					= default;
 		FVulkanImage& operator=(FVulkanImage&& _Another)		= default;
 		~FVulkanImage();
@@ -176,32 +176,41 @@ export namespace VE { namespace Runtime
 
 	SharedPtr<FVulkanImage> FVulkanAllocator::
 	CreateImage(EImageType		_Type,
-				FVulkanExtent	_Extent,
+				FVulkanExtent3D	_Extent,
 				EFormat			_Format,
 				EImageAspect	_Aspects,
 				EImageUsage		_Usages,
 				EImageTiling	_Tiling		/*= EImageTiling::Optimal*/,
 				ESampleRate     _SampleRate /*= ESampleRate::X1*/,
-				UInt8			_MipLevels	/* = 1*/,
+				UInt8			_MipmapLevels/* = 1*/,
 				UInt8			_ArrayLayers/* = 1*/,
 				ESharingMode	_SharingMode/* = ESharingMode::Exclusive*/,
 				EMemoryUsage	_Location	/*= EMemoryUsage::Auto*/) const
 	{
 		auto NewImage = CreateSharedPtr<FVulkanImage>();
+		NewImage->Type			= _Type;
+		NewImage->Extent		= std::move(_Extent);
+		NewImage->Format		= _Format;
+		NewImage->Aspects		= _Aspects;
+		NewImage->Usages		= _Usages;
+		NewImage->Tiling		= _Tiling;
+		NewImage->SampleRate	= _SampleRate;
+		NewImage->MipmapLevels	= _MipmapLevels;
+		NewImage->ArrayLayers	= _ArrayLayers;
 		
 		VkImageCreateInfo CreateInfo
 		{
 			.sType					= VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 			.pNext					= nullptr,
 			.flags					= 0x0,
-			.imageType				= AutoCast(_Type),
-			.format					= AutoCast(_Format),
-			.extent					= _Extent.Extent3D,
-			.mipLevels				= _MipLevels,
-			.arrayLayers			= _ArrayLayers,
-			.samples				= AutoCast(_SampleRate),
-			.tiling					= AutoCast(_Tiling),
-			.usage					= AutoCast(_Usages),
+			.imageType				= AutoCast(NewImage->Type),
+			.format					= AutoCast(NewImage->Format),
+			.extent					= NewImage->Extent,
+			.mipLevels				= NewImage->MipmapLevels,
+			.arrayLayers			= NewImage->ArrayLayers,
+			.samples				= AutoCast(NewImage->SampleRate),
+			.tiling					= AutoCast(NewImage->Tiling),
+			.usage					= AutoCast(NewImage->Usages),
 			.sharingMode			= AutoCast(_SharingMode),
 			.queueFamilyIndexCount	= 1,
 			.pQueueFamilyIndices	= &(GVulkan->Device->GetQueueFamily(EQueueFamily::Graphics).Index),

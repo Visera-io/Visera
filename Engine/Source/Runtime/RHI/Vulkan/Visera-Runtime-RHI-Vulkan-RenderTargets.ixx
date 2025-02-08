@@ -45,20 +45,9 @@ export namespace VE { namespace Runtime
 				ColorImages[Idx]->GetExtent(),
 				ColorImages[Idx]->GetFormat(),
 				EImageAspect::Color,
-				EImageUsage::ColorAttachment | EImageUsage::InputAttachment
-			);
-		}
-
-		// Create the Depth Image if not provided
-		if (DepthImage == nullptr)
-		{
-			DepthImage = GVulkan->Allocator->CreateImage(
-				EImageType::Image2D,
-				ColorImages.front()->GetExtent(),
-				EFormat::S32_Float_Depth32,
-				EImageAspect::Depth,
-				EImageUsage::DepthStencilAttachment
-			);
+				EImageUsage::ColorAttachment | EImageUsage::InputAttachment,
+				EImageTiling::Optimal,
+				ESampleRate::X1);
 		}
 	}
 

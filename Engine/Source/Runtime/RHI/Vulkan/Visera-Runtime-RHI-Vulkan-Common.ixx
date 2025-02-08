@@ -26,8 +26,11 @@ export namespace VE { namespace Runtime
 	// VE_ENUM_CLASS(EAttachmentIO,		VkAttachmentLoadOp)
 
 	// struct	FVulkanComponentMapping
-	// union	FVulkanExtent
-	// union	FVulkanOffset
+	// using	FClearValue = VkClearValue;
+	// using	FVulkanExtent2D = VkExtent2D;
+	// using	FVulkanExtent3D = VkExtent3D;
+	// using	FVulkanOffset2D = VkOffset2D;
+	// using	FVulkanOffset3D = VkOffset3D;
 	
 	using FClearValue = VkClearValue;
 
@@ -434,16 +437,10 @@ export namespace VE { namespace Runtime
 		EComponentMapping AMapping = EComponentMapping::Identity;
 	};
 
-	union FVulkanExtent
-	{
-		VkExtent2D Extent2D;
-		VkExtent3D Extent3D{ 0, 0, 1 };
-	};
-	
-	union FVulkanOffset
-	{
-		VkOffset2D Offset2D;
-		VkOffset3D Offset3D{ 0, 0, 1 };
-	};
+	using FVulkanExtent2D = VkExtent2D;
+	using FVulkanExtent3D = VkExtent3D;
+
+	using FVulkanOffset2D = VkOffset2D;
+	using FVulkanOffset3D = VkOffset3D;
 
 } } // namespace VE::Runtime

@@ -24,8 +24,13 @@ export namespace VE { namespace Runtime
 		using FFence				= FVulkanFence;
 		using FShader				= FVulkanShader;
 		using FBuffer				= FVulkanBuffer;
+		using FImage				= FVulkanImage;
+		using FExtent2D				= FVulkanExtent2D;
+		using FExtent3D				= FVulkanExtent3D;
 		using FFramebuffer			= FVulkanFramebuffer;
-		using FRenderPipeline		= FVulkanRenderPipeline;
+		using FRenderPass			= FVulkanRenderPass;
+		using FRenderTargets		= FVulkanRenderTargets;
+		using FRenderPipeline		= FVulkanRenderPipeline;	
 		using FPipelineLayout		= FVulkanPipelineLayout;
 
 		using ESampleRate			= ESampleRate;
@@ -37,17 +42,26 @@ export namespace VE { namespace Runtime
 		using EPipelineStage		= EPipelineStage;
 		using EMemoryUsage			= EMemoryUsage;
 		using EBufferUsage			= EBufferUsage;
-		using EImageLayout			= EImageLayout;
 		using EPipelineStage		= EPipelineStage;
 		using EAttachmentIO			= EAttachmentIO;
 		using EDescriptorType		= EDescriptorType;
+		using EImageType			= EImageType;
+		using EImageLayout			= EImageLayout;
+		using EImageUsage			= EImageUsage;
+		using EImageViewType		= EImageViewType;
+		using EImageAspect			= EImageAspect;
+		using EImageTiling			= EImageTiling;
+		using EFormat				= EFormat;
+		using EPresentMode			= EPresentMode;
 
 		using SwapchainRecreateSignal = FVulkanSwapchain::RecreateSignal;
 
 	public:
+		VE_API CreateRenderTargets(const Array<SharedPtr<FImage>>& _ColorImages, SharedPtr<FImage> _DepthImage = nullptr) -> SharedPtr<FRenderTargets> { return CreateSharedPtr<FRenderTargets>(_ColorImages, _DepthImage); }
 		VE_API CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _SetLayout)		-> SharedPtr<FDescriptorSet> { return GlobalDescriptorPool.CreateDescriptorSet(_SetLayout);		}
 		VE_API CreateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)			-> SharedPtr<FCommandBuffer> { return ResetableGraphicsCommandPool.CreateCommandBuffer(_Level); }
 		VE_API CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FCommandBuffer> { return TransientGraphicsCommandPool.CreateCommandBuffer(_Level); }
+		VE_API CreateImage(EImageType _Type, FExtent3D _Extent, EFormat _Format, EImageAspect _Aspects, EImageUsage _Usages, EImageTiling _Tiling = EImageTiling::Optimal,ESampleRate _SampleRate = ESampleRate::X1, UInt8 _MipmapLevels = 1,UInt8 _ArrayLayers = 1, ESharingMode	_SharingMode = ESharingMode::Exclusive,EMemoryUsage	_Location = EMemoryUsage::Auto)->SharedPtr<FImage> { return Vulkan->Allocator.CreateImage(_Type, _Extent, _Format, _Aspects, _Usages, _Tiling, _SampleRate, _MipmapLevels, _ArrayLayers, _SharingMode, _Location); }
 		VE_API CreateBuffer(UInt64 _Size, EBufferUsage _Usages, ESharingMode _SharingMode = ESharingMode::Exclusive, EMemoryUsage _Location = EMemoryUsage::Auto) -> SharedPtr<FBuffer> { return Vulkan->Allocator.CreateBuffer(_Size, _Usages, _SharingMode, _Location); }
 		VE_API CreateFence()																-> SharedPtr<FFence>		 { return CreateSharedPtr<FFence>();								}
 		VE_API CreateSignaledFence()														-> SharedPtr<FFence>		 { return CreateSharedPtr<FFence>(true);							}

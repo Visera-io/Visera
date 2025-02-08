@@ -20,10 +20,20 @@ export namespace VE { namespace Runtime
 	public:
 		VE_API CreateShader(StringView _ShaderName, StringView _EntryPoint) throw (SIOFailure, SRuntimeError) -> SharedPtr<FShader>;
 
+		enum class ESystemRT { Color, Depth };
+
 	private:
-		static void Bootstrap() {  };
-		static void Tick()	    {  };
-		static void Terminate() {  };
+		struct FFrame
+		{
+			SharedPtr<RHI::FRenderTargets> RenderTargets;
+			SharedPtr<RHI::FCommandBuffer> Drawcalls;
+		};
+		static inline Array<FFrame> Frames;
+		
+	private:
+		static void Bootstrap();
+		static void Tick();
+		static void Terminate();
 	};
 	
 	SharedPtr<FShader> Render::
@@ -39,6 +49,47 @@ export namespace VE { namespace Runtime
 		//Slang.ReflectShader(Shader);
 
 		return Shader;
+	}
+
+	void Render::
+	Bootstrap()
+	{
+		Frames.resize(RHI::GetAPI()->GetSwapchain().GetSize());
+		for (auto& Frame : Frames)
+		{
+			Frame.RenderTargets = RHI::CreateRenderTargets(
+				{
+				RHI::CreateImage(
+					RHI::EImageType::Image2D,
+					RHI::FExtent3D{ 1920, 1080, 1 },
+					RHI::EFormat::U32_sRGB_R8_G8_B8_A8,
+					RHI::EImageAspect::Color,
+					RHI::EImageUsage::ColorAttachment
+					| RHI::EImageUsage::InputAttachment
+					| RHI::EImageUsage::TransferSource)
+				},
+				RHI::CreateImage(
+					RHI::EImageType::Image2D,
+					RHI::FExtent3D{ 1920, 1080, 1 },
+					RHI::EFormat::U32_sRGB_R8_G8_B8_A8,
+					RHI::EImageAspect::Color,
+					RHI::EImageUsage::ColorAttachment
+					| RHI::EImageUsage::InputAttachment
+					| RHI::EImageUsage::TransferSource)
+			);
+		}
+	}
+
+	void Render::
+	Tick()
+	{
+
+	}
+
+	void Render::
+	Terminate()
+	{
+		Frames.clear();
 	}
 
 } } // namespace VE::Runtime

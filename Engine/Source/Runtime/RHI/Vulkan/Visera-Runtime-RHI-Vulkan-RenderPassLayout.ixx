@@ -41,13 +41,9 @@ export namespace VE { namespace Runtime
 
 		Bool HasDepthImage()				const { return DepthDesc.has_value(); }
 
-		auto GetRenderAreaOffset()			const -> const FVulkanOffset&	{ return RenderAreaOffset; }
-		auto GetRenderAreaOffset2D()		const -> const VkOffset2D&		{ return GetRenderAreaOffset().Offset2D; }
-		auto GetRenderAreaOffset3D()		const -> const VkOffset3D&		{ return GetRenderAreaOffset().Offset3D; }
-		auto GetRenderAreaExtent()			const -> const FVulkanExtent&	{ return RenderAreaExtent; }
-		auto GetRenderAreaExtent2D()		const -> const VkExtent2D&		{ return GetRenderAreaExtent().Extent2D; }
-		auto GetRenderAreaExtent3D()		const -> const VkExtent3D&		{ return GetRenderAreaExtent().Extent3D; }
-
+		auto GetRenderAreaOffset()			const -> const FVulkanOffset3D&	{ return RenderAreaOffset; }
+		auto GetRenderAreaExtent()			const -> const FVulkanExtent3D&	{ return RenderAreaExtent; }
+		
 		FVulkanRenderPassLayout();
 		~FVulkanRenderPassLayout();
 
@@ -59,8 +55,8 @@ export namespace VE { namespace Runtime
 		Optional<FAttachmentDescription>ShadingRateDesc;
 		Optional<FStencilDescription>	StencilDesc;
 	
-		FVulkanOffset					RenderAreaOffset;
-		FVulkanExtent					RenderAreaExtent;
+		FVulkanOffset3D					RenderAreaOffset;
+		FVulkanExtent3D					RenderAreaExtent;
 		Array<FClearValue>				ClearColors;
 	};
 
