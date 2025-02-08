@@ -146,6 +146,7 @@ export namespace VE { namespace Runtime
 
 		auto GetExtent()		const -> const FVulkanExtent3D&	{ return Extent; }
 		auto GetSize()			const -> VkDeviceSize			{ return Allocation->GetSize(); }
+		auto GetLayout()		const -> EImageLayout			{ return Layout; }
 		auto GetType()			const -> EImageType				{ return Type; }
 		auto GetFormat()		const -> EFormat				{ return Format; }
 		auto GetAspects()		const -> EImageAspect			{ return Aspects; }
@@ -164,6 +165,7 @@ export namespace VE { namespace Runtime
 		virtual auto Clone() const -> SharedPtr<FVulkanImage> override;
 	protected:
 		VkImage			Handle;
+		EImageLayout	Layout{ EImageLayout::Undefined }; //[TODO]: Layout  Transfer
 		EImageType		Type;
 		EFormat			Format;
 		FVulkanExtent3D	Extent;

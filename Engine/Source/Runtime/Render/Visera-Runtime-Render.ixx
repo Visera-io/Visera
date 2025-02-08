@@ -23,12 +23,12 @@ export namespace VE { namespace Runtime
 		enum class ESystemRT { Color, Depth };
 
 	private:
-		struct FFrame
+		/*struct FFrame
 		{
-			SharedPtr<RHI::FRenderTargets> RenderTargets;
+			SharedPtr<RHI::FRenderPassResource> RenderTargets;
 			SharedPtr<RHI::FCommandBuffer> Drawcalls;
 		};
-		static inline Array<FFrame> Frames;
+		static inline Array<FFrame> Frames;*/
 		
 	private:
 		static void Bootstrap();
@@ -54,7 +54,7 @@ export namespace VE { namespace Runtime
 	void Render::
 	Bootstrap()
 	{
-		Frames.resize(RHI::GetAPI()->GetSwapchain().GetSize());
+		/*Frames.resize(RHI::GetAPI()->GetSwapchain().GetSize());
 		for (auto& Frame : Frames)
 		{
 			Frame.RenderTargets = RHI::CreateRenderTargets(
@@ -77,7 +77,7 @@ export namespace VE { namespace Runtime
 					| RHI::EImageUsage::InputAttachment
 					| RHI::EImageUsage::TransferSource)
 			);
-		}
+		}*/
 	}
 
 	void Render::
@@ -89,7 +89,7 @@ export namespace VE { namespace Runtime
 	void Render::
 	Terminate()
 	{
-		Frames.clear();
+		//Frames.clear();
 	}
 
 } } // namespace VE::Runtime

@@ -21,33 +21,32 @@ export namespace VE { namespace Runtime
 	{
 		friend class RHI;
 	public:
-		struct FSubpass
+		struct FSubpass final
 		{
 			UniquePtr<FVulkanRenderPipeline>Pipeline;
 
-			Array<VkAttachmentReference>	InputImageReferences;    // Input Image References from Previous Subpasses.
-			Array<UInt32>					PreserveImageReferences; // Const Image References Used in Subpasses.
-			Array<VkAttachmentReference>	ColorImageReferences;
-			Array<VkAttachmentReference>	ResolveImageReferences;
-			Optional<VkAttachmentReference> DepthImageReference;
-			Optional<VkAttachmentReference> StencilImageReference;
-			EPipelineStage					SourceStage							{ EPipelineStage::None };
-			EAccessibility					SourceStageAccessPermissions		{ EAccessibility::None };
-			EPipelineStage					DestinationStage					{ EPipelineStage::None };
-			EAccessibility					DestinationStageAccessPermissions	{ EAccessibility::None };
+			Array<UInt8>					ColorImageReferences;
+			//Optional<VkAttachmentReference> StencilImageReference;
+			EPipelineStage					SourceStage					 { EPipelineStage::None };
+			EAccessibility					SourceStageAccessibility	 { EAccessibility::None };
+			EPipelineStage					DestinationStage			 { EPipelineStage::None };
+			EAccessibility					DestinationStageAccessibility{ EAccessibility::None };
+			Bool							bEnableDepthTest = True;
+			Array<UInt8>					InputImageReferences;    // Input Image References from Previous Subpasses.
+			Array<UInt8>					PreserveImageReferences; // Const Image References Used in Subpasses.
 		};
 
 		auto GetHandle() const -> const VkRenderPass { return Handle; }
 	
 	protected:
-		VkRenderPass						 Handle{ VK_NULL_HANDLE };
-		UInt32								 Priority { 0 }; // Less is More
-		SharedPtr<FVulkanRenderPassLayout>	 Layout;
-		Array<FVulkanFramebuffer>			 Framebuffers;
-		Array<FSubpass>						 Subpasses;
+		VkRenderPass						Handle{ VK_NULL_HANDLE };
+		UInt32								Priority { 0 }; // Less is More
+		SharedPtr<FVulkanRenderPassLayout>	Layout;
+		Array<FVulkanFramebuffer>			Framebuffers;
+		Array<FSubpass>						Subpasses;
 
-	private:
-		// Created by RHI
+	//private:
+		// Created by RHI Module (User : Render Module )
 		void Create(const Array<SharedPtr<FVulkanRenderPassResource>>& _RenderTargetsPackage);
 		void Destroy();
 
@@ -77,18 +76,42 @@ export namespace VE { namespace Runtime
 		{
 			auto& CurrentSubpass = Subpasses[Idx];
 
+			Array<VkAttachmentReference> ColorAttachmentRefs(CurrentSubpass.ColorImageReferences.size());
+			Array<VkAttachmentReference> ResolveAttachmentRefs(ColorAttachmentRefs.size());
+			for (UInt8 Idx = 0; Idx < ColorAttachmentRefs.size(); ++Idx)
+			{
+				ColorAttachmentRefs[Idx].attachment = CurrentSubpass.ColorImageReferences[Idx];
+				ColorAttachmentRefs[Idx].layout = AutoCast(
+					_RenderTargetsPackage.front()
+					->ColorImages.front()
+					->GetLayout());
+				ResolveAttachmentRefs[Idx].attachment = Layout->GetColorAttachmentCount() + CurrentSubpass.ColorImageReferences[Idx];
+				ResolveAttachmentRefs[Idx].layout = AutoCast(
+					_RenderTargetsPackage.front()
+					->ResolveImages.front()
+					->GetLayout());
+			}
+			VE_ASSERT(Layout->HasDepthImage()); // Debugging
+			VkAttachmentReference DepthAttachmentRef
+			{
+				.attachment = Layout->GetDepthAttachmentLocation(),
+				.layout = AutoCast(
+					_RenderTargetsPackage.front()
+					->DepthImage->GetLayout())
+			};
+
 			SubpassDescriptions[Idx] =
 			{
 				.flags					= 0x0,
 				.pipelineBindPoint		= VK_PIPELINE_BIND_POINT_GRAPHICS,
-				.inputAttachmentCount	= UInt32(CurrentSubpass.InputImageReferences.size()),
-				.pInputAttachments		= CurrentSubpass.InputImageReferences.data(),
-				.colorAttachmentCount	= UInt32(CurrentSubpass.ColorImageReferences.size()),
-				.pColorAttachments		= CurrentSubpass.ColorImageReferences.data(),
-				.pResolveAttachments	= CurrentSubpass.ResolveImageReferences.data(),
-				.pDepthStencilAttachment= CurrentSubpass.DepthImageReference.has_value()? &(CurrentSubpass.DepthImageReference.value()) : nullptr,
-				.preserveAttachmentCount= UInt32(CurrentSubpass.PreserveImageReferences.size()),
-				.pPreserveAttachments	= CurrentSubpass.PreserveImageReferences.data(),
+				.inputAttachmentCount	= 0, //[FIXME]
+				.pInputAttachments		= nullptr,
+				.colorAttachmentCount	= UInt32(ColorAttachmentRefs.size()),
+				.pColorAttachments		= ColorAttachmentRefs.data(),
+				.pResolveAttachments	= ResolveAttachmentRefs.data(),
+				.pDepthStencilAttachment= &DepthAttachmentRef,
+				.preserveAttachmentCount= 0,
+				.pPreserveAttachments	= nullptr,
 			};
 
 			static_assert(VK_SUBPASS_EXTERNAL == (0U - 1));
@@ -98,8 +121,8 @@ export namespace VE { namespace Runtime
 				.dstSubpass		= Idx,
 				.srcStageMask	= AutoCast(CurrentSubpass.SourceStage),
 				.dstStageMask	= AutoCast(CurrentSubpass.DestinationStage),
-				.srcAccessMask	= AutoCast(CurrentSubpass.SourceStageAccessPermissions),
-				.dstAccessMask	= AutoCast(CurrentSubpass.DestinationStageAccessPermissions),
+				.srcAccessMask	= AutoCast(CurrentSubpass.SourceStageAccessibility),
+				.dstAccessMask	= AutoCast(CurrentSubpass.DestinationStageAccessibility),
 				.dependencyFlags= 0x0,
 			};
 		}

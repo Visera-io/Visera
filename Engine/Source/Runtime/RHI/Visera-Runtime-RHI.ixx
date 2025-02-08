@@ -31,9 +31,11 @@ export namespace VE { namespace Runtime
 		using FOffset3D				= FVulkanOffset3D;
 		using FFramebuffer			= FVulkanFramebuffer;
 		using FRenderPass			= FVulkanRenderPass;
-		using FRenderTargets		= FVulkanRenderPassResource;
+		using FRenderPassLayout		= FVulkanRenderPassLayout;
+		using FRenderPassResource	= FVulkanRenderPassResource;
 		using FRenderPipeline		= FVulkanRenderPipeline;	
 		using FPipelineLayout		= FVulkanPipelineLayout;
+		using FRenderPipelineLayout	= FVulkanRenderPipelineLayout;
 
 		using ESampleRate			= ESampleRate;
 		using EQueueFamily			= EQueueFamily;
@@ -58,7 +60,7 @@ export namespace VE { namespace Runtime
 
 		using SwapchainRecreateSignal = FVulkanSwapchain::RecreateSignal;
 	public:
-		VE_API CreateRenderTargets(const Array<SharedPtr<FImage>>& _ColorImages, SharedPtr<FImage> _DepthImage = nullptr) -> SharedPtr<FRenderTargets> { return CreateSharedPtr<FRenderTargets>(_ColorImages, _DepthImage); }
+		VE_API CreateRenderTargets(const Array<SharedPtr<FImage>>& _ColorImages, SharedPtr<FImage> _DepthImage = nullptr) -> SharedPtr<FRenderPassResource> { return CreateSharedPtr<FRenderPassResource>(_ColorImages, _DepthImage); }
 		VE_API CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _SetLayout)		-> SharedPtr<FDescriptorSet> { return GlobalDescriptorPool.CreateDescriptorSet(_SetLayout);		}
 		VE_API CreateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)			-> SharedPtr<FCommandBuffer> { return ResetableGraphicsCommandPool.CreateCommandBuffer(_Level); }
 		VE_API CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FCommandBuffer> { return TransientGraphicsCommandPool.CreateCommandBuffer(_Level); }

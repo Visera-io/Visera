@@ -40,6 +40,7 @@ export namespace VE { namespace Runtime
 		auto AddColorAttachment(FAttachmentDescription _ColorDesc) -> FVulkanRenderPassLayout&;
 		auto GetColorAttachmentCount() const -> UInt8 { return ColorDescs.size(); }
 		auto GetTotalAttachmentCount() const -> UInt8 { return ColorDescs.size() + ResolveDescs.size() + (DepthDesc.has_value()? 1 : 0); }
+		auto GetDepthAttachmentLocation() const -> UInt8 { VE_ASSERT(HasDepthImage()); return GetTotalAttachmentCount() - 1; }
 
 		Bool HasDepthImage()				const { return DepthDesc.has_value(); }
 
