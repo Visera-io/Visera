@@ -27,9 +27,11 @@ export namespace VE { namespace Runtime
 		using FImage				= FVulkanImage;
 		using FExtent2D				= FVulkanExtent2D;
 		using FExtent3D				= FVulkanExtent3D;
+		using FOffset2D				= FVulkanOffset2D;
+		using FOffset3D				= FVulkanOffset3D;
 		using FFramebuffer			= FVulkanFramebuffer;
 		using FRenderPass			= FVulkanRenderPass;
-		using FRenderTargets		= FVulkanRenderTargets;
+		using FRenderTargets		= FVulkanRenderPassResource;
 		using FRenderPipeline		= FVulkanRenderPipeline;	
 		using FPipelineLayout		= FVulkanPipelineLayout;
 
@@ -55,7 +57,6 @@ export namespace VE { namespace Runtime
 		using EPresentMode			= EPresentMode;
 
 		using SwapchainRecreateSignal = FVulkanSwapchain::RecreateSignal;
-
 	public:
 		VE_API CreateRenderTargets(const Array<SharedPtr<FImage>>& _ColorImages, SharedPtr<FImage> _DepthImage = nullptr) -> SharedPtr<FRenderTargets> { return CreateSharedPtr<FRenderTargets>(_ColorImages, _DepthImage); }
 		VE_API CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _SetLayout)		-> SharedPtr<FDescriptorSet> { return GlobalDescriptorPool.CreateDescriptorSet(_SetLayout);		}

@@ -7,7 +7,7 @@ import :Device;
 import :PipelineCache;
 import :RenderPipeline;
 import :RenderPassLayout;
-import :RenderTargets;
+import :RenderPassResource;
 
 import Visera.Core.Signal;
 
@@ -36,11 +36,11 @@ export namespace VE { namespace Runtime
 		};
 		struct FFramebuffer
 		{
-			VkFramebuffer					Handle{ VK_NULL_HANDLE };
-			SharedPtr<FVulkanRenderTargets>	RenderTargets;
-			Array<VkImageView>				RenderTargetViews;
+			VkFramebuffer						Handle{ VK_NULL_HANDLE };
+			SharedPtr<FVulkanRenderPassResource>RenderResource;
+			Array<VkImageView>					RenderResourceViews;
 			//[TODO]: Shading Rate Image & VkAttachmentDescriptionStencilLayout StencilDescription;
-			Bool HasDepthImage() const { return RenderTargets->HasDepthImage(); }
+			Bool HasDepthImage() const { return RenderResource->HasDepthImage(); }
 			~FFramebuffer();
 		};
 
@@ -50,7 +50,7 @@ export namespace VE { namespace Runtime
 		VkRenderPass						 Handle{ VK_NULL_HANDLE };
 		UInt32								 Priority { 0 }; // Less is More
 		SharedPtr<FVulkanRenderPassLayout>	 Layout;
-		FFramebuffer						 Framebuffer;
+		Array<FFramebuffer>					 Framebuffers;
 		Array<FSubpass>						 Subpasses;
 
 	private:
@@ -72,9 +72,9 @@ export namespace VE { namespace Runtime
 	void FVulkanRenderPass::
 	Create()
 	{
-		VE_ASSERT(Layout->GetColorAttachmentCount() <= Framebuffer.RenderTargets->ColorImages.size());
+		VE_ASSERT(Layout->GetColorAttachmentCount() <= Framebuffer.RenderResource->ColorImages.size());
 		VE_ASSERT(!Layout->HasDepthImage() ||
-				 ( Layout->HasDepthImage() && Framebuffer.RenderTargets->HasDepthImage()));
+				 ( Layout->HasDepthImage() && Framebuffer.RenderResource->HasDepthImage()));
 
 		// Create Subpasses
 		for (auto& Subpass : Subpasses)
@@ -120,7 +120,8 @@ export namespace VE { namespace Runtime
 		for (UInt8 Idx = 0; Idx < Layout->GetColorAttachmentCount(); ++Idx)
 		{
 			auto& ColorDesc    = Layout->ColorDescs[Idx];
-			auto& RenderTarget = Framebuffer.RenderTargets->ColorImages[Idx];
+			auto& RenderTarget = Framebuffer.RenderResource->ColorImages[Idx];
+			
 			// Color Attachments
 			AttachmentDescriptions[Idx] = VkAttachmentDescription
 			{ 
@@ -136,7 +137,7 @@ export namespace VE { namespace Runtime
 			};
 			// Resolve Attachments
 			auto& ResolveDesc   = Layout->ResolveDescs[Idx];
-			auto& ResolveTarget = Framebuffer.RenderTargets->ResolveImages[Idx];
+			auto& ResolveTarget = Framebuffer.RenderResource->ResolveImages[Idx];
 			AttachmentDescriptions[Layout->GetColorAttachmentCount() + Idx] = VkAttachmentDescription
 			{ 
 				.flags			= 0x0,
@@ -155,7 +156,7 @@ export namespace VE { namespace Runtime
 		if (Layout->HasDepthImage())
 		{
 			auto& DepthDesc   = Layout->DepthDesc.value();
-			auto& DepthTarget = Framebuffer.RenderTargets->DepthImage;
+			auto& DepthTarget = Framebuffer.RenderResource->DepthImage;
 			AttachmentDescriptions.back() = VkAttachmentDescription
 			{
 				.flags			= 0x0,
@@ -188,20 +189,20 @@ export namespace VE { namespace Runtime
 		{ throw SRuntimeError("Failed to create Vulkan RenderPass!"); }
 
 		// Create Framebuffer
-		Framebuffer.RenderTargetViews.resize(Layout->GetTotalAttachmentCount());
-		VE_ASSERT(Framebuffer.RenderTargetViews.size() % 1 == 1); // Currently, Visera's each renderpass must have 2N + 1 attachments.
+		Framebuffer.RenderResourceViews.resize(Layout->GetTotalAttachmentCount());
+		VE_ASSERT(Framebuffer.RenderResourceViews.size() % 1 == 1); // Currently, Visera's each renderpass must have 2N + 1 attachments.
 		
 		for (UInt8 Idx = 0; Idx < Layout->GetColorAttachmentCount(); Idx++)
 		{
 			auto& ColorDesc = Layout->ColorDescs[Idx];
-			auto& ColorView = Framebuffer.RenderTargetViews[Idx];
-			ColorView		= Framebuffer.RenderTargets->ColorImages[Idx]
+			auto& ColorView = Framebuffer.RenderResourceViews[Idx];
+			ColorView		= Framebuffer.RenderResource->ColorImages[Idx]
 							  ->CreateImageView(ColorDesc.ImageViewType)
 							  ->Release();
 			
 			auto& ResolveDesc = Layout->ResolveDescs[Idx];
-			auto& ResolveView = Framebuffer.RenderTargetViews[Layout->GetColorAttachmentCount() + Idx];
-			ResolveView		  = Framebuffer.RenderTargets->ResolveImages[Idx]
+			auto& ResolveView = Framebuffer.RenderResourceViews[Layout->GetColorAttachmentCount() + Idx];
+			ResolveView		  = Framebuffer.RenderResource->ResolveImages[Idx]
 								->CreateImageView(ResolveDesc.ImageViewType)
 								->Release();
 		}
@@ -209,8 +210,8 @@ export namespace VE { namespace Runtime
 		if (Layout->HasDepthImage())
 		{
 			auto& DepthDesc = Layout->DepthDesc.value();
-			auto& DepthView = Framebuffer.RenderTargetViews.back();
-			DepthView = Framebuffer.RenderTargets->DepthImage
+			auto& DepthView = Framebuffer.RenderResourceViews.back();
+			DepthView = Framebuffer.RenderResource->DepthImage
 						->CreateImageView(DepthDesc.ImageViewType)
 						->Release();
 		}
@@ -230,8 +231,8 @@ export namespace VE { namespace Runtime
 			.pNext			 = nullptr,
 			.flags			 = 0x0,
 			.renderPass		 = Handle,
-			.attachmentCount = UInt32(Framebuffer.RenderTargetViews.size()),
-			.pAttachments	 = Framebuffer.RenderTargetViews.data(),
+			.attachmentCount = UInt32(Framebuffer.RenderResourceViews.size()),
+			.pAttachments	 = Framebuffer.RenderResourceViews.data(),
 			.width  = Layout->GetRenderAreaExtent().width,
 			.height = Layout->GetRenderAreaExtent().height,
 			.layers = Layout->GetRenderAreaExtent().depth,
@@ -258,7 +259,7 @@ export namespace VE { namespace Runtime
 	FVulkanRenderPass::FFramebuffer::
 	~FFramebuffer()
 	{ 
-		for (auto& RenderTargetView : RenderTargetViews)
+		for (auto& RenderTargetView : RenderResourceViews)
 		{
 			VE_ASSERT(RenderTargetView != VK_NULL_HANDLE);
 			vkDestroyImageView(GVulkan->Device->GetHandle(), RenderTargetView, GVulkan->AllocationCallbacks);

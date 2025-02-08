@@ -2,7 +2,7 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:RenderPassLayout;
 import :Common;
-import :RenderTargets;
+import :RenderPassResource;
 
 import Visera.Core.Signal;
 

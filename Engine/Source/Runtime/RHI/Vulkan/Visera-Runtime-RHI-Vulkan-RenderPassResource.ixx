@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.RHI.Vulkan:RenderTargets;
+export module Visera.Runtime.RHI.Vulkan:RenderPassResource;
 import :Common;
 import :Allocator;
 
@@ -11,15 +11,16 @@ export namespace VE { namespace Runtime
 	class FVulkanRenderPass;
 	class FVulkanFramebuffer;
 
-	class FVulkanRenderTargets
+	class FVulkanRenderPassResource
 	{
+		VE_NOT_COPYABLE(FVulkanRenderPassResource);
 		friend class FVulkanRenderPass;
 		friend class FVulkanFramebuffer;
 	public:
 		Bool HasDepthImage() const { return DepthImage != nullptr; }
 
-		FVulkanRenderTargets() = delete;
-		FVulkanRenderTargets(const Array<SharedPtr<FVulkanImage>>& _ColorImages, SharedPtr<FVulkanImage> _DepthImage = nullptr);
+		FVulkanRenderPassResource() = delete;
+		FVulkanRenderPassResource(const Array<SharedPtr<FVulkanImage>>& _ColorImages, SharedPtr<FVulkanImage> _DepthImage = nullptr);
 
 	private:
 		Array<SharedPtr<FVulkanImage>>	ColorImages;
@@ -27,8 +28,8 @@ export namespace VE { namespace Runtime
 		SharedPtr<FVulkanImage>			DepthImage;
 	};
 
-	FVulkanRenderTargets::
-	FVulkanRenderTargets(const Array<SharedPtr<FVulkanImage>>&	_ColorImages,
+	FVulkanRenderPassResource::
+	FVulkanRenderPassResource(const Array<SharedPtr<FVulkanImage>>&	_ColorImages,
 						 SharedPtr<FVulkanImage>				_DepthImage/* = nullptr*/)
 		:ColorImages {_ColorImages},
 		 DepthImage  {_DepthImage}

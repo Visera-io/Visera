@@ -8,6 +8,7 @@ import :Device;
 import :GPU;
 
 import Visera.Core.Signal;
+import Visera.Template.Pattern;
 
 export namespace VE { namespace Runtime
 {
@@ -23,7 +24,7 @@ export namespace VE { namespace Runtime
 						  ESharingMode _SharingMode = ESharingMode::Exclusive,
 						  EMemoryUsage _Location    = EMemoryUsage::Auto) const -> SharedPtr<FVulkanBuffer>;
 		auto CreateImage(EImageType		_Type,
-						VkExtent3D		_Extent,
+						FVulkanExtent3D	_Extent,
 						EFormat			_Format,
 						EImageAspect	_Aspects,
 						EImageUsage		_Usages,
@@ -70,7 +71,7 @@ export namespace VE { namespace Runtime
 		VmaAllocator	Handle{ VMA_NULL };
 	};
 
-	class FVulkanBuffer
+	class FVulkanBuffer : public Template::FPrototype<SharedPtr<FVulkanBuffer>>
 	{
 		VE_NOT_COPYABLE(FVulkanBuffer);
 		friend class FVulkanAllocator;
@@ -82,9 +83,13 @@ export namespace VE { namespace Runtime
 
 		VE_API Free(VkBuffer* _pHandle, VmaAllocation* _pAllocation) { VE_ASSERT(_pHandle && _pAllocation); vmaDestroyBuffer(GVulkan->Allocator->GetHandle(), *_pHandle, *_pAllocation); *_pHandle = VK_NULL_HANDLE;  *_pAllocation = VK_NULL_HANDLE; }
 		auto   Release() -> ResultPackage<VkBuffer, VmaAllocation> { VkBuffer RawHandle = Handle; VmaAllocation RawAlloc = Allocation; Handle = VK_NULL_HANDLE; Allocation = VK_NULL_HANDLE; return { RawHandle, RawAlloc }; }
+		virtual auto Clone() const -> SharedPtr<FVulkanBuffer> override;
 	private:
 		VkBuffer		Handle{ VK_NULL_HANDLE };
 		VmaAllocation	Allocation;
+		EBufferUsage	Usages;
+		ESharingMode	SharingMode;
+		EMemoryUsage	Location;
 
 	public:	
 		FVulkanBuffer() = default;
@@ -124,7 +129,9 @@ export namespace VE { namespace Runtime
 		~FVulkanImageView() { if (!IsReleased()) { Free(&Handle); } }
 	};
 
-	class FVulkanImage : public std::enable_shared_from_this<FVulkanImage>
+	class FVulkanImage : 
+		public std::enable_shared_from_this<FVulkanImage>,
+		public Template::FPrototype<SharedPtr<FVulkanImage>>
 	{
 		VE_NOT_COPYABLE(FVulkanImage);
 		friend class FVulkanAllocator;
@@ -154,6 +161,7 @@ export namespace VE { namespace Runtime
 		
 		VE_API Free(VkImage* _pHandle, VmaAllocation* _pAllocation) { VE_ASSERT(_pHandle && _pAllocation); vmaDestroyImage(GVulkan->Allocator->GetHandle(), *_pHandle, *_pAllocation); *_pHandle = VK_NULL_HANDLE;  *_pAllocation = VK_NULL_HANDLE; }
 		auto   Release() -> ResultPackage<VkImage, VmaAllocation> { VkImage RawHandle = Handle; VmaAllocation RawAlloc = Allocation; Handle = VK_NULL_HANDLE; Allocation = VK_NULL_HANDLE; return { RawHandle, RawAlloc }; }
+		virtual auto Clone() const -> SharedPtr<FVulkanImage> override;
 	protected:
 		VkImage			Handle;
 		EImageType		Type;
@@ -165,6 +173,8 @@ export namespace VE { namespace Runtime
 		UInt8			MipmapLevels = 0;
 		UInt8			ArrayLayers	 = 0;
 		ESampleRate     SampleRate	 = ESampleRate::X1;
+		ESharingMode	SharingMode;
+		EMemoryUsage	Location;
 
 		VmaAllocation	Allocation;
 	public:	
@@ -197,6 +207,8 @@ export namespace VE { namespace Runtime
 		NewImage->SampleRate	= _SampleRate;
 		NewImage->MipmapLevels	= _MipmapLevels;
 		NewImage->ArrayLayers	= _ArrayLayers;
+		NewImage->SharingMode   = _SharingMode;
+		NewImage->Location		= _Location;
 		
 		VkImageCreateInfo CreateInfo
 		{
@@ -212,8 +224,8 @@ export namespace VE { namespace Runtime
 			.tiling					= AutoCast(NewImage->Tiling),
 			.usage					= AutoCast(NewImage->Usages),
 			.sharingMode			= AutoCast(_SharingMode),
-			.queueFamilyIndexCount	= 1,
-			.pQueueFamilyIndices	= &(GVulkan->Device->GetQueueFamily(EQueueFamily::Graphics).Index),
+			//.queueFamilyIndexCount	= 1,
+			//.pQueueFamilyIndices	= &(GVulkan->Device->GetQueueFamily(EQueueFamily::Graphics).Index),
 			.initialLayout			= AutoCast(EImageLayout::Undefined),
 		};
 
@@ -301,16 +313,20 @@ export namespace VE { namespace Runtime
 		VE_ASSERT(_Size > 0);
 
 		auto NewBuffer = CreateSharedPtr<FVulkanBuffer>();
+		NewBuffer->Usages		= _Usages;
+		NewBuffer->SharingMode	= _SharingMode;
+		NewBuffer->Location		= _Location;
+
 		VkBufferCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 			.pNext = nullptr,
 			.flags = 0x0,
 			.size  = _Size,
-			.usage = AutoCast(_Usages),
-			.sharingMode = AutoCast(_SharingMode),
-			.queueFamilyIndexCount = 0,
-			.pQueueFamilyIndices = nullptr,
+			.usage = AutoCast(NewBuffer->Usages),
+			.sharingMode = AutoCast(NewBuffer->SharingMode),
+			.queueFamilyIndexCount	= 0,
+			.pQueueFamilyIndices	= nullptr,
 		};
 
 		VmaAllocationCreateInfo AllocationCreateInfo
@@ -336,6 +352,33 @@ export namespace VE { namespace Runtime
 	{
 		if (!IsReleased())
 		{ Free(&Handle, &Allocation); }
+	}
+
+	SharedPtr<FVulkanBuffer> FVulkanBuffer::
+	Clone() const
+	{
+		return GVulkan->Allocator->CreateBuffer(
+			GetSize(),
+			Usages,
+			SharingMode,
+			Location);
+	}
+
+	SharedPtr<FVulkanImage> FVulkanImage::
+	Clone() const
+	{
+		return GVulkan->Allocator->CreateImage(
+			Type,
+			Extent,
+			Format,
+			Aspects,
+			Usages,
+			Tiling,
+			SampleRate,
+			MipmapLevels,
+			ArrayLayers,
+			SharingMode,
+			Location);
 	}
 
 } } // namespace VE::Runtime
