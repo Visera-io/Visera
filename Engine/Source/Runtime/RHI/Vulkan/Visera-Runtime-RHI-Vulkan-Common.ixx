@@ -31,6 +31,7 @@ export namespace VE { namespace Runtime
 	// using	FVulkanExtent3D = VkExtent3D;
 	// using	FVulkanOffset2D = VkOffset2D;
 	// using	FVulkanOffset3D = VkOffset3D;
+	// using	FRenderArea		= VkRect2D;
 	
 	using FClearValue = VkClearValue;
 
@@ -60,6 +61,8 @@ export namespace VE { namespace Runtime
 		Array1D		= 	VK_IMAGE_VIEW_TYPE_1D_ARRAY,
 		Array2D		= 	VK_IMAGE_VIEW_TYPE_2D_ARRAY,
 		ArrayCube	=	VK_IMAGE_VIEW_TYPE_CUBE_ARRAY,
+
+		Auto,
 	};
 
 	VE_ENUM_CLASS(EImageType, VkImageType)
@@ -442,5 +445,7 @@ export namespace VE { namespace Runtime
 
 	using FVulkanOffset2D = VkOffset2D;
 	using FVulkanOffset3D = VkOffset3D;
+
+	using FRenderArea	  = VkRect2D;
 
 } } // namespace VE::Runtime

@@ -5,22 +5,30 @@ import :Common;
 import :Allocator;
 
 import Visera.Core.Signal;
+import Visera.Template.Pattern;
 
 export namespace VE { namespace Runtime
 {
 	class FVulkanRenderPass;
 	class FVulkanFramebuffer;
 
-	class FVulkanRenderPassResource
+	class FVulkanRenderPassResource : public Template::FPrototype<SharedPtr<FVulkanRenderPassResource>>
 	{
 		VE_NOT_COPYABLE(FVulkanRenderPassResource);
 		friend class FVulkanRenderPass;
 		friend class FVulkanFramebuffer;
 	public:
+		void AddColorImage(SharedPtr<FVulkanImage> _ColorImage);
+		void AddDepthImage(SharedPtr<FVulkanImage> _DepthImage);
+		auto GetTotalImageCount()	const	-> UInt8 { return GetColorImageCount() + GetResolveImageCount() + (HasDepthImage()? 1 : 0); }
+		auto GetColorImageCount()	const	-> UInt8 { return ColorImages.size(); }
+		auto GetResolveImageCount() const	-> UInt8 { return ResolveImages.size(); }
 		Bool HasDepthImage() const { return DepthImage != nullptr; }
 
-		FVulkanRenderPassResource() = delete;
-		FVulkanRenderPassResource(const Array<SharedPtr<FVulkanImage>>& _ColorImages, SharedPtr<FVulkanImage> _DepthImage = nullptr);
+		virtual auto Clone() const -> SharedPtr<FVulkanRenderPassResource> override;
+
+		FVulkanRenderPassResource() = default;
+		FVulkanRenderPassResource(const Array<SharedPtr<FVulkanImage>>& _ColorImages, SharedPtr<FVulkanImage> _DepthImage);
 
 	private:
 		Array<SharedPtr<FVulkanImage>>	ColorImages;
@@ -28,11 +36,39 @@ export namespace VE { namespace Runtime
 		SharedPtr<FVulkanImage>			DepthImage;
 	};
 
+	void FVulkanRenderPassResource::
+	AddColorImage(SharedPtr<FVulkanImage> _ColorImage)
+	{
+		VE_ASSERT(AutoCast(EImageAspect::Color & _ColorImage->GetAspects()) != False);
+		ResolveImages.emplace_back(std::move(
+			GVulkan->Allocator->CreateImage(
+				_ColorImage->GetType(),
+				_ColorImage->GetExtent(),
+				_ColorImage->GetFormat(),
+				EImageAspect::Color,
+				EImageUsage::ColorAttachment | EImageUsage::InputAttachment,
+				EImageTiling::Optimal,
+				ESampleRate::X1)
+		));
+		ColorImages.emplace_back(std::move(_ColorImage));
+	}
+
+	void FVulkanRenderPassResource::
+	AddDepthImage(SharedPtr<FVulkanImage> _DepthImage)
+	{
+		VE_ASSERT(AutoCast(EImageAspect::Depth & _DepthImage->GetAspects()) != False);
+		if (!HasDepthImage())
+		{  
+			DepthImage = std::move(_DepthImage);
+		} 
+		else { throw SRuntimeError("Cannnot add more than one depth image!"); }
+	}
+
 	FVulkanRenderPassResource::
 	FVulkanRenderPassResource(const Array<SharedPtr<FVulkanImage>>&	_ColorImages,
-						 SharedPtr<FVulkanImage>				_DepthImage/* = nullptr*/)
+						 SharedPtr<FVulkanImage>					_DepthImage)
 		:ColorImages {_ColorImages},
-		 DepthImage  {_DepthImage}
+		 DepthImage  {std::move(_DepthImage)}
 	{
 		if (ColorImages.empty())
 		{ throw SRuntimeError("Failed to create Vulkan Render Targets! -- No Color Images."); }
@@ -50,6 +86,21 @@ export namespace VE { namespace Runtime
 				EImageTiling::Optimal,
 				ESampleRate::X1);
 		}
+	}
+
+	SharedPtr<FVulkanRenderPassResource> FVulkanRenderPassResource::
+	Clone() const
+	{
+		auto Result = CreateSharedPtr<FVulkanRenderPassResource>();
+		Result->ColorImages.resize(GetColorImageCount());
+		Result->ResolveImages.resize(GetResolveImageCount());
+		for (UInt8 Idx = 0; Idx < GetColorImageCount(); ++Idx)
+		{
+			Result->ColorImages[Idx]   = ColorImages[Idx]->Clone();
+			Result->ResolveImages[Idx] = ResolveImages[Idx]->Clone();
+		}
+		Result->DepthImage = DepthImage->Clone();
+		return Result;
 	}
 
 } } // namespace VE::Runtime

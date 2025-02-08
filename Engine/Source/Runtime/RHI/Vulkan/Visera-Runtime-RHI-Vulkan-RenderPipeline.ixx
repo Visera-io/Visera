@@ -21,25 +21,23 @@ export namespace VE { namespace Runtime
 
 	protected:
 		VkPipeline								Handle{ VK_NULL_HANDLE };
-		const VkRenderPass const				Owner;
 		SharedPtr<FVulkanRenderPipelineLayout>	Layout;
 
-		Segment<FVulkanShader, MaxShaderSlot> Shaders;
+		Segment<FVulkanShader, MaxShaderSlot>	Shaders;
 
 	public:
-		FVulkanRenderPipeline() = delete;
-		FVulkanRenderPipeline(const VkRenderPass const _Owner) : Owner{ _Owner } { }
+		FVulkanRenderPipeline() = default;
 		~FVulkanRenderPipeline() noexcept { Destroy();}
 
 	private:
-		void Create();
+		void Create(const VkRenderPass _Owner);
 		void Destroy();
 	};
 
 	void FVulkanRenderPipeline::
-	Create()
+	Create(const VkRenderPass _Owner)
 	{
-		VE_ASSERT(Owner != VK_NULL_HANDLE);
+		VE_ASSERT(_Owner != VK_NULL_HANDLE);
 
 		auto ShaderStageCreateInfo = Segment<VkPipelineShaderStageCreateInfo, MaxShaderSlot>
 		{
@@ -62,7 +60,7 @@ export namespace VE { namespace Runtime
 			.pColorBlendState		= &Layout->GetColorBlendState(),
 			.pDynamicState			= &Layout->GetDynamicStates(),
 			.layout					= Layout->GetHandle(),
-			.renderPass				= Owner,
+			.renderPass				= _Owner,
 			.basePipelineHandle		= VK_NULL_HANDLE,		// Optional
 			.basePipelineIndex		= -1,					// Optional
 		};

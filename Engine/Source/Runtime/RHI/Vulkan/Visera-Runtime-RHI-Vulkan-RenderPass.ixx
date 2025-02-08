@@ -4,7 +4,9 @@ export module Visera.Runtime.RHI.Vulkan:RenderPass;
 import :Common;
 import :Allocator;
 import :Device;
+import :Swapchain;
 import :PipelineCache;
+import :Framebuffer;
 import :RenderPipeline;
 import :RenderPassLayout;
 import :RenderPassResource;
@@ -21,7 +23,7 @@ export namespace VE { namespace Runtime
 	public:
 		struct FSubpass
 		{
-			FVulkanRenderPipeline			Pipeline;
+			UniquePtr<FVulkanRenderPipeline>Pipeline;
 
 			Array<VkAttachmentReference>	InputImageReferences;    // Input Image References from Previous Subpasses.
 			Array<UInt32>					PreserveImageReferences; // Const Image References Used in Subpasses.
@@ -34,15 +36,6 @@ export namespace VE { namespace Runtime
 			EPipelineStage					DestinationStage					{ EPipelineStage::None };
 			EAccessibility					DestinationStageAccessPermissions	{ EAccessibility::None };
 		};
-		struct FFramebuffer
-		{
-			VkFramebuffer						Handle{ VK_NULL_HANDLE };
-			SharedPtr<FVulkanRenderPassResource>RenderResource;
-			Array<VkImageView>					RenderResourceViews;
-			//[TODO]: Shading Rate Image & VkAttachmentDescriptionStencilLayout StencilDescription;
-			Bool HasDepthImage() const { return RenderResource->HasDepthImage(); }
-			~FFramebuffer();
-		};
 
 		auto GetHandle() const -> const VkRenderPass { return Handle; }
 	
@@ -50,35 +43,31 @@ export namespace VE { namespace Runtime
 		VkRenderPass						 Handle{ VK_NULL_HANDLE };
 		UInt32								 Priority { 0 }; // Less is More
 		SharedPtr<FVulkanRenderPassLayout>	 Layout;
-		Array<FFramebuffer>					 Framebuffers;
+		Array<FVulkanFramebuffer>			 Framebuffers;
 		Array<FSubpass>						 Subpasses;
 
 	private:
 		// Created by RHI
-		void Create();
+		void Create(const Array<SharedPtr<FVulkanRenderPassResource>>& _RenderTargetsPackage);
 		void Destroy();
 
 	public:
 		FVulkanRenderPass() noexcept = default;
-		virtual ~FVulkanRenderPass() noexcept;
+		~FVulkanRenderPass() noexcept { Destroy(); }
 	};
 
-	FVulkanRenderPass::
-	~FVulkanRenderPass() noexcept
-	{
-		if (Handle != VK_NULL_HANDLE) { Destroy(); }
-	}
-
 	void FVulkanRenderPass::
-	Create()
+	Create(const Array<SharedPtr<FVulkanRenderPassResource>>& _RenderTargetsPackage)
 	{
-		VE_ASSERT(Layout->GetColorAttachmentCount() <= Framebuffer.RenderResource->ColorImages.size());
-		VE_ASSERT(!Layout->HasDepthImage() ||
-				 ( Layout->HasDepthImage() && Framebuffer.RenderResource->HasDepthImage()));
+		VE_ASSERT(_RenderTargetsPackage.size() == GVulkan->Swapchain->GetSize());
 
-		// Create Subpasses
+		// Create Subpasses (Setted in the derived class)
+		if (Subpasses.empty()) { throw SRuntimeError("Cannot create a RenderPass with 0 Subpass!"); }
 		for (auto& Subpass : Subpasses)
-		{ Subpass.Pipeline.Create(); }
+		{
+			VE_ASSERT(Subpass.Pipeline != nullptr);
+			Subpass.Pipeline->Create(Handle);
+		}
 
 		// Create RenderPass
 		Array<VkSubpassDescription> SubpassDescriptions(Subpasses.size());
@@ -120,14 +109,12 @@ export namespace VE { namespace Runtime
 		for (UInt8 Idx = 0; Idx < Layout->GetColorAttachmentCount(); ++Idx)
 		{
 			auto& ColorDesc    = Layout->ColorDescs[Idx];
-			auto& RenderTarget = Framebuffer.RenderResource->ColorImages[Idx];
-			
 			// Color Attachments
 			AttachmentDescriptions[Idx] = VkAttachmentDescription
 			{ 
 				.flags			= 0x0,
-				.format			= AutoCast(RenderTarget->GetFormat()),
-				.samples		= AutoCast(RenderTarget->GetSampleRate()),
+				.format			= AutoCast(ColorDesc.Format),
+				.samples		= AutoCast(ColorDesc.SampleRate),
 				.loadOp			= AutoCast(ColorDesc.LoadOp),
 				.storeOp		= AutoCast(AutoCast(ColorDesc.StoreOp)),
 				.stencilLoadOp	= AutoCast(ColorDesc.StencilLoadOp),
@@ -137,12 +124,11 @@ export namespace VE { namespace Runtime
 			};
 			// Resolve Attachments
 			auto& ResolveDesc   = Layout->ResolveDescs[Idx];
-			auto& ResolveTarget = Framebuffer.RenderResource->ResolveImages[Idx];
 			AttachmentDescriptions[Layout->GetColorAttachmentCount() + Idx] = VkAttachmentDescription
 			{ 
 				.flags			= 0x0,
-				.format			= AutoCast(RenderTarget->GetFormat()),
-				.samples		= AutoCast(RenderTarget->GetSampleRate()),
+				.format			= AutoCast(ResolveDesc.Format),
+				.samples		= AutoCast(ResolveDesc.SampleRate),
 				.loadOp			= AutoCast(ResolveDesc.LoadOp),
 				.storeOp		= AutoCast(AutoCast(ResolveDesc.StoreOp)),
 				.stencilLoadOp	= AutoCast(ResolveDesc.StencilLoadOp),
@@ -156,12 +142,11 @@ export namespace VE { namespace Runtime
 		if (Layout->HasDepthImage())
 		{
 			auto& DepthDesc   = Layout->DepthDesc.value();
-			auto& DepthTarget = Framebuffer.RenderResource->DepthImage;
 			AttachmentDescriptions.back() = VkAttachmentDescription
 			{
 				.flags			= 0x0,
-				.format			= AutoCast(DepthTarget->GetFormat()),
-				.samples		= AutoCast(DepthTarget->GetSampleRate()),
+				.format			= AutoCast(DepthDesc.Format),
+				.samples		= AutoCast(DepthDesc.SampleRate),
 				.loadOp			= AutoCast(DepthDesc.LoadOp),
 				.storeOp		= AutoCast(AutoCast(DepthDesc.StoreOp)),
 				.stencilLoadOp	= AutoCast(DepthDesc.StencilLoadOp),
@@ -188,85 +173,27 @@ export namespace VE { namespace Runtime
 			&Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan RenderPass!"); }
 
-		// Create Framebuffer
-		Framebuffer.RenderResourceViews.resize(Layout->GetTotalAttachmentCount());
-		VE_ASSERT(Framebuffer.RenderResourceViews.size() % 1 == 1); // Currently, Visera's each renderpass must have 2N + 1 attachments.
-		
-		for (UInt8 Idx = 0; Idx < Layout->GetColorAttachmentCount(); Idx++)
+		Framebuffers.resize(_RenderTargetsPackage.size());
+		for(UInt8 Idx = 0; Idx < Framebuffers.size(); ++Idx)
 		{
-			auto& ColorDesc = Layout->ColorDescs[Idx];
-			auto& ColorView = Framebuffer.RenderResourceViews[Idx];
-			ColorView		= Framebuffer.RenderResource->ColorImages[Idx]
-							  ->CreateImageView(ColorDesc.ImageViewType)
-							  ->Release();
-			
-			auto& ResolveDesc = Layout->ResolveDescs[Idx];
-			auto& ResolveView = Framebuffer.RenderResourceViews[Layout->GetColorAttachmentCount() + Idx];
-			ResolveView		  = Framebuffer.RenderResource->ResolveImages[Idx]
-								->CreateImageView(ResolveDesc.ImageViewType)
-								->Release();
+			Framebuffers[Idx].Create(Handle, Layout->RenderAreaExtent, _RenderTargetsPackage[Idx]);
 		}
-
-		if (Layout->HasDepthImage())
-		{
-			auto& DepthDesc = Layout->DepthDesc.value();
-			auto& DepthView = Framebuffer.RenderResourceViews.back();
-			DepthView = Framebuffer.RenderResource->DepthImage
-						->CreateImageView(DepthDesc.ImageViewType)
-						->Release();
-		}
-
-		if (Layout->StencilDesc.has_value())
-		{
-			VE_WIP;
-			/*DepthStencilImage = GVulkan->Allocator->CreateImage(EImageType::Image2D,
-																_OwnerLayout->GetExtent(),
-																EImageAspect::Depth | EImageAspect::Stencil,
-																EImageUsage::DepthStencilAttachment);*/
-		}
-
-		VkFramebufferCreateInfo FramebufferCreateInfo
-		{
-			.sType			 = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-			.pNext			 = nullptr,
-			.flags			 = 0x0,
-			.renderPass		 = Handle,
-			.attachmentCount = UInt32(Framebuffer.RenderResourceViews.size()),
-			.pAttachments	 = Framebuffer.RenderResourceViews.data(),
-			.width  = Layout->GetRenderAreaExtent().width,
-			.height = Layout->GetRenderAreaExtent().height,
-			.layers = Layout->GetRenderAreaExtent().depth,
-		};
-
-		if (vkCreateFramebuffer(
-			GVulkan->Device->GetHandle(),
-			&FramebufferCreateInfo,
-			GVulkan->AllocationCallbacks,
-			&Framebuffer.Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create Vulkan Framebuffer!"); }
 	}
 
 	void FVulkanRenderPass::
 	Destroy()
 	{
-		for (auto& Subpass : Subpasses)
-		{ Subpass.Pipeline.Destroy(); }
+		if (Handle != VK_NULL_HANDLE)
+		{	
+			for (auto& Framebuffer : Framebuffers)
+			{ Framebuffer.Destroy(); }
 
-		vkDestroyRenderPass(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
-		Handle = VK_NULL_HANDLE;
-	}
+			for (auto& Subpass : Subpasses)
+			{ Subpass.Pipeline->Destroy(); }
 
-	FVulkanRenderPass::FFramebuffer::
-	~FFramebuffer()
-	{ 
-		for (auto& RenderTargetView : RenderResourceViews)
-		{
-			VE_ASSERT(RenderTargetView != VK_NULL_HANDLE);
-			vkDestroyImageView(GVulkan->Device->GetHandle(), RenderTargetView, GVulkan->AllocationCallbacks);
+			vkDestroyRenderPass(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
+			Handle = VK_NULL_HANDLE;
 		}
-		vkDestroyFramebuffer(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
-		Handle = VK_NULL_HANDLE;
 	}
-
 
 } } // namespace VE::Runtime

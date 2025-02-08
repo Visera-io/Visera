@@ -20,7 +20,9 @@ export namespace VE { namespace Runtime
 	public:
 		struct FAttachmentDescription
 		{
-			EImageViewType  ImageViewType;
+			EFormat			Format;
+			ESampleRate		SampleRate;
+			EImageViewType  ViewType;
 			EAttachmentIO	LoadOp;
 			EAttachmentIO	StoreOp;
 			EImageLayout	InitialLayout;
@@ -65,7 +67,7 @@ export namespace VE { namespace Runtime
 	{
 		DepthDesc = FAttachmentDescription
 		{
-			.ImageViewType	= EImageViewType::Image2D,
+			.ViewType	= EImageViewType::Image2D,
 			.LoadOp			= EAttachmentIO::I_Whatever,
 			.StoreOp		= EAttachmentIO::O_Store,
 			.InitialLayout  = EImageLayout::DepthAttachment,
@@ -85,7 +87,7 @@ export namespace VE { namespace Runtime
 		ColorDescs.emplace_back(std::move(_ColorDesc));
 		ResolveDescs.emplace_back(FAttachmentDescription
 			{
-				.ImageViewType	= EImageViewType::Image2D,
+				.ViewType	= EImageViewType::Image2D,
 				.LoadOp			= EAttachmentIO::I_Whatever,
 				.StoreOp		= EAttachmentIO::O_Store,
 				.InitialLayout  = EImageLayout::Undefined,

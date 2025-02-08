@@ -137,7 +137,7 @@ export namespace VE { namespace Runtime
 		friend class FVulkanAllocator;
 	public:
 		auto CreateImageView(
-			EImageViewType		_Type,
+			EImageViewType		_Type   = EImageViewType::Auto,
 			EFormat				_Format = EFormat::None,
 			EImageAspect		_Aspect = EImageAspect::Undefined,
 			Pair<UInt8, UInt8> _MipmapLevelRange = {0,0},
@@ -255,7 +255,7 @@ export namespace VE { namespace Runtime
 	}
 	
 	SharedPtr<FVulkanImageView> FVulkanImage::
-	CreateImageView(EImageViewType	   _Type,
+	CreateImageView(EImageViewType	   _Type  /*= EImageViewType::Auto*/,
 					EFormat			   _Format/* = EFormat::None*/,
 					EImageAspect	   _Aspect/* = EImageAspect::Undefined*/,
 					Pair<UInt8, UInt8> _MipmapLevelRange/* = { 0,0 }*/,
@@ -264,9 +264,10 @@ export namespace VE { namespace Runtime
 	{
 		//[TODO]: Check more ImageView validity.
 		VE_ASSERT(IsOrderedPair(_MipmapLevelRange) && IsOrderedPair(_ArrayLayerRange));
+		VE_ASSERT(Type != EImageType::Undefined && "Cannot create the image view for an undefined image!");
 
 		auto NewImageView = CreateSharedPtr<FVulkanImageView>(shared_from_this());
-		NewImageView->TypeView   = _Type;
+		NewImageView->TypeView   = (_Type   == EImageViewType::Auto)? EImageViewType(this->Type) : _Type;
 		NewImageView->FormatView = (_Format == EFormat::None)? this->Format : _Format;
 		NewImageView->AspectView = (_Aspect == EImageAspect::Undefined)? this->Aspects : _Aspect;
 		NewImageView->MipmapLevelRange = std::move(_MipmapLevelRange);
@@ -298,7 +299,7 @@ export namespace VE { namespace Runtime
 			GVulkan->Device->GetHandle(),
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
-			&(NewImageView->Handle)) != VK_SUCCESS)
+			&NewImageView->Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan Image View!"); }
 
 		return NewImageView;
