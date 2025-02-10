@@ -4,7 +4,7 @@ module;
 export module Visera.Runtime.RHI.Vulkan:Framebuffer;
 import :Common;
 import :Device;
-import :RenderPassResource;
+import :RenderTarget;
 
 import Visera.Core.Signal;
 
@@ -16,18 +16,18 @@ export namespace VE { namespace Runtime
 	{
 		friend class FVulkanRenderPass;
 	public:
-		Bool HasDepthImage() const { return RenderTargets->HasDepthImage(); }
+		Bool HasDepthImage() const { return RenderTarget->HasDepthImage(); }
 	
 	private:
 		VkFramebuffer						Handle{ VK_NULL_HANDLE };
 		FVulkanExtent3D						Extent;
-		SharedPtr<FVulkanRenderPassResource>RenderTargets;
+		SharedPtr<FVulkanRenderTarget>		RenderTarget;
 		Array<VkImageView>					RenderTargetViews;
 		//[TODO]: Shading Rate Image & VkAttachmentDescriptionStencilLayout StencilDescription;
 	
 	private:
 		// Created in RenderPass
-		void Create(const VkRenderPass& _Owner, const FVulkanExtent3D& _Extent, SharedPtr<FVulkanRenderPassResource> _RenderTargets);
+		void Create(const VkRenderPass& _Owner, const FVulkanExtent3D& _Extent, SharedPtr<FVulkanRenderTarget> _RenderTargets);
 		void Destroy();
 
 	public:
@@ -38,22 +38,22 @@ export namespace VE { namespace Runtime
 	void FVulkanFramebuffer::
 	Create(const VkRenderPass& _Owner,
 		const FVulkanExtent3D& _Extent,
-		SharedPtr<FVulkanRenderPassResource> _RenderTargets)
+		SharedPtr<FVulkanRenderTarget> _RenderTargets)
 	{
 		Extent = _Extent;
-		RenderTargets = std::move(_RenderTargets);
+		RenderTarget = std::move(_RenderTargets);
 
-		RenderTargetViews.reserve(RenderTargets->GetTotalImageCount());
-		for (const auto& ColorImage : RenderTargets->ColorImages)
+		RenderTargetViews.reserve(RenderTarget->GetTotalImageCount());
+		for (const auto& ColorImage : RenderTarget->ColorImages)
 		{
 			RenderTargetViews.push_back(ColorImage->CreateImageView()->Release());
 		}
-		for (const auto& ResolveImage : RenderTargets->ResolveImages)
+		for (const auto& ResolveImage : RenderTarget->ResolveImages)
 		{
 			RenderTargetViews.push_back(ResolveImage->CreateImageView()->Release());
 		}
 		if (HasDepthImage())
-		{ RenderTargetViews.push_back(RenderTargets->DepthImage->CreateImageView()->Release()); }
+		{ RenderTargetViews.push_back(RenderTarget->DepthImage->CreateImageView()->Release()); }
 	
 		VE_ASSERT(RenderTargetViews.size() % 1 == 1); // Currently, Visera's each renderpass must have 2N + 1 attachments.
 		VkFramebufferCreateInfo CreateInfo

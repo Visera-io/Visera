@@ -32,11 +32,12 @@ export namespace VE { namespace Runtime
 		using FFramebuffer			= FVulkanFramebuffer;
 		using FRenderPass			= FVulkanRenderPass;
 		using FRenderPassLayout		= FVulkanRenderPassLayout;
-		using FRenderPassResource	= FVulkanRenderPassResource;
+		using FRenderTarget			= FVulkanRenderTarget;
 		using FRenderPipeline		= FVulkanRenderPipeline;	
 		using FPipelineLayout		= FVulkanPipelineLayout;
 		using FRenderPipelineLayout	= FVulkanRenderPipelineLayout;
 
+		using ESharingMode			= EVulkanSharingMode;
 		using ESampleRate			= EVulkanSampleRate;
 		using EQueueFamily			= EVulkanQueueFamily;
 		using ECommandPoolType		= EVulkanCommandPoolType;
@@ -60,18 +61,16 @@ export namespace VE { namespace Runtime
 
 		using SSwapchainRecreation = FVulkanSwapchain::SRecreation;
 	public:
-		VE_API CreateRenderTargets(const Array<SharedPtr<FImage>>& _ColorImages, SharedPtr<FImage> _DepthImage = nullptr) -> SharedPtr<FRenderPassResource> { return CreateSharedPtr<FRenderPassResource>(_ColorImages, _DepthImage); }
-		VE_API CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _SetLayout)		-> SharedPtr<FDescriptorSet> { return GlobalDescriptorPool.CreateDescriptorSet(_SetLayout);		}
-		VE_API CreateCommandBuffer(ECommandLevel _Level = EVulkanCommandLevel::Primary)			-> SharedPtr<FCommandBuffer> { return ResetableGraphicsCommandPool.CreateCommandBuffer(_Level); }
-		VE_API CreateImmediateCommandBuffer(ECommandLevel _Level = EVulkanCommandLevel::Primary)	-> SharedPtr<FCommandBuffer> { return TransientGraphicsCommandPool.CreateCommandBuffer(_Level); }
-		VE_API CreateImage(EImageType _Type, FExtent3D _Extent, EFormat _Format, EImageAspect _Aspects, EImageUsage _Usages, EImageTiling _Tiling = EVulkanImageTiling::Optimal,ESampleRate _SampleRate = EVulkanSampleRate::X1, UInt8 _MipmapLevels = 1,UInt8 _ArrayLayers = 1, EVulkanSharingMode	_SharingMode = EVulkanSharingMode::Exclusive,EMemoryUsage	_Location = EVulkanMemoryUsage::Auto)->SharedPtr<FImage> { return Vulkan->Allocator.CreateImage(_Type, _Extent, _Format, _Aspects, _Usages, _Tiling, _SampleRate, _MipmapLevels, _ArrayLayers, _SharingMode, _Location); }
-		VE_API CreateBuffer(UInt64 _Size, EBufferUsage _Usages, EVulkanSharingMode _SharingMode = EVulkanSharingMode::Exclusive, EMemoryUsage _Location = EVulkanMemoryUsage::Auto) -> SharedPtr<FBuffer> { return Vulkan->Allocator.CreateBuffer(_Size, _Usages, _SharingMode, _Location); }
-		VE_API CreateFence()																-> SharedPtr<FFence>		 { return CreateSharedPtr<FFence>();								}
-		VE_API CreateSignaledFence()														-> SharedPtr<FFence>		 { return CreateSharedPtr<FFence>(true);							}
-		VE_API CreateSemaphore()															-> SharedPtr<FSemaphore>	 { return CreateSharedPtr<FSemaphore>();							}
-		VE_API CreateShader(EShaderStage Stage, const Array<Byte>& ShadingCode)				-> SharedPtr<FShader>		 { return CreateSharedPtr<FVulkanShader>(Stage, ShadingCode);		}
-
-		VE_API SubmitCommandBuffer(SharedPtr<FCommandBuffer> _CommandBuffer);
+		VE_API CreateRenderTargets(const Array<SharedPtr<FImage>>& _ColorImages, SharedPtr<FImage> _DepthImage = nullptr) -> SharedPtr<FRenderTarget> { return CreateSharedPtr<FRenderTarget>(_ColorImages, _DepthImage); }
+		VE_API CreateDescriptorSet(SharedPtr<FDescriptorSetLayout> _SetLayout)				-> SharedPtr<FDescriptorSet> { return GlobalDescriptorPool.CreateDescriptorSet(_SetLayout);		}
+		VE_API CreateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)			-> SharedPtr<FCommandBuffer> { return ResetableGraphicsCommandPool.CreateCommandBuffer(_Level); }
+		VE_API CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FCommandBuffer> { return TransientGraphicsCommandPool.CreateCommandBuffer(_Level); }
+		VE_API CreateImage(EImageType _Type, FExtent3D _Extent, EFormat _Format, EImageAspect _Aspects, EImageUsage _Usages, EImageTiling _Tiling = EImageTiling::Optimal,ESampleRate _SampleRate = ESampleRate::X1, UInt8 _MipmapLevels = 1,UInt8 _ArrayLayers = 1, ESharingMode	_SharingMode = ESharingMode::Exclusive,EMemoryUsage	_Location = EMemoryUsage::Auto)->SharedPtr<FImage> { return Vulkan->Allocator.CreateImage(_Type, _Extent, _Format, _Aspects, _Usages, _Tiling, _SampleRate, _MipmapLevels, _ArrayLayers, _SharingMode, _Location); }
+		VE_API CreateBuffer(UInt64 _Size, EBufferUsage _Usages, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive, EMemoryUsage _Location = EMemoryUsage::Auto) -> SharedPtr<FBuffer> { return Vulkan->Allocator.CreateBuffer(_Size, _Usages, _SharingMode, _Location); }
+		VE_API CreateFence()																-> SharedPtr<FFence>		 { return CreateSharedPtr<FFence>();						}
+		VE_API CreateSignaledFence()														-> SharedPtr<FFence>		 { return CreateSharedPtr<FFence>(true);					}
+		VE_API CreateSemaphore()															-> SharedPtr<FSemaphore>	 { return CreateSharedPtr<FSemaphore>();					}
+		VE_API CreateShader(EShaderStage Stage, const Array<Byte>& ShadingCode)				-> SharedPtr<FShader>		 { return CreateSharedPtr<FShader>(Stage, ShadingCode);		}
 
 		VE_API WaitIdle()	-> void				{ Vulkan->Device.WaitIdle(); }
 
@@ -118,20 +117,20 @@ export namespace VE { namespace Runtime
 			Vulkan = new FVulkan();
 			GlobalDescriptorPool.Create(
 				{
-					{EVulkanDescriptorType::UniformBuffer,		1000},
-					{EVulkanDescriptorType::StorageBuffer,		1000},
-					{EVulkanDescriptorType::DynamicStorageBuffer, 1000},
-					{EVulkanDescriptorType::DynamicUniformBuffer, 1000},
-					{EVulkanDescriptorType::CombinedImageSampler, 1000},
-					{EVulkanDescriptorType::InputAttachment,		1000},
-					{EVulkanDescriptorType::SampledImage,			1000},
-					{EVulkanDescriptorType::StorageImage,			1000},
-					{EVulkanDescriptorType::StorageTexelBuffer,	1000},
-					{EVulkanDescriptorType::UniformTexelBuffer,	1000},
-					{EVulkanDescriptorType::Sampler,				1000},
+					{EDescriptorType::UniformBuffer,		1000},
+					{EDescriptorType::StorageBuffer,		1000},
+					{EDescriptorType::DynamicStorageBuffer, 1000},
+					{EDescriptorType::DynamicUniformBuffer, 1000},
+					{EDescriptorType::CombinedImageSampler, 1000},
+					{EDescriptorType::InputAttachment,		1000},
+					{EDescriptorType::SampledImage,			1000},
+					{EDescriptorType::StorageImage,			1000},
+					{EDescriptorType::StorageTexelBuffer,	1000},
+					{EDescriptorType::UniformTexelBuffer,	1000},
+					{EDescriptorType::Sampler,				1000},
 				}, 10000);
-			ResetableGraphicsCommandPool.Create(EVulkanQueueFamily::Graphics, EVulkanCommandPoolType::Resetable);
-			TransientGraphicsCommandPool.Create(EVulkanQueueFamily::Graphics, EVulkanCommandPoolType::Transient);
+			ResetableGraphicsCommandPool.Create(EQueueFamily::Graphics, ECommandPoolType::Resetable);
+			TransientGraphicsCommandPool.Create(EQueueFamily::Graphics, ECommandPoolType::Transient);
 		}
 		static void
 		Tick()

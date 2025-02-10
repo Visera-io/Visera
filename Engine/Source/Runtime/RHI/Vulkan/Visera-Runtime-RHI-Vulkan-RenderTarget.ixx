@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.RHI.Vulkan:RenderPassResource;
+export module Visera.Runtime.RHI.Vulkan:RenderTarget;
 import :Common;
 import :Allocator;
 
@@ -11,9 +11,9 @@ export namespace VE { namespace Runtime
 	class FVulkanRenderPass;
 	class FVulkanFramebuffer;
 
-	class FVulkanRenderPassResource
+	class FVulkanRenderTarget
 	{
-		VE_NOT_COPYABLE(FVulkanRenderPassResource);
+		VE_NOT_COPYABLE(FVulkanRenderTarget);
 		friend class FVulkanRenderPass;
 		friend class FVulkanFramebuffer;
 	public:
@@ -24,10 +24,10 @@ export namespace VE { namespace Runtime
 		auto GetResolveImageCount() const	-> UInt8 { return ResolveImages.size(); }
 		Bool HasDepthImage() const { return DepthImage != nullptr; }
 
-		auto Clone() const -> SharedPtr<FVulkanRenderPassResource>;
+		auto Clone() const -> SharedPtr<FVulkanRenderTarget>;
 
-		FVulkanRenderPassResource() = default;
-		FVulkanRenderPassResource(const Array<SharedPtr<FVulkanImage>>& _ColorImages, SharedPtr<FVulkanImage> _DepthImage);
+		FVulkanRenderTarget() = default;
+		FVulkanRenderTarget(const Array<SharedPtr<FVulkanImage>>& _ColorImages, SharedPtr<FVulkanImage> _DepthImage);
 
 	private:
 		Array<SharedPtr<FVulkanImage>>		ColorImages;
@@ -35,7 +35,7 @@ export namespace VE { namespace Runtime
 		SharedPtr<FVulkanImage>				DepthImage;
 	};
 
-	void FVulkanRenderPassResource::
+	void FVulkanRenderTarget::
 	AddColorImage(SharedPtr<FVulkanImage> _ColorImage)
 	{
 		VE_ASSERT(AutoCast(EVulkanImageAspect::Color & _ColorImage->GetAspects()) != False);
@@ -52,7 +52,7 @@ export namespace VE { namespace Runtime
 		ColorImages.emplace_back(std::move(_ColorImage));
 	}
 
-	void FVulkanRenderPassResource::
+	void FVulkanRenderTarget::
 	AddDepthImage(SharedPtr<FVulkanImage> _DepthImage)
 	{
 		VE_ASSERT(AutoCast(EVulkanImageAspect::Depth & _DepthImage->GetAspects()) != False);
@@ -63,8 +63,8 @@ export namespace VE { namespace Runtime
 		else { throw SRuntimeError("Cannnot add more than one depth image!"); }
 	}
 
-	FVulkanRenderPassResource::
-	FVulkanRenderPassResource(const Array<SharedPtr<FVulkanImage>>&	_ColorImages,
+	FVulkanRenderTarget::
+	FVulkanRenderTarget(const Array<SharedPtr<FVulkanImage>>&	_ColorImages,
 						 SharedPtr<FVulkanImage>					_DepthImage)
 		:ColorImages {_ColorImages},
 		 DepthImage  {std::move(_DepthImage)}
@@ -87,10 +87,10 @@ export namespace VE { namespace Runtime
 		}
 	}
 
-	SharedPtr<FVulkanRenderPassResource> FVulkanRenderPassResource::
+	SharedPtr<FVulkanRenderTarget> FVulkanRenderTarget::
 	Clone() const
 	{
-		auto Result = CreateSharedPtr<FVulkanRenderPassResource>();
+		auto Result = CreateSharedPtr<FVulkanRenderTarget>();
 		Result->ColorImages.resize(GetColorImageCount());
 		Result->ResolveImages.resize(GetResolveImageCount());
 		for (UInt8 Idx = 0; Idx < GetColorImageCount(); ++Idx)

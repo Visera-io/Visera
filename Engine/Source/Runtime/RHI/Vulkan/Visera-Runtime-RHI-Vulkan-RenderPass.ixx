@@ -9,7 +9,7 @@ import :PipelineCache;
 import :Framebuffer;
 import :RenderPipeline;
 import :RenderPassLayout;
-import :RenderPassResource;
+import :RenderTarget;
 
 import Visera.Core.Signal;
 
@@ -47,7 +47,7 @@ export namespace VE { namespace Runtime
 
 	//private:
 		// Created by RHI Module (User : Render Module )
-		void Create(const Array<SharedPtr<FVulkanRenderPassResource>>& _RenderTargetsPackage);
+		void Create(const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargetsPackage);
 		void Destroy();
 
 	public:
@@ -56,7 +56,7 @@ export namespace VE { namespace Runtime
 	};
 
 	void FVulkanRenderPass::
-	Create(const Array<SharedPtr<FVulkanRenderPassResource>>& _RenderTargetsPackage)
+	Create(const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargetsPackage)
 	{
 		VE_ASSERT(_RenderTargetsPackage.size() == GVulkan->Swapchain->GetFrameCount());
 

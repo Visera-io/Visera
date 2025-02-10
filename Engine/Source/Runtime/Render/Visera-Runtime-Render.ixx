@@ -25,7 +25,7 @@ export namespace VE { namespace Runtime
 	private:
 		/*struct FFrame
 		{
-			SharedPtr<RHI::FRenderPassResource> RenderTargets;
+			SharedPtr<RHI::FRenderTarget> RenderTargets;
 			SharedPtr<RHI::FCommandBuffer> Drawcalls;
 		};
 		static inline Array<FFrame> Frames;*/

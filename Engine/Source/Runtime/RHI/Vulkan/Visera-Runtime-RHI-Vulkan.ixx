@@ -12,7 +12,7 @@ export import :RenderPass;
 export import :RenderPassLayout;
 export import :RenderPipeline;
 export import :RenderPipelineLayout;
-export import :RenderPassResource;
+export import :RenderTarget;
 export import :Framebuffer;
 export import :Synchronization;
 export import :Common;
