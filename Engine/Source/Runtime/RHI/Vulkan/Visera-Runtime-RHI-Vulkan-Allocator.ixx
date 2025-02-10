@@ -8,7 +8,6 @@ import :Device;
 import :GPU;
 
 import Visera.Core.Signal;
-import Visera.Template.Pattern;
 
 export namespace VE { namespace Runtime
 {
@@ -20,20 +19,20 @@ export namespace VE { namespace Runtime
 		friend class FVulkan;
 	public:
 		auto CreateBuffer(VkDeviceSize _Size,
-						  EBufferUsage _Usages,
-						  ESharingMode _SharingMode = ESharingMode::Exclusive,
-						  EMemoryUsage _Location    = EMemoryUsage::Auto) const -> SharedPtr<FVulkanBuffer>;
-		auto CreateImage(EImageType		_Type,
+						  EVulkanBufferUsage _Usages,
+						  EVulkanSharingMode _SharingMode = EVulkanSharingMode::Exclusive,
+						  EVulkanMemoryUsage _Location    = EVulkanMemoryUsage::Auto) const -> SharedPtr<FVulkanBuffer>;
+		auto CreateImage(EVulkanImageType		_Type,
 						FVulkanExtent3D	_Extent,
-						EFormat			_Format,
-						EImageAspect	_Aspects,
-						EImageUsage		_Usages,
-						EImageTiling	_Tiling		  = EImageTiling::Optimal,
-						ESampleRate     _SampleRate	  = ESampleRate::X1,
+						EVulkanFormat			_Format,
+						EVulkanImageAspect	_Aspects,
+						EVulkanImageUsage		_Usages,
+						EVulkanImageTiling	_Tiling		  = EVulkanImageTiling::Optimal,
+						EVulkanSampleRate     _SampleRate	  = EVulkanSampleRate::X1,
 						UInt8			_MipmapLevels = 1,
 						UInt8			_ArrayLayers  = 1,
-						ESharingMode	_SharingMode  = ESharingMode::Exclusive,
-						EMemoryUsage	_Location	  = EMemoryUsage::Auto) const -> SharedPtr<FVulkanImage>;
+						EVulkanSharingMode	_SharingMode  = EVulkanSharingMode::Exclusive,
+						EVulkanMemoryUsage	_Location	  = EVulkanMemoryUsage::Auto) const -> SharedPtr<FVulkanImage>;
 
 		auto GetHandle() const -> VmaAllocator { return Handle; }
 		operator VmaAllocator() const { return Handle; }
@@ -71,7 +70,7 @@ export namespace VE { namespace Runtime
 		VmaAllocator	Handle{ VMA_NULL };
 	};
 
-	class FVulkanBuffer : public Template::FPrototype<SharedPtr<FVulkanBuffer>>
+	class FVulkanBuffer
 	{
 		VE_NOT_COPYABLE(FVulkanBuffer);
 		friend class FVulkanAllocator;
@@ -83,13 +82,13 @@ export namespace VE { namespace Runtime
 
 		VE_API Free(VkBuffer* _pHandle, VmaAllocation* _pAllocation) { VE_ASSERT(_pHandle && _pAllocation); vmaDestroyBuffer(GVulkan->Allocator->GetHandle(), *_pHandle, *_pAllocation); *_pHandle = VK_NULL_HANDLE;  *_pAllocation = VK_NULL_HANDLE; }
 		auto   Release() -> ResultPackage<VkBuffer, VmaAllocation> { VkBuffer RawHandle = Handle; VmaAllocation RawAlloc = Allocation; Handle = VK_NULL_HANDLE; Allocation = VK_NULL_HANDLE; return { RawHandle, RawAlloc }; }
-		virtual auto Clone() const -> SharedPtr<FVulkanBuffer> override;
+		auto   Clone() const -> SharedPtr<FVulkanBuffer>;
 	private:
 		VkBuffer		Handle{ VK_NULL_HANDLE };
 		VmaAllocation	Allocation;
-		EBufferUsage	Usages;
-		ESharingMode	SharingMode;
-		EMemoryUsage	Location;
+		EVulkanBufferUsage	Usages;
+		EVulkanSharingMode	SharingMode;
+		EVulkanMemoryUsage	Location;
 
 	public:	
 		FVulkanBuffer() = default;
@@ -115,9 +114,9 @@ export namespace VE { namespace Runtime
 	private:
 		VkImageView					Handle{ VK_NULL_HANDLE };
 		WeakPtr<const FVulkanImage>	Image;
-		EImageViewType				TypeView;
-		EImageAspect				AspectView;
-		EFormat						FormatView;
+		EVulkanImageViewType				TypeView;
+		EVulkanImageAspect				AspectView;
+		EVulkanFormat						FormatView;
 		Pair<UInt8, UInt8>			MipmapLevelRange{ 0, 0 };
 		Pair<UInt8, UInt8>			ArrayLayerRange	{ 0, 0 };
 
@@ -129,32 +128,30 @@ export namespace VE { namespace Runtime
 		~FVulkanImageView() { if (!IsReleased()) { Free(&Handle); } }
 	};
 
-	class FVulkanImage : 
-		public std::enable_shared_from_this<FVulkanImage>,
-		public Template::FPrototype<SharedPtr<FVulkanImage>>
+	class FVulkanImage : public std::enable_shared_from_this<FVulkanImage>
 	{
 		VE_NOT_COPYABLE(FVulkanImage);
 		friend class FVulkanAllocator;
 	public:
 		auto CreateImageView(
-			EImageViewType		_Type   = EImageViewType::Auto,
-			EFormat				_Format = EFormat::None,
-			EImageAspect		_Aspect = EImageAspect::Undefined,
+			EVulkanImageViewType		_Type   = EVulkanImageViewType::Auto,
+			EVulkanFormat				_Format = EVulkanFormat::None,
+			EVulkanImageAspect		_Aspect = EVulkanImageAspect::Undefined,
 			Pair<UInt8, UInt8> _MipmapLevelRange = {0,0},
 			Pair<UInt8, UInt8> _ArrayLayerRange  = {0,0},
 			const FVulkanComponentMapping& _ComponentMapping = {}) const -> SharedPtr<FVulkanImageView>;
 
 		auto GetExtent()		const -> const FVulkanExtent3D&	{ return Extent; }
 		auto GetSize()			const -> VkDeviceSize			{ return Allocation->GetSize(); }
-		auto GetLayout()		const -> EImageLayout			{ return Layout; }
-		auto GetType()			const -> EImageType				{ return Type; }
-		auto GetFormat()		const -> EFormat				{ return Format; }
-		auto GetAspects()		const -> EImageAspect			{ return Aspects; }
-		auto GetUsages()		const -> EImageUsage			{ return Usages; }
-		auto GetTiling()		const -> EImageTiling			{ return Tiling; }
+		auto GetLayout()		const -> EVulkanImageLayout			{ return Layout; }
+		auto GetType()			const -> EVulkanImageType				{ return Type; }
+		auto GetFormat()		const -> EVulkanFormat				{ return Format; }
+		auto GetAspects()		const -> EVulkanImageAspect			{ return Aspects; }
+		auto GetUsages()		const -> EVulkanImageUsage			{ return Usages; }
+		auto GetTiling()		const -> EVulkanImageTiling			{ return Tiling; }
 		auto GetMipmapLevels()	const -> UInt8				{ return MipmapLevels; }
 		auto GetArrayLayers()	const -> UInt8				{ return ArrayLayers; }
-		auto GetSampleRate()	const -> ESampleRate		{ return SampleRate;}
+		auto GetSampleRate()	const -> EVulkanSampleRate		{ return SampleRate;}
 		auto GetDetails()		const -> VmaAllocationInfo  { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
 		auto GetHandle()			  -> VkImage { return Handle; }
 
@@ -162,21 +159,21 @@ export namespace VE { namespace Runtime
 		
 		VE_API Free(VkImage* _pHandle, VmaAllocation* _pAllocation) { VE_ASSERT(_pHandle && _pAllocation); vmaDestroyImage(GVulkan->Allocator->GetHandle(), *_pHandle, *_pAllocation); *_pHandle = VK_NULL_HANDLE;  *_pAllocation = VK_NULL_HANDLE; }
 		auto   Release() -> ResultPackage<VkImage, VmaAllocation> { VkImage RawHandle = Handle; VmaAllocation RawAlloc = Allocation; Handle = VK_NULL_HANDLE; Allocation = VK_NULL_HANDLE; return { RawHandle, RawAlloc }; }
-		virtual auto Clone() const -> SharedPtr<FVulkanImage> override;
+		auto   Clone() const -> SharedPtr<FVulkanImage>;
 	protected:
 		VkImage			Handle;
-		EImageLayout	Layout{ EImageLayout::Undefined }; //[TODO]: Layout  Transfer
-		EImageType		Type;
-		EFormat			Format;
+		EVulkanImageLayout	Layout{ EVulkanImageLayout::Undefined }; //[TODO]: Layout  Transfer
+		EVulkanImageType		Type;
+		EVulkanFormat			Format;
 		FVulkanExtent3D	Extent;
-		EImageAspect    Aspects;
-		EImageUsage		Usages;
-		EImageTiling	Tiling;
+		EVulkanImageAspect    Aspects;
+		EVulkanImageUsage		Usages;
+		EVulkanImageTiling	Tiling;
 		UInt8			MipmapLevels = 0;
 		UInt8			ArrayLayers	 = 0;
-		ESampleRate     SampleRate	 = ESampleRate::X1;
-		ESharingMode	SharingMode;
-		EMemoryUsage	Location;
+		EVulkanSampleRate     SampleRate	 = EVulkanSampleRate::X1;
+		EVulkanSharingMode	SharingMode;
+		EVulkanMemoryUsage	Location;
 
 		VmaAllocation	Allocation;
 	public:	
@@ -187,17 +184,17 @@ export namespace VE { namespace Runtime
 	};
 
 	SharedPtr<FVulkanImage> FVulkanAllocator::
-	CreateImage(EImageType		_Type,
+	CreateImage(EVulkanImageType		_Type,
 				FVulkanExtent3D	_Extent,
-				EFormat			_Format,
-				EImageAspect	_Aspects,
-				EImageUsage		_Usages,
-				EImageTiling	_Tiling		/*= EImageTiling::Optimal*/,
-				ESampleRate     _SampleRate /*= ESampleRate::X1*/,
+				EVulkanFormat			_Format,
+				EVulkanImageAspect	_Aspects,
+				EVulkanImageUsage		_Usages,
+				EVulkanImageTiling	_Tiling		/*= EImageTiling::Optimal*/,
+				EVulkanSampleRate     _SampleRate /*= ESampleRate::X1*/,
 				UInt8			_MipmapLevels/* = 1*/,
 				UInt8			_ArrayLayers/* = 1*/,
-				ESharingMode	_SharingMode/* = ESharingMode::Exclusive*/,
-				EMemoryUsage	_Location	/*= EMemoryUsage::Auto*/) const
+				EVulkanSharingMode	_SharingMode/* = ESharingMode::Exclusive*/,
+				EVulkanMemoryUsage	_Location	/*= EMemoryUsage::Auto*/) const
 	{
 		auto NewImage = CreateSharedPtr<FVulkanImage>();
 		NewImage->Type			= _Type;
@@ -228,7 +225,7 @@ export namespace VE { namespace Runtime
 			.sharingMode			= AutoCast(_SharingMode),
 			//.queueFamilyIndexCount	= 1,
 			//.pQueueFamilyIndices	= &(GVulkan->Device->GetQueueFamily(EQueueFamily::Graphics).Index),
-			.initialLayout			= AutoCast(EImageLayout::Undefined),
+			.initialLayout			= AutoCast(EVulkanImageLayout::Undefined),
 		};
 
 		VmaAllocationCreateInfo AllocationCreateInfo
@@ -257,21 +254,21 @@ export namespace VE { namespace Runtime
 	}
 	
 	SharedPtr<FVulkanImageView> FVulkanImage::
-	CreateImageView(EImageViewType	   _Type  /*= EImageViewType::Auto*/,
-					EFormat			   _Format/* = EFormat::None*/,
-					EImageAspect	   _Aspect/* = EImageAspect::Undefined*/,
+	CreateImageView(EVulkanImageViewType	   _Type  /*= EImageViewType::Auto*/,
+					EVulkanFormat			   _Format/* = EFormat::None*/,
+					EVulkanImageAspect	   _Aspect/* = EImageAspect::Undefined*/,
 					Pair<UInt8, UInt8> _MipmapLevelRange/* = { 0,0 }*/,
 					Pair<UInt8, UInt8> _ArrayLayerRange /* = { 0,0 }*/,
 					const FVulkanComponentMapping& _ComponentMapping/* = {}*/) const
 	{
 		//[TODO]: Check more ImageView validity.
 		VE_ASSERT(IsOrderedPair(_MipmapLevelRange) && IsOrderedPair(_ArrayLayerRange));
-		VE_ASSERT(Type != EImageType::Undefined && "Cannot create the image view for an undefined image!");
+		VE_ASSERT(Type != EVulkanImageType::Undefined && "Cannot create the image view for an undefined image!");
 
 		auto NewImageView = CreateSharedPtr<FVulkanImageView>(shared_from_this());
-		NewImageView->TypeView   = (_Type   == EImageViewType::Auto)? EImageViewType(this->Type) : _Type;
-		NewImageView->FormatView = (_Format == EFormat::None)? this->Format : _Format;
-		NewImageView->AspectView = (_Aspect == EImageAspect::Undefined)? this->Aspects : _Aspect;
+		NewImageView->TypeView   = (_Type   == EVulkanImageViewType::Auto)? EVulkanImageViewType(this->Type) : _Type;
+		NewImageView->FormatView = (_Format == EVulkanFormat::None)? this->Format : _Format;
+		NewImageView->AspectView = (_Aspect == EVulkanImageAspect::Undefined)? this->Aspects : _Aspect;
 		NewImageView->MipmapLevelRange = std::move(_MipmapLevelRange);
 		NewImageView->ArrayLayerRange  = std::move(_ArrayLayerRange);
 		
@@ -309,9 +306,9 @@ export namespace VE { namespace Runtime
 
 	SharedPtr<FVulkanBuffer> FVulkanAllocator::
 	CreateBuffer(VkDeviceSize _Size,
-				 EBufferUsage _Usages,
-				 ESharingMode _SharingMode/* = ESharingMode::Exclusive*/,
-				 EMemoryUsage _Location/* = EMemoryUsage::Auto*/) const
+				 EVulkanBufferUsage _Usages,
+				 EVulkanSharingMode _SharingMode/* = ESharingMode::Exclusive*/,
+				 EVulkanMemoryUsage _Location/* = EMemoryUsage::Auto*/) const
 	{
 		VE_ASSERT(_Size > 0);
 

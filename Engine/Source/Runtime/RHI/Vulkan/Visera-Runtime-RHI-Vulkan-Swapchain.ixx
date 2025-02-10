@@ -18,24 +18,23 @@ export namespace VE { namespace Runtime
 	{
 		friend class FVulkan;
 	public:
-		class RecreateSignal : public std::exception { public: RecreateSignal() noexcept = default; };
-		void WaitForCurrentImage(VkSemaphore SignalSemaphore, VkFence SignalFence) throw(RecreateSignal);
-		void PresentCurrentImage(VkSemaphore WaitSemaphore, Bool bMoveCursor = True) throw(RecreateSignal);
+		class SRecreation : public std::exception { public: SRecreation() noexcept = default; };
+		void WaitForCurrentImage(VkSemaphore SignalSemaphore, VkFence SignalFence) throw(SRecreation);
+		void PresentCurrentImage(VkSemaphore WaitSemaphore, Bool bMoveCursor = True) throw(SRecreation);
 
-		auto GetCursor()			const   -> UInt32					{ return Cursor; }
-		auto GetSize()				const	-> size_t					{ return Images.size(); }
-		auto GetExtent()			const	-> const VkExtent2D&		{ return ImageExtent; }
-		auto GetFormat()			const	-> EFormat					{ return ImageFormat; }
-		auto GetColorSpace()		const	-> VkColorSpaceKHR			{ return ImageColorSpace; }
-		auto GetImages()			const	-> const Array<VkImage>&	{ return Images; }
-		auto GetImageViews()		const	-> const Array<VkImageView> { return ImageViews; }
-		auto GetHandle()			const	-> VkSwapchainKHR			{ return Handle; }
-		operator VkSwapchainKHR()	const	{ return Handle; }
+		auto GetCursor()		const   -> UInt32					{ return Cursor; }
+		auto GetFrameCount()	const	-> UInt32					{ return Images.size(); }
+		auto GetExtent()		const	-> const VkExtent2D&		{ return ImageExtent; }
+		auto GetFormat()		const	-> EVulkanFormat					{ return ImageFormat; }
+		auto GetColorSpace()	const	-> VkColorSpaceKHR			{ return ImageColorSpace; }
+		auto GetImages()		const	-> const Array<VkImage>&	{ return Images; }
+		auto GetImageViews()	const	-> const Array<VkImageView> { return ImageViews; }
+		auto GetHandle()		const	-> const VkSwapchainKHR		{ return Handle; }
 
 	private:
 		VkSwapchainKHR			Handle{ VK_NULL_HANDLE };
 		
-		EPresentMode			PresentMode		= EPresentMode::Mailbox;
+		EVulkanPresentMode			PresentMode		= EVulkanPresentMode::Mailbox;
 
 		UInt32					Cursor{ 0 };	// Current Frame Index
 		void MoveCursor(UInt32 Stride) { Cursor = (Cursor + Stride) % Images.size(); }
@@ -43,11 +42,11 @@ export namespace VE { namespace Runtime
 		Array<VkImage>			Images;			// Size: Clamp(minImageCount + 1, maxImageCount)
 		Array<VkImageView>		ImageViews;
 		VkExtent2D				ImageExtent;
-		EFormat					ImageFormat		= EFormat::U32_sRGB_B8_G8_R8_A8;
+		EVulkanFormat					ImageFormat		= EVulkanFormat::U32_sRGB_B8_G8_R8_A8;
 		VkColorSpaceKHR			ImageColorSpace	= VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 
-		EFormat					DepthImageFormat= EFormat::S32_Float_Depth32;
-		EImageTiling			DepthImageTiling= EImageTiling::Optimal;
+		EVulkanFormat					DepthImageFormat= EVulkanFormat::S32_Float_Depth32;
+		EVulkanImageTiling			DepthImageTiling= EVulkanImageTiling::Optimal;
 
 		void Create();
 		void Destroy();
@@ -89,10 +88,10 @@ export namespace VE { namespace Runtime
 			auto ZBufferProperties = GVulkan->GPU->QueryFormatProperties(DepthImageFormat);
 			switch (DepthImageTiling)
 			{
-			case EImageTiling::Linear:
+			case EVulkanImageTiling::Linear:
 				bZBufferFormatSupport = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT & ZBufferProperties.linearTilingFeatures;
 				break;
-			case EImageTiling::Optimal:
+			case EVulkanImageTiling::Optimal:
 				bZBufferFormatSupport = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT & ZBufferProperties.optimalTilingFeatures;
 				break;
 			default: break;
@@ -143,8 +142,8 @@ export namespace VE { namespace Runtime
 
 		Array<UInt32> QueuefamilyIndices
 		{
-			GVulkan->Device->GetQueueFamily(EQueueFamily::Graphics).Index,
-			GVulkan->Device->GetQueueFamily(EQueueFamily::Present).Index
+			GVulkan->Device->GetQueueFamily(EVulkanQueueFamily::Graphics).Index,
+			GVulkan->Device->GetQueueFamily(EVulkanQueueFamily::Present).Index
 		};
 		VkSwapchainCreateInfoKHR CreateInfo
 		{
@@ -155,8 +154,8 @@ export namespace VE { namespace Runtime
 			.imageColorSpace		= ImageColorSpace,
 			.imageExtent			= ImageExtent,
 			.imageArrayLayers		= 1,
-			.imageUsage				= AutoCast( EImageUsage::ColorAttachment |
-												EImageUsage::TransferDestination),
+			.imageUsage				= AutoCast( EVulkanImageUsage::ColorAttachment |
+												EVulkanImageUsage::TransferDestination),
 			.imageSharingMode		= GVulkan->GPU->IsDiscreteGPU()? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT,
 			.queueFamilyIndexCount	= GVulkan->GPU->IsDiscreteGPU()? 0U : 2U,
 			.pQueueFamilyIndices	= GVulkan->GPU->IsDiscreteGPU()? nullptr : QueuefamilyIndices.data(),
@@ -226,7 +225,7 @@ export namespace VE { namespace Runtime
 
 	void FVulkanSwapchain::
 	WaitForCurrentImage(VkSemaphore SignalSemaphore, VkFence SignalFence)
-	throw(RecreateSignal)
+	throw(SRecreation)
 	{
 		auto Result = vkAcquireNextImageKHR(GVulkan->Device->GetHandle(),
 											Handle,
@@ -239,14 +238,14 @@ export namespace VE { namespace Runtime
 			VK_SUBOPTIMAL_KHR		 == Result)
 		{
 			//recreate_swapchain();
-			throw RecreateSignal{};
+			throw SRecreation{};
 		}
 		if (Result != VK_SUCCESS) throw SRuntimeError("Failed to retrive the next image from the Vulkan Swapchain!");
 	}
 
 	void FVulkanSwapchain::
 	PresentCurrentImage(VkSemaphore WaitSemaphore, Bool bMoveCursor/* = True*/)
-	throw(RecreateSignal)
+	throw(SRecreation)
 	{
 		VkPresentInfoKHR PresentInfo
 		{
@@ -258,14 +257,14 @@ export namespace VE { namespace Runtime
 			.pImageIndices		= &Cursor,
 			.pResults			= nullptr // It is not necessary if you are only using a single swap chain
 		};
-		VkQueue PresentQueue = GVulkan->Device->GetQueueFamily(EQueueFamily::Present).Queues.front();
+		VkQueue PresentQueue = GVulkan->Device->GetQueueFamily(EVulkanQueueFamily::Present).Queues.front();
 		auto Result = vkQueuePresentKHR(PresentQueue, &PresentInfo);
 
 		if (VK_ERROR_OUT_OF_DATE_KHR == Result ||
 			VK_SUBOPTIMAL_KHR		 == Result)
 		{
 			//recreate_swapchain();
-			throw RecreateSignal{};
+			throw SRecreation{};
 		}
 		if (Result != VK_SUCCESS) throw SRuntimeError(Text("Failed to present the Vulkan Swapchain! (Cursor:{})", Cursor));
 

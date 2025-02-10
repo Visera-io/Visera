@@ -24,7 +24,7 @@ export namespace VE { namespace Runtime
 
 	public:
 		FVulkanShader() noexcept = default;
-		FVulkanShader(EShaderStage ShaderType, const Array<Byte>& ShadingCode);
+		FVulkanShader(EVulkanShaderStage ShaderType, const Array<Byte>& ShadingCode);
 		~FVulkanShader() noexcept;
 		
 	private:
@@ -34,7 +34,7 @@ export namespace VE { namespace Runtime
 	};
 
 	FVulkanShader::
-	FVulkanShader(EShaderStage ShaderType, const Array<Byte>& ShadingCode)
+	FVulkanShader(EVulkanShaderStage ShaderType, const Array<Byte>& ShadingCode)
 		:Stage{VkShaderStageFlagBits(ShaderType)}, Data{ShadingCode}
 	{
 		VE_ASSERT(!Data.empty());

@@ -5,43 +5,44 @@ export module Visera.Runtime.RHI.Vulkan:Common;
 export namespace VE { namespace Runtime
 {
 
-	// VE_ENUM_CLASS(EImageViewType,	VkImageViewType)
-	// VE_ENUM_CLASS(EImageType,		VkImageType)
-	// VE_ENUM_CLASS(EImageAspect,		VkImageAspectFlags)
-	// VE_ENUM_CLASS(EImageTiling,		VkImageTiling)
-	// VE_ENUM_CLASS(EFormat,			VkFormat)
-	// VE_ENUM_CLASS(EPresentMode,		VkPresentModeKHR)
-	// VE_ENUM_CLASS(EDescriptorType,	VkDescriptorType)
-	// VE_ENUM_CLASS(EQueueFamily,		UInt32)
-	// VE_ENUM_CLASS(ECommandPool,		VkCommandPoolCreateFlags)
-	// VE_ENUM_CLASS(ECommandLevel,		VkCommandBufferLevel)
-	// VE_ENUM_CLASS(ESampleRate,		VkSampleCountFlags)
-	// VE_ENUM_CLASS(EAccessibility,	VkAccessFlags)
-	// VE_ENUM_CLASS(EShaderStage,		VkShaderStageFlags)
-	// VE_ENUM_CLASS(EPipelineStage,	VkPipelineStageFlags)
-	// VE_ENUM_CLASS(EMemoryUsage,		VmaMemoryUsage)
-	// VE_ENUM_CLASS(EImageLayout,		VkImageLayout)
-	// VE_ENUM_CLASS(EImageUsage,		VkImageUsageFlags)
-	// VE_ENUM_CLASS(EBufferUsage,		VkBufferUsageFlags)
-	// VE_ENUM_CLASS(EAttachmentIO,		VkAttachmentLoadOp)
+	// VE_ENUM_CLASS(EVulkanSharingMode,	VkSharingMode)
+	// VE_ENUM_CLASS(EVulkanSwizzle,		VkComponentSwizzle)
+	// VE_ENUM_CLASS(EVulkanImageViewType,	VkImageViewType)
+	// VE_ENUM_CLASS(EVulkanImageType,		VkImageType)
+	// VE_ENUM_CLASS(EVulkanImageAspect,	VkImageAspectFlags)
+	// VE_ENUM_CLASS(EVulkanImageTiling,	VkImageTiling)
+	// VE_ENUM_CLASS(EVulkanFormat,			VkFormat)
+	// VE_ENUM_CLASS(EVulkanPresentMode,	VkPresentModeKHR)
+	// VE_ENUM_CLASS(EVulkanDescriptorType,	VkDescriptorType)
+	// VE_ENUM_CLASS(EVulkanQueueFamily,	UInt32)
+	// VE_ENUM_CLASS(EVulkanCommandPoolType,VkCommandPoolCreateFlags)
+	// VE_ENUM_CLASS(EVulkanCommandLevel,	VkCommandBufferLevel)
+	// VE_ENUM_CLASS(EVulkanSampleRate,		VkSampleCountFlags)
+	// VE_ENUM_CLASS(EVulkanAccessibility,			VkAccessFlags)
+	// VE_ENUM_CLASS(EVulkanShaderStage,	VkShaderStageFlags)
+	// VE_ENUM_CLASS(EVulkanPipelineStage,	VkPipelineStageFlags)
+	// VE_ENUM_CLASS(EVulkanMemoryUsage,	VmaMemoryUsage)
+	// VE_ENUM_CLASS(EVulkanImageLayout,	VkImageLayout)
+	// VE_ENUM_CLASS(EVulkanImageUsage,		VkImageUsageFlags)
+	// VE_ENUM_CLASS(EVulkanBufferUsage,	VkBufferUsageFlags)
+	// VE_ENUM_CLASS(EVulkanAttachmentIO,	VkAttachmentLoadOp)
 
 	// struct	FVulkanComponentMapping
-	// using	FClearValue = VkClearValue;
-	// using	FVulkanExtent2D = VkExtent2D;
-	// using	FVulkanExtent3D = VkExtent3D;
-	// using	FVulkanOffset2D = VkOffset2D;
-	// using	FVulkanOffset3D = VkOffset3D;
-	// using	FRenderArea		= VkRect2D;
+	// using	FVulkanExtent2D		= VkExtent2D;
+	// using	FVulkanExtent3D		= VkExtent3D;
+	// using	FVulkanOffset2D		= VkOffset2D;
+	// using	FVulkanOffset3D		= VkOffset3D;
+	// using	FVulkanRenderArea	= VkRect2D;
 	
 	using FClearValue = VkClearValue;
 
-	VE_ENUM_CLASS(ESharingMode, VkSharingMode)
+	VE_ENUM_CLASS(EVulkanSharingMode, VkSharingMode)
 	{
 		Exclusive	= VK_SHARING_MODE_EXCLUSIVE,
 		Concurrent	= VK_SHARING_MODE_CONCURRENT,
 	};
     
-	VE_ENUM_CLASS(EComponentMapping, VkComponentSwizzle)
+	VE_ENUM_CLASS(EVulkanSwizzle, VkComponentSwizzle)
 	{
 		Identity  = VK_COMPONENT_SWIZZLE_IDENTITY,
 		Zero	  = VK_COMPONENT_SWIZZLE_ZERO,
@@ -52,7 +53,7 @@ export namespace VE { namespace Runtime
 		A	      = VK_COMPONENT_SWIZZLE_A,
 	};
 
-	VE_ENUM_CLASS(EImageViewType, VkImageViewType)
+	VE_ENUM_CLASS(EVulkanImageViewType, VkImageViewType)
 	{
 		Image1D		=	VK_IMAGE_VIEW_TYPE_1D,
 		Image2D		= 	VK_IMAGE_VIEW_TYPE_2D,
@@ -65,7 +66,7 @@ export namespace VE { namespace Runtime
 		Auto,
 	};
 
-	VE_ENUM_CLASS(EImageType, VkImageType)
+	VE_ENUM_CLASS(EVulkanImageType, VkImageType)
 	{
 		Image1D = VK_IMAGE_TYPE_1D,
 		Image2D = VK_IMAGE_TYPE_2D,
@@ -74,7 +75,7 @@ export namespace VE { namespace Runtime
 		Undefined,
 	};
 
-	VE_ENUM_CLASS(EImageAspect, VkImageAspectFlags)
+	VE_ENUM_CLASS(EVulkanImageAspect, VkImageAspectFlags)
 	{
 		Color		= VK_IMAGE_ASPECT_COLOR_BIT,
 		Depth		= VK_IMAGE_ASPECT_DEPTH_BIT,
@@ -83,14 +84,14 @@ export namespace VE { namespace Runtime
 		Undefined,
 	};
 
-	VE_ENUM_CLASS(EImageTiling, VkImageTiling)
+	VE_ENUM_CLASS(EVulkanImageTiling, VkImageTiling)
 	{
 		Optimal = VK_IMAGE_TILING_OPTIMAL,
 		Linear	= VK_IMAGE_TILING_LINEAR,
 	};
 
 	/* BXXX format is common for Windows bitmap (BGRA) images. */
-	VE_ENUM_CLASS(EFormat, VkFormat)
+	VE_ENUM_CLASS(EVulkanFormat, VkFormat)
 	{
 		None						= VK_FORMAT_UNDEFINED,
 
@@ -228,7 +229,7 @@ export namespace VE { namespace Runtime
 		VK_FORMAT_R32G32B32A32_SFLOAT,*/
 	};
 
-	VE_ENUM_CLASS(EPresentMode, VkPresentModeKHR)
+	VE_ENUM_CLASS(EVulkanPresentMode, VkPresentModeKHR)
 	{
 		Immediate	= VK_PRESENT_MODE_IMMEDIATE_KHR,
 		Mailbox		= VK_PRESENT_MODE_MAILBOX_KHR,
@@ -236,7 +237,7 @@ export namespace VE { namespace Runtime
 		RelaxedFIFO = VK_PRESENT_MODE_FIFO_RELAXED_KHR, // Relaxed V-Sync
 	};
 
-	VE_ENUM_CLASS(EDescriptorType, VkDescriptorType)
+	VE_ENUM_CLASS(EVulkanDescriptorType, VkDescriptorType)
 	{
 		Sampler					= VK_DESCRIPTOR_TYPE_SAMPLER,
 		CombinedImageSampler	= VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
@@ -256,7 +257,7 @@ export namespace VE { namespace Runtime
 		InlineUniformBlock		= VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK,
 	};
 
-	VE_ENUM_CLASS(EQueueFamily, UInt32)
+	VE_ENUM_CLASS(EVulkanQueueFamily, UInt32)
 	{
 		Graphics = 0,
 		Present  = 1,
@@ -265,7 +266,7 @@ export namespace VE { namespace Runtime
 		All		 = 4,
 	};
 
-	VE_ENUM_CLASS(ESampleRate, VkSampleCountFlagBits)
+	VE_ENUM_CLASS(EVulkanSampleRate, VkSampleCountFlagBits)
 	{
 		X1	= VK_SAMPLE_COUNT_1_BIT,
 		X2	= VK_SAMPLE_COUNT_2_BIT,
@@ -277,20 +278,20 @@ export namespace VE { namespace Runtime
 	};
 	VE_REGISTER_AUTOCAST(VkSampleCountFlagBits, VkSampleCountFlags);
 
-	VE_ENUM_CLASS(ECommandPool, VkCommandPoolCreateFlags)
+	VE_ENUM_CLASS(EVulkanCommandPoolType, VkCommandPoolCreateFlags)
 	{
 		Transient = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
 		Resetable = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
 		Protected = VK_COMMAND_POOL_CREATE_PROTECTED_BIT,
 	};
 
-	VE_ENUM_CLASS(ECommandLevel, VkCommandBufferLevel)
+	VE_ENUM_CLASS(EVulkanCommandLevel, VkCommandBufferLevel)
 	{
 		Primary   = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
 		Secondary = VK_COMMAND_BUFFER_LEVEL_SECONDARY,
 	};
 
-	VE_ENUM_CLASS(EAccessibility, VkAccessFlags)
+	VE_ENUM_CLASS(EVulkanAccessibility, VkAccessFlags)
 	{
 		None						= VK_ACCESS_NONE,
 
@@ -321,13 +322,13 @@ export namespace VE { namespace Runtime
 		X_Memory				= R_Memory					| W_Memory,
 	};
 
-	VE_ENUM_CLASS(EShaderStage,	VkShaderStageFlags)
+	VE_ENUM_CLASS(EVulkanShaderStage,	VkShaderStageFlags)
 	{
 		Vertex			= VK_SHADER_STAGE_VERTEX_BIT,
 		Fragment		= VK_SHADER_STAGE_FRAGMENT_BIT,
 	};
 
-	VE_ENUM_CLASS(EPipelineStage, VkPipelineStageFlags)
+	VE_ENUM_CLASS(EVulkanPipelineStage, VkPipelineStageFlags)
 	{
 		None							= VK_PIPELINE_STAGE_NONE,
 		All								= VK_PIPELINE_STAGE_FLAG_BITS_MAX_ENUM,
@@ -352,7 +353,7 @@ export namespace VE { namespace Runtime
 		AllCommands 	= VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
 	};
 
-	VE_ENUM_CLASS(EMemoryUsage,	VmaMemoryUsage)
+	VE_ENUM_CLASS(EVulkanMemoryUsage,	VmaMemoryUsage)
 	{
 		None	=	VMA_MEMORY_USAGE_UNKNOWN,
 		All		=	VMA_MEMORY_USAGE_MAX_ENUM,
@@ -364,7 +365,7 @@ export namespace VE { namespace Runtime
 		GPU		=	VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
 	};
 
-	VE_ENUM_CLASS(EImageLayout, VkImageLayout)
+	VE_ENUM_CLASS(EVulkanImageLayout, VkImageLayout)
 	{
 		Undefined 							= VK_IMAGE_LAYOUT_UNDEFINED,
 		General 							= VK_IMAGE_LAYOUT_GENERAL,
@@ -388,7 +389,7 @@ export namespace VE { namespace Runtime
 		Present								= VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 	};
 
-	VE_ENUM_CLASS(EImageUsage, VkImageUsageFlags)
+	VE_ENUM_CLASS(EVulkanImageUsage, VkImageUsageFlags)
 	{
 		None						= 0x0,
 		All							= VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM,
@@ -403,7 +404,7 @@ export namespace VE { namespace Runtime
 		InputAttachment				= VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
 	};
 
-	VE_ENUM_CLASS(EBufferUsage, VkBufferUsageFlags)
+	VE_ENUM_CLASS(EVulkanBufferUsage, VkBufferUsageFlags)
 	{
 		None	= 0x0,
 		All		= VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM,
@@ -420,7 +421,7 @@ export namespace VE { namespace Runtime
 		SharedDeviceAddress	= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
 	};
 
-	VE_ENUM_CLASS(EAttachmentIO, VkAttachmentLoadOp)
+	VE_ENUM_CLASS(EVulkanAttachmentIO, VkAttachmentLoadOp)
 	{
 		I_Keep	 	= VK_ATTACHMENT_LOAD_OP_LOAD,
 		I_Clear	 	= VK_ATTACHMENT_LOAD_OP_CLEAR,
@@ -434,10 +435,10 @@ export namespace VE { namespace Runtime
 
 	struct FVulkanComponentMapping
 	{
-		EComponentMapping RMapping = EComponentMapping::Identity;
-		EComponentMapping GMapping = EComponentMapping::Identity;
-		EComponentMapping BMapping = EComponentMapping::Identity;
-		EComponentMapping AMapping = EComponentMapping::Identity;
+		EVulkanSwizzle RMapping = EVulkanSwizzle::Identity;
+		EVulkanSwizzle GMapping = EVulkanSwizzle::Identity;
+		EVulkanSwizzle BMapping = EVulkanSwizzle::Identity;
+		EVulkanSwizzle AMapping = EVulkanSwizzle::Identity;
 	};
 
 	using FVulkanExtent2D = VkExtent2D;
@@ -446,6 +447,6 @@ export namespace VE { namespace Runtime
 	using FVulkanOffset2D = VkOffset2D;
 	using FVulkanOffset3D = VkOffset3D;
 
-	using FRenderArea	  = VkRect2D;
+	using FVulkanRenderArea	= VkRect2D;
 
 } } // namespace VE::Runtime

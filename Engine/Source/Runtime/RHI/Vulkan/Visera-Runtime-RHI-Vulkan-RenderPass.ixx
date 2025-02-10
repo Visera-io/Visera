@@ -27,11 +27,11 @@ export namespace VE { namespace Runtime
 
 			Array<UInt8>					ColorImageReferences;
 			//Optional<VkAttachmentReference> StencilImageReference;
-			EPipelineStage					SourceStage					 { EPipelineStage::None };
-			EAccessibility					SourceStageAccessibility	 { EAccessibility::None };
-			EPipelineStage					DestinationStage			 { EPipelineStage::None };
-			EAccessibility					DestinationStageAccessibility{ EAccessibility::None };
-			Bool							bEnableDepthTest = True;
+			EVulkanPipelineStage			BeginStage				{ EVulkanPipelineStage::None };
+			EVulkanAccessibility					BeginStageAccessibility	{ EVulkanAccessibility::None };
+			EVulkanPipelineStage			EndStage				{ EVulkanPipelineStage::None };
+			EVulkanAccessibility					EndStageAccessibility	{ EVulkanAccessibility::None };
+			Bool							bEnableDepthTest		= True;
 			Array<UInt8>					InputImageReferences;    // Input Image References from Previous Subpasses.
 			Array<UInt8>					PreserveImageReferences; // Const Image References Used in Subpasses.
 		};
@@ -58,15 +58,7 @@ export namespace VE { namespace Runtime
 	void FVulkanRenderPass::
 	Create(const Array<SharedPtr<FVulkanRenderPassResource>>& _RenderTargetsPackage)
 	{
-		VE_ASSERT(_RenderTargetsPackage.size() == GVulkan->Swapchain->GetSize());
-
-		// Create Subpasses (Setted in the derived class)
-		if (Subpasses.empty()) { throw SRuntimeError("Cannot create a RenderPass with 0 Subpass!"); }
-		for (auto& Subpass : Subpasses)
-		{
-			VE_ASSERT(Subpass.Pipeline != nullptr);
-			Subpass.Pipeline->Create(Handle);
-		}
+		VE_ASSERT(_RenderTargetsPackage.size() == GVulkan->Swapchain->GetFrameCount());
 
 		// Create RenderPass
 		Array<VkSubpassDescription> SubpassDescriptions(Subpasses.size());
@@ -76,28 +68,20 @@ export namespace VE { namespace Runtime
 		{
 			auto& CurrentSubpass = Subpasses[Idx];
 
-			Array<VkAttachmentReference> ColorAttachmentRefs(CurrentSubpass.ColorImageReferences.size());
-			Array<VkAttachmentReference> ResolveAttachmentRefs(ColorAttachmentRefs.size());
-			for (UInt8 Idx = 0; Idx < ColorAttachmentRefs.size(); ++Idx)
+			Array<VkAttachmentReference> ColorRefs(CurrentSubpass.ColorImageReferences.size());
+			Array<VkAttachmentReference> ResolveRefs(ColorRefs.size());
+			for (UInt8 Idx = 0; Idx < ColorRefs.size(); ++Idx)
 			{
-				ColorAttachmentRefs[Idx].attachment = CurrentSubpass.ColorImageReferences[Idx];
-				ColorAttachmentRefs[Idx].layout = AutoCast(
-					_RenderTargetsPackage.front()
-					->ColorImages.front()
-					->GetLayout());
-				ResolveAttachmentRefs[Idx].attachment = Layout->GetColorAttachmentCount() + CurrentSubpass.ColorImageReferences[Idx];
-				ResolveAttachmentRefs[Idx].layout = AutoCast(
-					_RenderTargetsPackage.front()
-					->ResolveImages.front()
-					->GetLayout());
+				ColorRefs[Idx].attachment	= CurrentSubpass.ColorImageReferences[Idx];
+				ColorRefs[Idx].layout		= AutoCast(Layout->ColorDescs[Idx].Layout);
+				ResolveRefs[Idx].attachment = Layout->GetColorAttachmentCount() + CurrentSubpass.ColorImageReferences[Idx];
+				ResolveRefs[Idx].layout		= AutoCast(Layout->ResolveDescs[Idx].Layout);
 			}
 			VE_ASSERT(Layout->HasDepthImage()); // Debugging
-			VkAttachmentReference DepthAttachmentRef
+			VkAttachmentReference DepthRef
 			{
 				.attachment = Layout->GetDepthAttachmentLocation(),
-				.layout = AutoCast(
-					_RenderTargetsPackage.front()
-					->DepthImage->GetLayout())
+				.layout = AutoCast(Layout->DepthDesc.value().Layout),
 			};
 
 			SubpassDescriptions[Idx] =
@@ -106,10 +90,10 @@ export namespace VE { namespace Runtime
 				.pipelineBindPoint		= VK_PIPELINE_BIND_POINT_GRAPHICS,
 				.inputAttachmentCount	= 0, //[FIXME]
 				.pInputAttachments		= nullptr,
-				.colorAttachmentCount	= UInt32(ColorAttachmentRefs.size()),
-				.pColorAttachments		= ColorAttachmentRefs.data(),
-				.pResolveAttachments	= ResolveAttachmentRefs.data(),
-				.pDepthStencilAttachment= &DepthAttachmentRef,
+				.colorAttachmentCount	= UInt32(ColorRefs.size()),
+				.pColorAttachments		= ColorRefs.data(),
+				.pResolveAttachments	= ResolveRefs.data(),
+				.pDepthStencilAttachment= &DepthRef,
 				.preserveAttachmentCount= 0,
 				.pPreserveAttachments	= nullptr,
 			};
@@ -119,10 +103,10 @@ export namespace VE { namespace Runtime
 			{
 				.srcSubpass		= Idx - 1,
 				.dstSubpass		= Idx,
-				.srcStageMask	= AutoCast(CurrentSubpass.SourceStage),
-				.dstStageMask	= AutoCast(CurrentSubpass.DestinationStage),
-				.srcAccessMask	= AutoCast(CurrentSubpass.SourceStageAccessibility),
-				.dstAccessMask	= AutoCast(CurrentSubpass.DestinationStageAccessibility),
+				.srcStageMask	= AutoCast(CurrentSubpass.BeginStage),
+				.dstStageMask	= AutoCast(CurrentSubpass.EndStage),
+				.srcAccessMask	= AutoCast(CurrentSubpass.BeginStageAccessibility),
+				.dstAccessMask	= AutoCast(CurrentSubpass.EndStageAccessibility),
 				.dependencyFlags= 0x0,
 			};
 		}
@@ -196,6 +180,15 @@ export namespace VE { namespace Runtime
 			&Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan RenderPass!"); }
 
+		// Create Subpasses (Setted in the derived class)
+		if (Subpasses.empty()) { throw SRuntimeError("Cannot create a RenderPass with 0 Subpass!"); }
+		for (auto& Subpass : Subpasses)
+		{
+			VE_ASSERT(Subpass.Pipeline != nullptr);
+			Subpass.Pipeline->Create(Handle);
+		}
+
+		// Create Framebuffers
 		Framebuffers.resize(_RenderTargetsPackage.size());
 		for(UInt8 Idx = 0; Idx < Framebuffers.size(); ++Idx)
 		{

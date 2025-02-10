@@ -17,7 +17,7 @@ export namespace VE { namespace Runtime
 		// PushConstantRange is device-specified (usually 256B limit), check the limit via @vulkanCapsViewer.
 		struct FPushConstantRange
 		{
-			EShaderStage ShaderStage;
+			EVulkanShaderStage ShaderStage;
 			UInt16       Offset = 0;
 			UInt16       Size   = 0;
 			operator VkPushConstantRange() { return VkPushConstantRange{ .stageFlags = AutoCast(ShaderStage), .offset = Offset, .size = Size }; }

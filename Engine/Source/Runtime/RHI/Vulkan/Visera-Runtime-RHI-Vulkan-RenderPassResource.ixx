@@ -5,14 +5,13 @@ import :Common;
 import :Allocator;
 
 import Visera.Core.Signal;
-import Visera.Template.Pattern;
 
 export namespace VE { namespace Runtime
 {
 	class FVulkanRenderPass;
 	class FVulkanFramebuffer;
 
-	class FVulkanRenderPassResource : public Template::FPrototype<SharedPtr<FVulkanRenderPassResource>>
+	class FVulkanRenderPassResource
 	{
 		VE_NOT_COPYABLE(FVulkanRenderPassResource);
 		friend class FVulkanRenderPass;
@@ -25,30 +24,30 @@ export namespace VE { namespace Runtime
 		auto GetResolveImageCount() const	-> UInt8 { return ResolveImages.size(); }
 		Bool HasDepthImage() const { return DepthImage != nullptr; }
 
-		virtual auto Clone() const -> SharedPtr<FVulkanRenderPassResource> override;
+		auto Clone() const -> SharedPtr<FVulkanRenderPassResource>;
 
 		FVulkanRenderPassResource() = default;
 		FVulkanRenderPassResource(const Array<SharedPtr<FVulkanImage>>& _ColorImages, SharedPtr<FVulkanImage> _DepthImage);
 
 	private:
-		Array<SharedPtr<FVulkanImage>>	ColorImages;
-		Array<SharedPtr<FVulkanImage>>	ResolveImages;
-		SharedPtr<FVulkanImage>			DepthImage;
+		Array<SharedPtr<FVulkanImage>>		ColorImages;
+		Array<SharedPtr<FVulkanImage>>		ResolveImages;
+		SharedPtr<FVulkanImage>				DepthImage;
 	};
 
 	void FVulkanRenderPassResource::
 	AddColorImage(SharedPtr<FVulkanImage> _ColorImage)
 	{
-		VE_ASSERT(AutoCast(EImageAspect::Color & _ColorImage->GetAspects()) != False);
+		VE_ASSERT(AutoCast(EVulkanImageAspect::Color & _ColorImage->GetAspects()) != False);
 		ResolveImages.emplace_back(std::move(
 			GVulkan->Allocator->CreateImage(
 				_ColorImage->GetType(),
 				_ColorImage->GetExtent(),
 				_ColorImage->GetFormat(),
-				EImageAspect::Color,
-				EImageUsage::ColorAttachment | EImageUsage::InputAttachment,
-				EImageTiling::Optimal,
-				ESampleRate::X1)
+				EVulkanImageAspect::Color,
+				EVulkanImageUsage::ColorAttachment | EVulkanImageUsage::InputAttachment,
+				EVulkanImageTiling::Optimal,
+				EVulkanSampleRate::X1)
 		));
 		ColorImages.emplace_back(std::move(_ColorImage));
 	}
@@ -56,7 +55,7 @@ export namespace VE { namespace Runtime
 	void FVulkanRenderPassResource::
 	AddDepthImage(SharedPtr<FVulkanImage> _DepthImage)
 	{
-		VE_ASSERT(AutoCast(EImageAspect::Depth & _DepthImage->GetAspects()) != False);
+		VE_ASSERT(AutoCast(EVulkanImageAspect::Depth & _DepthImage->GetAspects()) != False);
 		if (!HasDepthImage())
 		{  
 			DepthImage = std::move(_DepthImage);
@@ -81,10 +80,10 @@ export namespace VE { namespace Runtime
 				ColorImages[Idx]->GetType(),
 				ColorImages[Idx]->GetExtent(),
 				ColorImages[Idx]->GetFormat(),
-				EImageAspect::Color,
-				EImageUsage::ColorAttachment | EImageUsage::InputAttachment,
-				EImageTiling::Optimal,
-				ESampleRate::X1);
+				EVulkanImageAspect::Color,
+				EVulkanImageUsage::ColorAttachment | EVulkanImageUsage::InputAttachment,
+				EVulkanImageTiling::Optimal,
+				EVulkanSampleRate::X1);
 		}
 	}
 

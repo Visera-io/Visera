@@ -21,7 +21,7 @@ export namespace VE { namespace Runtime
 		auto GetQueueFamilyProperties() const -> const Array<VkQueueFamilyProperties>&	{ return QueueFamilyProperties; }
 		auto GetExtensionProperties()	const -> const Array<VkExtensionProperties>&	{ return ExtensionProperties; }
 
-		auto QueryFormatProperties(EFormat Format)			const -> VkFormatProperties { VkFormatProperties Properties; vkGetPhysicalDeviceFormatProperties(Handle, AutoCast(Format), &Properties); return Properties; }
+		auto QueryFormatProperties(EVulkanFormat Format)			const -> VkFormatProperties { VkFormatProperties Properties; vkGetPhysicalDeviceFormatProperties(Handle, AutoCast(Format), &Properties); return Properties; }
 
 		Bool IsDiscreteGPU() const { return Properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU; }
 		

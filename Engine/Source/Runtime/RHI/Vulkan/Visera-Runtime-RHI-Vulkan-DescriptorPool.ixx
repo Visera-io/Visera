@@ -22,7 +22,7 @@ export namespace VE { namespace Runtime
 
 		struct FDescriptorEntry
 		{
-			EDescriptorType Type;
+			EVulkanDescriptorType Type;
 			UInt32			Count = 0;
 		};
 
@@ -31,7 +31,7 @@ export namespace VE { namespace Runtime
 	private:
 		VkDescriptorPool						Handle{ VK_NULL_HANDLE };
 		UInt32									MaxSets{ 0 };
-		HashMap<EDescriptorType, Int32>			DescriptorTable;
+		HashMap<EVulkanDescriptorType, Int32>			DescriptorTable;
 		List<SharedPtr<FVulkanDescriptorSet>>	Children;
 
 	private:

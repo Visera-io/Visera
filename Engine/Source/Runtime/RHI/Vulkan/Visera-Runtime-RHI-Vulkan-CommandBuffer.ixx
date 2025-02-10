@@ -31,7 +31,7 @@ export namespace VE { namespace Runtime
 		Bool IsInsideRenderPass()	const { return Status == EStatus::InsideRenderPass; }
 		Bool IsResettable()			const { return bIsResettable;   }
 		Bool IsPrimary()			const { return bIsPrimary;		}
-		auto GetLevel()				const -> ECommandLevel		{ return IsPrimary()? ECommandLevel::Primary : ECommandLevel::Secondary; }
+		auto GetLevel()				const -> EVulkanCommandLevel		{ return IsPrimary()? EVulkanCommandLevel::Primary : EVulkanCommandLevel::Secondary; }
 		auto GetHandle()				  -> VkCommandBuffer	{ return Handle; }
 		operator VkCommandBuffer() { return Handle; }
 
@@ -46,7 +46,7 @@ export namespace VE { namespace Runtime
 		Byte bIsPrimary		: 1;
 
 	public:
-		FVulkanCommandBuffer(SharedPtr<FVulkanCommandPool> _Owner, ECommandLevel _Level) noexcept;
+		FVulkanCommandBuffer(SharedPtr<FVulkanCommandPool> _Owner, EVulkanCommandLevel _Level) noexcept;
 		FVulkanCommandBuffer() noexcept = delete;
 		~FVulkanCommandBuffer() noexcept;
 	};
@@ -76,9 +76,9 @@ export namespace VE { namespace Runtime
 
 	
 	FVulkanCommandBuffer::
-	FVulkanCommandBuffer(SharedPtr<FVulkanCommandPool> _Owner, ECommandLevel _Level) noexcept
+	FVulkanCommandBuffer(SharedPtr<FVulkanCommandPool> _Owner, EVulkanCommandLevel _Level) noexcept
 		: Owner { std::move(_Owner) },
-		  bIsPrimary { ECommandLevel::Primary == _Level? True : False }
+		  bIsPrimary { EVulkanCommandLevel::Primary == _Level? True : False }
 	{
 
 	}

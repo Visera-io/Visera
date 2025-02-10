@@ -17,15 +17,15 @@ export namespace VE { namespace Runtime
 	{
 		friend class RHI;
 	public:
-		auto CreateCommandBuffer(ECommandLevel _CommandLevel) -> SharedPtr<FVulkanCommandBuffer>;
+		auto CreateCommandBuffer(EVulkanCommandLevel _CommandLevel) -> SharedPtr<FVulkanCommandBuffer>;
 
-		auto GetType()		const -> ECommandPool { return ECommandPool(Type); }
-		Bool IsResetable()	const				  { return Type == ECommandPool::Resetable; }
+		auto GetType()		const -> EVulkanCommandPoolType { return EVulkanCommandPoolType(Type); }
+		Bool IsResetable()	const				  { return Type == EVulkanCommandPoolType::Resetable; }
 
 		auto GetHandle()						  { return Handle; }
 
 	private:
-		void Create(EQueueFamily QueueFamilyType, ECommandPool Type);
+		void Create(EVulkanQueueFamily QueueFamilyType, EVulkanCommandPoolType Type);
 		void Destroy();
 		void CollectGarbages(Bool _bDestroyMode = False); // Managed by RHI or Deconstructor
 
@@ -35,13 +35,13 @@ export namespace VE { namespace Runtime
 
 	private:
 		VkCommandPool				Handle{ VK_NULL_HANDLE };
-		ECommandPool				Type;
-		EQueueFamily				QueueFamilyType;
+		EVulkanCommandPoolType				Type;
+		EVulkanQueueFamily				QueueFamilyType;
 		List<SharedPtr<FVulkanCommandBuffer>> Children;
 	};
 
 	void FVulkanCommandPool::
-	Create(EQueueFamily _QueueFamilyType, ECommandPool _CommandPoolType)
+	Create(EVulkanQueueFamily _QueueFamilyType, EVulkanCommandPoolType _CommandPoolType)
 	{
 		Type = _CommandPoolType;
 		QueueFamilyType = _QueueFamilyType;
@@ -70,7 +70,7 @@ export namespace VE { namespace Runtime
 	}
 
 	SharedPtr<FVulkanCommandBuffer> FVulkanCommandPool::
-	CreateCommandBuffer(ECommandLevel _CommandLevel)
+	CreateCommandBuffer(EVulkanCommandLevel _CommandLevel)
 	{
 		auto CommandBuffer = CreateSharedPtr<FVulkanCommandBuffer>(shared_from_this(), _CommandLevel);
 		CommandBuffer->bIsResettable = IsResetable();

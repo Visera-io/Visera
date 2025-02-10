@@ -17,9 +17,9 @@ export namespace VE { namespace Runtime
 	public:
 		struct FBinding
 		{
-			EDescriptorType DescriptorType;
+			EVulkanDescriptorType DescriptorType;
 			UInt32			DescriptorCount;
-			EShaderStage    ShaderStages;
+			EVulkanShaderStage    ShaderStages;
 			//SharedPtr<FVulkanSampler> Sampler;
 			const VkSampler* Samplers = nullptr;
 		};

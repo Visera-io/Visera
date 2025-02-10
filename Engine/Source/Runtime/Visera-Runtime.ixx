@@ -86,7 +86,7 @@ export namespace VE { namespace Runtime
 				//}
 				//RHI::PresentCurrentFrame();
 			}
-			catch (const RHI::SwapchainRecreateSignal&)
+			catch (const RHI::SSwapchainRecreation&)
 			{
 				throw SRuntimeError("Not support Swapchain recreation right now.");
 			}

@@ -31,7 +31,7 @@ export namespace VE { namespace Runtime
 			Array<Float>		QueuePriorities{ 1.0 };
 			Bool IsValid() const { return Index != UINT32_MAX; }
 		};
-		auto GetQueueFamily(EQueueFamily Type) const -> const FQueueFamily& { return QueueFamilies[AutoCast(Type)]; }
+		auto GetQueueFamily(EVulkanQueueFamily Type) const -> const FQueueFamily& { return QueueFamilies[AutoCast(Type)]; }
 
 	private:
 		Array<FQueueFamily> QueueFamilies;
@@ -57,7 +57,7 @@ export namespace VE { namespace Runtime
 			{ continue; }
 
 			//Queue Families Properties
-			QueueFamilies.resize(AutoCast(EQueueFamily::All));
+			QueueFamilies.resize(AutoCast(EVulkanQueueFamily::All));
 			{
 				const auto& Properties = GPUCandidate.GetQueueFamilyProperties();
 				Set<UInt32>		GraphicsQueueFamilies;
@@ -91,16 +91,16 @@ export namespace VE { namespace Runtime
 				Bool Found = False;
 				for (UInt32 IdxA : GraphicsAndPresentQueueFamilies)
 				{
-					QueueFamilies[AutoCast(EQueueFamily::Graphics)].Index = IdxA;
-					QueueFamilies[AutoCast(EQueueFamily::Present)].Index = IdxA;
+					QueueFamilies[AutoCast(EVulkanQueueFamily::Graphics)].Index = IdxA;
+					QueueFamilies[AutoCast(EVulkanQueueFamily::Present)].Index = IdxA;
 					for (UInt32 IdxB : TransferQueueFamilies)
 					{
 						if (IdxB == IdxA) continue;
-						QueueFamilies[AutoCast(EQueueFamily::Transfer)].Index = IdxB;
+						QueueFamilies[AutoCast(EVulkanQueueFamily::Transfer)].Index = IdxB;
 						for (UInt32 IdxC : ComputeQueueFamilies)
 						{
 							if (IdxC == IdxB) continue;
-							QueueFamilies[AutoCast(EQueueFamily::Compute)].Index = IdxC;
+							QueueFamilies[AutoCast(EVulkanQueueFamily::Compute)].Index = IdxC;
 							Found = True;
 						}
 						if (Found) break;
@@ -148,10 +148,10 @@ export namespace VE { namespace Runtime
 		if (GVulkan->GPU->GetHandle() == VK_NULL_HANDLE)
 		{ throw SRuntimeError("Failed to find a suitable Physical Device on current computer!"); }
 
-		auto& GraphicsQueueFamily	= QueueFamilies[AutoCast(EQueueFamily::Graphics)];
-		auto& PresentQueueFamily	= QueueFamilies[AutoCast(EQueueFamily::Present)];
-		auto& TransferQueueFamily	= QueueFamilies[AutoCast(EQueueFamily::Transfer)];
-		auto& ComputeQueueFamily	= QueueFamilies[AutoCast(EQueueFamily::Compute)];
+		auto& GraphicsQueueFamily	= QueueFamilies[AutoCast(EVulkanQueueFamily::Graphics)];
+		auto& PresentQueueFamily	= QueueFamilies[AutoCast(EVulkanQueueFamily::Present)];
+		auto& TransferQueueFamily	= QueueFamilies[AutoCast(EVulkanQueueFamily::Transfer)];
+		auto& ComputeQueueFamily	= QueueFamilies[AutoCast(EVulkanQueueFamily::Compute)];
 
 		//Create Queues
 		Array<VkDeviceQueueCreateInfo> DeviceQueueCreateInfos(4-1/*Graphics == Present*/);

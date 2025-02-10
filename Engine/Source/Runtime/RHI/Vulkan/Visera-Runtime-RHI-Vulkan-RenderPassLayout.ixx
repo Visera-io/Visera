@@ -20,21 +20,22 @@ export namespace VE { namespace Runtime
 	public:
 		struct FAttachmentDescription
 		{
-			EFormat			Format;
-			ESampleRate		SampleRate;
-			EImageViewType  ViewType;
-			EAttachmentIO	LoadOp;
-			EAttachmentIO	StoreOp;
-			EImageLayout	InitialLayout;
-			EImageLayout	FinalLayout;
-			EAttachmentIO	StencilLoadOp	{ EAttachmentIO::I_Whatever	};
-			EAttachmentIO	StencilStoreOp	{ EAttachmentIO::O_Whatever };
+			EVulkanImageLayout	Layout;
+			EVulkanFormat			Format;
+			EVulkanSampleRate		SampleRate;
+			EVulkanImageViewType  ViewType;
+			EVulkanAttachmentIO	LoadOp;
+			EVulkanAttachmentIO	StoreOp;
+			EVulkanImageLayout	InitialLayout;
+			EVulkanImageLayout	FinalLayout;
+			EVulkanAttachmentIO	StencilLoadOp	{ EVulkanAttachmentIO::I_Whatever	};
+			EVulkanAttachmentIO	StencilStoreOp	{ EVulkanAttachmentIO::O_Whatever };
 		};
 
 		struct FStencilDescription
 		{
-			EImageLayout	InitialLayout;
-			EImageLayout	FinalLayout;
+			EVulkanImageLayout	InitialLayout;
+			EVulkanImageLayout	FinalLayout;
 		};
 
 		auto AddColorAttachment(FAttachmentDescription _ColorDesc) -> FVulkanRenderPassLayout&;
@@ -68,11 +69,11 @@ export namespace VE { namespace Runtime
 	{
 		DepthDesc = FAttachmentDescription
 		{
-			.ViewType	= EImageViewType::Image2D,
-			.LoadOp			= EAttachmentIO::I_Whatever,
-			.StoreOp		= EAttachmentIO::O_Store,
-			.InitialLayout  = EImageLayout::DepthAttachment,
-			.FinalLayout    = EImageLayout::DepthAttachment,
+			.ViewType	= EVulkanImageViewType::Image2D,
+			.LoadOp			= EVulkanAttachmentIO::I_Whatever,
+			.StoreOp		= EVulkanAttachmentIO::O_Store,
+			.InitialLayout  = EVulkanImageLayout::DepthAttachment,
+			.FinalLayout    = EVulkanImageLayout::DepthAttachment,
 		};
 	}
 
@@ -88,11 +89,11 @@ export namespace VE { namespace Runtime
 		ColorDescs.emplace_back(std::move(_ColorDesc));
 		ResolveDescs.emplace_back(FAttachmentDescription
 			{
-				.ViewType	= EImageViewType::Image2D,
-				.LoadOp			= EAttachmentIO::I_Whatever,
-				.StoreOp		= EAttachmentIO::O_Store,
-				.InitialLayout  = EImageLayout::Undefined,
-				.FinalLayout    = EImageLayout::Present,
+				.ViewType		= EVulkanImageViewType::Image2D,
+				.LoadOp			= EVulkanAttachmentIO::I_Whatever,
+				.StoreOp		= EVulkanAttachmentIO::O_Store,
+				.InitialLayout  = EVulkanImageLayout::Undefined,
+				.FinalLayout    = EVulkanImageLayout::Present,
 			});
 		return *this;
 	}
