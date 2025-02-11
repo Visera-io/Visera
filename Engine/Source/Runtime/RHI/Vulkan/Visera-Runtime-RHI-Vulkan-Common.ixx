@@ -327,6 +327,7 @@ export namespace VE { namespace Runtime
 		Vertex			= VK_SHADER_STAGE_VERTEX_BIT,
 		Fragment		= VK_SHADER_STAGE_FRAGMENT_BIT,
 	};
+	VE_REGISTER_AUTOCAST(VkShaderStageFlags, VkShaderStageFlagBits);
 
 	VE_ENUM_CLASS(EVulkanPipelineStage, VkPipelineStageFlags)
 	{

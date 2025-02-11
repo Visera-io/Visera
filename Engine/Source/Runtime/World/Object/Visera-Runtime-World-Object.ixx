@@ -24,7 +24,7 @@ export namespace VE { namespace Runtime
 		Bool HasMesh()					const { return MeshComponent != nullptr; }
 		auto GetMesh()					const -> SharedPtr<OCMesh> { return MeshComponent; }
 
-		auto GetObjectName()			const -> StringView { return Name.GetName(); }
+		auto GetObjectName()			const -> StringView { return Name.GetFileName(); }
 		auto GetObjectNameWithNumber()	const -> String		{ return Name.GetNameWithNumber(); }
 
 	protected:

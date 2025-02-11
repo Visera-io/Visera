@@ -21,7 +21,7 @@ export namespace VE
 		auto Emplace(T&& _Data)				-> FNode*		{ FNode* NextNode = CurrentNode->Next; CurrentNode->Next = new FNode(_Data); CurrentNode->Next->Next = NextNode; return CurrentNode->Next; }
 		auto Insert(const T& _Data)			-> TLoop&		{ FNode* NextNode = CurrentNode->Next; CurrentNode->Next = new FNode(_Data); CurrentNode->Next->Next = NextNode; return *this; }
 		auto Peek()					const	-> const FNode* { return CurrentNode; }
-		auto Advance()						-> FNode*		{ FNode* Prev = CurrentNode; CurrentNode = CurrentNode->Next; return Prev; }
+		auto Advance()						-> FNode*	{ FNode* Prev = CurrentNode; CurrentNode = CurrentNode->Next; return Prev; }
 
 		explicit TLoop() noexcept = delete;
 		explicit TLoop(std::initializer_list<T> _InitNodes) noexcept;

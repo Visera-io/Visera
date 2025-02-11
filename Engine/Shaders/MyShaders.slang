@@ -1,4 +1,4 @@
-static float foo = 3.0f;
+static const float foo = 3.0f;
 
 void Basr()
 {

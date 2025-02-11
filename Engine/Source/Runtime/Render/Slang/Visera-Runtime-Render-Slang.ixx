@@ -3,8 +3,9 @@ module;
 #include <slang.h>
 #include <slang-com-ptr.h>
 export module Visera.Runtime.Render.Slang;
-import Visera.Runtime.Render.Shader;
 
+import Visera.Runtime.Render.Shader;
+import Visera.Runtime.RHI;
 import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
@@ -71,7 +72,7 @@ export namespace VE { namespace Runtime
 		const FSlang::FCompiler* Compiler = nullptr;
 		switch (_Shader->Type)
 		{
-		case FShader::EType::VulkanSPIRV:
+		case FShader::ECompileType::VulkanSPIRV:
 			Compiler = &VulkanSPIRVCompiler;
 			break;
 		default:
@@ -79,73 +80,60 @@ export namespace VE { namespace Runtime
 		}
 
 		// Create Shader Module
-		COMPtr<slang::IModule> ShaderModule{ Compiler->Session->loadModule(_Shader->GetName().data(), Diagnostics.writeRef()) };
+		COMPtr<slang::IModule> ShaderModule{ Compiler->Session->loadModule(_Shader->GetFileName().data(), Diagnostics.writeRef()) };
 		if (Diagnostics) { throw SRuntimeError(Text("Failed to create Slang Shader Module:\n{}", RawString(Diagnostics->getBufferPointer()))); }
-
+		
 		// Create Shader Program
 		COMPtr<slang::IEntryPoint> ShaderEntryPoint;
-		if (ShaderModule->findEntryPointByName(_Shader->GetEntryPoint().data(), ShaderEntryPoint.writeRef()) != SLANG_OK)
-		{ throw SRuntimeError(Text("Failed to find the EntryPoint({}) from Shader({})!", _Shader->GetEntryPoint(), _Shader->GetName())); }
+		if (ShaderModule->findEntryPointByName(
+			_Shader->GetEntryPoint().data(),
+			ShaderEntryPoint.writeRef()) != SLANG_OK)
+		{ throw SRuntimeError(Text("Failed to find the EntryPoint({}) from Shader({})!", _Shader->GetEntryPoint(), _Shader->GetFileName())); }
 
-		
-		
-		slang::IComponentType* ShaderComponents[2] = 
+		const auto ShaderComponents = Segment<slang::IComponentType*, 2> 
 		{ 
 			reinterpret_cast<slang::IComponentType*>(ShaderModule.get()),
 			reinterpret_cast<slang::IComponentType*>(ShaderEntryPoint.get())
 		};
-		Compiler->Session->createCompositeComponentType(ShaderComponents, 2, _Shader->Handle.writeRef(), Diagnostics.writeRef());
-		if (Diagnostics) { throw SRuntimeError(Text("Failed to create the Shader({}):\n{}", _Shader->GetName(), RawString(Diagnostics->getBufferPointer()))); }
+		if (Compiler->Session->createCompositeComponentType(
+			ShaderComponents.data(),
+			ShaderComponents.size(),
+			_Shader->Handle.writeRef(),
+			Diagnostics.writeRef()) != SLANG_OK)
+		{ throw SRuntimeError(Text("Failed to create the Shader({}):\n{}", _Shader->GetFileName(), RawString(Diagnostics->getBufferPointer()))); }
+	
+		COMPtr<slang::IBlob> CompiledCode;
+		if (_Shader->Handle->getEntryPointCode(
+			0,
+			0,
+			CompiledCode.writeRef(),
+			Diagnostics.writeRef()) != SLANG_OK)
+		{ throw SRuntimeError(Text("Failed to obtain compiled shader code from {}! -- {}", _Shader->GetFileName(), RawString(Diagnostics->getBufferPointer()))); }
+	
+		_Shader->RHIShader = RHI::CreateShader(_Shader->GetShaderStage(),
+											   _Shader->GetEntryPoint(),
+											   CompiledCode->getBufferPointer(),
+											   CompiledCode->getBufferSize());
 	}
 
 	void FSlang::
 	ReflectShader(SharedPtr<FShader> _Shader) const
 	throw (SRuntimeError)
 	{
-		VE_ASSERT(_Shader->IsCompiled());
+		VE_ASSERT(_Shader->IsCompiled() && !_Shader->IsReflected());
+		COMPtr<slang::IBlob>  Diagnostics;
+
+		slang::ProgramLayout* ShaderLayout = _Shader->Handle->getLayout(0, Diagnostics.writeRef());
+		if (Diagnostics) { throw SRuntimeError(Text("Failed to get reflection info from Shader({})! -- {}", _Shader->GetFileName(), RawString(Diagnostics->getBufferPointer()))); }
+
 		VE_WIP;
-		
-			///*Note that because both IModule and IEntryPoint inherit from IComponentType,
-			//  they can also be queried for their layouts individually.
-			//  The layout for a module comprises just its global-scope parameters.
-			//  The layout for an entry point comprises just its entry-point parameters
-			//  (both uniform and varying).*/
-			//slang::ProgramLayout* ProgramLayout = Program->getLayout(0, Diagnostics.writeRef());
-			//if (Diagnostics) { Log::Fatal(RawString(Diagnostics->getBufferPointer())); }
-
-			///*A key property of GPU shader programming is that
-			//  the same type may be laid out differently, depending on how it is used.
-			//  For example, a user-defined struct type Stuff will often be laid out differently
-			//  if it is used in a ConstantBuffer<Stuff> than in a StructuredBuffer<Stuff>.
-			//  Because the same thing can be laid out in multiple ways (even within the same program),
-			//  the Slang reflection API represents types and variables as distinct things from the layouts applied to them. */
-			////slang::ShaderReflection* Reflection = Module->ref
-			//auto* R = ProgramLayout->findTypeByName("float");
-			//Log::Warn("{}", R->getName());
-			//auto* Rs = ProgramLayout->findFunctionByName("Bar");
-			//Log::Warn("{}", Rs->getName());
-			//slang::VariableLayoutReflection* GVarLayout = ProgramLayout->getGlobalParamsVarLayout();
-			//UInt32 GParams = GVarLayout->getCategoryCount();
-			//for (UInt32 Idx = 0; Idx < GParams; ++Idx)
-			//{
-			//	auto Cate = GVarLayout->getCategoryByIndex(Idx);
-			//	/*auto* Var = Cate;
-			//	auto* VarType = GVarLayout->getType();*/
-			//	//Log::Info("(L) Name: {} | Type: {}", Var->getName(), VarType->getName());
-			//}
-
-			//UInt32 Params = ProgramLayout->getParameterCount();
-			//for (UInt32 Idx = 0; Idx < Params; ++Idx)
-			//{
-			//	auto* VarLayout = ProgramLayout->getParameterByIndex(Idx);
-			//	auto* Var = VarLayout->getVariable();
-			//	auto* VarType = VarLayout->getType();
-			//	Log::Info("(L) Name: {} | Type: {}", Var->getName(), VarType->getName());
-			//}
-			////slang::ProgramLayout* programLayout = program->getLayout(targetIndex);
-			////auto Set2 = GlobalDescriptorPool.CreateDescriptorSet(SetLayout);
-			////if (Set2 == nullptr) { Log::Fatal("Failed to allocate set2"); }
-
+		/*A key property of GPU shader programming is that
+		  the same type may be laid out differently, depending on how it is used.
+		  For example, a user-defined struct type Stuff will often be laid out differently
+		  if it is used in a ConstantBuffer<Stuff> than in a StructuredBuffer<Stuff>.
+		  Because the same thing can be laid out in multiple ways (even within the same program),
+		  the Slang reflection API represents types and variables as distinct things from the layouts applied to them. */
+		//slang::ShaderReflection* Reflection = _Shader->Handle->ref
 	}
 
 } } // namespace VE::Runtime

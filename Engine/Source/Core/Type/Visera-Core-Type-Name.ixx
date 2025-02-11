@@ -14,8 +14,8 @@ export namespace VE
 		VE_API FetchNameString(EName _Name) -> StringView	 { return NamePool.FetchNameString(_Name); }
 		VE_API FetchNameString(FName _Name) -> StringView	 { return NamePool.FetchNameString(_Name.Handle); }
 	public:
-		auto GetName()			 const -> StringView { return NamePool.FetchNameString(Handle); }
-		auto GetNameWithNumber() const -> String	 { return Text("{}_{}", GetName(), Number); }
+		auto GetFileName()			 const -> StringView { return NamePool.FetchNameString(Handle); }
+		auto GetNameWithNumber() const -> String	 { return Text("{}_{}", GetFileName(), Number); }
 		auto GetHandle() const -> UInt32 { return Handle; }
 		auto GetNumber() const -> UInt32 { return Number; }
 		auto GetIdentifier() const -> UInt64 { return (UInt64(Handle) << 32) | Number; }

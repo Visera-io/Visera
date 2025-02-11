@@ -17,17 +17,18 @@ export namespace VE { namespace Runtime
 	public:
 		struct FBinding
 		{
+			Int8				  BindPoint{-1};
 			EVulkanDescriptorType DescriptorType;
-			UInt32			DescriptorCount;
+			UInt16				  DescriptorCount;
 			EVulkanShaderStage    ShaderStages;
 			//SharedPtr<FVulkanSampler> Sampler;
 			const VkSampler* Samplers = nullptr;
 		};
 
-		auto GetHandle() -> VkDescriptorSetLayout { return Handle; }
+		auto GetHandle() const -> const VkDescriptorSetLayout { return Handle; }
 
 		FVulkanDescriptorSetLayout() = delete;
-		FVulkanDescriptorSetLayout(Array<FBinding> _Bindings);
+		FVulkanDescriptorSetLayout(const Array<FBinding>& _Bindings);
 		~FVulkanDescriptorSetLayout();
 	private:
 		VkDescriptorSetLayout  Handle{ VK_NULL_HANDLE };
@@ -35,29 +36,30 @@ export namespace VE { namespace Runtime
 	};
 
 	FVulkanDescriptorSetLayout::
-	FVulkanDescriptorSetLayout(Array<FBinding> _Bindings)
-		: BindingSlots { std::move(_Bindings) }
+	FVulkanDescriptorSetLayout(const Array<FBinding>& _Bindings)
+		: BindingSlots { _Bindings }
 	{
-		VE_ASSERT(BindingSlots.size() > 0);
-
 		Array<VkDescriptorSetLayoutBinding> Bindings(BindingSlots.size());
-		for (UInt32 Idx = 0; Idx < Bindings.size(); ++Idx)
-		{
-			Bindings[Idx] = VkDescriptorSetLayoutBinding
-			{
-				.binding = Idx,
-				.descriptorType  = AutoCast(BindingSlots[Idx].DescriptorType),
-				.descriptorCount = BindingSlots[Idx].DescriptorCount,
-				.stageFlags		 = AutoCast(BindingSlots[Idx].ShaderStages),
-				.pImmutableSamplers = BindingSlots[Idx].Samplers,
-			};
-		}
+		std::transform(BindingSlots.begin(), BindingSlots.end(),
+					   Bindings.begin(),
+					   [](const auto& _BindingSlot)->VkDescriptorSetLayoutBinding
+						{
+							VE_ASSERT(_BindingSlot.BindPoint >= 0);
+							return VkDescriptorSetLayoutBinding
+							{
+								.binding		 = UInt32(_BindingSlot.BindPoint),
+								.descriptorType  = AutoCast(_BindingSlot.DescriptorType),
+								.descriptorCount = _BindingSlot.DescriptorCount,
+								.stageFlags		 = AutoCast(_BindingSlot.ShaderStages),
+								.pImmutableSamplers = _BindingSlot.Samplers,
+							};
+						});
 
 		VkDescriptorSetLayoutCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
 			.bindingCount = UInt32(Bindings.size()),
-			.pBindings    = Bindings.data()
+			.pBindings    = Bindings.empty()? nullptr : Bindings.data()
 		};
 
 		if (vkCreateDescriptorSetLayout(

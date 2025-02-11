@@ -18,26 +18,30 @@ export namespace VE { namespace Runtime
 	{
 		friend class FSlang;
 	public:
-		enum class EType	{ VulkanSPIRV, Default = VulkanSPIRV };
-		auto GetName()		 const -> StringView { return Name; }
-		auto GetEntryPoint() const -> StringView { return EntryPoint; }
+		enum class ECompileType	{ VulkanSPIRV, Default = VulkanSPIRV };
+		auto GetFileName()		const -> StringView { return FileName; }
+		auto GetEntryPoint()	const -> StringView { return EntryPoint; }
+		auto GetShaderStage()	const -> RHI::EShaderStage { return Stage; }
+		auto GetCompatiblePipelineLayout() const -> SharedPtr<const RHI::FPipelineLayout> { return CompatiblePipelineLayout; }
 
-		Bool IsCompiled() const { return Handle != nullptr; }
+		Bool IsCompiled()  const { return RHIShader != nullptr; }
+		Bool IsReflected() const { return CompatiblePipelineLayout != nullptr; }
 
-		FShader(StringView _Name, StringView _EntryPoint, EType _Type = EType::Default);
+		FShader(StringView _ShaderFileName, StringView _EntryPoint);
 
 	private:
 		COMPtr<slang::IComponentType> Handle {nullptr}; // Created after FSlang::CompileShader(...)
-		EType  Type;
-		String Name;
-		String EntryPoint;
-		//SharedPtr<> DescriptorSetLayout;
+		String				FileName;
+		String				EntryPoint;
+		RHI::EShaderStage	Stage;
+		ECompileType		Type;
+		SharedPtr<RHI::FShader>			RHIShader;
+		SharedPtr<RHI::FPipelineLayout> CompatiblePipelineLayout;
 	};
 
 	FShader::
-	FShader(StringView _Name, StringView _EntryPoint, EType _Type/* = EType::Default*/)
-		: Type{_Type},
-		  Name{_Name},
+	FShader(StringView _ShaderFileName, StringView _EntryPoint)
+		: FileName{_ShaderFileName},
 		  EntryPoint{_EntryPoint}
 	{
 		

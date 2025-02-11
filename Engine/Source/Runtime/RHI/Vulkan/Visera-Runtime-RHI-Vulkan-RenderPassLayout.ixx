@@ -20,16 +20,16 @@ export namespace VE { namespace Runtime
 	public:
 		struct FAttachmentDescription
 		{
-			EVulkanImageLayout	Layout;
+			EVulkanImageLayout		Layout;
 			EVulkanFormat			Format;
 			EVulkanSampleRate		SampleRate;
-			EVulkanImageViewType  ViewType;
-			EVulkanAttachmentIO	LoadOp;
-			EVulkanAttachmentIO	StoreOp;
-			EVulkanImageLayout	InitialLayout;
-			EVulkanImageLayout	FinalLayout;
-			EVulkanAttachmentIO	StencilLoadOp	{ EVulkanAttachmentIO::I_Whatever	};
-			EVulkanAttachmentIO	StencilStoreOp	{ EVulkanAttachmentIO::O_Whatever };
+			EVulkanImageViewType	ViewType;
+			EVulkanAttachmentIO		LoadOp;
+			EVulkanAttachmentIO		StoreOp;
+			EVulkanImageLayout		InitialLayout;
+			EVulkanImageLayout		FinalLayout;
+			EVulkanAttachmentIO		StencilLoadOp	{ EVulkanAttachmentIO::I_Whatever	};
+			EVulkanAttachmentIO		StencilStoreOp	{ EVulkanAttachmentIO::O_Whatever };
 		};
 
 		struct FStencilDescription
@@ -39,15 +39,14 @@ export namespace VE { namespace Runtime
 		};
 
 		auto AddColorAttachment(FAttachmentDescription _ColorDesc) -> FVulkanRenderPassLayout&;
+		
 		auto GetColorAttachmentCount() const -> UInt8 { return ColorDescs.size(); }
 		auto GetTotalAttachmentCount() const -> UInt8 { return ColorDescs.size() + ResolveDescs.size() + (DepthDesc.has_value()? 1 : 0); }
 		auto GetDepthAttachmentLocation() const -> UInt8 { VE_ASSERT(HasDepthImage()); return GetTotalAttachmentCount() - 1; }
+		auto GetRenderArea()			const -> const FVulkanRenderArea&	{ return RenderArea; }
 
-		Bool HasDepthImage()				const { return DepthDesc.has_value(); }
+		Bool HasDepthImage()			const { return DepthDesc.has_value(); }
 
-		auto GetRenderAreaOffset()			const -> const FVulkanOffset3D&	{ return RenderAreaOffset; }
-		auto GetRenderAreaExtent()			const -> const FVulkanExtent3D&	{ return RenderAreaExtent; }
-		
 		FVulkanRenderPassLayout();
 		~FVulkanRenderPassLayout();
 
@@ -59,8 +58,7 @@ export namespace VE { namespace Runtime
 		Optional<FAttachmentDescription>ShadingRateDesc;
 		Optional<FStencilDescription>	StencilDesc;
 	
-		FVulkanOffset3D					RenderAreaOffset;
-		FVulkanExtent3D					RenderAreaExtent;
+		FVulkanRenderArea				RenderArea{ 0,0 };
 		Array<FClearValue>				ClearColors;
 	};
 
@@ -69,9 +67,12 @@ export namespace VE { namespace Runtime
 	{
 		DepthDesc = FAttachmentDescription
 		{
-			.ViewType	= EVulkanImageViewType::Image2D,
-			.LoadOp			= EVulkanAttachmentIO::I_Whatever,
-			.StoreOp		= EVulkanAttachmentIO::O_Store,
+			.Layout			= EVulkanImageLayout::Undefined,
+			.Format			= EVulkanFormat::S32_Float_Depth32,
+			.SampleRate		= EVulkanSampleRate::X1,
+			.ViewType		= EVulkanImageViewType::Image2D,
+			.LoadOp			= EVulkanAttachmentIO::I_Clear,
+			.StoreOp		= EVulkanAttachmentIO::O_Whatever,
 			.InitialLayout  = EVulkanImageLayout::DepthAttachment,
 			.FinalLayout    = EVulkanImageLayout::DepthAttachment,
 		};
@@ -89,11 +90,14 @@ export namespace VE { namespace Runtime
 		ColorDescs.emplace_back(std::move(_ColorDesc));
 		ResolveDescs.emplace_back(FAttachmentDescription
 			{
-				.ViewType		= EVulkanImageViewType::Image2D,
+				.Layout			= EVulkanImageLayout::Undefined,
+				.Format			= ColorDescs.back().Format,
+				.SampleRate		= EVulkanSampleRate::X1,
+				.ViewType		= ColorDescs.back().ViewType,
 				.LoadOp			= EVulkanAttachmentIO::I_Whatever,
 				.StoreOp		= EVulkanAttachmentIO::O_Store,
 				.InitialLayout  = EVulkanImageLayout::Undefined,
-				.FinalLayout    = EVulkanImageLayout::Present,
+				.FinalLayout    = EVulkanImageLayout::TransferSource,
 			});
 		return *this;
 	}

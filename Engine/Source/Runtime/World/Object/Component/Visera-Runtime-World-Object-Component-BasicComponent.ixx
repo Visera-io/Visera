@@ -13,7 +13,7 @@ export namespace VE { namespace Runtime
 	{
 		friend class VObject; // Object Components are managed by the VObject.
 	public:
-		auto GetComponentName()				-> StringView { return Name.GetName(); }
+		auto GetComponentName()				-> StringView { return Name.GetFileName(); }
 		auto GetComponentNameWithNumber()   -> String { return Name.GetNameWithNumber(); }
 		auto GetOwner() -> WeakPtr<VObject> { return Owner; }
 	

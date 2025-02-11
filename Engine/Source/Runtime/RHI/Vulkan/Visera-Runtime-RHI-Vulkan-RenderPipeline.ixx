@@ -23,34 +23,54 @@ export namespace VE { namespace Runtime
 		VkPipeline								Handle{ VK_NULL_HANDLE };
 		SharedPtr<FVulkanRenderPipelineLayout>	Layout;
 
-		Segment<FVulkanShader, MaxShaderSlot>	Shaders;
-
 	public:
-		FVulkanRenderPipeline() = default;
+		FVulkanRenderPipeline() = delete;
+		FVulkanRenderPipeline(SharedPtr<FVulkanRenderPipelineLayout> _Layout) : Layout{ std::move(_Layout) } { VE_ASSERT(Layout != nullptr); }
 		~FVulkanRenderPipeline() noexcept { Destroy();}
 
 	private:
-		void Create(const VkRenderPass _Owner);
+		void Create(const VkRenderPass _Owner, SharedPtr<const FVulkanShader> _VertexShader, SharedPtr<const FVulkanShader> _FragmentShader);
 		void Destroy();
 	};
 
 	void FVulkanRenderPipeline::
-	Create(const VkRenderPass _Owner)
+	Create(const VkRenderPass _Owner,
+		   SharedPtr<const FVulkanShader> _VertexShader,
+		   SharedPtr<const FVulkanShader> _FragmentShader)
 	{
-		VE_ASSERT(_Owner != VK_NULL_HANDLE);
+		VE_ASSERT(_Owner != VK_NULL_HANDLE   &&
+				  _VertexShader != nullptr   && (Bool(_VertexShader->GetStage() & EVulkanShaderStage::Vertex)) &&
+				  _FragmentShader != nullptr && (Bool(_FragmentShader->GetStage() & EVulkanShaderStage::Fragment)));
 
-		auto ShaderStageCreateInfo = Segment<VkPipelineShaderStageCreateInfo, MaxShaderSlot>
+		auto ShaderStageCreateInfos = Segment<VkPipelineShaderStageCreateInfo, MaxShaderSlot>{};
+		ShaderStageCreateInfos[Vertex] = VkPipelineShaderStageCreateInfo
 		{
-
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+			.pNext = nullptr,
+			.flags = 0x0,
+			.stage = AutoCast(AutoCast(EVulkanShaderStage::Vertex)),
+			.module= _VertexShader->GetHandle(),
+			.pName = _VertexShader->GetEntryPoint().data(),
+			.pSpecializationInfo = nullptr
 		};
-		VE_WIP; //[TODO]: Slang Shader Reflect
+
+		ShaderStageCreateInfos[Fragment] = VkPipelineShaderStageCreateInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+			.pNext = nullptr,
+			.flags = 0x0,
+			.stage = AutoCast(AutoCast(EVulkanShaderStage::Fragment)),
+			.module= _FragmentShader->GetHandle(),
+			.pName = _FragmentShader->GetEntryPoint().data(),
+			.pSpecializationInfo = nullptr
+		};
         
 		VkGraphicsPipelineCreateInfo CreateInfo =
 		{
 			.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 			.flags = 0x0,
-			.stageCount				= UInt32(ShaderStageCreateInfo.size()),
-			.pStages				= ShaderStageCreateInfo.data(),
+			.stageCount				= UInt32(ShaderStageCreateInfos.size()),
+			.pStages				= ShaderStageCreateInfos.data(),
 			.pVertexInputState		= &Layout->VertexInputState,
 			.pInputAssemblyState	= &Layout->InputAssemblyState,
 			.pViewportState			= &Layout->GetViewportState(),

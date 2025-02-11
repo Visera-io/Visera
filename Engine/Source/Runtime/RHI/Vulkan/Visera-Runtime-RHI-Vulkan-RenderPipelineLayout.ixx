@@ -22,7 +22,7 @@ export namespace VE { namespace Runtime
 		auto GetVertexInputState()	const -> const VkPipelineVertexInputStateCreateInfo&   { return VertexInputState; }
 		auto GetTessellationState()	const -> const VkPipelineTessellationStateCreateInfo&  { return TessellationState; }
 		auto GetInputAssemblyState()const -> const VkPipelineInputAssemblyStateCreateInfo& { return InputAssemblyState; }
-		auto GetViewportState()		const -> const VkPipelineViewportStateCreateInfo&;
+		auto GetViewportState()		const -> const VkPipelineViewportStateCreateInfo&	   { return ViewportState; }
 		auto GetRasterizationState()const -> const VkPipelineRasterizationStateCreateInfo& { return RasterizationState; }
 		auto GetMultisampleState()	const -> const VkPipelineMultisampleStateCreateInfo&   { return MultisampleState; }
 		auto GetDepthStencilState() const -> const VkPipelineDepthStencilStateCreateInfo&  { return DepthStencilState; };
@@ -34,8 +34,7 @@ export namespace VE { namespace Runtime
 		/*1*/VkPipelineVertexInputStateCreateInfo	VertexInputState;
 		/*2*/VkPipelineTessellationStateCreateInfo	TessellationState;
 		/*3*/VkPipelineInputAssemblyStateCreateInfo	InputAssemblyState;
-		/*4*/Array<VkViewport>						Viewports;    //Default(1)
-			 Array<VkRect2D>						Scissors;     //Default(1)
+		/*4*/VkPipelineViewportStateCreateInfo		ViewportState;
 		/*5*/VkPipelineRasterizationStateCreateInfo	RasterizationState;
 		/*6*/VkPipelineMultisampleStateCreateInfo	MultisampleState;
 		/*7*/VkPipelineDepthStencilStateCreateInfo	DepthStencilState;
@@ -43,13 +42,23 @@ export namespace VE { namespace Runtime
 		/*9*/Array<VkDynamicState>					DynamicStates{VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
 		
 	public:
-		FVulkanRenderPipelineLayout();
+		FVulkanRenderPipelineLayout() = delete;
+		FVulkanRenderPipelineLayout(const Array<FPushConstantRange>& _PushConstantRanges,
+									const Array<SharedPtr<FVulkanDescriptorSetLayout>>& _DescriptorSetLayouts);
 		~FVulkanRenderPipelineLayout() noexcept = default;
 	};
 
 		
 	FVulkanRenderPipelineLayout::
-	FVulkanRenderPipelineLayout():
+	FVulkanRenderPipelineLayout(
+		const Array<FPushConstantRange>& _PushConstantRanges,
+		const Array<SharedPtr<FVulkanDescriptorSetLayout>>& _DescriptorSetLayouts)
+		:
+		FVulkanPipelineLayout
+		{ 
+			_PushConstantRanges, 
+			_DescriptorSetLayouts
+		},
 		VertexInputState{ VkPipelineVertexInputStateCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -69,19 +78,14 @@ export namespace VE { namespace Runtime
 			.topology	= VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.primitiveRestartEnable = VK_FALSE,
 		} },
-		//[FIXME]: Dynamic Viewports
-		Viewports{ {
-			.x		= 0.0f, 
-			.y		=	Float(GVulkan->Swapchain->GetExtent().height),
-			.width	=	Float(GVulkan->Swapchain->GetExtent().width),
-			.height	= - Float(GVulkan->Swapchain->GetExtent().height),
-			.minDepth = 0.0f,
-			.maxDepth = 1.0f,} },
-		//[FIXME]: Dynamic Scissors
-		Scissors{{
-			.offset = { 0, 0 },
-			.extent = GVulkan->Swapchain->GetExtent(),
-		}},
+		ViewportState{ VkPipelineViewportStateCreateInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+			.viewportCount	= 0,		// Dynamic Viewport (Setted by the CommandBuffer)
+			.pViewports		= nullptr,
+			.scissorCount	= 0,		// Dynamic Scissor  (Setted by the CommandBuffer)
+			.pScissors		= nullptr,
+		} },
 		RasterizationState{ VkPipelineRasterizationStateCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
@@ -136,18 +140,6 @@ export namespace VE { namespace Runtime
 		} }
 	{
 		
-	}
-
-	const VkPipelineViewportStateCreateInfo& FVulkanRenderPipelineLayout::
-	GetViewportState() const
-	{
-		static VkPipelineViewportStateCreateInfo ViewportState{ .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
-		ViewportState.viewportCount = UInt32(Viewports.size());
-		ViewportState.pViewports	= Viewports.data();
-		ViewportState.scissorCount	= UInt32(Scissors.size());
-		ViewportState.pScissors		= Scissors.data();
-
-		return ViewportState;
 	}
 
 	const VkPipelineColorBlendStateCreateInfo& FVulkanRenderPipelineLayout::

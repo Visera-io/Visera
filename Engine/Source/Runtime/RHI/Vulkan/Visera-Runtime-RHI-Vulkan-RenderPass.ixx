@@ -24,30 +24,33 @@ export namespace VE { namespace Runtime
 		struct FSubpass final
 		{
 			UniquePtr<FVulkanRenderPipeline>Pipeline;
+			WeakPtr<FVulkanShader>			VertexShader;
+			WeakPtr<FVulkanShader>			FragmentShader;
 
 			Array<UInt8>					ColorImageReferences;
 			//Optional<VkAttachmentReference> StencilImageReference;
 			EVulkanPipelineStage			BeginStage				{ EVulkanPipelineStage::None };
-			EVulkanAccessibility					BeginStageAccessibility	{ EVulkanAccessibility::None };
+			EVulkanAccessibility			BeginStageAccessibility	{ EVulkanAccessibility::None };
 			EVulkanPipelineStage			EndStage				{ EVulkanPipelineStage::None };
-			EVulkanAccessibility					EndStageAccessibility	{ EVulkanAccessibility::None };
+			EVulkanAccessibility			EndStageAccessibility	{ EVulkanAccessibility::None };
 			Bool							bEnableDepthTest		= True;
 			Array<UInt8>					InputImageReferences;    // Input Image References from Previous Subpasses.
 			Array<UInt8>					PreserveImageReferences; // Const Image References Used in Subpasses.
 		};
-
-		auto GetHandle() const -> const VkRenderPass { return Handle; }
+	
+		auto GetRenderPassBeginInfo()  const -> VkRenderPassBeginInfo;
+		auto GetHandle()	const	-> const VkRenderPass { return Handle; }
 	
 	protected:
 		VkRenderPass						Handle{ VK_NULL_HANDLE };
 		UInt32								Priority { 0 }; // Less is More
-		SharedPtr<FVulkanRenderPassLayout>	Layout;
+		SharedPtr<FVulkanRenderPassLayout>	Layout; // Slang Reflect after Create(...)
 		Array<FVulkanFramebuffer>			Framebuffers;
 		Array<FSubpass>						Subpasses;
 
 	//private:
 		// Created by RHI Module (User : Render Module )
-		void Create(const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargetsPackage);
+		void Create(const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets);
 		void Destroy();
 
 	public:
@@ -56,20 +59,24 @@ export namespace VE { namespace Runtime
 	};
 
 	void FVulkanRenderPass::
-	Create(const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargetsPackage)
+	Create(const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets)
 	{
-		VE_ASSERT(_RenderTargetsPackage.size() == GVulkan->Swapchain->GetFrameCount());
+		VE_ASSERT(_RenderTargets.size() == GVulkan->Swapchain->GetFrameCount());
 
 		// Create RenderPass
 		Array<VkSubpassDescription> SubpassDescriptions(Subpasses.size());
 		Array<VkSubpassDependency>  SubpassDependencies(Subpasses.size());
+		Array<Array<VkAttachmentReference>> ColorRefTable(Subpasses.size());
+		Array<Array<VkAttachmentReference>> ResolveRefTable(Subpasses.size());
 
 		for (UInt32 Idx = 0; Idx < Subpasses.size(); ++Idx)
 		{
 			auto& CurrentSubpass = Subpasses[Idx];
 
-			Array<VkAttachmentReference> ColorRefs(CurrentSubpass.ColorImageReferences.size());
-			Array<VkAttachmentReference> ResolveRefs(ColorRefs.size());
+			auto& ColorRefs = ColorRefTable[Idx];
+			ColorRefs.resize(CurrentSubpass.ColorImageReferences.size());
+			auto& ResolveRefs = ResolveRefTable[Idx];
+			ResolveRefs.resize(ColorRefs.size());
 			for (UInt8 Idx = 0; Idx < ColorRefs.size(); ++Idx)
 			{
 				ColorRefs[Idx].attachment	= CurrentSubpass.ColorImageReferences[Idx];
@@ -111,7 +118,7 @@ export namespace VE { namespace Runtime
 			};
 		}
 		
-		auto AttachmentDescriptions = Array<VkAttachmentDescription>(2 * Layout->GetColorAttachmentCount() + (Layout->HasDepthImage()? 1 : 0));
+		auto AttachmentDescriptions = Array<VkAttachmentDescription>(Layout->GetTotalAttachmentCount());
 		
 		for (UInt8 Idx = 0; Idx < Layout->GetColorAttachmentCount(); ++Idx)
 		{
@@ -182,17 +189,25 @@ export namespace VE { namespace Runtime
 
 		// Create Subpasses (Setted in the derived class)
 		if (Subpasses.empty()) { throw SRuntimeError("Cannot create a RenderPass with 0 Subpass!"); }
+		
 		for (auto& Subpass : Subpasses)
 		{
 			VE_ASSERT(Subpass.Pipeline != nullptr);
-			Subpass.Pipeline->Create(Handle);
+			if (Subpass.VertexShader.expired())
+			{ throw SRuntimeError("WIP: Cannot reload the vertex shader!"); }
+			if (Subpass.FragmentShader.expired())
+			{ throw SRuntimeError("WIP: Cannot reload the fragment shader!"); }
+
+			Subpass.Pipeline->Create(Handle, Subpass.VertexShader.lock(),
+											 Subpass.FragmentShader.lock());
 		}
 
 		// Create Framebuffers
-		Framebuffers.resize(_RenderTargetsPackage.size());
+		Framebuffers.resize(_RenderTargets.size());
 		for(UInt8 Idx = 0; Idx < Framebuffers.size(); ++Idx)
 		{
-			Framebuffers[Idx].Create(Handle, Layout->RenderAreaExtent, _RenderTargetsPackage[Idx]);
+			FVulkanExtent3D Extent{ Layout->RenderArea.extent.width, Layout->RenderArea.extent.height, 1 };
+			Framebuffers[Idx].Create(Handle, Extent, _RenderTargets[Idx]);
 		}
 	}
 
@@ -210,6 +225,21 @@ export namespace VE { namespace Runtime
 			vkDestroyRenderPass(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 			Handle = VK_NULL_HANDLE;
 		}
+	}
+
+	VkRenderPassBeginInfo FVulkanRenderPass::
+	GetRenderPassBeginInfo() const
+	{
+		return VkRenderPassBeginInfo
+		{
+			.sType			 = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+			.pNext			 = nullptr,
+			.renderPass		 = Handle,
+			.framebuffer	 = Framebuffers[GVulkan->Swapchain->GetCursor()].Handle,
+			.renderArea		 = Layout->GetRenderArea(),
+			.clearValueCount = UInt32(Layout->ClearColors.size()),
+			.pClearValues    = Layout->ClearColors.data(),
+		};
 	}
 
 } } // namespace VE::Runtime

@@ -13,7 +13,7 @@ export namespace VE { namespace Runtime
 	{
 		friend class FVulkan;
 	public:
-		auto GetName()					const -> RawString								{ return Properties.deviceName; }
+		auto GetFileName()					const -> RawString								{ return Properties.deviceName; }
 		auto GetHandle()				const -> const VkPhysicalDevice					{ return Handle; }
 		auto GetFeatures()				const -> const VkPhysicalDeviceFeatures&		{ return Features; }
 		auto GetProperties()			const -> const VkPhysicalDeviceProperties&		{ return Properties; }

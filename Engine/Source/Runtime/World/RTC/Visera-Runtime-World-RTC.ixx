@@ -16,7 +16,7 @@ export namespace VE { namespace Runtime
 		friend class World;
 	public:
 		using EBuffer	= EEmbreeBuffer;
-		using EType		= EEmbreeType;
+		using ECompileType		= EEmbreeType;
 		using ETopology = EEmbreeTopology;
 
 		VE_API GetAPI() -> const FEmbree* { return Embree; }

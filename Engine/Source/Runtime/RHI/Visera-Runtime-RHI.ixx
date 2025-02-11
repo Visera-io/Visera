@@ -21,6 +21,7 @@ export namespace VE { namespace Runtime
 		using FDescriptorPool		= FVulkanDescriptorPool;
 		using FDescriptorSet		= FVulkanDescriptorSet;
 		using FDescriptorSetLayout  = FVulkanDescriptorSetLayout;
+		using FDescriptorBinding	= FVulkanDescriptorSetLayout::FBinding;
 		using FFence				= FVulkanFence;
 		using FShader				= FVulkanShader;
 		using FBuffer				= FVulkanBuffer;
@@ -36,6 +37,7 @@ export namespace VE { namespace Runtime
 		using FRenderPipeline		= FVulkanRenderPipeline;	
 		using FPipelineLayout		= FVulkanPipelineLayout;
 		using FRenderPipelineLayout	= FVulkanRenderPipelineLayout;
+		using FPushConstantRange	= FVulkanPipelineLayout::FPushConstantRange;
 
 		using ESharingMode			= EVulkanSharingMode;
 		using ESampleRate			= EVulkanSampleRate;
@@ -60,8 +62,9 @@ export namespace VE { namespace Runtime
 		using EPresentMode			= EVulkanPresentMode;
 
 		using SSwapchainRecreation = FVulkanSwapchain::SRecreation;
-	public:
+	public: 
 		VE_API CreateRenderTargets(const Array<SharedPtr<FImage>>& _ColorImages, SharedPtr<FImage> _DepthImage = nullptr) -> SharedPtr<FRenderTarget> { return CreateSharedPtr<FRenderTarget>(_ColorImages, _DepthImage); }
+		VE_API CreateDescriptorSetLayout(const Array<FDescriptorBinding> _Bindings)			-> SharedPtr<FDescriptorSetLayout> { return CreateSharedPtr<FDescriptorSetLayout>(_Bindings); }
 		VE_API CreateDescriptorSet(SharedPtr<FDescriptorSetLayout> _SetLayout)				-> SharedPtr<FDescriptorSet> { return GlobalDescriptorPool.CreateDescriptorSet(_SetLayout);		}
 		VE_API CreateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)			-> SharedPtr<FCommandBuffer> { return ResetableGraphicsCommandPool.CreateCommandBuffer(_Level); }
 		VE_API CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FCommandBuffer> { return TransientGraphicsCommandPool.CreateCommandBuffer(_Level); }
@@ -70,7 +73,7 @@ export namespace VE { namespace Runtime
 		VE_API CreateFence()																-> SharedPtr<FFence>		 { return CreateSharedPtr<FFence>();						}
 		VE_API CreateSignaledFence()														-> SharedPtr<FFence>		 { return CreateSharedPtr<FFence>(true);					}
 		VE_API CreateSemaphore()															-> SharedPtr<FSemaphore>	 { return CreateSharedPtr<FSemaphore>();					}
-		VE_API CreateShader(EShaderStage Stage, const Array<Byte>& ShadingCode)				-> SharedPtr<FShader>		 { return CreateSharedPtr<FShader>(Stage, ShadingCode);		}
+		VE_API CreateShader(EShaderStage _ShaderStage, StringView _EntryPoint, const void* _SPIRVCode, UInt64 _CodeSize) -> SharedPtr<FShader> { return CreateSharedPtr<FShader>(_ShaderStage, _EntryPoint, _SPIRVCode, _CodeSize); }
 
 		VE_API WaitIdle()	-> void				{ Vulkan->Device.WaitIdle(); }
 

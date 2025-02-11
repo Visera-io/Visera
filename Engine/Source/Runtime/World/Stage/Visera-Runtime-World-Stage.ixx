@@ -50,7 +50,7 @@ export namespace VE { namespace Runtime
 			{
 				Log::Warn("You may attach a duplicated Scene({}) to the Stage({})."
 						  "-- If you want to do that, try to increase the number of FName.",
-						  Name.GetNameWithNumber(), SceneSlot->GetName().GetNameWithNumber());
+						  Name.GetNameWithNumber(), SceneSlot->GetFileName().GetNameWithNumber());
 				Result = False;
 			}
 		}
