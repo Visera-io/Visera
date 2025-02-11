@@ -20,7 +20,7 @@ export namespace VE { namespace Runtime
 	public:
 		struct FAttachmentDescription
 		{
-			EVulkanImageLayout		Layout;
+			EVulkanImageLayout		Setting;
 			EVulkanFormat			Format;
 			EVulkanSampleRate		SampleRate;
 			EVulkanImageViewType	ViewType;
@@ -67,7 +67,7 @@ export namespace VE { namespace Runtime
 	{
 		DepthDesc = FAttachmentDescription
 		{
-			.Layout			= EVulkanImageLayout::Undefined,
+			.Setting			= EVulkanImageLayout::Undefined,
 			.Format			= EVulkanFormat::S32_Float_Depth32,
 			.SampleRate		= EVulkanSampleRate::X1,
 			.ViewType		= EVulkanImageViewType::Image2D,
@@ -90,7 +90,7 @@ export namespace VE { namespace Runtime
 		ColorDescs.emplace_back(std::move(_ColorDesc));
 		ResolveDescs.emplace_back(FAttachmentDescription
 			{
-				.Layout			= EVulkanImageLayout::Undefined,
+				.Setting			= EVulkanImageLayout::Undefined,
 				.Format			= ColorDescs.back().Format,
 				.SampleRate		= EVulkanSampleRate::X1,
 				.ViewType		= ColorDescs.back().ViewType,

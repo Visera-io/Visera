@@ -24,8 +24,8 @@ export namespace VE { namespace Runtime
 		struct FSubpass final
 		{
 			UniquePtr<FVulkanRenderPipeline>Pipeline;
-			WeakPtr<FVulkanShader>			VertexShader;
-			WeakPtr<FVulkanShader>			FragmentShader;
+			WeakPtr<const FVulkanShader>	VertexShader;
+			WeakPtr<const FVulkanShader>	FragmentShader;
 
 			Array<UInt8>					ColorImageReferences;
 			//Optional<VkAttachmentReference> StencilImageReference;
@@ -44,7 +44,7 @@ export namespace VE { namespace Runtime
 	protected:
 		VkRenderPass						Handle{ VK_NULL_HANDLE };
 		UInt32								Priority { 0 }; // Less is More
-		SharedPtr<FVulkanRenderPassLayout>	Layout; // Slang Reflect after Create(...)
+		SharedPtr<FVulkanRenderPassLayout>	Setting; // Slang Reflect after Create(...)
 		Array<FVulkanFramebuffer>			Framebuffers;
 		Array<FSubpass>						Subpasses;
 
@@ -80,15 +80,15 @@ export namespace VE { namespace Runtime
 			for (UInt8 Idx = 0; Idx < ColorRefs.size(); ++Idx)
 			{
 				ColorRefs[Idx].attachment	= CurrentSubpass.ColorImageReferences[Idx];
-				ColorRefs[Idx].layout		= AutoCast(Layout->ColorDescs[Idx].Layout);
-				ResolveRefs[Idx].attachment = Layout->GetColorAttachmentCount() + CurrentSubpass.ColorImageReferences[Idx];
-				ResolveRefs[Idx].layout		= AutoCast(Layout->ResolveDescs[Idx].Layout);
+				ColorRefs[Idx].layout		= AutoCast(Setting->ColorDescs[Idx].Setting);
+				ResolveRefs[Idx].attachment = Setting->GetColorAttachmentCount() + CurrentSubpass.ColorImageReferences[Idx];
+				ResolveRefs[Idx].layout		= AutoCast(Setting->ResolveDescs[Idx].Setting);
 			}
-			VE_ASSERT(Layout->HasDepthImage()); // Debugging
+			VE_ASSERT(Setting->HasDepthImage()); // Debugging
 			VkAttachmentReference DepthRef
 			{
-				.attachment = Layout->GetDepthAttachmentLocation(),
-				.layout = AutoCast(Layout->DepthDesc.value().Layout),
+				.attachment = Setting->GetDepthAttachmentLocation(),
+				.layout = AutoCast(Setting->DepthDesc.value().Setting),
 			};
 
 			SubpassDescriptions[Idx] =
@@ -118,11 +118,11 @@ export namespace VE { namespace Runtime
 			};
 		}
 		
-		auto AttachmentDescriptions = Array<VkAttachmentDescription>(Layout->GetTotalAttachmentCount());
+		auto AttachmentDescriptions = Array<VkAttachmentDescription>(Setting->GetTotalAttachmentCount());
 		
-		for (UInt8 Idx = 0; Idx < Layout->GetColorAttachmentCount(); ++Idx)
+		for (UInt8 Idx = 0; Idx < Setting->GetColorAttachmentCount(); ++Idx)
 		{
-			auto& ColorDesc    = Layout->ColorDescs[Idx];
+			auto& ColorDesc    = Setting->ColorDescs[Idx];
 			// Color Attachments
 			AttachmentDescriptions[Idx] = VkAttachmentDescription
 			{ 
@@ -137,8 +137,8 @@ export namespace VE { namespace Runtime
 				.finalLayout	= AutoCast(ColorDesc.FinalLayout),
 			};
 			// Resolve Attachments
-			auto& ResolveDesc   = Layout->ResolveDescs[Idx];
-			AttachmentDescriptions[Layout->GetColorAttachmentCount() + Idx] = VkAttachmentDescription
+			auto& ResolveDesc   = Setting->ResolveDescs[Idx];
+			AttachmentDescriptions[Setting->GetColorAttachmentCount() + Idx] = VkAttachmentDescription
 			{ 
 				.flags			= 0x0,
 				.format			= AutoCast(ResolveDesc.Format),
@@ -152,10 +152,10 @@ export namespace VE { namespace Runtime
 			};
 		}
 		// Depth Attachment
-		VE_ASSERT(Layout->HasDepthImage()); // Current Visera Pipeline will automatically create depth image!
-		if (Layout->HasDepthImage())
+		VE_ASSERT(Setting->HasDepthImage()); // Current Visera Pipeline will automatically create depth image!
+		if (Setting->HasDepthImage())
 		{
-			auto& DepthDesc   = Layout->DepthDesc.value();
+			auto& DepthDesc   = Setting->DepthDesc.value();
 			AttachmentDescriptions.back() = VkAttachmentDescription
 			{
 				.flags			= 0x0,
@@ -206,7 +206,7 @@ export namespace VE { namespace Runtime
 		Framebuffers.resize(_RenderTargets.size());
 		for(UInt8 Idx = 0; Idx < Framebuffers.size(); ++Idx)
 		{
-			FVulkanExtent3D Extent{ Layout->RenderArea.extent.width, Layout->RenderArea.extent.height, 1 };
+			FVulkanExtent3D Extent{ Setting->RenderArea.extent.width, Setting->RenderArea.extent.height, 1 };
 			Framebuffers[Idx].Create(Handle, Extent, _RenderTargets[Idx]);
 		}
 	}
@@ -236,9 +236,9 @@ export namespace VE { namespace Runtime
 			.pNext			 = nullptr,
 			.renderPass		 = Handle,
 			.framebuffer	 = Framebuffers[GVulkan->Swapchain->GetCursor()].Handle,
-			.renderArea		 = Layout->GetRenderArea(),
-			.clearValueCount = UInt32(Layout->ClearColors.size()),
-			.pClearValues    = Layout->ClearColors.data(),
+			.renderArea		 = Setting->GetRenderArea(),
+			.clearValueCount = UInt32(Setting->ClearColors.size()),
+			.pClearValues    = Setting->ClearColors.data(),
 		};
 	}
 

@@ -2,7 +2,8 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:RenderPipeline;
 
-import :RenderPipelineLayout;
+import :PipelineLayout;
+import :RenderPipelineSetting;
 import :PipelineCache;
 import :Device;
 import :Shader;
@@ -21,11 +22,13 @@ export namespace VE { namespace Runtime
 
 	protected:
 		VkPipeline								Handle{ VK_NULL_HANDLE };
-		SharedPtr<FVulkanRenderPipelineLayout>	Layout;
+		SharedPtr<FVulkanPipelineLayout>		Layout;
+		SharedPtr<FVulkanRenderPipelineSetting>	Setting;
 
 	public:
 		FVulkanRenderPipeline() = delete;
-		FVulkanRenderPipeline(SharedPtr<FVulkanRenderPipelineLayout> _Layout) : Layout{ std::move(_Layout) } { VE_ASSERT(Layout != nullptr); }
+		FVulkanRenderPipeline(SharedPtr<FVulkanPipelineLayout> _Layout, SharedPtr<FVulkanRenderPipelineSetting> _Setting) 
+			: Layout{std::move(_Layout)}, Setting{ std::move(_Setting) } { VE_ASSERT(Layout != nullptr && Setting != nullptr); }
 		~FVulkanRenderPipeline() noexcept { Destroy();}
 
 	private:
@@ -71,14 +74,14 @@ export namespace VE { namespace Runtime
 			.flags = 0x0,
 			.stageCount				= UInt32(ShaderStageCreateInfos.size()),
 			.pStages				= ShaderStageCreateInfos.data(),
-			.pVertexInputState		= &Layout->VertexInputState,
-			.pInputAssemblyState	= &Layout->InputAssemblyState,
-			.pViewportState			= &Layout->GetViewportState(),
-			.pRasterizationState	= &Layout->RasterizationState,
-			.pMultisampleState		= &Layout->MultisampleState,
-			.pDepthStencilState		= &Layout->DepthStencilState,	// Optional
-			.pColorBlendState		= &Layout->GetColorBlendState(),
-			.pDynamicState			= &Layout->GetDynamicStates(),
+			.pVertexInputState		= &Setting->VertexInputState,
+			.pInputAssemblyState	= &Setting->InputAssemblyState,
+			.pViewportState			= &Setting->GetViewportState(),
+			.pRasterizationState	= &Setting->RasterizationState,
+			.pMultisampleState		= &Setting->MultisampleState,
+			.pDepthStencilState		= &Setting->DepthStencilState,	// Optional
+			.pColorBlendState		= &Setting->GetColorBlendState(),
+			.pDynamicState			= &Setting->GetDynamicStates(),
 			.layout					= Layout->GetHandle(),
 			.renderPass				= _Owner,
 			.basePipelineHandle		= VK_NULL_HANDLE,		// Optional

@@ -71,7 +71,7 @@ export namespace VE { namespace Runtime
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create Vulkan Pipeline Layout!"); }
+		{ throw SRuntimeError("Failed to create Vulkan Pipeline Setting!"); }
 	}
 
 } } // namespace VE::Runtime

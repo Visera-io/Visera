@@ -22,6 +22,7 @@ export namespace VE { namespace Runtime
 		auto GetFileName()		const -> StringView { return FileName; }
 		auto GetEntryPoint()	const -> StringView { return EntryPoint; }
 		auto GetShaderStage()	const -> RHI::EShaderStage { return Stage; }
+		auto GetRHIShader()		const -> SharedPtr<const RHI::FShader> { return RHIShader; }
 		auto GetCompatiblePipelineLayout() const -> SharedPtr<const RHI::FPipelineLayout> { return CompatiblePipelineLayout; }
 
 		Bool IsCompiled()  const { return RHIShader != nullptr; }

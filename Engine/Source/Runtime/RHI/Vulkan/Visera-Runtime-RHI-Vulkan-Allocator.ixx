@@ -143,7 +143,7 @@ export namespace VE { namespace Runtime
 
 		auto GetExtent()		const -> const FVulkanExtent3D&	{ return Extent; }
 		auto GetSize()			const -> VkDeviceSize			{ return Allocation->GetSize(); }
-		auto GetLayout()		const -> EVulkanImageLayout			{ return Layout; }
+		auto GetLayout()		const -> EVulkanImageLayout			{ return Setting; }
 		auto GetType()			const -> EVulkanImageType				{ return Type; }
 		auto GetFormat()		const -> EVulkanFormat				{ return Format; }
 		auto GetAspects()		const -> EVulkanImageAspect			{ return Aspects; }
@@ -162,7 +162,7 @@ export namespace VE { namespace Runtime
 		auto   Clone() const -> SharedPtr<FVulkanImage>;
 	protected:
 		VkImage			Handle;
-		EVulkanImageLayout	Layout{ EVulkanImageLayout::Undefined }; //[TODO]: Layout  Transfer
+		EVulkanImageLayout	Setting{ EVulkanImageLayout::Undefined }; //[TODO]: Setting  Transfer
 		EVulkanImageType		Type;
 		EVulkanFormat			Format;
 		FVulkanExtent3D	Extent;

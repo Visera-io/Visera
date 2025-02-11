@@ -36,7 +36,7 @@ export namespace VE { namespace Runtime
 		using FRenderTarget			= FVulkanRenderTarget;
 		using FRenderPipeline		= FVulkanRenderPipeline;	
 		using FPipelineLayout		= FVulkanPipelineLayout;
-		using FRenderPipelineLayout	= FVulkanRenderPipelineLayout;
+		using FRenderPipelineSetting= FVulkanRenderPipelineSetting;
 		using FPushConstantRange	= FVulkanPipelineLayout::FPushConstantRange;
 
 		using ESharingMode			= EVulkanSharingMode;

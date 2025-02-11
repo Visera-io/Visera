@@ -1,13 +1,12 @@
 module;
 #include <Visera.h>
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.RHI.Vulkan:RenderPipelineLayout;
+export module Visera.Runtime.RHI.Vulkan:RenderPipelineSetting;
 
 import :Common;
 import :Device;
 import :Shader;
 import :Swapchain;
-import :PipelineLayout;
 
 import Visera.Core.Signal;
 
@@ -15,7 +14,7 @@ export namespace VE { namespace Runtime
 {
 	class FVulkanRenderPipeline;
 
-	class FVulkanRenderPipelineLayout : public FVulkanPipelineLayout
+	class FVulkanRenderPipelineSetting
 	{
 		friend class FVulkanRenderPipeline;
 	public:
@@ -42,23 +41,13 @@ export namespace VE { namespace Runtime
 		/*9*/Array<VkDynamicState>					DynamicStates{VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
 		
 	public:
-		FVulkanRenderPipelineLayout() = delete;
-		FVulkanRenderPipelineLayout(const Array<FPushConstantRange>& _PushConstantRanges,
-									const Array<SharedPtr<FVulkanDescriptorSetLayout>>& _DescriptorSetLayouts);
-		~FVulkanRenderPipelineLayout() noexcept = default;
+		FVulkanRenderPipelineSetting();
+		~FVulkanRenderPipelineSetting() noexcept = default;
 	};
 
 		
-	FVulkanRenderPipelineLayout::
-	FVulkanRenderPipelineLayout(
-		const Array<FPushConstantRange>& _PushConstantRanges,
-		const Array<SharedPtr<FVulkanDescriptorSetLayout>>& _DescriptorSetLayouts)
-		:
-		FVulkanPipelineLayout
-		{ 
-			_PushConstantRanges, 
-			_DescriptorSetLayouts
-		},
+	FVulkanRenderPipelineSetting::
+	FVulkanRenderPipelineSetting():
 		VertexInputState{ VkPipelineVertexInputStateCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -142,7 +131,7 @@ export namespace VE { namespace Runtime
 		
 	}
 
-	const VkPipelineColorBlendStateCreateInfo& FVulkanRenderPipelineLayout::
+	const VkPipelineColorBlendStateCreateInfo& FVulkanRenderPipelineSetting::
 	GetColorBlendState() const
 	{
 		static VkPipelineColorBlendStateCreateInfo ColorBlendState
@@ -158,7 +147,7 @@ export namespace VE { namespace Runtime
 		return ColorBlendState;
 	}
 
-	const VkPipelineDynamicStateCreateInfo& FVulkanRenderPipelineLayout::
+	const VkPipelineDynamicStateCreateInfo& FVulkanRenderPipelineSetting::
 	GetDynamicStates() const
 	{
 		static VkPipelineDynamicStateCreateInfo DyncmicStateCreateInfo{ .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
