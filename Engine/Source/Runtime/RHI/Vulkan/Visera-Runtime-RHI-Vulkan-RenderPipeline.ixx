@@ -32,17 +32,17 @@ export namespace VE { namespace Runtime
 		~FVulkanRenderPipeline() noexcept { Destroy();}
 
 	private:
-		void Create(const VkRenderPass _Owner, SharedPtr<const FVulkanShader> _VertexShader, SharedPtr<const FVulkanShader> _FragmentShader);
+		void Create(const VkRenderPass _Owner, UInt32 _SubpassIndex, SharedPtr<const FVulkanShader> _VertexShader, SharedPtr<const FVulkanShader> _FragmentShader);
 		void Destroy();
 	};
 
 	void FVulkanRenderPipeline::
-	Create(const VkRenderPass _Owner,
+	Create(const VkRenderPass _Owner, UInt32 _SubpassIndex,
 		   SharedPtr<const FVulkanShader> _VertexShader,
 		   SharedPtr<const FVulkanShader> _FragmentShader)
 	{
 		VE_ASSERT(_Owner != VK_NULL_HANDLE   &&
-				  _VertexShader != nullptr   && (Bool(_VertexShader->GetStage() & EVulkanShaderStage::Vertex)) &&
+				  _VertexShader != nullptr   && (Bool(_VertexShader->GetStage()   & EVulkanShaderStage::Vertex)) &&
 				  _FragmentShader != nullptr && (Bool(_FragmentShader->GetStage() & EVulkanShaderStage::Fragment)));
 
 		auto ShaderStageCreateInfos = Segment<VkPipelineShaderStageCreateInfo, MaxShaderSlot>{};
@@ -84,6 +84,7 @@ export namespace VE { namespace Runtime
 			.pDynamicState			= &Setting->GetDynamicStates(),
 			.layout					= Layout->GetHandle(),
 			.renderPass				= _Owner,
+			.subpass				= _SubpassIndex,
 			.basePipelineHandle		= VK_NULL_HANDLE,		// Optional
 			.basePipelineIndex		= -1,					// Optional
 		};
@@ -95,7 +96,7 @@ export namespace VE { namespace Runtime
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create one Subpass in current RenderPass!"); }
+		{ throw SRuntimeError("Failed to create Vulkan Render Pipeline!"); }
 	}
 
 	void FVulkanRenderPipeline::

@@ -73,7 +73,7 @@ export namespace VE { namespace Runtime
 		VE_API CreateFence()																-> SharedPtr<FFence>		 { return CreateSharedPtr<FFence>();						}
 		VE_API CreateSignaledFence()														-> SharedPtr<FFence>		 { return CreateSharedPtr<FFence>(true);					}
 		VE_API CreateSemaphore()															-> SharedPtr<FSemaphore>	 { return CreateSharedPtr<FSemaphore>();					}
-		VE_API CreateShader(EShaderStage _ShaderStage, StringView _EntryPoint, const void* _SPIRVCode, UInt64 _CodeSize) -> SharedPtr<FShader> { return CreateSharedPtr<FShader>(_ShaderStage, _EntryPoint, _SPIRVCode, _CodeSize); }
+		VE_API CreateShader(EShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize) -> SharedPtr<FShader> { return CreateSharedPtr<FShader>(_ShaderStage, _SPIRVCode, _CodeSize); }
 
 		VE_API WaitIdle()	-> void				{ Vulkan->Device.WaitIdle(); }
 

@@ -47,7 +47,6 @@ export namespace VE { namespace Runtime
 
 		auto Shader = CreateSharedPtr<FShader>(_ShaderFileName, _EntryPoint);
 		Slang.CompileShader(Shader);
-		Slang.ReflectShader(Shader);
 
 		return Shader;
 	}

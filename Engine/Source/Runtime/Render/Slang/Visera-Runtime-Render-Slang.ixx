@@ -10,15 +10,16 @@ import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 {
+	class Render;
 	
 	template<class T>
 	using COMPtr = Slang::ComPtr<T>;
 
 	class FSlang
 	{
+		friend class Render;
 	public:
 		void CompileShader(SharedPtr<FShader> _Shader) const throw (SRuntimeError);
-		void ReflectShader(SharedPtr<FShader> _Shader) const throw (SRuntimeError);
 
 		FSlang();
 		~FSlang() = default;
@@ -110,38 +111,25 @@ export namespace VE { namespace Runtime
 			Diagnostics.writeRef()) != SLANG_OK)
 		{ throw SRuntimeError(Text("Failed to obtain compiled shader code from {}! -- {}", _Shader->GetFileName(), RawString(Diagnostics->getBufferPointer()))); }
 	
-		_Shader->RHIShader = RHI::CreateShader(_Shader->GetShaderStage(),
-											   _Shader->GetEntryPoint(),
-											   CompiledCode->getBufferPointer(),
-											   CompiledCode->getBufferSize());
-	}
-
-	void FSlang::
-	ReflectShader(SharedPtr<FShader> _Shader) const
-	throw (SRuntimeError)
-	{
-		VE_ASSERT(_Shader->IsCompiled() && !_Shader->IsReflected());
-		COMPtr<slang::IBlob>  Diagnostics;
-
+		// Reflect Shader
 		slang::ProgramLayout* ShaderLayout = _Shader->Handle->getLayout(0, Diagnostics.writeRef());
 		if (Diagnostics) { throw SRuntimeError(Text("Failed to get reflection info from Shader({})! -- {}", _Shader->GetFileName(), RawString(Diagnostics->getBufferPointer()))); }
 		
 		auto* EntryPointRef = ShaderLayout->findEntryPointByName(_Shader->GetEntryPoint().data());
+
+		RHI::EShaderStage ShaderStage{};
 		switch (EntryPointRef->getStage())
 		{
-		case SLANG_STAGE_VERTEX:	_Shader->Stage = RHI::EShaderStage::Vertex;   break;
-		case SLANG_STAGE_FRAGMENT:	_Shader->Stage = RHI::EShaderStage::Fragment; break;
+		case SLANG_STAGE_VERTEX:	ShaderStage = RHI::EShaderStage::Vertex;   break;
+		case SLANG_STAGE_FRAGMENT:	ShaderStage = RHI::EShaderStage::Fragment; break;
 		default: throw SRuntimeError("Unsupported Shader Type!");
 		}
 
 		std::cerr << Text("Warn: Func(ReflectShader) is WIP but is still being used for testing!\n");
-		/*A key property of GPU shader programming is that
-		  the same type may be laid out differently, depending on how it is used.
-		  For example, a user-defined struct type Stuff will often be laid out differently
-		  if it is used in a ConstantBuffer<Stuff> than in a StructuredBuffer<Stuff>.
-		  Because the same thing can be laid out in multiple ways (even within the same program),
-		  the Slang reflection API represents types and variables as distinct things from the layouts applied to them. */
-		//slang::ShaderReflection* Reflection = _Shader->Handle->ref
+		
+		_Shader->RHIShader = RHI::CreateShader(ShaderStage,
+											   CompiledCode->getBufferPointer(),
+											   CompiledCode->getBufferSize());
 	}
 
 } } // namespace VE::Runtime

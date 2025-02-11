@@ -19,14 +19,15 @@ export namespace VE { namespace Runtime
 		friend class FSlang;
 	public:
 		enum class ECompileType	{ VulkanSPIRV, Default = VulkanSPIRV };
+		
+		Bool IsCompiled()  const { return Handle != nullptr; }
+		Bool IsReflected() const { return CompatiblePipelineLayout != nullptr; }
+
 		auto GetFileName()		const -> StringView { return FileName; }
 		auto GetEntryPoint()	const -> StringView { return EntryPoint; }
-		auto GetShaderStage()	const -> RHI::EShaderStage { return Stage; }
+		auto GetShaderStage()	const -> RHI::EShaderStage { VE_ASSERT(IsReflected()); return RHIShader->GetStage(); }
 		auto GetRHIShader()		const -> SharedPtr<const RHI::FShader> { return RHIShader; }
 		auto GetCompatiblePipelineLayout() const -> SharedPtr<const RHI::FPipelineLayout> { return CompatiblePipelineLayout; }
-
-		Bool IsCompiled()  const { return RHIShader != nullptr; }
-		Bool IsReflected() const { return CompatiblePipelineLayout != nullptr; }
 
 		FShader(StringView _ShaderFileName, StringView _EntryPoint, ECompileType _CompileType = ECompileType::Default);
 
@@ -34,7 +35,6 @@ export namespace VE { namespace Runtime
 		COMPtr<slang::IComponentType> Handle {nullptr}; // Created after FSlang::CompileShader(...)
 		String				FileName;
 		String				EntryPoint;
-		RHI::EShaderStage	Stage;
 		ECompileType		Type;
 		SharedPtr<RHI::FShader>			RHIShader;
 		SharedPtr<RHI::FPipelineLayout> CompatiblePipelineLayout;

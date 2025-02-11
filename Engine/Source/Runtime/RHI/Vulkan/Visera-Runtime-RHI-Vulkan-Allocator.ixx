@@ -114,9 +114,9 @@ export namespace VE { namespace Runtime
 	private:
 		VkImageView					Handle{ VK_NULL_HANDLE };
 		WeakPtr<const FVulkanImage>	Image;
-		EVulkanImageViewType				TypeView;
-		EVulkanImageAspect				AspectView;
-		EVulkanFormat						FormatView;
+		EVulkanImageViewType		TypeView;
+		EVulkanImageAspect			AspectView;
+		EVulkanFormat				FormatView;
 		Pair<UInt8, UInt8>			MipmapLevelRange{ 0, 0 };
 		Pair<UInt8, UInt8>			ArrayLayerRange	{ 0, 0 };
 
@@ -143,7 +143,7 @@ export namespace VE { namespace Runtime
 
 		auto GetExtent()		const -> const FVulkanExtent3D&	{ return Extent; }
 		auto GetSize()			const -> VkDeviceSize			{ return Allocation->GetSize(); }
-		auto GetLayout()		const -> EVulkanImageLayout			{ return Setting; }
+		auto GetLayout()		const -> EVulkanImageLayout			{ return Layout; }
 		auto GetType()			const -> EVulkanImageType				{ return Type; }
 		auto GetFormat()		const -> EVulkanFormat				{ return Format; }
 		auto GetAspects()		const -> EVulkanImageAspect			{ return Aspects; }
@@ -155,23 +155,24 @@ export namespace VE { namespace Runtime
 		auto GetDetails()		const -> VmaAllocationInfo  { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
 		auto GetHandle()			  -> VkImage { return Handle; }
 
+		Bool EnabledMSAA()const { return SampleRate > EVulkanSampleRate::X1; }
 		Bool IsReleased() const { return Handle == VK_NULL_HANDLE && Allocation == VK_NULL_HANDLE; }
 		
 		VE_API Free(VkImage* _pHandle, VmaAllocation* _pAllocation) { VE_ASSERT(_pHandle && _pAllocation); vmaDestroyImage(GVulkan->Allocator->GetHandle(), *_pHandle, *_pAllocation); *_pHandle = VK_NULL_HANDLE;  *_pAllocation = VK_NULL_HANDLE; }
 		auto   Release() -> ResultPackage<VkImage, VmaAllocation> { VkImage RawHandle = Handle; VmaAllocation RawAlloc = Allocation; Handle = VK_NULL_HANDLE; Allocation = VK_NULL_HANDLE; return { RawHandle, RawAlloc }; }
 		auto   Clone() const -> SharedPtr<FVulkanImage>;
 	protected:
-		VkImage			Handle;
-		EVulkanImageLayout	Setting{ EVulkanImageLayout::Undefined }; //[TODO]: Setting  Transfer
-		EVulkanImageType		Type;
-		EVulkanFormat			Format;
-		FVulkanExtent3D	Extent;
-		EVulkanImageAspect    Aspects;
-		EVulkanImageUsage		Usages;
+		VkImage				Handle;
+		EVulkanImageLayout	Layout{ EVulkanImageLayout::Undefined }; //[TODO]: Layout  Transfer
+		EVulkanImageType	Type;
+		EVulkanFormat		Format;
+		FVulkanExtent3D		Extent;
+		EVulkanImageAspect  Aspects;
+		EVulkanImageUsage	Usages;
 		EVulkanImageTiling	Tiling;
-		UInt8			MipmapLevels = 0;
-		UInt8			ArrayLayers	 = 0;
-		EVulkanSampleRate     SampleRate	 = EVulkanSampleRate::X1;
+		UInt8				MipmapLevels = 0;
+		UInt8				ArrayLayers	 = 0;
+		EVulkanSampleRate   SampleRate	 = EVulkanSampleRate::X1;
 		EVulkanSharingMode	SharingMode;
 		EVulkanMemoryUsage	Location;
 

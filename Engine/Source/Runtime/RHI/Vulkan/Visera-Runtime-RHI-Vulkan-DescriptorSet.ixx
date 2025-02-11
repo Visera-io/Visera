@@ -27,15 +27,15 @@ export namespace VE { namespace Runtime
 		EStatus			 Status { EStatus::Idle  };
 		VkDescriptorSet  Handle { VK_NULL_HANDLE };
 		SharedPtr<FVulkanDescriptorPool>	  Owner;
-		SharedPtr<FVulkanDescriptorSetLayout> Setting;
+		SharedPtr<FVulkanDescriptorSetLayout> Layout;
 	};
 
 	FVulkanDescriptorSet::
 	FVulkanDescriptorSet(SharedPtr<FVulkanDescriptorPool> _Owner, SharedPtr<FVulkanDescriptorSetLayout> _Layout)
 		: Owner{ std::move(_Owner) },
-		  Setting { std::move(_Layout) }
+		  Layout { std::move(_Layout) }
 	{
-		VE_ASSERT(Setting->GetHandle() != VK_NULL_HANDLE);
+		VE_ASSERT(Layout->GetHandle() != VK_NULL_HANDLE);
 	}
 	
 } } // namespace VE::Runtime

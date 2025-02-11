@@ -39,17 +39,20 @@ export namespace VE { namespace Runtime
 	AddColorImage(SharedPtr<FVulkanImage> _ColorImage)
 	{
 		VE_ASSERT(AutoCast(EVulkanImageAspect::Color & _ColorImage->GetAspects()) != False);
-		ResolveImages.emplace_back(std::move(
-			GVulkan->Allocator->CreateImage(
-				_ColorImage->GetType(),
-				_ColorImage->GetExtent(),
-				_ColorImage->GetFormat(),
-				EVulkanImageAspect::Color,
-				EVulkanImageUsage::ColorAttachment | EVulkanImageUsage::InputAttachment,
-				EVulkanImageTiling::Optimal,
-				EVulkanSampleRate::X1)
-		));
-		ColorImages.emplace_back(std::move(_ColorImage));
+		auto& NewColorImage = ColorImages.emplace_back(std::move(_ColorImage));
+		if (NewColorImage->EnabledMSAA())
+		{
+			ResolveImages.emplace_back(std::move(
+				GVulkan->Allocator->CreateImage(
+					_ColorImage->GetType(),
+					_ColorImage->GetExtent(),
+					_ColorImage->GetFormat(),
+					EVulkanImageAspect::Color,
+					EVulkanImageUsage::ColorAttachment | EVulkanImageUsage::InputAttachment,
+					EVulkanImageTiling::Optimal,
+					EVulkanSampleRate::X1)
+			));
+		}
 	}
 
 	void FVulkanRenderTarget::
@@ -65,7 +68,7 @@ export namespace VE { namespace Runtime
 
 	FVulkanRenderTarget::
 	FVulkanRenderTarget(const Array<SharedPtr<FVulkanImage>>&	_ColorImages,
-						 SharedPtr<FVulkanImage>					_DepthImage)
+						 SharedPtr<FVulkanImage>				_DepthImage)
 		:ColorImages {_ColorImages},
 		 DepthImage  {std::move(_DepthImage)}
 	{
@@ -73,17 +76,21 @@ export namespace VE { namespace Runtime
 		{ throw SRuntimeError("Failed to create Vulkan Render Targets! -- No Color Images."); }
 
 		// Create Resolve Images for each Color Image
-		ResolveImages.resize(ColorImages.size());
-		for (UInt8 Idx = 0; Idx < ColorImages.size(); ++Idx)
+		if (ColorImages.front()->EnabledMSAA())
 		{
-			ResolveImages[Idx] = GVulkan->Allocator->CreateImage(
-				ColorImages[Idx]->GetType(),
-				ColorImages[Idx]->GetExtent(),
-				ColorImages[Idx]->GetFormat(),
-				EVulkanImageAspect::Color,
-				EVulkanImageUsage::ColorAttachment | EVulkanImageUsage::InputAttachment,
-				EVulkanImageTiling::Optimal,
-				EVulkanSampleRate::X1);
+			//[FIXME]: Some images may not need to MSAA
+			ResolveImages.resize(ColorImages.size());
+			for (UInt8 Idx = 0; Idx < ColorImages.size(); ++Idx)
+			{
+				ResolveImages[Idx] = GVulkan->Allocator->CreateImage(
+					ColorImages[Idx]->GetType(),
+					ColorImages[Idx]->GetExtent(),
+					ColorImages[Idx]->GetFormat(),
+					EVulkanImageAspect::Color,
+					EVulkanImageUsage::ColorAttachment | EVulkanImageUsage::InputAttachment,
+					EVulkanImageTiling::Optimal,
+					EVulkanSampleRate::X1);
+			}
 		}
 	}
 
@@ -96,6 +103,9 @@ export namespace VE { namespace Runtime
 		for (UInt8 Idx = 0; Idx < GetColorImageCount(); ++Idx)
 		{
 			Result->ColorImages[Idx]   = ColorImages[Idx]->Clone();
+		}
+		for (UInt8 Idx = 0; Idx < GetResolveImageCount(); ++Idx)
+		{
 			Result->ResolveImages[Idx] = ResolveImages[Idx]->Clone();
 		}
 		Result->DepthImage = DepthImage->Clone();

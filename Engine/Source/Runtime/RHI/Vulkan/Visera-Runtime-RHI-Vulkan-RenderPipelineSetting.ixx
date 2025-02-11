@@ -38,7 +38,8 @@ export namespace VE { namespace Runtime
 		/*6*/VkPipelineMultisampleStateCreateInfo	MultisampleState;
 		/*7*/VkPipelineDepthStencilStateCreateInfo	DepthStencilState;
 		/*8*/Array<VkPipelineColorBlendAttachmentState> ColorBlendAttachments; //Default(1)
-		/*9*/Array<VkDynamicState>					DynamicStates{VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+		/*9*/Array<VkDynamicState>					DynamicStates
+		{VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT, VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT};
 		
 	public:
 		FVulkanRenderPipelineSetting();

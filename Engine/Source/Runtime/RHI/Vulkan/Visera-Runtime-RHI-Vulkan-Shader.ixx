@@ -9,12 +9,11 @@ import :Device;
 
 export namespace VE { namespace Runtime
 {
-
+		
 	class FVulkanShader
 	{
-		friend class FVulkan;
 	public:
-		auto GetEntryPoint()	const -> StringView				{ return EntryPoint; }
+		auto GetEntryPoint()	const -> StringView				{ return "main"; }
 		auto GetStage()			const -> EVulkanShaderStage		{ return Stage; }
 
 		auto GetHandle()			const { return Handle; }
@@ -22,22 +21,20 @@ export namespace VE { namespace Runtime
 
 	public:
 		FVulkanShader() noexcept = delete;
-		FVulkanShader(EVulkanShaderStage _ShaderStage, StringView _EntryPoint, const void* _SPIRVCode, UInt64 _CodeSize);
+		FVulkanShader(EVulkanShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize);
 		~FVulkanShader() noexcept;
 		
 	private:
 		VkShaderModule			Handle{ VK_NULL_HANDLE };
-		String					EntryPoint;
+		//String				EntryPoint; (Always "main")
 		EVulkanShaderStage		Stage;
 	};
 
 	FVulkanShader::
 	FVulkanShader(EVulkanShaderStage _ShaderStage,
-				  StringView _EntryPoint,
 				  const void* _SPIRVCode,
 				  UInt64 _CodeSize)
-		:Stage{_ShaderStage},
-		 EntryPoint{_EntryPoint}
+		:Stage{_ShaderStage}
 	{
 		VE_ASSERT(_SPIRVCode && _CodeSize);
 		VkShaderModuleCreateInfo CreateInfo

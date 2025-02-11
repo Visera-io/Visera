@@ -55,7 +55,6 @@ export namespace VE { namespace Runtime
 		if (HasDepthImage())
 		{ RenderTargetViews.push_back(RenderTarget->DepthImage->CreateImageView()->Release()); }
 	
-		VE_ASSERT(RenderTargetViews.size() % 1 == 1); // Currently, Visera's each renderpass must have 2N + 1 attachments.
 		VkFramebufferCreateInfo CreateInfo
 		{
 			.sType			 = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
