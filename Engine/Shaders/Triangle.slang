@@ -23,6 +23,7 @@ static const float3 Colors[3] =
 };
 
 // Vertex shader function
+[shader("vertex")]
 VSOutput VertMain(uint vertexID : SV_VertexID)
 {
     VSOutput output;
@@ -32,6 +33,7 @@ VSOutput VertMain(uint vertexID : SV_VertexID)
 }
 
 // Pixel shader function
+[shader("fragment")]
 float4 FragMain(VSOutput input) : SV_Target
 {
     return float4(input.color, 1.0);

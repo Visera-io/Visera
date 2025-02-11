@@ -28,7 +28,7 @@ export namespace VE { namespace Runtime
 		Bool IsCompiled()  const { return RHIShader != nullptr; }
 		Bool IsReflected() const { return CompatiblePipelineLayout != nullptr; }
 
-		FShader(StringView _ShaderFileName, StringView _EntryPoint);
+		FShader(StringView _ShaderFileName, StringView _EntryPoint, ECompileType _CompileType = ECompileType::Default);
 
 	private:
 		COMPtr<slang::IComponentType> Handle {nullptr}; // Created after FSlang::CompileShader(...)
@@ -41,9 +41,12 @@ export namespace VE { namespace Runtime
 	};
 
 	FShader::
-	FShader(StringView _ShaderFileName, StringView _EntryPoint)
+	FShader(StringView _ShaderFileName,
+			StringView _EntryPoint,
+			ECompileType _CompileType/* = ECompileType::Default*/)
 		: FileName{_ShaderFileName},
-		  EntryPoint{_EntryPoint}
+		  EntryPoint{_EntryPoint},
+		  Type{_CompileType}
 	{
 		
 	}

@@ -73,7 +73,7 @@ export namespace VE { namespace Runtime
 			.ViewType		= EVulkanImageViewType::Image2D,
 			.LoadOp			= EVulkanAttachmentIO::I_Clear,
 			.StoreOp		= EVulkanAttachmentIO::O_Whatever,
-			.InitialLayout  = EVulkanImageLayout::DepthAttachment,
+			.InitialLayout  = EVulkanImageLayout::Undefined,//[FIXME]
 			.FinalLayout    = EVulkanImageLayout::DepthAttachment,
 		};
 	}

@@ -125,8 +125,16 @@ export namespace VE { namespace Runtime
 
 		slang::ProgramLayout* ShaderLayout = _Shader->Handle->getLayout(0, Diagnostics.writeRef());
 		if (Diagnostics) { throw SRuntimeError(Text("Failed to get reflection info from Shader({})! -- {}", _Shader->GetFileName(), RawString(Diagnostics->getBufferPointer()))); }
+		
+		auto* EntryPointRef = ShaderLayout->findEntryPointByName(_Shader->GetEntryPoint().data());
+		switch (EntryPointRef->getStage())
+		{
+		case SLANG_STAGE_VERTEX:	_Shader->Stage = RHI::EShaderStage::Vertex;   break;
+		case SLANG_STAGE_FRAGMENT:	_Shader->Stage = RHI::EShaderStage::Fragment; break;
+		default: throw SRuntimeError("Unsupported Shader Type!");
+		}
 
-		VE_WIP;
+		std::cerr << Text("Warn: Func(ReflectShader) is WIP but is still being used for testing!\n");
 		/*A key property of GPU shader programming is that
 		  the same type may be laid out differently, depending on how it is used.
 		  For example, a user-defined struct type Stuff will often be laid out differently
