@@ -4,6 +4,7 @@ export module Visera.Runtime.RHI.Vulkan:CommandBuffer;
 import :Common;
 import :Device;
 import :RenderPass;
+import :Pipeline;
 
 import Visera.Core.Signal;
 
@@ -21,6 +22,10 @@ export namespace VE { namespace Runtime
 		void StopRecording();
 		void StartRenderPass(SharedPtr<FVulkanRenderPass> _RenderPass);
 		void StopRenderPass()	  { VE_ASSERT(IsInsideRenderPass()); vkCmdEndRenderPass(Handle); Status = EStatus::Recording; }
+		
+		void BindPipeline(SharedPtr<const FVulkanPipeline> _Pipeline) const;
+		void Draw(UInt32 _VertexCount, UInt32 _InstanceCount = 1, UInt32 _FirstVertex = 0, UInt32 _FirstInstance = 0) const { vkCmdDraw(Handle, _VertexCount, _InstanceCount, _FirstVertex, _FirstInstance); };
+
 		void Reset()			  { VE_ASSERT(IsIdle() && IsResettable()); vkResetCommandBuffer(Handle, 0x0); }
 		void Free()				  { Status = EStatus::Expired; }
 
@@ -38,8 +43,8 @@ export namespace VE { namespace Runtime
 	private:
 		VkCommandBuffer						Handle{ VK_NULL_HANDLE };
 		WeakPtr<const FVulkanCommandPool>   Owner;
-		Array<VkViewport>					CurrentViewports;
-		Array<VkRect2D>						CurrentScissors;
+		Segment<VkViewport,1>				CurrentViewports{ VkViewport{.minDepth = 0.0f, .maxDepth = 1.0f} };
+		Segment<VkRect2D, 1>				CurrentScissors{ VkRect2D {.offset{.x = 0, .y = 0}, .extent{.width = 0, .height = 0} } };
 
 		EStatus Status = EStatus::Idle;
 		Byte bIsResettable  : 1;
@@ -64,14 +69,30 @@ export namespace VE { namespace Runtime
 			&RenderPassBeginInfo,
 			IsPrimary()? VK_SUBPASS_CONTENTS_INLINE : VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
+		const auto& RenderArea = _RenderPass->GetRenderArea();
+		CurrentViewports[0].x = RenderArea.offset.x;
+		CurrentViewports[0].y = RenderArea.offset.y;
+		CurrentViewports[0].width  = RenderArea.extent.width;
+		CurrentViewports[0].height = RenderArea.extent.height;
+
 		Status = EStatus::InsideRenderPass;
 	}
 
+	void FVulkanCommandBuffer::
+	BindPipeline(SharedPtr<const FVulkanPipeline> _Pipeline) const
+	{
+		VE_ASSERT(IsInsideRenderPass());
+		vkCmdBindPipeline(Handle, AutoCast(_Pipeline->GetBindPoint()), _Pipeline->GetHandle());
+
+		vkCmdSetViewportWithCount(Handle, CurrentViewports.size(), CurrentViewports.data());
+		vkCmdSetScissorWithCount(Handle, CurrentScissors.size(), CurrentScissors.data());
+	}
 	
 	FVulkanCommandBuffer::
 	FVulkanCommandBuffer(SharedPtr<const FVulkanCommandPool> _Owner, EVulkanCommandLevel _Level) noexcept
-		: Owner { _Owner },
-		  bIsPrimary { EVulkanCommandLevel::Primary == _Level? True : False }
+		: 
+		Owner { _Owner },
+		bIsPrimary { EVulkanCommandLevel::Primary == _Level? True : False }
 	{
 		
 	}

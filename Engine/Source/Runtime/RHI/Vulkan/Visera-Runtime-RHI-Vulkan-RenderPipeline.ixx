@@ -2,6 +2,7 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:RenderPipeline;
 
+import :Pipeline;
 import :PipelineLayout;
 import :RenderPipelineSetting;
 import :PipelineCache;
@@ -14,21 +15,21 @@ export namespace VE { namespace Runtime
 {
 	class FVulkanRenderPass;
 
-	class FVulkanRenderPipeline
+	class FVulkanRenderPipeline : public FVulkanPipeline
 	{
 		friend class FVulkanRenderPass;
 	public:
 		enum EShaderSlot { Vertex, Fragment, MaxShaderSlot };
+		auto GetSetting() const -> SharedPtr<const FVulkanRenderPipelineSetting>{ return Setting; }
 
 	protected:
-		VkPipeline								Handle{ VK_NULL_HANDLE };
-		SharedPtr<FVulkanPipelineLayout>		Layout;
-		SharedPtr<FVulkanRenderPipelineSetting>	Setting;
+		SharedPtr<const FVulkanRenderPipelineSetting> Setting;
 
 	public:
 		FVulkanRenderPipeline() = delete;
-		FVulkanRenderPipeline(SharedPtr<FVulkanPipelineLayout> _Layout, SharedPtr<FVulkanRenderPipelineSetting> _Setting) 
-			: Layout{std::move(_Layout)}, Setting{ std::move(_Setting) } { VE_ASSERT(Layout != nullptr && Setting != nullptr); }
+		FVulkanRenderPipeline(SharedPtr<const FVulkanPipelineLayout> _Layout, SharedPtr<const FVulkanRenderPipelineSetting> _Setting) 
+			: FVulkanPipeline{EVulkanPipelineBindPoint::Graphics, _Layout},
+			  Setting{ std::move(_Setting) } { VE_ASSERT(Layout != nullptr && Setting != nullptr); }
 		~FVulkanRenderPipeline() noexcept { Destroy();}
 
 	private:

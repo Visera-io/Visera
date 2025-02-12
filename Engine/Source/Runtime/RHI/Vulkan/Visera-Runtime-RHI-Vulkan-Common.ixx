@@ -36,6 +36,12 @@ export namespace VE { namespace Runtime
 	
 	using FClearValue = VkClearValue;
 
+	VE_ENUM_CLASS(EVulkanPipelineBindPoint, VkPipelineBindPoint)
+	{
+		Graphics = VK_PIPELINE_BIND_POINT_GRAPHICS,
+		Compute  = VK_PIPELINE_BIND_POINT_COMPUTE,
+	};
+
 	VE_ENUM_CLASS(EVulkanSharingMode, VkSharingMode)
 	{
 		Exclusive	= VK_SHARING_MODE_EXCLUSIVE,

@@ -16,16 +16,14 @@ import Visera.Core.Signal;
 export namespace VE { namespace Runtime
 {
 	class RHI;
-	class FVulkanCommandBuffer;
 
 	class FVulkanRenderPass
 	{
 		friend class RHI;
-		friend class FVulkanCommandBuffer;
 	public:
 		struct FSubpass final
 		{
-			UniquePtr<FVulkanRenderPipeline>Pipeline;
+			SharedPtr<FVulkanRenderPipeline>Pipeline;
 			WeakPtr<const FVulkanShader>	VertexShader;
 			WeakPtr<const FVulkanShader>	FragmentShader;
 
@@ -40,6 +38,7 @@ export namespace VE { namespace Runtime
 			Array<UInt8>					PreserveImageReferences; // Const Image References Used in Subpasses.
 		};
 
+		auto GetRenderArea()		  const -> const FVulkanRenderArea& { return RenderArea; }
 		auto GetSubpasses()			  const -> const Array<FSubpass>& { return Subpasses; }
 		auto GetRenderPassBeginInfo() const -> const VkRenderPassBeginInfo;
 		auto GetHandle()	const	-> const VkRenderPass { return Handle; }
@@ -52,7 +51,6 @@ export namespace VE { namespace Runtime
 		Array<FClearValue>					ClearValues;
 		Array<FVulkanFramebuffer>			Framebuffers;
 		Array<FSubpass>						Subpasses;
-		WeakPtr<FVulkanCommandBuffer>		CurrentCommandBuffer;
 
 	//private:
 		// Created by RHI Module (User : Render Module )

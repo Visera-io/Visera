@@ -45,8 +45,7 @@ export namespace VE { namespace Runtime
 		FVulkanRenderPipelineSetting();
 		~FVulkanRenderPipelineSetting() noexcept = default;
 	};
-
-		
+	
 	FVulkanRenderPipelineSetting::
 	FVulkanRenderPipelineSetting():
 		VertexInputState{ VkPipelineVertexInputStateCreateInfo
