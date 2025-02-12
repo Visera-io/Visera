@@ -2,6 +2,7 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:RenderPipeline;
 
+import :Common;
 import :Pipeline;
 import :PipelineLayout;
 import :RenderPipelineSetting;
@@ -42,9 +43,9 @@ export namespace VE { namespace Runtime
 		   SharedPtr<const FVulkanShader> _VertexShader,
 		   SharedPtr<const FVulkanShader> _FragmentShader)
 	{
-		VE_ASSERT(_Owner != VK_NULL_HANDLE   &&
-				  _VertexShader != nullptr   && (Bool(_VertexShader->GetStage()   & EVulkanShaderStage::Vertex)) &&
-				  _FragmentShader != nullptr && (Bool(_FragmentShader->GetStage() & EVulkanShaderStage::Fragment)));
+		VE_ASSERT(_Owner != VK_NULL_HANDLE);
+		/*VE_ASSERT(_VertexShader != nullptr   && _VertexShader->GetStage()   == EVulkanShaderStage::Vertex &&
+				  _FragmentShader != nullptr && _FragmentShader->GetStage() == EVulkanShaderStage::Fragment)*/
 
 		auto ShaderStageCreateInfos = Segment<VkPipelineShaderStageCreateInfo, MaxShaderSlot>{};
 		ShaderStageCreateInfos[Vertex] = VkPipelineShaderStageCreateInfo

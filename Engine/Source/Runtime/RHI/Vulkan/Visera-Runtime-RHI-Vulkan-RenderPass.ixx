@@ -5,6 +5,7 @@ import :Common;
 import :Allocator;
 import :Device;
 import :Swapchain;
+import :Shader;
 import :PipelineCache;
 import :Framebuffer;
 import :RenderPipeline;
