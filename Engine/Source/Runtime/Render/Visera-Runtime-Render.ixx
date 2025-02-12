@@ -18,19 +18,20 @@ export namespace VE { namespace Runtime
 		VE_MODULE_MANAGER_CLASS(Render);
 		friend class ViseraRuntime;
 	public:
-		using FShader = FShader;
-		VE_API CreateShader(StringView _ShaderFileName, StringView _EntryPoint, FShader::ECompileType _CompileType = FShader::ECompileType::Default) throw (SIOFailure, SRuntimeError) -> SharedPtr<FShader>;
-
 		enum class ESystemRT { Color, Depth };
 
-	private:
-		/*struct FFrame
+		using FShader = FShader;
+		struct FFrame
 		{
-			SharedPtr<RHI::FRenderTarget> RenderTargets;
-			SharedPtr<RHI::FCommandBuffer> Drawcalls;
+			SharedPtr<RHI::FCommandBuffer> DrawcallBuffer;
 		};
-		static inline Array<FFrame> Frames;*/
-		
+
+		VE_API CreateShader(StringView _ShaderFileName, StringView _EntryPoint, FShader::ECompileType _CompileType = FShader::ECompileType::Default) throw (SIOFailure, SRuntimeError) -> SharedPtr<FShader>;
+		VE_API GetCurrentFrame() -> FFrame& { return Frames[RHI::GetSwapchainCursor()]; }
+
+	private:
+		static inline Array<FFrame> Frames;
+
 	private:
 		static void Bootstrap();
 		static void Tick();
@@ -43,8 +44,7 @@ export namespace VE { namespace Runtime
 				 FShader::ECompileType _CompileType/*Default*/)
 	throw (SIOFailure, SRuntimeError)
 	{ 
-		static FSlang Slang{}; // Lazy load
-
+		static FSlang Slang{}; // Lazy Load
 		auto Shader = CreateSharedPtr<FShader>(_ShaderFileName, _EntryPoint);
 		Slang.CompileShader(Shader);
 
@@ -54,6 +54,11 @@ export namespace VE { namespace Runtime
 	void Render::
 	Bootstrap()
 	{
+		Frames.resize(RHI::GetSwapchainFrameCount());
+		for (auto& Frame : Frames)
+		{
+			Frame.DrawcallBuffer = RHI::CreateCommandBuffer();
+		}
 		/*Frames.resize(RHI::GetAPI()->GetSwapchain().GetSize());
 		for (auto& Frame : Frames)
 		{
@@ -89,7 +94,7 @@ export namespace VE { namespace Runtime
 	void Render::
 	Terminate()
 	{
-		//Frames.clear();
+		Frames.clear();
 	}
 
 } } // namespace VE::Runtime

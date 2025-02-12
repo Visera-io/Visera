@@ -16,10 +16,12 @@ import Visera.Core.Signal;
 export namespace VE { namespace Runtime
 {
 	class RHI;
+	class FVulkanCommandBuffer;
 
 	class FVulkanRenderPass
 	{
 		friend class RHI;
+		friend class FVulkanCommandBuffer;
 	public:
 		struct FSubpass final
 		{
@@ -37,20 +39,24 @@ export namespace VE { namespace Runtime
 			Array<UInt8>					InputImageReferences;    // Input Image References from Previous Subpasses.
 			Array<UInt8>					PreserveImageReferences; // Const Image References Used in Subpasses.
 		};
-	
-		auto GetRenderPassBeginInfo()  const -> VkRenderPassBeginInfo;
+
+		auto GetSubpasses()			  const -> const Array<FSubpass>& { return Subpasses; }
+		auto GetRenderPassBeginInfo() const -> const VkRenderPassBeginInfo;
 		auto GetHandle()	const	-> const VkRenderPass { return Handle; }
 	
 	protected:
 		VkRenderPass						Handle{ VK_NULL_HANDLE };
 		UInt32								Priority { 0 }; // Less is More
+		FVulkanRenderArea					RenderArea{ 0,0 };
 		SharedPtr<FVulkanRenderPassLayout>	Layout; // Slang Reflect after Create(...)
+		Array<FClearValue>					ClearValues;
 		Array<FVulkanFramebuffer>			Framebuffers;
 		Array<FSubpass>						Subpasses;
+		WeakPtr<FVulkanCommandBuffer>		CurrentCommandBuffer;
 
 	//private:
 		// Created by RHI Module (User : Render Module )
-		void Create(const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets);
+		void Create(const FVulkanRenderArea& _RenderArea, const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets);
 		void Destroy();
 
 	public:
@@ -59,15 +65,21 @@ export namespace VE { namespace Runtime
 	};
 
 	void FVulkanRenderPass::
-	Create(const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets)
+	Create(const FVulkanRenderArea& _RenderArea,
+		   const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets)
 	{
 		VE_ASSERT(_RenderTargets.size() == GVulkan->Swapchain->GetFrameCount());
+		VE_ASSERT(_RenderArea.extent.width > 0 && _RenderArea.extent.height > 0);
+
+		RenderArea = _RenderArea;
 
 		// Create RenderPass
 		Array<VkSubpassDescription> SubpassDescriptions(Subpasses.size());
 		Array<VkSubpassDependency>  SubpassDependencies(Subpasses.size());
 		Array<Array<VkAttachmentReference>> ColorRefTable(Subpasses.size());
 		Array<Array<VkAttachmentReference>> ResolveRefTable(Subpasses.size());
+		
+		ClearValues.reserve(Layout->GetTotalAttachmentCount());
 
 		for (UInt32 Idx = 0; Idx < Subpasses.size(); ++Idx)
 		{
@@ -79,7 +91,7 @@ export namespace VE { namespace Runtime
 			{
 				ColorRefs[Idx].attachment	= CurrentSubpass.ColorImageReferences[Idx];
 				ColorRefs[Idx].layout		= AutoCast(Layout->ColorDescs[Idx].Layout);
-				
+				ClearValues.emplace_back(FClearValue{ .color{1.0f, 0.0f, 1.0f, 1.0f} });
 			}
 
 			auto& ResolveRefs = ResolveRefTable[Idx];
@@ -91,16 +103,21 @@ export namespace VE { namespace Runtime
 				{
 					ResolveRefs[Idx].attachment = Layout->GetColorAttachmentCount() + CurrentSubpass.ColorImageReferences[Idx];
 					ResolveRefs[Idx].layout		= AutoCast(Layout->ResolveDescs[Idx].Layout);
+					ClearValues.emplace_back(FClearValue{ .color{1.0f, 0.0f, 0.0f, 1.0f} });
 				}
 			}
-			
-			VE_ASSERT(Layout->HasDepthImage()); // Debugging
-			VkAttachmentReference DepthRef
+	
+			Optional<VkAttachmentReference> DepthRef;
+			if (Layout->HasDepthImage())
 			{
-				.attachment = Layout->GetDepthAttachmentLocation(),
-				.layout = AutoCast(Layout->DepthDesc.value().Layout),
+				DepthRef = VkAttachmentReference
+				{
+					.attachment = Layout->GetDepthAttachmentLocation(),
+					.layout		= AutoCast(Layout->DepthDesc.value().Layout),
+				};
+				ClearValues.emplace_back(FClearValue{ .depthStencil{.depth = 1.0f, .stencil = 0} });
 			};
-
+			
 			SubpassDescriptions[Idx] =
 			{
 				.flags					= 0x0,
@@ -110,7 +127,7 @@ export namespace VE { namespace Runtime
 				.colorAttachmentCount	= UInt32(ColorRefs.size()),
 				.pColorAttachments		= ColorRefs.data(),
 				.pResolveAttachments	= ResolveRefs.empty()? nullptr : ResolveRefs.data(),
-				.pDepthStencilAttachment= &DepthRef,
+				.pDepthStencilAttachment= &DepthRef.value(),
 				.preserveAttachmentCount= 0,
 				.pPreserveAttachments	= nullptr,
 			};
@@ -129,7 +146,7 @@ export namespace VE { namespace Runtime
 		}
 		
 		auto AttachmentDescriptions = Array<VkAttachmentDescription>(Layout->GetTotalAttachmentCount());
-		
+
 		for (UInt8 Idx = 0; Idx < Layout->GetColorAttachmentCount(); ++Idx)
 		{
 			auto& ColorDesc    = Layout->ColorDescs[Idx];
@@ -182,7 +199,7 @@ export namespace VE { namespace Runtime
 				.finalLayout	= AutoCast(DepthDesc.FinalLayout),
 			};
 		}
-		
+
 		VkRenderPassCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
@@ -201,7 +218,8 @@ export namespace VE { namespace Runtime
 		{ throw SRuntimeError("Failed to create Vulkan RenderPass!"); }
 
 		// Create Subpasses (Setted in the derived class)
-		if (Subpasses.empty()) { throw SRuntimeError("Cannot create a RenderPass with 0 Subpass!"); }
+		if (Subpasses.empty())
+		{ throw SRuntimeError("Cannot create a RenderPass with 0 Subpass!"); }
 		
 		for (UInt8 Idx = 0; Idx < Subpasses.size(); ++Idx)
 		{
@@ -221,7 +239,7 @@ export namespace VE { namespace Runtime
 		Framebuffers.resize(_RenderTargets.size());
 		for(UInt8 Idx = 0; Idx < Framebuffers.size(); ++Idx)
 		{
-			FVulkanExtent3D Extent{ Layout->RenderArea.extent.width, Layout->RenderArea.extent.height, 1 };
+			FVulkanExtent3D Extent{ RenderArea.extent.width, RenderArea.extent.height, 1 };
 			Framebuffers[Idx].Create(Handle, Extent, _RenderTargets[Idx]);
 		}
 	}
@@ -241,20 +259,20 @@ export namespace VE { namespace Runtime
 			Handle = VK_NULL_HANDLE;
 		}
 	}
-
-	VkRenderPassBeginInfo FVulkanRenderPass::
+	const VkRenderPassBeginInfo FVulkanRenderPass::
 	GetRenderPassBeginInfo() const
 	{
 		return VkRenderPassBeginInfo
 		{
-			.sType			 = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-			.pNext			 = nullptr,
-			.renderPass		 = Handle,
-			.framebuffer	 = Framebuffers[GVulkan->Swapchain->GetCursor()].Handle,
-			.renderArea		 = Layout->GetRenderArea(),
-			.clearValueCount = UInt32(Layout->ClearColors.size()),
-			.pClearValues    = Layout->ClearColors.data(),
+			.sType			= VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+			.pNext			= nullptr,
+			.renderPass		= Handle,
+			.framebuffer	= Framebuffers[GVulkan->Swapchain->GetCursor()].Handle,
+			.renderArea		= RenderArea,
+			.clearValueCount= UInt32(ClearValues.size()),
+			.pClearValues	= ClearValues.data()
 		};
 	}
+	
 
 } } // namespace VE::Runtime

@@ -68,6 +68,8 @@ export namespace VE { namespace Runtime
 	CompileShader(SharedPtr<FShader> _Shader) const
 	throw (SRuntimeError)
 	{
+		VE_ASSERT(!_Shader->IsCompiled());
+
 		COMPtr<slang::IBlob>  Diagnostics;
 		// Select Compiler
 		const FSlang::FCompiler* Compiler = nullptr;
@@ -96,15 +98,17 @@ export namespace VE { namespace Runtime
 			reinterpret_cast<slang::IComponentType*>(ShaderModule.get()),
 			reinterpret_cast<slang::IComponentType*>(ShaderEntryPoint.get())
 		};
+
+		COMPtr<slang::IComponentType> ShaderProgram {nullptr};
 		if (Compiler->Session->createCompositeComponentType(
 			ShaderComponents.data(),
 			ShaderComponents.size(),
-			_Shader->Handle.writeRef(),
+			ShaderProgram.writeRef(),
 			Diagnostics.writeRef()) != SLANG_OK)
 		{ throw SRuntimeError(Text("Failed to create the Shader({}):\n{}", _Shader->GetFileName(), RawString(Diagnostics->getBufferPointer()))); }
 	
 		COMPtr<slang::IBlob> CompiledCode;
-		if (_Shader->Handle->getEntryPointCode(
+		if (ShaderProgram->getEntryPointCode(
 			0,
 			0,
 			CompiledCode.writeRef(),
@@ -112,7 +116,7 @@ export namespace VE { namespace Runtime
 		{ throw SRuntimeError(Text("Failed to obtain compiled shader code from {}! -- {}", _Shader->GetFileName(), RawString(Diagnostics->getBufferPointer()))); }
 	
 		// Reflect Shader
-		slang::ProgramLayout* ShaderLayout = _Shader->Handle->getLayout(0, Diagnostics.writeRef());
+		slang::ProgramLayout* ShaderLayout = ShaderProgram->getLayout(0, Diagnostics.writeRef());
 		if (Diagnostics) { throw SRuntimeError(Text("Failed to get reflection info from Shader({})! -- {}", _Shader->GetFileName(), RawString(Diagnostics->getBufferPointer()))); }
 		
 		auto* EntryPointRef = ShaderLayout->findEntryPointByName(_Shader->GetEntryPoint().data());
@@ -127,9 +131,11 @@ export namespace VE { namespace Runtime
 
 		std::cerr << Text("Warn: Func(ReflectShader) is WIP but is still being used for testing!\n");
 		
-		_Shader->RHIShader = RHI::CreateShader(ShaderStage,
-											   CompiledCode->getBufferPointer(),
-											   CompiledCode->getBufferSize());
+		_Shader->Handle = RHI::CreateShader(ShaderStage,
+											CompiledCode->getBufferPointer(),
+											CompiledCode->getBufferSize());
+
+		ShaderProgram->release();
 	}
 
 } } // namespace VE::Runtime

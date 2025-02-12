@@ -16,6 +16,7 @@ export namespace VE { namespace Runtime
 	{
 		friend class FVulkanRenderPass;
 	public:
+		auto GetHandle()	 const -> const VkFramebuffer { return Handle; }
 		Bool HasDepthImage() const { return RenderTarget->HasDepthImage(); }
 	
 	private:

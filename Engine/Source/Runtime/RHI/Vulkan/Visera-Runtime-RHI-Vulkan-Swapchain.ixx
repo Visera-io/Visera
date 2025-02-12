@@ -23,9 +23,9 @@ export namespace VE { namespace Runtime
 		void PresentCurrentImage(VkSemaphore WaitSemaphore, Bool bMoveCursor = True) throw(SRecreation);
 
 		auto GetCursor()		const   -> UInt32					{ return Cursor; }
-		auto GetFrameCount()	const	-> UInt32					{ return Images.size(); }
+		auto GetFrameCount()	const	-> UInt8					{ return Images.size(); }
 		auto GetExtent()		const	-> const VkExtent2D&		{ return ImageExtent; }
-		auto GetFormat()		const	-> EVulkanFormat					{ return ImageFormat; }
+		auto GetFormat()		const	-> EVulkanFormat			{ return ImageFormat; }
 		auto GetColorSpace()	const	-> VkColorSpaceKHR			{ return ImageColorSpace; }
 		auto GetImages()		const	-> const Array<VkImage>&	{ return Images; }
 		auto GetImageViews()	const	-> const Array<VkImageView> { return ImageViews; }
@@ -34,7 +34,7 @@ export namespace VE { namespace Runtime
 	private:
 		VkSwapchainKHR			Handle{ VK_NULL_HANDLE };
 		
-		EVulkanPresentMode			PresentMode		= EVulkanPresentMode::Mailbox;
+		EVulkanPresentMode		PresentMode		= EVulkanPresentMode::Mailbox;
 
 		UInt32					Cursor{ 0 };	// Current Frame Index
 		void MoveCursor(UInt32 Stride) { Cursor = (Cursor + Stride) % Images.size(); }
@@ -42,11 +42,11 @@ export namespace VE { namespace Runtime
 		Array<VkImage>			Images;			// Size: Clamp(minImageCount + 1, maxImageCount)
 		Array<VkImageView>		ImageViews;
 		VkExtent2D				ImageExtent;
-		EVulkanFormat					ImageFormat		= EVulkanFormat::U32_sRGB_B8_G8_R8_A8;
+		EVulkanFormat			ImageFormat		= EVulkanFormat::U32_sRGB_B8_G8_R8_A8;
 		VkColorSpaceKHR			ImageColorSpace	= VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 
-		EVulkanFormat					DepthImageFormat= EVulkanFormat::S32_Float_Depth32;
-		EVulkanImageTiling			DepthImageTiling= EVulkanImageTiling::Optimal;
+		EVulkanFormat			DepthImageFormat= EVulkanFormat::S32_Float_Depth32;
+		EVulkanImageTiling		DepthImageTiling= EVulkanImageTiling::Optimal;
 
 		void Create();
 		void Destroy();

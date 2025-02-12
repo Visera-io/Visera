@@ -39,12 +39,10 @@ export namespace VE { namespace Runtime
 		};
 
 		auto AddColorAttachment(FAttachmentDescription _ColorDesc) -> FVulkanRenderPassLayout&;
-		auto SetRenderArea(UInt32 _Width, UInt32 _Height, Int32 _OffsetX = 0, Int32 _OffsetY = 0) -> FVulkanRenderPassLayout& { RenderArea = FVulkanRenderArea{ .offset{.x = _OffsetX, .y = _OffsetY}, .extent{.width = _Width, .height = _Height} }; return *this; };
 
 		auto GetColorAttachmentCount() const -> UInt8 { return ColorDescs.size(); }
 		auto GetTotalAttachmentCount() const -> UInt8 { return ColorDescs.size() + ResolveDescs.size() + (DepthDesc.has_value()? 1 : 0); }
 		auto GetDepthAttachmentLocation() const -> UInt8 { VE_ASSERT(HasDepthImage()); return GetTotalAttachmentCount() - 1; }
-		auto GetRenderArea()			const -> const FVulkanRenderArea&	{ return RenderArea; }
 
 		Bool HasDepthImage()			const { return DepthDesc.has_value(); }
 		Bool HasResolveImage()			const { return !ResolveDescs.empty(); }
@@ -59,9 +57,6 @@ export namespace VE { namespace Runtime
 		Optional<FAttachmentDescription>DepthDesc;
 		Optional<FAttachmentDescription>ShadingRateDesc;
 		Optional<FStencilDescription>	StencilDesc;
-	
-		FVulkanRenderArea				RenderArea{ 0,0 };
-		Array<FClearValue>				ClearColors;
 	};
 
 	FVulkanRenderPassLayout::

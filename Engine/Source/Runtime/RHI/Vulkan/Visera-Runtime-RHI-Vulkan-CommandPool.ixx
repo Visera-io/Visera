@@ -22,35 +22,33 @@ export namespace VE { namespace Runtime
 		auto GetType()		const -> EVulkanCommandPoolType { return EVulkanCommandPoolType(Type); }
 		Bool IsResetable()	const				  { return Type == EVulkanCommandPoolType::Resetable; }
 
-		auto GetHandle()						  { return Handle; }
+		auto GetHandle()	const -> const VkCommandPool { return Handle; }
 
-	private:
-		void Create(EVulkanQueueFamily QueueFamilyType, EVulkanCommandPoolType Type);
-		void Destroy();
 		void CollectGarbages(Bool _bDestroyMode = False); // Managed by RHI or Deconstructor
 
 	public:
-		FVulkanCommandPool()  noexcept = default;
-		~FVulkanCommandPool() noexcept = default;
+		FVulkanCommandPool() = delete;
+		FVulkanCommandPool(EVulkanCommandPoolType _PoolType, EVulkanQueueFamily _QueueFamily);
+		~FVulkanCommandPool();
 
 	private:
-		VkCommandPool				Handle{ VK_NULL_HANDLE };
+		VkCommandPool						Handle{ VK_NULL_HANDLE };
 		EVulkanCommandPoolType				Type;
-		EVulkanQueueFamily				QueueFamilyType;
+		EVulkanQueueFamily					QueueFamilyType;
 		List<SharedPtr<FVulkanCommandBuffer>> Children;
+		Array<VkCommandBuffer>				Trashbin;
 	};
 
-	void FVulkanCommandPool::
-	Create(EVulkanQueueFamily _QueueFamilyType, EVulkanCommandPoolType _CommandPoolType)
+	FVulkanCommandPool::
+	FVulkanCommandPool(EVulkanCommandPoolType _PoolType, EVulkanQueueFamily _QueueFamily)
+		:Type {_PoolType},
+		 QueueFamilyType {_QueueFamily}
 	{
-		Type = _CommandPoolType;
-		QueueFamilyType = _QueueFamilyType;
-
 		VkCommandPoolCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
 			.flags = AutoCast(Type),
-			.queueFamilyIndex = GVulkan->Device->GetQueueFamily(_QueueFamilyType).Index,
+			.queueFamilyIndex = GVulkan->Device->GetQueueFamily(QueueFamilyType).Index,
 		};
 
 		if(VK_SUCCESS != vkCreateCommandPool(
@@ -59,10 +57,12 @@ export namespace VE { namespace Runtime
 			GVulkan->AllocationCallbacks,
 			&Handle))
 		{ throw SRuntimeError("Failed to create Vulkan FCommandPool!"); }
+
+		Trashbin.resize(8);
 	}
 
-	void FVulkanCommandPool::
-	Destroy()
+	FVulkanCommandPool::
+	~FVulkanCommandPool()
 	{
 		CollectGarbages(True);
 		vkDestroyCommandPool(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
@@ -95,7 +95,6 @@ export namespace VE { namespace Runtime
 	void FVulkanCommandPool::
 	CollectGarbages(Bool _bDestroyMode/* = False*/)
 	{
-		static Array<VkCommandBuffer> Trashbin(8);
 		UInt32 CollectionCount = 0;
 		
 		if (_bDestroyMode)

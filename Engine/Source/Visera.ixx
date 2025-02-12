@@ -71,9 +71,6 @@ export namespace VE
 					Log::Debug(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
 					StateCode = Signal.StateCode;
 				}
-				App->Terminate();
-				delete App;
-
 #if defined(VISERA_RUNTIME)
 				Log::Debug("Terminating Visera Editor...");
 				Editor::ViseraEditor::Terminate();
@@ -86,6 +83,12 @@ export namespace VE
 			{
 				Log::Debug("Visera Engine Stopped:\n{}{}", Signal.What(), Signal.Where());
 				StateCode = Signal.StateCode;
+			}
+
+			if (App)
+			{
+				App->Terminate();
+				delete App;
 			}
 			return StateCode;
 		}

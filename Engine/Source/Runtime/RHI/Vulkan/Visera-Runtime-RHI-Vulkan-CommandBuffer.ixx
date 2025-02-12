@@ -11,7 +11,7 @@ export namespace VE { namespace Runtime
 { 
 	class FVulkanCommandPool;
 
-	class FVulkanCommandBuffer
+	class FVulkanCommandBuffer : public std::enable_shared_from_this<FVulkanCommandBuffer>
 	{
 		friend class FVulkanCommandPool;
 	public:
@@ -31,22 +31,22 @@ export namespace VE { namespace Runtime
 		Bool IsInsideRenderPass()	const { return Status == EStatus::InsideRenderPass; }
 		Bool IsResettable()			const { return bIsResettable;   }
 		Bool IsPrimary()			const { return bIsPrimary;		}
-		auto GetLevel()				const -> EVulkanCommandLevel		{ return IsPrimary()? EVulkanCommandLevel::Primary : EVulkanCommandLevel::Secondary; }
-		auto GetHandle()				  -> VkCommandBuffer	{ return Handle; }
+		auto GetLevel()				const -> EVulkanCommandLevel	{ return IsPrimary()? EVulkanCommandLevel::Primary : EVulkanCommandLevel::Secondary; }
+		auto GetHandle()			const -> const VkCommandBuffer	{ return Handle; }
 		operator VkCommandBuffer() { return Handle; }
 
 	private:
-		VkCommandBuffer				  Handle{ VK_NULL_HANDLE };
-		SharedPtr<FVulkanCommandPool> Owner;
-		Array<VkViewport>			  CurrentViewports;
-		Array<VkRect2D>				  CurrentScissors;
+		VkCommandBuffer						Handle{ VK_NULL_HANDLE };
+		WeakPtr<const FVulkanCommandPool>   Owner;
+		Array<VkViewport>					CurrentViewports;
+		Array<VkRect2D>						CurrentScissors;
 
 		EStatus Status = EStatus::Idle;
 		Byte bIsResettable  : 1;
 		Byte bIsPrimary		: 1;
 
 	public:
-		FVulkanCommandBuffer(SharedPtr<FVulkanCommandPool> _Owner, EVulkanCommandLevel _Level) noexcept;
+		FVulkanCommandBuffer(SharedPtr<const FVulkanCommandPool> _Owner, EVulkanCommandLevel _Level) noexcept;
 		FVulkanCommandBuffer() noexcept = delete;
 		~FVulkanCommandBuffer() noexcept;
 	};
@@ -55,17 +55,10 @@ export namespace VE { namespace Runtime
 	StartRenderPass(SharedPtr<FVulkanRenderPass> _RenderPass)
 	{ 
 		VE_ASSERT(IsRecording());
-		
-		VE_WIP;//Framebuffer
-		VkRenderPassBeginInfo RenderPassBeginInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-			.renderPass = _RenderPass->GetHandle(),
-			//.framebuffer = ,
-			//.renderArea = _RenderPass->GetRenderArea(),
-			//.clearValueCount = _RenderPass->Get
-			//.pClearValues
-		};
+
+		static VkRenderPassBeginInfo RenderPassBeginInfo{};
+		RenderPassBeginInfo = std::move(_RenderPass->GetRenderPassBeginInfo());
+
 		vkCmdBeginRenderPass(
 			Handle,
 			&RenderPassBeginInfo,
@@ -76,17 +69,17 @@ export namespace VE { namespace Runtime
 
 	
 	FVulkanCommandBuffer::
-	FVulkanCommandBuffer(SharedPtr<FVulkanCommandPool> _Owner, EVulkanCommandLevel _Level) noexcept
-		: Owner { std::move(_Owner) },
+	FVulkanCommandBuffer(SharedPtr<const FVulkanCommandPool> _Owner, EVulkanCommandLevel _Level) noexcept
+		: Owner { _Owner },
 		  bIsPrimary { EVulkanCommandLevel::Primary == _Level? True : False }
 	{
-
+		
 	}
 
 	FVulkanCommandBuffer::
 	~FVulkanCommandBuffer() noexcept
 	{
-
+		Status = EStatus::Expired; // Collected by Owner Pool
 	}
 
 	void FVulkanCommandBuffer::
