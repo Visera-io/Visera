@@ -19,8 +19,8 @@ export namespace VE { namespace Runtime
 		friend class FVulkan;
 	public:
 		class SRecreation : public std::exception { public: SRecreation() noexcept = default; };
-		void WaitForCurrentImage(VkSemaphore SignalSemaphore, VkFence SignalFence) throw(SRecreation);
-		void PresentCurrentImage(VkSemaphore WaitSemaphore, Bool bMoveCursor = True) throw(SRecreation);
+		void WaitForNextImage(VkSemaphore* _SignalSemaphore_) throw(SRecreation);
+		void Present(VkSemaphore _WaitSemaphores[], UInt32 _WaitSemaphoreCount) throw(SRecreation);
 
 		auto GetCursor()		const   -> UInt32					{ return Cursor; }
 		auto GetFrameCount()	const	-> UInt8					{ return Images.size(); }
@@ -38,6 +38,7 @@ export namespace VE { namespace Runtime
 
 		UInt32					Cursor{ 0 };	// Current Frame Index
 		void MoveCursor(UInt32 Stride) { Cursor = (Cursor + Stride) % Images.size(); }
+		Array<FVulkanSemaphore> NextImageReadySemaphores;
 
 		Array<VkImage>			Images;			// Size: Clamp(minImageCount + 1, maxImageCount)
 		Array<VkImageView>		ImageViews;
@@ -207,6 +208,9 @@ export namespace VE { namespace Runtime
 			{ throw SRuntimeError("Failed to create Vulkan Image View!"); }
 		}
 
+		//Present Semaphores & Fences
+		NextImageReadySemaphores.resize(GetFrameCount());
+
 		//Init Frames
 		Cursor = 0;
 	}
@@ -214,6 +218,8 @@ export namespace VE { namespace Runtime
 	void FVulkanSwapchain::
 	Destroy()
 	{
+		NextImageReadySemaphores.clear();
+
 		for (auto ImageView : ImageViews)
 		{
 			vkDestroyImageView(GVulkan->Device->GetHandle(), ImageView, GVulkan->AllocationCallbacks);
@@ -224,14 +230,17 @@ export namespace VE { namespace Runtime
 	}
 
 	void FVulkanSwapchain::
-	WaitForCurrentImage(VkSemaphore SignalSemaphore, VkFence SignalFence)
+	WaitForNextImage(VkSemaphore* _SignalSemaphore_)
 	throw(SRecreation)
 	{
+		auto& CurrentFrameSemaphore = NextImageReadySemaphores[GetCursor()];
+		*_SignalSemaphore_ = CurrentFrameSemaphore;
+
 		auto Result = vkAcquireNextImageKHR(GVulkan->Device->GetHandle(),
 											Handle,
 											UINT64_MAX,
-								/*Signal*/  SignalSemaphore,
-								/*Signal*/  SignalFence,
+								/*Signal*/  CurrentFrameSemaphore,
+								/*Signal*/  VK_NULL_HANDLE,
 											&Cursor);
 
 		if (VK_ERROR_OUT_OF_DATE_KHR == Result ||
@@ -240,24 +249,25 @@ export namespace VE { namespace Runtime
 			//recreate_swapchain();
 			throw SRecreation{};
 		}
-		if (Result != VK_SUCCESS) throw SRuntimeError("Failed to retrive the next image from the Vulkan Swapchain!");
+		if (Result != VK_SUCCESS)
+		{ throw SRuntimeError("Failed to retrive the next image from the Vulkan Swapchain!"); }
 	}
 
 	void FVulkanSwapchain::
-	PresentCurrentImage(VkSemaphore WaitSemaphore, Bool bMoveCursor/* = True*/)
+	Present(VkSemaphore _WaitSemaphores[], UInt32 _WaitSemaphoreCount)
 	throw(SRecreation)
 	{
 		VkPresentInfoKHR PresentInfo
 		{
 			.sType				= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 			.waitSemaphoreCount = 1,
-			.pWaitSemaphores	= &WaitSemaphore,
-			.swapchainCount		= 1,
+			.pWaitSemaphores	= _WaitSemaphores,
+			.swapchainCount		= _WaitSemaphoreCount,
 			.pSwapchains		= &Handle,
 			.pImageIndices		= &Cursor,
 			.pResults			= nullptr // It is not necessary if you are only using a single swap chain
 		};
-		VkQueue PresentQueue = GVulkan->Device->GetQueueFamily(EVulkanQueueFamily::Present).Queues.front();
+		auto PresentQueue = GVulkan->Device->GetQueueFamily(EVulkanQueueFamily::Present).Queues[0];
 		auto Result = vkQueuePresentKHR(PresentQueue, &PresentInfo);
 
 		if (VK_ERROR_OUT_OF_DATE_KHR == Result ||
@@ -266,9 +276,10 @@ export namespace VE { namespace Runtime
 			//recreate_swapchain();
 			throw SRecreation{};
 		}
-		if (Result != VK_SUCCESS) throw SRuntimeError(Text("Failed to present the Vulkan Swapchain! (Cursor:{})", Cursor));
+		if (Result != VK_SUCCESS)
+		{ throw SRuntimeError(Text("Failed to present the Vulkan Swapchain! (Cursor:{})", Cursor)); }
 
-		if (bMoveCursor) MoveCursor(1);
+		MoveCursor(1);
 	}
 
 } } // namespace VE::Runtime

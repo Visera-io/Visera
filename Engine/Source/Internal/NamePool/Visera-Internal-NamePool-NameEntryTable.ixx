@@ -31,7 +31,7 @@ export namespace VE { namespace Internal
 		};
 		auto Insert(StringView _ParsedName, const FNameHash& _NameHash) -> FNameEntryHandle;
 		auto LookUp(FNameEntryHandle _NameEntryHandle) const -> const FNameEntry&
-		{ // Lock not needed since any valid NameEntryHandle is distributed after the insertion.
+		{ // Reset not needed since any valid NameEntryHandle is distributed after the insertion.
 		  return *reinterpret_cast<FNameEntry*>(Sections[_NameEntryHandle.GetSectionIndex()].Data + NameEntryByteStride * _NameEntryHandle.GetSectionOffset());
 		}
 

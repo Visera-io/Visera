@@ -21,9 +21,14 @@ export namespace VE { namespace Runtime
 		enum class ESystemRT { Color, Depth };
 
 		using FShader = FShader;
-		struct FFrame
+		class FFrame
 		{
+			friend class Render;
+		public:
 			SharedPtr<RHI::FCommandBuffer> DrawcallBuffer;
+		private:
+			//Array<RHI::FSemaphore> WaitSemaphores;
+			Array<RHI::FSemaphore> SignalSemaphores;
 		};
 
 		VE_API CreateShader(StringView _ShaderFileName, StringView _EntryPoint, FShader::ECompileType _CompileType = FShader::ECompileType::Default) throw (SIOFailure, SRuntimeError) -> SharedPtr<FShader>;
@@ -55,40 +60,25 @@ export namespace VE { namespace Runtime
 	Bootstrap()
 	{
 		Frames.resize(RHI::GetSwapchainFrameCount());
+
 		for (auto& Frame : Frames)
 		{
 			Frame.DrawcallBuffer = RHI::CreateCommandBuffer();
+			auto& SignalSemaphore = Frame.SignalSemaphores.emplace_back(RHI::CreateSemaphore());
+			Frame.DrawcallBuffer->AddSignalSemaphore(SignalSemaphore);
 		}
-		/*Frames.resize(RHI::GetAPI()->GetSwapchain().GetSize());
-		for (auto& Frame : Frames)
-		{
-			Frame.RenderTargets = RHI::CreateRenderTargets(
-				{
-				RHI::CreateImage(
-					RHI::EImageType::Image2D,
-					RHI::FExtent3D{ 1920, 1080, 1 },
-					RHI::EFormat::U32_sRGB_R8_G8_B8_A8,
-					RHI::EImageAspect::Color,
-					RHI::EImageUsage::ColorAttachment
-					| RHI::EImageUsage::InputAttachment
-					| RHI::EImageUsage::TransferSource)
-				},
-				RHI::CreateImage(
-					RHI::EImageType::Image2D,
-					RHI::FExtent3D{ 1920, 1080, 1 },
-					RHI::EFormat::U32_sRGB_R8_G8_B8_A8,
-					RHI::EImageAspect::Color,
-					RHI::EImageUsage::ColorAttachment
-					| RHI::EImageUsage::InputAttachment
-					| RHI::EImageUsage::TransferSource)
-			);
-		}*/
 	}
 
 	void Render::
 	Tick()
 	{
-
+		auto& CurrentFrame = GetCurrentFrame();
+		if (!CurrentFrame.DrawcallBuffer->IsIdle())
+		{
+			Log::Warn("You may forget to stop recording DrawcallBuffer?");
+			CurrentFrame.DrawcallBuffer->StopRecording();
+		}
+		RHI::RenderAndPresent(CurrentFrame.DrawcallBuffer);
 	}
 
 	void Render::

@@ -5,15 +5,18 @@ import :Common;
 import :Device;
 import :RenderPass;
 import :Pipeline;
+import :Synchronization;
 
 import Visera.Core.Signal;
 
 export namespace VE { namespace Runtime
 { 
+	class RHI;
 	class FVulkanCommandPool;
 
 	class FVulkanCommandBuffer : public std::enable_shared_from_this<FVulkanCommandBuffer>
 	{
+		friend class RHI;
 		friend class FVulkanCommandPool;
 	public:
 		enum class EStatus { Expired, Idle, Recording, InsideRenderPass, Submitted };
@@ -26,7 +29,7 @@ export namespace VE { namespace Runtime
 		void BindPipeline(SharedPtr<const FVulkanPipeline> _Pipeline) const;
 		void Draw(UInt32 _VertexCount, UInt32 _InstanceCount = 1, UInt32 _FirstVertex = 0, UInt32 _FirstInstance = 0) const { vkCmdDraw(Handle, _VertexCount, _InstanceCount, _FirstVertex, _FirstInstance); };
 
-		void Reset()			  { VE_ASSERT(IsIdle() && IsResettable()); vkResetCommandBuffer(Handle, 0x0); }
+		void Reset()			  { VE_ASSERT(IsIdle() && IsResettable()); vkResetCommandBuffer(Handle, 0x0); WaitStages = 0; }
 		void Free()				  { Status = EStatus::Expired; }
 
 		Bool IsExpired()			const { return Status == EStatus::Expired;			}
@@ -36,13 +39,21 @@ export namespace VE { namespace Runtime
 		Bool IsInsideRenderPass()	const { return Status == EStatus::InsideRenderPass; }
 		Bool IsResettable()			const { return bIsResettable;   }
 		Bool IsPrimary()			const { return bIsPrimary;		}
+
 		auto GetLevel()				const -> EVulkanCommandLevel	{ return IsPrimary()? EVulkanCommandLevel::Primary : EVulkanCommandLevel::Secondary; }
+		auto GetSubmitInfo()		const -> const VkSubmitInfo;
 		auto GetHandle()			const -> const VkCommandBuffer	{ return Handle; }
-		operator VkCommandBuffer() { return Handle; }
+		
+		auto AddWaitStage(EVulkanPipelineStage _WaitStage)		-> FVulkanCommandBuffer* { WaitStages |= AutoCast(_WaitStage); return this; }
+		auto AddWaitSemaphore(const VkSemaphore _WaitSemaphore)		-> FVulkanCommandBuffer* { WaitSemaphoreViews.push_back(_WaitSemaphore); return this; }
+		auto AddSignalSemaphore(const VkSemaphore _SignalSemaphore)	-> FVulkanCommandBuffer* { SignalSemaphoreViews.push_back(_SignalSemaphore); return this; }
 
 	private:
 		VkCommandBuffer						Handle{ VK_NULL_HANDLE };
 		WeakPtr<const FVulkanCommandPool>   Owner;
+		Array<VkSemaphore>					WaitSemaphoreViews;
+		VkPipelineStageFlags				WaitStages{ 0 };
+		Array<VkSemaphore>					SignalSemaphoreViews;
 		Segment<VkViewport,1>				CurrentViewports{ VkViewport{.minDepth = 0.0f, .maxDepth = 1.0f} };
 		Segment<VkRect2D, 1>				CurrentScissors{ VkRect2D {.offset{.x = 0, .y = 0}, .extent{.width = 0, .height = 0} } };
 
@@ -55,6 +66,23 @@ export namespace VE { namespace Runtime
 		FVulkanCommandBuffer() noexcept = delete;
 		~FVulkanCommandBuffer() noexcept;
 	};
+
+	const VkSubmitInfo FVulkanCommandBuffer::
+	GetSubmitInfo() const
+	{
+		return VkSubmitInfo
+		{
+			.sType					= VK_STRUCTURE_TYPE_SUBMIT_INFO,
+			.pNext					= nullptr,
+			.waitSemaphoreCount		= UInt32(WaitSemaphoreViews.size()),
+			.pWaitSemaphores		= WaitSemaphoreViews.data(),
+			.pWaitDstStageMask		= &WaitStages,
+			.commandBufferCount		= 1,
+			.pCommandBuffers		= &Handle,
+			.signalSemaphoreCount	= UInt32(SignalSemaphoreViews.size()),
+			.pSignalSemaphores		= SignalSemaphoreViews.data(),
+		};
+	}
 
 	void FVulkanCommandBuffer::
 	StartRenderPass(SharedPtr<FVulkanRenderPass> _RenderPass)

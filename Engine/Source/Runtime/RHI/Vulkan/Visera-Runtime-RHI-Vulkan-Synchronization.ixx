@@ -8,39 +8,46 @@ import :Device;
 
 export namespace VE { namespace Runtime
 {
+	class RHI;
 
 	class FVulkanSemaphore
 	{
-		friend class FVulkan;
+		VE_NOT_COPYABLE(FVulkanSemaphore);
+		friend class RHI;
 	public:
-		auto GetHandle()		const	-> VkSemaphore { return Handle; }
-		operator VkSemaphore()	const { return Handle; }
+		auto GetHandle() const -> const VkSemaphore { return Handle; }
+		operator const VkSemaphore() const { return Handle; }
 
 		FVulkanSemaphore(Bool bSignaled = False);
 		~FVulkanSemaphore();
+		FVulkanSemaphore(FVulkanSemaphore&& _Another) : Handle{ _Another.Handle } { _Another.Handle = VK_NULL_HANDLE; }
+		FVulkanSemaphore& operator=(FVulkanSemaphore&& _Another) { Handle = _Another.Handle; _Another.Handle = VK_NULL_HANDLE; return *this; }
 
 	private:
-		VkSemaphore				Handle{ VK_NULL_HANDLE };
+		VkSemaphore	Handle{ VK_NULL_HANDLE };
 	};
 	static_assert(sizeof(FVulkanSemaphore) == sizeof(VkSemaphore));
 
 	class FVulkanFence
 	{
-		friend class FVulkan;
+		VE_NOT_COPYABLE(FVulkanFence);
+		friend class RHI;
 	public:
+		auto GetHandle() const -> const VkFence { return Handle; }
+		operator const VkFence() const { return Handle; }
+
 		enum WaitTime : UInt64 { Forever = UINT64_MAX };
 		void Wait(WaitTime Timeout = Forever) const { vkWaitForFences(GVulkan->Device->GetHandle(), 1, &Handle, VK_TRUE, Timeout); }
-		void Lock()		const { VE_ASSERT(!IsLocked()); vkResetFences(GVulkan->Device->GetHandle(), 1, &Handle); }
-		Bool IsLocked()	const { return VK_SUCCESS != vkGetFenceStatus(GVulkan->Device->GetHandle(), Handle); }
-
-		auto GetHandle()	const -> VkFence { return Handle; }
-		operator VkFence()	const { return Handle; }
+		void Reset()		const { VE_ASSERT(!IsBlocking()); vkResetFences(GVulkan->Device->GetHandle(), 1, &Handle); }
+		Bool IsBlocking()	const { return VK_SUCCESS != vkGetFenceStatus(GVulkan->Device->GetHandle(), Handle); }
 
 		FVulkanFence(Bool bSignaled = False);
 		~FVulkanFence();
+		FVulkanFence(FVulkanFence&& _Another) : Handle{ _Another.Handle } { _Another.Handle = VK_NULL_HANDLE; }
+		FVulkanFence& operator=(FVulkanFence&& _Another) { Handle = _Another.Handle; _Another.Handle = VK_NULL_HANDLE; return *this; }
 
 	private:
-		VkFence					Handle{ VK_NULL_HANDLE };
+		VkFence	 Handle{ VK_NULL_HANDLE };
 	};
 	static_assert(sizeof(FVulkanFence) == sizeof(VkFence));
 
@@ -63,8 +70,11 @@ export namespace VE { namespace Runtime
 	FVulkanSemaphore::
 	~FVulkanSemaphore()
 	{
-		vkDestroySemaphore(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
-		Handle = VK_NULL_HANDLE;
+		if (Handle != VK_NULL_HANDLE)
+		{
+			vkDestroySemaphore(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
+			Handle = VK_NULL_HANDLE;
+		}
 	}
 
 	FVulkanFence::
@@ -86,8 +96,11 @@ export namespace VE { namespace Runtime
 	FVulkanFence::
 	~FVulkanFence()
 	{
-		vkDestroyFence(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
-		Handle = VK_NULL_HANDLE;
+		if (Handle != VK_NULL_HANDLE)
+		{
+			vkDestroyFence(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
+			Handle = VK_NULL_HANDLE;
+		}
 	}
 
 } } // namespace VE::Runtime

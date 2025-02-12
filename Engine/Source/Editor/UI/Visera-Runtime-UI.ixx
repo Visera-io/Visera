@@ -23,8 +23,8 @@ export namespace VE { namespace Editor
 			//ImGui = new FImGui(FImGui::CreateInfo
 			//{
 			//	.Instance		= API->Instance,
-			//	//.PhysicalDevice = API->GPU.GetHandle(),
-			//	.Device			= API->Device.GetHandle(),
+			//	//.PhysicalDevice = API->GPU.GetView(),
+			//	.Device			= API->Device.GetView(),
 			//	.QueueFamily	= API->Device.GetQueueFamily(RHI::EQueueFamily::Graphics).Index,
 			//	.Queue			= API->Device.GetQueueFamily(RHI::EQueueFamily::Graphics).Queues[0],
 			//	//.RenderPass;      // Ignored if using dynamic rendering [TODO]
@@ -34,7 +34,7 @@ export namespace VE { namespace Editor
 			//	.ImageCount		= UInt32(API->Swapchain.GetImages().size()),
 			//	.MSAASamples	= AutoCast(AutoCast(RHI::ESampleRate::X1)),
 
-			//	.PipelineCache	= API->GraphicsPipelineCache.GetHandle(),
+			//	.PipelineCache	= API->GraphicsPipelineCache.GetView(),
 			//	//[Debug]
 			//	.Allocator		= API->AllocationCallbacks,
 			//});

@@ -17,6 +17,7 @@ export namespace VE { namespace Runtime
 		friend class FVulkan;
 	public:
 		void WaitIdle()  const { vkDeviceWaitIdle(Handle); }
+		void SubmitCommands(EVulkanQueueFamily _QueueFamily, const VkSubmitInfo _SubmitInfos[], UInt32 _SubmitCounts, VkFence _Fence, UInt32 _QueueIndex = 0) const;
 		auto GetHandle() const -> const VkDevice { return Handle; }
 
 	private:
@@ -42,6 +43,14 @@ export namespace VE { namespace Runtime
 		FVulkanDevice()	noexcept	= default;
 		~FVulkanDevice() noexcept	= default;
 	};
+
+	void FVulkanDevice::
+	SubmitCommands(EVulkanQueueFamily _QueueFamily, const VkSubmitInfo _SubmitInfos[], UInt32 _SubmitCounts, VkFence _Fence, UInt32 _QueueIndex/* = 0*/) const
+	{
+		static_assert(VK_NULL_HANDLE == nullptr); // RHI may submit nullptr
+		auto TargetQueue = GetQueueFamily(_QueueFamily).Queues[_QueueIndex];
+		vkQueueSubmit(TargetQueue, _SubmitCounts, _SubmitInfos, _Fence);
+	}
 
 	VkDevice FVulkanDevice::
 	Create(FVulkanGPU* GPU, FVulkanSurface* Surface)
