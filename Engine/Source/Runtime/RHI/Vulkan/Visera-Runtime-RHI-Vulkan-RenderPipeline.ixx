@@ -104,6 +104,9 @@ export namespace VE { namespace Runtime
 	{
 		if (Handle == VK_NULL_HANDLE) { return; }
 		
+		Layout.reset();
+		Setting.reset();
+
 		vkDestroyPipeline(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}

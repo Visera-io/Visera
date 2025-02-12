@@ -30,7 +30,7 @@ export namespace VE { namespace Runtime
 		FVulkanPipelineLayout() = delete;
 		FVulkanPipelineLayout(const Array<FPushConstantRange>& _PushConstantRanges,
 							  const Array<SharedPtr<FVulkanDescriptorSetLayout>>& _DescriptorSetLayouts);
-
+		~FVulkanPipelineLayout();
 	protected:
 		VkPipelineLayout			 Handle { VK_NULL_HANDLE };
 		Array<VkPushConstantRange>	 PushConstantRanges;
@@ -72,6 +72,19 @@ export namespace VE { namespace Runtime
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan Pipeline Layout!"); }
+	}
+
+	FVulkanPipelineLayout::
+	~FVulkanPipelineLayout()
+	{
+		if (Handle != VK_NULL_HANDLE)
+		{
+			vkDestroyPipelineLayout(
+				GVulkan->Device->GetHandle(),
+				Handle,
+				GVulkan->AllocationCallbacks);
+			Handle = VK_NULL_HANDLE;
+		}
 	}
 
 } } // namespace VE::Runtime
