@@ -78,7 +78,7 @@ export namespace VE { namespace Runtime
 				//			.CommandBuffers = {CommandContext->Commands->GetView()},
 				//			.WaitSemaphores = {CurrentFrame.Semaphore_ReadyToRender},//[FIXME] Temp
 				//			.SignalSemaphores = { /*TEST*/ CurrentFrame.Semaphore_ReadyToPresent },
-				//			.Fence = CurrentFrame.Fence_Rendering
+				//			.InFlightFence = CurrentFrame.Fence_Rendering
 				//		});
 				//	}
 				//	VE_ASSERT(SubmitInfos.size() == 1, "TESTING"); //Visera Render is controled by a singlton cmd

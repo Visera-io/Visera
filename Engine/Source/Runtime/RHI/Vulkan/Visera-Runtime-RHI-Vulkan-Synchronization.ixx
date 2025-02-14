@@ -26,13 +26,14 @@ export namespace VE { namespace Runtime
 	private:
 		VkSemaphore	Handle{ VK_NULL_HANDLE };
 	};
-	static_assert(sizeof(FVulkanSemaphore) == sizeof(VkSemaphore));
+	static_assert(sizeof(FVulkanSemaphore) == sizeof(VkFence));
 
 	class FVulkanFence
 	{
 		VE_NOT_COPYABLE(FVulkanFence);
 		friend class RHI;
 	public:
+		enum class EStatus { Blocking = 0, Signaled = VK_FENCE_CREATE_SIGNALED_BIT };
 		auto GetHandle() const -> const VkFence { return Handle; }
 		operator const VkFence() const { return Handle; }
 
@@ -41,7 +42,7 @@ export namespace VE { namespace Runtime
 		void Reset()		const { VE_ASSERT(!IsBlocking()); vkResetFences(GVulkan->Device->GetHandle(), 1, &Handle); }
 		Bool IsBlocking()	const { return VK_SUCCESS != vkGetFenceStatus(GVulkan->Device->GetHandle(), Handle); }
 
-		FVulkanFence(Bool bSignaled = False);
+		FVulkanFence(EStatus _Status = EStatus::Blocking);
 		~FVulkanFence();
 		FVulkanFence(FVulkanFence&& _Another) : Handle{ _Another.Handle } { _Another.Handle = VK_NULL_HANDLE; }
 		FVulkanFence& operator=(FVulkanFence&& _Another) { Handle = _Another.Handle; _Another.Handle = VK_NULL_HANDLE; return *this; }
@@ -78,12 +79,12 @@ export namespace VE { namespace Runtime
 	}
 
 	FVulkanFence::
-	FVulkanFence(Bool bSignaled/* = False*/) 
+	FVulkanFence(EStatus _Status/* = EStatus::Blocking*/)
 	{
 		VkFenceCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
-			.flags = bSignaled? VK_FENCE_CREATE_SIGNALED_BIT : VkFenceCreateFlags(0),
+			.flags = UInt32(_Status),
 		};
 		if(VK_SUCCESS != vkCreateFence(
 			GVulkan->Device->GetHandle(),

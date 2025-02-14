@@ -27,7 +27,7 @@ export namespace VE { namespace Runtime
 		public:
 			SharedPtr<RHI::FCommandBuffer> DrawcallBuffer;
 		private:
-			//Array<RHI::FSemaphore> WaitSemaphores;
+			Array<RHI::FSemaphore> WaitSemaphores;
 			Array<RHI::FSemaphore> SignalSemaphores;
 		};
 
@@ -66,6 +66,8 @@ export namespace VE { namespace Runtime
 			Frame.DrawcallBuffer = RHI::CreateCommandBuffer();
 			auto& SignalSemaphore = Frame.SignalSemaphores.emplace_back(RHI::CreateSemaphore());
 			Frame.DrawcallBuffer->AddSignalSemaphore(SignalSemaphore);
+			auto& WaitRHIFrameSema = Frame.WaitSemaphores.emplace_back(RHI::CreateSemaphore());
+			Frame.DrawcallBuffer->AddWaitSemaphore(WaitRHIFrameSema);
 		}
 	}
 
@@ -73,11 +75,14 @@ export namespace VE { namespace Runtime
 	Tick()
 	{
 		auto& CurrentFrame = GetCurrentFrame();
+		RHI::WaitNextFrame(&CurrentFrame.WaitSemaphores[0]);
+
 		if (!CurrentFrame.DrawcallBuffer->IsIdle())
 		{
 			Log::Warn("You may forget to stop recording DrawcallBuffer?");
 			CurrentFrame.DrawcallBuffer->StopRecording();
 		}
+
 		RHI::RenderAndPresent(CurrentFrame.DrawcallBuffer);
 	}
 
