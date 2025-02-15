@@ -46,10 +46,11 @@ export namespace VE { namespace Runtime
 		using ECommandLevel			= EVulkanCommandLevel;
 		using EShaderStage			= EVulkanShaderStage;
 		using EAccessibility		= EVulkanAccessibility;
-		using EPipelineStage		= EVulkanPipelineStage;
+		using EGraphicsPipelineStage= EVulkanGraphicsPipelineStage;
+		using EComputePipelineStage = EVulkanComputePipelineStage;
+		using ETransferPipelineStage= EVulkanTransferPipelineStage;
 		using EMemoryUsage			= EVulkanMemoryUsage;
 		using EBufferUsage			= EVulkanBufferUsage;
-		using EPipelineStage		= EVulkanPipelineStage;
 		using EAttachmentIO			= EVulkanAttachmentIO;
 		using EDescriptorType		= EVulkanDescriptorType;
 		using EImageType			= EVulkanImageType;
@@ -129,7 +130,7 @@ export namespace VE { namespace Runtime
 			{
 				Frame.Drawcalls->AddWaitSemaphore(Frame.SwapchainReadySemaphore)
 							   ->AddSignalSemaphore(Frame.DrawcallsFinishedSemaphore)
-							   ->AddWaitStage(EPipelineStage::PipelineBottom);
+							   ->AddWaitStage(EGraphicsPipelineStage::PipelineBottom);
 
 			}
 		}

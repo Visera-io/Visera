@@ -77,7 +77,7 @@ export namespace VE { namespace Runtime
 	public:
 		auto GetSize()		const	-> VkDeviceSize { return Allocation->GetSize(); }
 		auto GetDetails()	const	-> VmaAllocationInfo { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
-		auto GetHandle()			-> VkBuffer { return Handle; }
+		auto GetHandle()	const	-> const VkBuffer { return Handle; }
 		Bool IsReleased()	const { return Handle == VK_NULL_HANDLE && Allocation == VK_NULL_HANDLE; }
 
 		VE_API Free(VkBuffer* _pHandle, VmaAllocation* _pAllocation) { VE_ASSERT(_pHandle && _pAllocation); vmaDestroyBuffer(GVulkan->Allocator->GetHandle(), *_pHandle, *_pAllocation); *_pHandle = VK_NULL_HANDLE;  *_pAllocation = VK_NULL_HANDLE; }
@@ -143,17 +143,17 @@ export namespace VE { namespace Runtime
 
 		auto GetExtent()		const -> const FVulkanExtent3D&	{ return Extent; }
 		auto GetSize()			const -> VkDeviceSize			{ return Allocation->GetSize(); }
-		auto GetLayout()		const -> EVulkanImageLayout			{ return Layout; }
-		auto GetType()			const -> EVulkanImageType				{ return Type; }
-		auto GetFormat()		const -> EVulkanFormat				{ return Format; }
-		auto GetAspects()		const -> EVulkanImageAspect			{ return Aspects; }
-		auto GetUsages()		const -> EVulkanImageUsage			{ return Usages; }
-		auto GetTiling()		const -> EVulkanImageTiling			{ return Tiling; }
+		auto GetLayout()		const -> EVulkanImageLayout		{ return Layout; }
+		auto GetType()			const -> EVulkanImageType		{ return Type; }
+		auto GetFormat()		const -> EVulkanFormat			{ return Format; }
+		auto GetAspects()		const -> EVulkanImageAspect		{ return Aspects; }
+		auto GetUsages()		const -> EVulkanImageUsage		{ return Usages; }
+		auto GetTiling()		const -> EVulkanImageTiling		{ return Tiling; }
 		auto GetMipmapLevels()	const -> UInt8				{ return MipmapLevels; }
 		auto GetArrayLayers()	const -> UInt8				{ return ArrayLayers; }
 		auto GetSampleRate()	const -> EVulkanSampleRate		{ return SampleRate;}
 		auto GetDetails()		const -> VmaAllocationInfo  { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
-		auto GetHandle()			  -> VkImage { return Handle; }
+		auto GetHandle()		const -> const VkImage { return Handle; }
 
 		Bool EnabledMSAA()const { return SampleRate > EVulkanSampleRate::X1; }
 		Bool IsReleased() const { return Handle == VK_NULL_HANDLE && Allocation == VK_NULL_HANDLE; }

@@ -4,7 +4,9 @@ export module Visera.Runtime.RHI.Vulkan:Common;
 
 export namespace VE { namespace Runtime
 {
-
+	// VE_ENUM_CLASS(EVulkanTransferPipelineStage, VkPipelineStageFlags)
+	// VE_ENUM_CLASS(EVulkanComputePipelineStage, VkPipelineStageFlags)
+	// VE_ENUM_CLASS(EVulkanFilter,			VkFilter)
 	// VE_ENUM_CLASS(EVulkanSharingMode,	VkSharingMode)
 	// VE_ENUM_CLASS(EVulkanSwizzle,		VkComponentSwizzle)
 	// VE_ENUM_CLASS(EVulkanImageViewType,	VkImageViewType)
@@ -20,7 +22,7 @@ export namespace VE { namespace Runtime
 	// VE_ENUM_CLASS(EVulkanSampleRate,		VkSampleCountFlags)
 	// VE_ENUM_CLASS(EVulkanAccessibility,			VkAccessFlags)
 	// VE_ENUM_CLASS(EVulkanShaderStage,	VkShaderStageFlags)
-	// VE_ENUM_CLASS(EVulkanPipelineStage,	VkPipelineStageFlags)
+	// VE_ENUM_CLASS(EVulkanGraphicsPipelineStage,	VkPipelineStageFlags)
 	// VE_ENUM_CLASS(EVulkanMemoryUsage,	VmaMemoryUsage)
 	// VE_ENUM_CLASS(EVulkanImageLayout,	VkImageLayout)
 	// VE_ENUM_CLASS(EVulkanImageUsage,		VkImageUsageFlags)
@@ -35,6 +37,12 @@ export namespace VE { namespace Runtime
 	// using	FVulkanRenderArea	= VkRect2D;
 	
 	using FClearValue = VkClearValue;
+
+	VE_ENUM_CLASS(EVulkanFilter, VkFilter)
+	{
+		Nearest = VK_FILTER_NEAREST,
+		Linear  = VK_FILTER_LINEAR,
+	};
 
 	VE_ENUM_CLASS(EVulkanPipelineBindPoint, VkPipelineBindPoint)
 	{
@@ -335,29 +343,73 @@ export namespace VE { namespace Runtime
 	};
 	VE_REGISTER_AUTOCAST(VkShaderStageFlags, VkShaderStageFlagBits);
 
-	VE_ENUM_CLASS(EVulkanPipelineStage, VkPipelineStageFlags)
+	VE_ENUM_CLASS(EVulkanGraphicsPipelineStage, VkPipelineStageFlags)
 	{
 		None							= VK_PIPELINE_STAGE_NONE,
-		All								= VK_PIPELINE_STAGE_FLAG_BITS_MAX_ENUM,
 
 		PipelineTop						= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+
+	/*<< Graphics Pipeline >>*/
+		AllGraphics 					= VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT,
+		//1. Draw Processing
+		//ConditionalRendering			= VK_PIPELINE_STAGE_CONDITIONAL_RENDERING_BIT_EXT,
 		DrawIndirect					= VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
+		
+		//2. Vertex Processing
 		VertexInput						= VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
 		VertexShader					= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+		
+		//3. Tessellation
 		TessellationControlShader		= VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT,
 		TessellationEvaluationShader	= VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT,
+		
+		//4. Primitive Processing
 		GeometryShader					= VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT,
-		FragmentShader					= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		//TransformFeedback				= VK_PIPELINE_STAGE_TRANSFORM_FEEDBACK_BIT_EXT,
+		
+		//5. Rasterization
+
+		//6. Fragment Processing
+		//FragmentShadingRate			= VK_PIPELINE_STAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR,
 		EarlyFragmentTests				= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+		FragmentShader					= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
 		LateFragmentTests				= VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+
+		//7. Pixel Processing
 		ColorAttachmentOutput			= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-		ComputeShader					= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-		Transfer						= VK_PIPELINE_STAGE_TRANSFER_BIT,
+	
 		PipelineBottom					= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
 
 		Host 	= VK_PIPELINE_STAGE_HOST_BIT,
-		AllGraphics 	= VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT,
 		AllCommands 	= VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+	};
+	
+	VE_ENUM_CLASS(EVulkanComputePipelineStage, VkPipelineStageFlags)
+	{
+		None						= VK_PIPELINE_STAGE_NONE,
+
+		PipelineTop					= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+		//ConditionalRendering		= VK_PIPELINE_STAGE_CONDITIONAL_RENDERING_BIT_EXT,
+		DrawIndirect				= VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
+
+		ComputeShader				= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+
+		PipelineBottom				= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+
+		AllCommands 				= VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+	};
+
+	VE_ENUM_CLASS(EVulkanTransferPipelineStage, VkPipelineStageFlags)
+	{
+		None						= VK_PIPELINE_STAGE_NONE,
+
+		PipelineTop					= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+
+		Transfer					= VK_PIPELINE_STAGE_TRANSFER_BIT,
+
+		PipelineBottom				= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+
+		AllCommands 				= VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
 	};
 
 	VE_ENUM_CLASS(EVulkanMemoryUsage,	VmaMemoryUsage)

@@ -20,6 +20,8 @@ export namespace VE { namespace Runtime
 
 		Bool IsExpired() const { return Status == EStatus::Expired; }
 
+		auto GetHandle() const -> const VkDescriptorSet { return Handle; }
+
 		FVulkanDescriptorSet() = delete;
 		FVulkanDescriptorSet(SharedPtr<FVulkanDescriptorPool> _Owner, SharedPtr<FVulkanDescriptorSetLayout> _Layout);
 		~FVulkanDescriptorSet() = default; // Recollected via its owner automatically.

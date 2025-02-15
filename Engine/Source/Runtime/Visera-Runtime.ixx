@@ -74,7 +74,7 @@ export namespace VE { namespace Runtime
 				//	{
 				//		SubmitInfos.emplace_back(RHI::FCommandPool::SubmitInfo
 				//		{
-				//			.Deadlines = {AutoCast(RHI::EPipelineStage::ColorAttachmentOutput)},
+				//			.Deadlines = {AutoCast(RHI::EGraphicsPipelineStage::ColorAttachmentOutput)},
 				//			.CommandBuffers = {CommandContext->Commands->GetView()},
 				//			.WaitSemaphores = {CurrentFrame.Semaphore_ReadyToRender},//[FIXME] Temp
 				//			.SignalSemaphores = { /*TEST*/ CurrentFrame.Semaphore_ReadyToPresent },

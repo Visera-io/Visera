@@ -30,9 +30,9 @@ export namespace VE { namespace Runtime
 
 			Array<UInt8>					ColorImageReferences;
 			//Optional<VkAttachmentReference> StencilImageReference;
-			EVulkanPipelineStage			BeginStage				{ EVulkanPipelineStage::None };
+			EVulkanGraphicsPipelineStage			BeginStage				{ EVulkanGraphicsPipelineStage::None };
 			EVulkanAccessibility			BeginStageAccessibility	{ EVulkanAccessibility::None };
-			EVulkanPipelineStage			EndStage				{ EVulkanPipelineStage::None };
+			EVulkanGraphicsPipelineStage			EndStage				{ EVulkanGraphicsPipelineStage::None };
 			EVulkanAccessibility			EndStageAccessibility	{ EVulkanAccessibility::None };
 			Bool							bEnableDepthTest		= True;
 			Array<UInt8>					InputImageReferences;    // Input Image References from Previous Subpasses.
