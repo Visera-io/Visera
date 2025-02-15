@@ -346,11 +346,10 @@ export namespace VE { namespace Runtime
 	VE_ENUM_CLASS(EVulkanGraphicsPipelineStage, VkPipelineStageFlags)
 	{
 		None							= VK_PIPELINE_STAGE_NONE,
+		All 							= VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT,
 
 		PipelineTop						= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
 
-	/*<< Graphics Pipeline >>*/
-		AllGraphics 					= VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT,
 		//1. Draw Processing
 		//ConditionalRendering			= VK_PIPELINE_STAGE_CONDITIONAL_RENDERING_BIT_EXT,
 		DrawIndirect					= VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT,
@@ -379,14 +378,12 @@ export namespace VE { namespace Runtime
 		ColorAttachmentOutput			= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 	
 		PipelineBottom					= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-
-		Host 	= VK_PIPELINE_STAGE_HOST_BIT,
-		AllCommands 	= VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
 	};
 	
 	VE_ENUM_CLASS(EVulkanComputePipelineStage, VkPipelineStageFlags)
 	{
 		None						= VK_PIPELINE_STAGE_NONE,
+		All 						= VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
 
 		PipelineTop					= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
 		//ConditionalRendering		= VK_PIPELINE_STAGE_CONDITIONAL_RENDERING_BIT_EXT,
@@ -402,6 +399,7 @@ export namespace VE { namespace Runtime
 	VE_ENUM_CLASS(EVulkanTransferPipelineStage, VkPipelineStageFlags)
 	{
 		None						= VK_PIPELINE_STAGE_NONE,
+		All 						= VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
 
 		PipelineTop					= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
 
