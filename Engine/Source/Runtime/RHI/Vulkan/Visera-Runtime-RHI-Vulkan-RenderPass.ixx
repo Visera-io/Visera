@@ -30,10 +30,10 @@ export namespace VE { namespace Runtime
 
 			Array<UInt8>					ColorImageReferences;
 			//Optional<VkAttachmentReference> StencilImageReference;
-			EVulkanGraphicsPipelineStage			BeginStage				{ EVulkanGraphicsPipelineStage::None };
-			EVulkanAccessibility			BeginStageAccessibility	{ EVulkanAccessibility::None };
-			EVulkanGraphicsPipelineStage			EndStage				{ EVulkanGraphicsPipelineStage::None };
-			EVulkanAccessibility			EndStageAccessibility	{ EVulkanAccessibility::None };
+			EVulkanGraphicsPipelineStage	SrcStage				{ EVulkanGraphicsPipelineStage::PipelineTop };
+			EVulkanAccess					SrcStageAccess			{ EVulkanAccess::None };
+			EVulkanGraphicsPipelineStage	DstStage				{ EVulkanGraphicsPipelineStage::None };
+			EVulkanAccess					DstStageAccess			{ EVulkanAccess::None };
 			Bool							bEnableDepthTest		= True;
 			Array<UInt8>					InputImageReferences;    // Input Image References from Previous Subpasses.
 			Array<UInt8>					PreserveImageReferences; // Const Image References Used in Subpasses.
@@ -42,7 +42,9 @@ export namespace VE { namespace Runtime
 		auto GetRenderArea()		  const -> const FVulkanRenderArea& { return RenderArea; }
 		auto GetSubpasses()			  const -> const Array<FSubpass>& { return Subpasses; }
 		auto GetRenderPassBeginInfo() const -> const VkRenderPassBeginInfo;
-		auto GetHandle()	const	-> const VkRenderPass { return Handle; }
+		auto GetHandle()			  const	-> const VkRenderPass { return Handle; }
+
+		Bool HasSubpass(SharedPtr<const FVulkanRenderPipeline> _SubpassPipeline) const;
 	
 	protected:
 		VkRenderPass						Handle{ VK_NULL_HANDLE };
@@ -136,10 +138,10 @@ export namespace VE { namespace Runtime
 			{
 				.srcSubpass		= Idx - 1,
 				.dstSubpass		= Idx,
-				.srcStageMask	= AutoCast(CurrentSubpass.BeginStage),
-				.dstStageMask	= AutoCast(CurrentSubpass.EndStage),
-				.srcAccessMask	= AutoCast(CurrentSubpass.BeginStageAccessibility),
-				.dstAccessMask	= AutoCast(CurrentSubpass.EndStageAccessibility),
+				.srcStageMask	= AutoCast(CurrentSubpass.SrcStage),
+				.dstStageMask	= AutoCast(CurrentSubpass.DstStage),
+				.srcAccessMask	= AutoCast(CurrentSubpass.SrcStageAccess),
+				.dstAccessMask	= AutoCast(CurrentSubpass.DstStageAccess),
 				.dependencyFlags= 0x0,
 			};
 		}
@@ -272,6 +274,17 @@ export namespace VE { namespace Runtime
 			.pClearValues	= ClearValues.data()
 		};
 	}
-	
+
+	Bool FVulkanRenderPass::HasSubpass(SharedPtr<const FVulkanRenderPipeline> _SubpassPipeline) const
+	{
+		for (const auto& Subpass : Subpasses)
+		{
+			if (_SubpassPipeline->GetHandle() == Subpass.Pipeline->GetHandle())
+			{
+				return True;
+			}
+		}
+		return False;
+	}
 
 } } // namespace VE::Runtime

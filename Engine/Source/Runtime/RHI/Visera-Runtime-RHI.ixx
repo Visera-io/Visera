@@ -16,8 +16,8 @@ export namespace VE { namespace Runtime
 		friend class ViseraRuntime;
 	public:
 		using FSemaphore			= FVulkanSemaphore;
-		using FCommandPool			= FVulkanCommandPool;
-		using FCommandBuffer		= FVulkanCommandBuffer;
+		using FGraphicsCommandPool	= FVulkanGraphicsCommandPool;
+		using FGraphicsCommandBuffer= FVulkanGraphicsCommandBuffer;
 		using FDescriptorPool		= FVulkanDescriptorPool;
 		using FDescriptorSet		= FVulkanDescriptorSet;
 		using FDescriptorSetLayout  = FVulkanDescriptorSetLayout;
@@ -38,6 +38,7 @@ export namespace VE { namespace Runtime
 		using FPipelineLayout		= FVulkanPipelineLayout;
 		using FRenderPipelineSetting= FVulkanRenderPipelineSetting;
 		using FPushConstantRange	= FVulkanPipelineLayout::FPushConstantRange;
+		using FCommandSubmitInfo	= FVulkanCommandSubmitInfo;
 
 		using ESharingMode			= EVulkanSharingMode;
 		using ESampleRate			= EVulkanSampleRate;
@@ -45,7 +46,7 @@ export namespace VE { namespace Runtime
 		using ECommandPoolType		= EVulkanCommandPoolType;
 		using ECommandLevel			= EVulkanCommandLevel;
 		using EShaderStage			= EVulkanShaderStage;
-		using EAccessibility		= EVulkanAccessibility;
+		using EAccessibility		= EVulkanAccess;
 		using EGraphicsPipelineStage= EVulkanGraphicsPipelineStage;
 		using EComputePipelineStage = EVulkanComputePipelineStage;
 		using ETransferPipelineStage= EVulkanTransferPipelineStage;
@@ -63,43 +64,49 @@ export namespace VE { namespace Runtime
 		using EPresentMode			= EVulkanPresentMode;
 
 		using SSwapchainRecreation = FVulkanSwapchain::SRecreation;
+	
+		class FRHIFrame
+		{
+			friend class RHI;
+		public:
+			auto GetGraphicsCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer> { return GraphicsCommandBuffer; }
+
+		private:
+			SharedPtr<FGraphicsCommandBuffer> GraphicsCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
+			FSemaphore GraphicsCommandsFinishedSemaphore= RHI::CreateSemaphore();
+
+			FSemaphore SwapchainReadySemaphore			= RHI::CreateSemaphore();
+			FFence	   InFlightFence					= RHI::CreateFence(FFence::EStatus::Signaled);
+		};
 
 	public: 
 		VE_API CreateRenderTargets(const Array<SharedPtr<FImage>>& _ColorImages, SharedPtr<FImage> _DepthImage = nullptr) -> SharedPtr<FRenderTarget> { return CreateSharedPtr<FRenderTarget>(_ColorImages, _DepthImage); }
 		VE_API CreateDescriptorSetLayout(const Array<FDescriptorBinding> _Bindings)			-> SharedPtr<FDescriptorSetLayout> { return CreateSharedPtr<FDescriptorSetLayout>(_Bindings); }
 		VE_API CreateDescriptorSet(SharedPtr<FDescriptorSetLayout> _SetLayout)				-> SharedPtr<FDescriptorSet> { return GlobalDescriptorPool.CreateDescriptorSet(_SetLayout);		}
-		VE_API CreateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)			-> SharedPtr<FCommandBuffer> { return ResetableGraphicsCommandPool->CreateCommandBuffer(_Level); }
-		VE_API CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FCommandBuffer> { return TransientGraphicsCommandPool->CreateCommandBuffer(_Level); }
+		VE_API CreateGraphicsCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return ResetableGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
+		//VE_API CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return TransientGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
 		VE_API CreateImage(EImageType _Type, FExtent3D _Extent, EFormat _Format, EImageAspect _Aspects, EImageUsage _Usages, EImageTiling _Tiling = EImageTiling::Optimal,ESampleRate _SampleRate = ESampleRate::X1, UInt8 _MipmapLevels = 1,UInt8 _ArrayLayers = 1, ESharingMode	_SharingMode = ESharingMode::Exclusive,EMemoryUsage	_Location = EMemoryUsage::Auto)->SharedPtr<FImage> { return Vulkan->Allocator.CreateImage(_Type, _Extent, _Format, _Aspects, _Usages, _Tiling, _SampleRate, _MipmapLevels, _ArrayLayers, _SharingMode, _Location); }
 		VE_API CreateBuffer(UInt64 _Size, EBufferUsage _Usages, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive, EMemoryUsage _Location = EMemoryUsage::Auto) -> SharedPtr<FBuffer> { return Vulkan->Allocator.CreateBuffer(_Size, _Usages, _SharingMode, _Location); }
 		VE_API CreateFence(FFence::EStatus _Status = FFence::EStatus::Blocking)				-> FFence		 { return FFence{_Status};	}
 		VE_API CreateSemaphore()															-> FSemaphore	 { return FSemaphore();	}
 		VE_API CreateShader(EShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize) -> SharedPtr<FShader> { return CreateSharedPtr<FShader>(_ShaderStage, _SPIRVCode, _CodeSize); }
 
-		VE_API WaitIdle()	-> void				{ Vulkan->Device.WaitIdle(); }
-		VE_API SubmitCommand(EQueueFamily _QueueFamily, SharedPtr<FCommandBuffer> _CommandBuffers, FFence* _Fence) -> void;
-		VE_API WaitNextFrame(FSemaphore* _SignalSemaphoreFromSwapchain_) -> void;
-		VE_API RenderAndPresent(SharedPtr<FCommandBuffer> _DralcallBatch) -> void;
+		VE_API WaitIdle()			-> void		{ Vulkan->Device.WaitIdle(); }
+		VE_API WaitNextFrame()		-> void;
+		VE_API RenderAndPresent()	-> void;
 
 		VE_API GetSwapchainFrameCount()	-> UInt32		  { return Vulkan->Swapchain.GetFrameCount(); }
 		VE_API GetSwapchainCursor()		-> UInt32		  { return Vulkan->Swapchain.GetCursor(); }
 		VE_API GetAPI()					-> const FVulkan* { return Vulkan; }
 
-		struct FFrame
-		{
-			SharedPtr<FCommandBuffer> Drawcalls		= RHI::CreateCommandBuffer();
-			FSemaphore DrawcallsFinishedSemaphore	= RHI::CreateSemaphore();
-			FSemaphore SwapchainReadySemaphore		= RHI::CreateSemaphore();
-			FFence	   InFlightFence				= RHI::CreateFence(FFence::EStatus::Signaled);
-		};
-		static inline Array<FFrame> Frames;
-
 	private:
-		static inline FVulkan*			 Vulkan;
+		static inline FVulkan*							Vulkan;
 		//[TODO]: ThreadSafe Paradigm
-		static inline FDescriptorPool			GlobalDescriptorPool{};
-		static inline SharedPtr<FCommandPool>	ResetableGraphicsCommandPool{};
-		static inline SharedPtr<FCommandPool>	TransientGraphicsCommandPool{};
+		static inline FDescriptorPool					GlobalDescriptorPool{};
+		static inline SharedPtr<FGraphicsCommandPool>	ResetableGraphicsCommandPool{};
+		static inline SharedPtr<FGraphicsCommandPool>	TransientGraphicsCommandPool{};
+
+		static inline Array<FRHIFrame> Frames;
 
 	private:
 		static void
@@ -120,19 +127,10 @@ export namespace VE { namespace Runtime
 					{EDescriptorType::UniformTexelBuffer,	1000},
 					{EDescriptorType::Sampler,				1000},
 				}, 10000);
-			ResetableGraphicsCommandPool = CreateSharedPtr<FCommandPool>
-				(ECommandPoolType::Resetable, EQueueFamily::Graphics);
-			TransientGraphicsCommandPool = CreateSharedPtr<FCommandPool>
-				(ECommandPoolType::Transient, EQueueFamily::Graphics);
+			ResetableGraphicsCommandPool = CreateSharedPtr<FGraphicsCommandPool>(ECommandPoolType::Resetable);
+			TransientGraphicsCommandPool = CreateSharedPtr<FGraphicsCommandPool>(ECommandPoolType::Transient);
 
 			Frames.resize(GetSwapchainFrameCount());
-			for (auto& Frame : Frames)
-			{
-				Frame.Drawcalls->AddWaitSemaphore(Frame.SwapchainReadySemaphore)
-							   ->AddSignalSemaphore(Frame.DrawcallsFinishedSemaphore)
-							   ->AddWaitStage(EGraphicsPipelineStage::PipelineBottom);
-
-			}
 		}
 
 		static void
@@ -154,29 +152,17 @@ export namespace VE { namespace Runtime
 	};
 
 	void RHI::
-	SubmitCommand(EQueueFamily _QueueFamily, SharedPtr<FCommandBuffer> _CommandBuffers, FFence* _Fence)
-	{
-		const auto SubmitInfo = _CommandBuffers->GetSubmitInfo();
-
-		Vulkan->Device.SubmitCommands(
-				_QueueFamily,
-				&SubmitInfo, 1,
-				_Fence? _Fence->GetHandle() : nullptr);
-	}
-
-	void RHI::
-	WaitNextFrame(FSemaphore* _SignalSemaphoreFromSwapchain_)
+	WaitNextFrame()
 	{
 		auto& NextFrame = Frames[GetSwapchainCursor()];
 		NextFrame.InFlightFence.Wait();
-		NextFrame.Drawcalls->Status = FCommandBuffer::EStatus::Idle;
-		NextFrame.Drawcalls->Reset();
+		NextFrame.GraphicsCommandBuffer->Status = FGraphicsCommandBuffer::EStatus::Idle;
+		NextFrame.GraphicsCommandBuffer->Reset();
 		
 		try
 		{
 			Vulkan->Swapchain.WaitForNextImage(&NextFrame.SwapchainReadySemaphore.Handle);
-			NextFrame.InFlightFence.Reset();
-			VE_ASSERT(NextFrame.InFlightFence.IsBlocking());
+			NextFrame.InFlightFence.Block();
 		}
 		catch (const SSwapchainRecreation& Signal)
 		{
@@ -185,20 +171,22 @@ export namespace VE { namespace Runtime
 	}
 
 	void RHI::
-	RenderAndPresent(SharedPtr<FCommandBuffer> _DralcallBatch)
+	RenderAndPresent()
 	{
-		auto& NextFrame = Frames[GetSwapchainCursor()];
+		auto& CurrentFrame = Frames[GetSwapchainCursor()];
 		try
 		{
-			VE_ASSERT(_DralcallBatch->IsIdle());
-
-			auto SubmitInfo = _DralcallBatch->GetSubmitInfo();
-			SubmitCommand(EQueueFamily::Graphics, _DralcallBatch, &NextFrame.InFlightFence);
-			_DralcallBatch->Status = FCommandBuffer::EStatus::Submitted;
-			
-			Vulkan->Swapchain.Present(
-				_DralcallBatch->WaitSemaphoreViews.data(),
-				_DralcallBatch->WaitSemaphoreViews.size());
+			//VE_ASSERT(CurrentFrame.GraphicsCommandBuffer->Is);
+			CurrentFrame.GraphicsCommandBuffer->Submit(
+				FCommandSubmitInfo
+				{
+					.WaitSemaphoreCount = 1,
+					.pWaitSemaphores = &CurrentFrame.SwapchainReadySemaphore,
+					.WaitStages = EGraphicsPipelineStage::PipelineTop,
+					.SignalSemaphoreCount = 1,
+					.pSignalSemaphores = &CurrentFrame.GraphicsCommandsFinishedSemaphore,
+					.SignalFence = &CurrentFrame.InFlightFence,
+				});
 		}
 		catch (const SSwapchainRecreation& Signal)
 		{

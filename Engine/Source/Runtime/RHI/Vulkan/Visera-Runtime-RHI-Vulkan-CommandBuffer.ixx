@@ -6,6 +6,7 @@ import :Allocator;
 import :Device;
 import :RenderPass;
 import :Pipeline;
+import :RenderPipeline;
 import :DescriptorSet;
 import :Synchronization;
 
@@ -15,75 +16,106 @@ export namespace VE { namespace Runtime
 { 
 	class RHI;
 	class FVulkanCommandPool;
+	class FVulkanGraphicsCommandPool;
+
+	struct FVulkanCommandSubmitInfo
+	{
+		UInt32					WaitSemaphoreCount = 0;
+		const FVulkanSemaphore*	pWaitSemaphores = nullptr;
+		struct { union
+		{
+			EVulkanGraphicsPipelineStage GraphicsStages;
+			EVulkanComputePipelineStage  ComputeStages;
+		};}						WaitStages;
+
+		UInt32					SignalSemaphoreCount = 0;
+		const FVulkanSemaphore*	pSignalSemaphores = nullptr;
+		
+		const FVulkanFence*		SignalFence = nullptr;
+
+		UInt32					QueueIndex = 0;
+	};
 
 	class FVulkanCommandBuffer : public std::enable_shared_from_this<FVulkanCommandBuffer>
 	{
 		friend class RHI;
 		friend class FVulkanCommandPool;
 	public:
-		enum class EStatus { Expired, Idle, Recording, InsideRenderPass, Submitted };
-
-		void StartRecording();
-		void StopRecording();
-		void StartRenderPass(SharedPtr<FVulkanRenderPass> _RenderPass);
-		void StopRenderPass()	  { VE_ASSERT(IsInsideRenderPass()); vkCmdEndRenderPass(Handle); Status = EStatus::Recording; }
-		
-		/*<< State-Type Commands >>*/
-		void BindVertexBuffer(SharedPtr<const FVulkanBuffer> _VertexBuffer) const;
-		void BindPipeline(SharedPtr<const FVulkanPipeline> _Pipeline) const;
-		void PushConstants(const void* _Data, UInt64 _Size) const;
-		void SetScissor() const;
-		void SetViewport() const;
-		//void SetDepthBias() const;
-		void BindDescriptorSet(SharedPtr<const FVulkanDescriptorSet> _DescriptorSet) const;
-
-		/*<< Action-Type Commands >>*/
-		//Graphics Pipeline Commands
-		void Draw(UInt32 _VertexCount, UInt32 _InstanceCount = 1, UInt32 _FirstVertex = 0, UInt32 _FirstInstance = 0) const { vkCmdDraw(Handle, _VertexCount, _InstanceCount, _FirstVertex, _FirstInstance); };
-		void BlitImage(SharedPtr<const FVulkanImage> _SrcImage, SharedPtr<FVulkanImage> _DstImage, EVulkanFilter _Filter) const;
-
-		void Reset() { VE_ASSERT(IsIdle() && IsResettable()); vkResetCommandBuffer(Handle, 0x0); WaitStages = 0; CurrentPipeline.reset(); }
-		void Free()	 { Status = EStatus::Expired; }
-
-		Bool IsExpired()			const { return Status == EStatus::Expired;			}
-		Bool IsSubmitted()			const { return Status == EStatus::Submitted;		}
-		Bool IsIdle()				const { return Status == EStatus::Idle;				}
-		Bool IsRecording()			const { return Status == EStatus::Recording;		}
-		Bool IsInsideRenderPass()	const { return Status == EStatus::InsideRenderPass; }
+		enum class EStatus { Expired, Idle, Recording, ReadyToSubmit, Submitted }; //[FIXME]: Currrent Status is not trustable
+		Bool IsExpired()			const { return Status == EStatus::Expired;		}
+		Bool IsIdle()				const { return Status == EStatus::Idle;			}
+		Bool IsRecording()			const { return Status == EStatus::Recording;	}
+		Bool IsReadyToSubmit()		const { return Status == EStatus::ReadyToSubmit;}
+		Bool IsSubmitted()			const { return Status == EStatus::Submitted;	}
 		Bool IsResettable()			const { return bIsResettable;   }
 		Bool IsPrimary()			const { return bIsPrimary;		}
 
 		auto GetLevel()				const -> EVulkanCommandLevel	{ return IsPrimary()? EVulkanCommandLevel::Primary : EVulkanCommandLevel::Secondary; }
-		auto GetSubmitInfo()		const -> const VkSubmitInfo;
 		auto GetHandle()			const -> const VkCommandBuffer	{ return Handle; }
-		
-		auto AddWaitStage(EVulkanGraphicsPipelineStage _WaitStage)		-> FVulkanCommandBuffer* { WaitStages |= AutoCast(_WaitStage); return this; }
-		auto AddWaitSemaphore(const VkSemaphore _WaitSemaphore)		-> FVulkanCommandBuffer* { WaitSemaphoreViews.push_back(_WaitSemaphore); return this; }
-		auto AddSignalSemaphore(const VkSemaphore _SignalSemaphore)	-> FVulkanCommandBuffer* { SignalSemaphoreViews.push_back(_SignalSemaphore); return this; }
 
-	private:
+	protected: //Selective Export API
+		void Submit(const FVulkanCommandSubmitInfo& _SubmitInfo);
+		void Reset() const { VE_ASSERT(IsIdle() && IsResettable()); vkResetCommandBuffer(Handle, 0x0); }
+
+		void StartRecording();
+		void StopRecording();
+
+		void BindPipeline(SharedPtr<const FVulkanPipeline> _Pipeline);
+		void PushConstants(EVulkanShaderStage _ShaderStages, const void* _Data, UInt32 _Size, UInt32 _Offset);
+		void BindDescriptorSet(SharedPtr<const FVulkanDescriptorSet> _DescriptorSet);
+
+		void Free()	 { Status = EStatus::Expired; }
+
+	protected:
 		VkCommandBuffer						Handle{ VK_NULL_HANDLE };
 		WeakPtr<const FVulkanCommandPool>   Owner;
-		Array<VkSemaphore>					WaitSemaphoreViews;
-		VkPipelineStageFlags				WaitStages{ 0 };
-		Array<VkSemaphore>					SignalSemaphoreViews;
-		
-		Segment<VkViewport,1>				CurrentViewports{ VkViewport{.minDepth = 0.0f, .maxDepth = 1.0f} };
-		Segment<VkRect2D, 1>				CurrentScissors{ VkRect2D {.offset{.x = 0, .y = 0}, .extent{.width = 0, .height = 0} } };
+		EVulkanQueueFamily					QueueFamily;
+
 		SharedPtr<const FVulkanPipeline>	CurrentPipeline;
 
 		EStatus Status = EStatus::Idle;
-		Byte bIsResettable  : 1;
-		Byte bIsPrimary		: 1;
+		UInt8 bIsResettable  : 1;
+		UInt8 bIsPrimary	 : 1;
 
 	public:
-		FVulkanCommandBuffer(SharedPtr<const FVulkanCommandPool> _Owner, EVulkanCommandLevel _Level) noexcept;
+		FVulkanCommandBuffer(SharedPtr<const FVulkanCommandPool> _Owner, EVulkanQueueFamily _QueueFamily, EVulkanCommandLevel _Level) noexcept;
 		FVulkanCommandBuffer() noexcept = delete;
 		~FVulkanCommandBuffer() noexcept;
 	};
 
+	class FVulkanGraphicsCommandBuffer : public FVulkanCommandBuffer
+	{
+		friend class RHI;
+		friend class FVulkanGraphicsCommandPool;
+	public:
+		void StartRecording() { FVulkanCommandBuffer::StartRecording(); }
+		void StopRecording()  { FVulkanCommandBuffer::StopRecording();  }
 
-	void FVulkanCommandBuffer::
+		void ReachRenderPass(SharedPtr<const FVulkanRenderPass> _RenderPass);
+		void BindVertexBuffer(SharedPtr<const FVulkanBuffer> _VertexBuffer) const;
+		void BindRenderPipeline(SharedPtr<const FVulkanRenderPipeline> _RenderPipeline);
+		void SetScissor() const;
+		void SetViewport() const;
+		//void SetDepthBias() const;
+		void Draw(UInt32 _VertexCount, UInt32 _InstanceCount = 1, UInt32 _FirstVertex = 0, UInt32 _FirstInstance = 0) const { vkCmdDraw(Handle, _VertexCount, _InstanceCount, _FirstVertex, _FirstInstance); };
+		void LeaveRenderPass();
+
+		void BlitImage(SharedPtr<const FVulkanImage> _SrcImage, SharedPtr<FVulkanImage> _DstImage, EVulkanFilter _Filter) const;
+
+		Bool IsInsideRenderPass() const { return CurrentRenderPass != nullptr; }
+
+	private:
+		Segment<VkViewport,1>				CurrentViewports{ VkViewport{.minDepth = 0.0f, .maxDepth = 1.0f} };
+		Segment<VkRect2D, 1>				CurrentScissors{ VkRect2D {.offset{.x = 0, .y = 0}, .extent{.width = 0, .height = 0} } };
+		SharedPtr<const FVulkanRenderPass>	CurrentRenderPass;
+
+	public:
+		FVulkanGraphicsCommandBuffer(SharedPtr<const FVulkanCommandPool> _Owner, EVulkanCommandLevel _Level) noexcept
+			:FVulkanCommandBuffer{_Owner, EVulkanQueueFamily::Graphics, _Level}{}
+		FVulkanGraphicsCommandBuffer() noexcept = delete;
+	};
+
+	void FVulkanGraphicsCommandBuffer::
 	BlitImage(SharedPtr<const FVulkanImage> _SrcImage,
 			  SharedPtr<FVulkanImage> _DstImage,
 			  EVulkanFilter _Filter) const
@@ -138,7 +170,7 @@ export namespace VE { namespace Runtime
 	}
 
 	void FVulkanCommandBuffer::
-	PushConstants(const void* _Data, UInt64 _Size) const
+	PushConstants(EVulkanShaderStage _ShaderStages, const void* _Data, UInt32 _Size, UInt32 _Offset)
 	{
 		if (CurrentPipeline != nullptr)
 		{
@@ -146,8 +178,8 @@ export namespace VE { namespace Runtime
 			vkCmdPushConstants(
 				Handle,
 				CurrentPipeline->GetLayout()->GetHandle(),
-				WaitStages,
-				0,
+				AutoCast(_ShaderStages),
+				_Offset,
 				_Size,
 				_Data
 			);
@@ -155,20 +187,20 @@ export namespace VE { namespace Runtime
 		else throw SRuntimeError("Call BindPipeline(...) before PushConstants(...)!");
 	}
 
-	void FVulkanCommandBuffer::
+	void FVulkanGraphicsCommandBuffer::
 	SetScissor() const
 	{
 		vkCmdSetScissorWithCount(Handle, CurrentScissors.size(), CurrentScissors.data());
 	}
 
-	void FVulkanCommandBuffer::
+	void FVulkanGraphicsCommandBuffer::
 	SetViewport() const
 	{
 		vkCmdSetViewportWithCount(Handle, CurrentViewports.size(), CurrentViewports.data());
 	}
 
 	void FVulkanCommandBuffer::
-	BindDescriptorSet(SharedPtr<const FVulkanDescriptorSet> _DescriptorSet) const
+	BindDescriptorSet(SharedPtr<const FVulkanDescriptorSet> _DescriptorSet)
 	{
 		auto DescriptorSetHandle = _DescriptorSet->GetHandle();
 		if (CurrentPipeline != nullptr)
@@ -185,66 +217,85 @@ export namespace VE { namespace Runtime
 		else throw SRuntimeError("Call BindPipeline(...) before BindDescriptorSet(...)!");
 	}
 
-	void FVulkanCommandBuffer::
+	void FVulkanGraphicsCommandBuffer::
 	BindVertexBuffer(SharedPtr<const FVulkanBuffer> _VertexBuffer) const
 	{
 		auto VertexBufferHanedle = _VertexBuffer->GetHandle();
 		vkCmdBindVertexBuffers(Handle, 0, 1, &VertexBufferHanedle, nullptr);
 	}
 
-	const VkSubmitInfo FVulkanCommandBuffer::
-	GetSubmitInfo() const
+	void FVulkanCommandBuffer::
+	Submit(const FVulkanCommandSubmitInfo& _SubmitInfo)
 	{
-		return VkSubmitInfo
+		VE_ASSERT(IsReadyToSubmit());
+
+		auto WaitStages = AutoCast(_SubmitInfo.WaitStages.GraphicsStages);
+		VkSubmitInfo SubmitInfo
 		{
 			.sType					= VK_STRUCTURE_TYPE_SUBMIT_INFO,
 			.pNext					= nullptr,
-			.waitSemaphoreCount		= UInt32(WaitSemaphoreViews.size()),
-			.pWaitSemaphores		= WaitSemaphoreViews.data(),
+			.waitSemaphoreCount		= _SubmitInfo.WaitSemaphoreCount,
+			.pWaitSemaphores		= reinterpret_cast<const VkSemaphore*>(_SubmitInfo.pWaitSemaphores),
 			.pWaitDstStageMask		= &WaitStages,
 			.commandBufferCount		= 1,
 			.pCommandBuffers		= &Handle,
-			.signalSemaphoreCount	= UInt32(SignalSemaphoreViews.size()),
-			.pSignalSemaphores		= SignalSemaphoreViews.data(),
+			.signalSemaphoreCount	= _SubmitInfo.SignalSemaphoreCount,
+			.pSignalSemaphores		= reinterpret_cast<const VkSemaphore*>(_SubmitInfo.pSignalSemaphores),
 		};
+		auto& TargetQueueFamily = GVulkan->Device->GetQueueFamily(EVulkanQueueFamily::Graphics);
+		if (vkQueueSubmit(
+			TargetQueueFamily.Queues[_SubmitInfo.QueueIndex],
+			1,
+			&SubmitInfo,
+			_SubmitInfo.SignalFence->GetHandle()) != VK_SUCCESS)
+		{ throw SRuntimeError("Failed to submit the Vulkan Graphics CommandBuffer(QueueIndex:{})", _SubmitInfo.QueueIndex); }
+
+		Status = EStatus::Submitted;
 	}
 
-	void FVulkanCommandBuffer::
-	StartRenderPass(SharedPtr<FVulkanRenderPass> _RenderPass)
+	void FVulkanGraphicsCommandBuffer::
+	ReachRenderPass(SharedPtr<const FVulkanRenderPass> _RenderPass)
 	{ 
 		VE_ASSERT(IsRecording());
+		CurrentRenderPass = std::move(_RenderPass);
 
 		static VkRenderPassBeginInfo RenderPassBeginInfo{};
-		RenderPassBeginInfo = std::move(_RenderPass->GetRenderPassBeginInfo());
+		RenderPassBeginInfo = std::move(CurrentRenderPass->GetRenderPassBeginInfo());
 
 		vkCmdBeginRenderPass(
 			Handle,
 			&RenderPassBeginInfo,
 			IsPrimary()? VK_SUBPASS_CONTENTS_INLINE : VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-		const auto& RenderArea = _RenderPass->GetRenderArea();
+		const auto& RenderArea = CurrentRenderPass->GetRenderArea();
 		CurrentViewports[0].x = RenderArea.offset.x;
 		CurrentViewports[0].y = RenderArea.offset.y;
 		CurrentViewports[0].width  = RenderArea.extent.width;
 		CurrentViewports[0].height = RenderArea.extent.height;
+	}
 
-		Status = EStatus::InsideRenderPass;
+	void FVulkanGraphicsCommandBuffer::
+	LeaveRenderPass()
+	{
+		VE_ASSERT(IsInsideRenderPass());
+		vkCmdEndRenderPass(Handle);
+		CurrentRenderPass.reset();
 	}
 
 	void FVulkanCommandBuffer::
-	BindPipeline(SharedPtr<const FVulkanPipeline> _Pipeline) const
+	BindPipeline(SharedPtr<const FVulkanPipeline> _Pipeline)
 	{
-		VE_ASSERT(IsInsideRenderPass());
-		vkCmdBindPipeline(Handle, AutoCast(_Pipeline->GetBindPoint()), _Pipeline->GetHandle());
-
-		vkCmdSetViewportWithCount(Handle, CurrentViewports.size(), CurrentViewports.data());
-		vkCmdSetScissorWithCount(Handle, CurrentScissors.size(), CurrentScissors.data());
+		CurrentPipeline = std::move(_Pipeline);
+		vkCmdBindPipeline(Handle, AutoCast(CurrentPipeline->GetBindPoint()), CurrentPipeline->GetHandle());
 	}
 	
 	FVulkanCommandBuffer::
-	FVulkanCommandBuffer(SharedPtr<const FVulkanCommandPool> _Owner, EVulkanCommandLevel _Level) noexcept
+	FVulkanCommandBuffer(SharedPtr<const FVulkanCommandPool> _Owner,
+						 EVulkanQueueFamily _QueueFamily,
+						 EVulkanCommandLevel _Level) noexcept
 		: 
 		Owner { _Owner },
+		QueueFamily { _QueueFamily },
 		bIsPrimary { EVulkanCommandLevel::Primary == _Level? True : False }
 	{
 		
@@ -259,8 +310,8 @@ export namespace VE { namespace Runtime
 	void FVulkanCommandBuffer::
 	StartRecording()
 	{
-		VE_ASSERT(!IsRecording() && !IsExpired());
-
+		VE_ASSERT(IsIdle() && "Make sure the Status is setted as Idle at the beginning of each RHIFrame!");
+		
 		//Implicitly Reset Current CommandBuffer.
 		VkCommandBufferBeginInfo BeginInfo
 		{
@@ -268,7 +319,7 @@ export namespace VE { namespace Runtime
 			.flags = 0x0,
 			.pInheritanceInfo = nullptr
 		};
-		if (VK_SUCCESS != vkBeginCommandBuffer(Handle, &BeginInfo))
+		if (vkBeginCommandBuffer(Handle, &BeginInfo) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to begin recording Vulkan Command FVulkanBuffer!"); }
 
 		Status = EStatus::Recording;
@@ -279,10 +330,22 @@ export namespace VE { namespace Runtime
 	{
 		VE_ASSERT(IsRecording());
 
-		if (VK_SUCCESS != vkEndCommandBuffer(Handle))
+		if (vkEndCommandBuffer(Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to stop recording Vulkan Command FVulkanBuffer!"); }
 
-		Status = EStatus::Idle;
+		CurrentPipeline.reset();
+		Status = EStatus::ReadyToSubmit;
+	}
+
+	void FVulkanGraphicsCommandBuffer::
+	BindRenderPipeline(SharedPtr<const FVulkanRenderPipeline> _RenderPipeline)
+	{ 
+		VE_ASSERT(IsInsideRenderPass() && CurrentRenderPass->HasSubpass(_RenderPipeline));
+
+		FVulkanCommandBuffer::BindPipeline(_RenderPipeline);
+		//Assert Enable Dynamic Scissors & Viewports
+		SetScissor();
+		SetViewport();
 	}
 	
 } } // namespace VE::Runtime

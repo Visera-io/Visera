@@ -61,11 +61,11 @@ export namespace VE { namespace Runtime
 				//RHI::WaitForCurrentFrame();
 				//{
 				//	auto& CurrentFrame = RHI::GetCurrentFrame();
-				//	VE_ASSERT(Drawcalls.size() > 0);
+				//	VE_ASSERT(GraphicsCommandBuffer.size() > 0);
 				//	//[TODO]: CommandList is submitted via App;
-				//	auto& DrawCall = Drawcalls.front();
+				//	auto& DrawCall = GraphicsCommandBuffer.front();
 				//	DrawCall();
-				//	Drawcalls.clear();
+				//	GraphicsCommandBuffer.clear();
 				//	std::exit(VISERA_APP_ERROR); // TEST
 
 				//	Array<RHI::FCommandPool::SubmitInfo> SubmitInfos;

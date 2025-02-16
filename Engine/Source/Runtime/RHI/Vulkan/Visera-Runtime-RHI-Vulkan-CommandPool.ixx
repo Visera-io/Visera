@@ -17,14 +17,16 @@ export namespace VE { namespace Runtime
 	{
 		friend class RHI;
 	public:
-		auto CreateCommandBuffer(EVulkanCommandLevel _CommandLevel) -> SharedPtr<FVulkanCommandBuffer>;
-
-		auto GetType()		const -> EVulkanCommandPoolType { return EVulkanCommandPoolType(Type); }
-		Bool IsResetable()	const				  { return Type == EVulkanCommandPoolType::Resetable; }
-
 		auto GetHandle()	const -> const VkCommandPool { return Handle; }
 
-		void CollectGarbages(Bool _bDestroyMode = False); // Managed by RHI or Deconstructor
+		Bool IsResetable()	const { return PoolType == EVulkanCommandPoolType::Resetable; }
+
+	protected:
+		VkCommandPool						Handle{ VK_NULL_HANDLE };
+		EVulkanCommandPoolType				PoolType;
+		EVulkanQueueFamily					QueueFamilyType;
+		List<SharedPtr<FVulkanCommandBuffer>>Children;
+		Array<VkCommandBuffer>				Trashbin;
 
 	public:
 		FVulkanCommandPool() = delete;
@@ -32,22 +34,29 @@ export namespace VE { namespace Runtime
 		~FVulkanCommandPool();
 
 	private:
-		VkCommandPool						Handle{ VK_NULL_HANDLE };
-		EVulkanCommandPoolType				Type;
-		EVulkanQueueFamily					QueueFamilyType;
-		List<SharedPtr<FVulkanCommandBuffer>> Children;
-		Array<VkCommandBuffer>				Trashbin;
+		void CollectGarbages(Bool _bDestroyMode = False); // Managed by RHI or Deconstructor
 	};
 
+	class FVulkanGraphicsCommandPool : public FVulkanCommandPool
+	{
+	public:
+		auto CreateGraphicsCommandBuffer(EVulkanCommandLevel _CommandLevel) -> SharedPtr<FVulkanGraphicsCommandBuffer>;
+
+	public:
+		FVulkanGraphicsCommandPool() = delete;
+		FVulkanGraphicsCommandPool(EVulkanCommandPoolType _PoolType)
+		:FVulkanCommandPool{_PoolType, EVulkanQueueFamily::Graphics}{ }
+	};
+	
 	FVulkanCommandPool::
 	FVulkanCommandPool(EVulkanCommandPoolType _PoolType, EVulkanQueueFamily _QueueFamily)
-		:Type {_PoolType},
+		:PoolType {_PoolType},
 		 QueueFamilyType {_QueueFamily}
 	{
 		VkCommandPoolCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-			.flags = AutoCast(Type),
+			.flags = AutoCast(PoolType),
 			.queueFamilyIndex = GVulkan->Device->GetQueueFamily(QueueFamilyType).Index,
 		};
 
@@ -69,10 +78,10 @@ export namespace VE { namespace Runtime
 		Handle = VK_NULL_HANDLE;
 	}
 
-	SharedPtr<FVulkanCommandBuffer> FVulkanCommandPool::
-	CreateCommandBuffer(EVulkanCommandLevel _CommandLevel)
+	SharedPtr<FVulkanGraphicsCommandBuffer> FVulkanGraphicsCommandPool::
+	CreateGraphicsCommandBuffer(EVulkanCommandLevel _CommandLevel)
 	{
-		auto CommandBuffer = CreateSharedPtr<FVulkanCommandBuffer>(shared_from_this(), _CommandLevel);
+		auto CommandBuffer = CreateSharedPtr<FVulkanGraphicsCommandBuffer>(shared_from_this(), _CommandLevel);
 		CommandBuffer->bIsResettable = IsResetable();
 
 		VkCommandBufferAllocateInfo AllocateInfo
@@ -87,9 +96,10 @@ export namespace VE { namespace Runtime
 			GVulkan->Device->GetHandle(),
 			&AllocateInfo,
 			&CommandBuffer->Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create FCommandBuffer!"); }
+		{ throw SRuntimeError("Failed to create FGraphicsCommandBuffer!"); }
 
-		return Children.emplace_back(std::move(CommandBuffer));
+		Children.push_back(CommandBuffer);
+		return CommandBuffer;
 	}
 
 	void FVulkanCommandPool::

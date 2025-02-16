@@ -20,7 +20,7 @@ export namespace VE { namespace Runtime
 	// VE_ENUM_CLASS(EVulkanCommandPoolType,VkCommandPoolCreateFlags)
 	// VE_ENUM_CLASS(EVulkanCommandLevel,	VkCommandBufferLevel)
 	// VE_ENUM_CLASS(EVulkanSampleRate,		VkSampleCountFlags)
-	// VE_ENUM_CLASS(EVulkanAccessibility,			VkAccessFlags)
+	// VE_ENUM_CLASS(EVulkanAccess,			VkAccessFlags)
 	// VE_ENUM_CLASS(EVulkanShaderStage,	VkShaderStageFlags)
 	// VE_ENUM_CLASS(EVulkanGraphicsPipelineStage,	VkPipelineStageFlags)
 	// VE_ENUM_CLASS(EVulkanMemoryUsage,	VmaMemoryUsage)
@@ -305,7 +305,7 @@ export namespace VE { namespace Runtime
 		Secondary = VK_COMMAND_BUFFER_LEVEL_SECONDARY,
 	};
 
-	VE_ENUM_CLASS(EVulkanAccessibility, VkAccessFlags)
+	VE_ENUM_CLASS(EVulkanAccess, VkAccessFlags)
 	{
 		None						= VK_ACCESS_NONE,
 
@@ -340,6 +340,8 @@ export namespace VE { namespace Runtime
 	{
 		Vertex			= VK_SHADER_STAGE_VERTEX_BIT,
 		Fragment		= VK_SHADER_STAGE_FRAGMENT_BIT,
+		
+		Compute			= VK_SHADER_STAGE_COMPUTE_BIT,
 	};
 	VE_REGISTER_AUTOCAST(VkShaderStageFlags, VkShaderStageFlagBits);
 

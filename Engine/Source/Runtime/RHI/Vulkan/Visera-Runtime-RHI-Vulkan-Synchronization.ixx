@@ -27,7 +27,8 @@ export namespace VE { namespace Runtime
 		VkSemaphore	Handle{ VK_NULL_HANDLE };
 	};
 	static_assert(sizeof(FVulkanSemaphore) == sizeof(VkFence));
-
+	static_assert(std::is_standard_layout_v<FVulkanSemaphore>);
+	
 	class FVulkanFence
 	{
 		VE_NOT_COPYABLE(FVulkanFence);
@@ -39,7 +40,7 @@ export namespace VE { namespace Runtime
 
 		enum WaitTime : UInt64 { Forever = UINT64_MAX };
 		void Wait(WaitTime Timeout = Forever) const { vkWaitForFences(GVulkan->Device->GetHandle(), 1, &Handle, VK_TRUE, Timeout); }
-		void Reset()		const { VE_ASSERT(!IsBlocking()); vkResetFences(GVulkan->Device->GetHandle(), 1, &Handle); }
+		void Block()		const { VE_ASSERT(!IsBlocking()); vkResetFences(GVulkan->Device->GetHandle(), 1, &Handle); }
 		Bool IsBlocking()	const { return VK_SUCCESS != vkGetFenceStatus(GVulkan->Device->GetHandle(), Handle); }
 
 		FVulkanFence(EStatus _Status = EStatus::Blocking);
@@ -51,6 +52,7 @@ export namespace VE { namespace Runtime
 		VkFence	 Handle{ VK_NULL_HANDLE };
 	};
 	static_assert(sizeof(FVulkanFence) == sizeof(VkFence));
+	static_assert(std::is_standard_layout_v<FVulkanFence>);
 
 	FVulkanSemaphore::
 	FVulkanSemaphore(Bool bSignaled/* = False*/)

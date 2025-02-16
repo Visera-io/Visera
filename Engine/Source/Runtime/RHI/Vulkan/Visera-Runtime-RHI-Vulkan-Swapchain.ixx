@@ -233,8 +233,6 @@ export namespace VE { namespace Runtime
 	WaitForNextImage(VkSemaphore* _SignalSemaphore_)
 	throw(SRecreation)
 	{
-		MoveCursor(1);
-
 		auto& CurrentFrameSemaphore = NextImageReadySemaphores[GetCursor()];
 		*_SignalSemaphore_ = CurrentFrameSemaphore;
 
@@ -280,6 +278,8 @@ export namespace VE { namespace Runtime
 		}
 		if (Result != VK_SUCCESS)
 		{ throw SRuntimeError(Text("Failed to present the Vulkan Swapchain! (Cursor:{})", Cursor)); }
+
+		MoveCursor(1);
 	}
 
 } } // namespace VE::Runtime

@@ -126,7 +126,7 @@ export namespace VE { namespace Runtime
 		{
 		case SLANG_STAGE_VERTEX:	ShaderStage = RHI::EShaderStage::Vertex;   break;
 		case SLANG_STAGE_FRAGMENT:	ShaderStage = RHI::EShaderStage::Fragment; break;
-		default: throw SRuntimeError("Unsupported Shader Type!");
+		default: throw SRuntimeError("Unsupported Shader PoolType!");
 		}
 
 		std::cerr << Text("Warn: Func(ReflectShader) is WIP but is still being used for testing!\n");
