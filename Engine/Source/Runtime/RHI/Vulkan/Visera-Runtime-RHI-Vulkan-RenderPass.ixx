@@ -47,13 +47,13 @@ export namespace VE { namespace Runtime
 		Bool HasSubpass(SharedPtr<const FVulkanRenderPipeline> _SubpassPipeline) const;
 	
 	protected:
-		VkRenderPass						Handle{ VK_NULL_HANDLE };
-		UInt32								Priority { 0 }; // Less is More
-		FVulkanRenderArea					RenderArea{ 0,0 };
-		SharedPtr<FVulkanRenderPassLayout>	Layout; // Slang Reflect after Create(...)
-		Array<FClearValue>					ClearValues;
-		Array<FVulkanFramebuffer>			Framebuffers;
-		Array<FSubpass>						Subpasses;
+		VkRenderPass					Handle{ VK_NULL_HANDLE };
+		UInt32							Priority { 0 }; // Less is More
+		FVulkanRenderArea				RenderArea{ 0,0 };
+		FVulkanRenderPassLayout			Layout{}; // Default
+		Array<FClearValue>				ClearValues;
+		Array<FVulkanFramebuffer>		Framebuffers;
+		Array<FSubpass>					Subpasses;
 
 	//private:
 		// Created by RHI Module (User : Render Module )
@@ -61,7 +61,7 @@ export namespace VE { namespace Runtime
 		void Destroy();
 
 	public:
-		FVulkanRenderPass() noexcept = default;
+		FVulkanRenderPass()  noexcept = default;
 		~FVulkanRenderPass() noexcept { Destroy(); }
 	};
 
@@ -80,7 +80,7 @@ export namespace VE { namespace Runtime
 		Array<Array<VkAttachmentReference>> ColorRefTable(Subpasses.size());
 		Array<Array<VkAttachmentReference>> ResolveRefTable(Subpasses.size());
 		
-		ClearValues.reserve(Layout->GetTotalAttachmentCount());
+		ClearValues.reserve(Layout.GetTotalAttachmentCount());
 
 		for (UInt32 Idx = 0; Idx < Subpasses.size(); ++Idx)
 		{
@@ -91,30 +91,30 @@ export namespace VE { namespace Runtime
 			for (UInt8 Idx = 0; Idx < ColorRefs.size(); ++Idx)
 			{
 				ColorRefs[Idx].attachment	= CurrentSubpass.ColorImageReferences[Idx];
-				ColorRefs[Idx].layout		= AutoCast(Layout->ColorDescs[Idx].Layout);
+				ColorRefs[Idx].layout		= AutoCast(Layout.ColorDescs[Idx].Layout);
 				ClearValues.emplace_back(FClearValue{ .color{1.0f, 0.0f, 1.0f, 1.0f} });
 			}
 
 			auto& ResolveRefs = ResolveRefTable[Idx];
-			if (Layout->HasResolveImage())
+			if (Layout.HasResolveImage())
 			{
 				VE_WIP;// MSAA WIP
 				ResolveRefs.resize(ColorRefs.size());
 				for (UInt8 Idx = 0; Idx < ColorRefs.size(); ++Idx)
 				{
-					ResolveRefs[Idx].attachment = Layout->GetColorAttachmentCount() + CurrentSubpass.ColorImageReferences[Idx];
-					ResolveRefs[Idx].layout		= AutoCast(Layout->ResolveDescs[Idx].Layout);
+					ResolveRefs[Idx].attachment = Layout.GetColorAttachmentCount() + CurrentSubpass.ColorImageReferences[Idx];
+					ResolveRefs[Idx].layout		= AutoCast(Layout.ResolveDescs[Idx].Layout);
 					ClearValues.emplace_back(FClearValue{ .color{1.0f, 0.0f, 0.0f, 1.0f} });
 				}
 			}
 	
 			Optional<VkAttachmentReference> DepthRef;
-			if (Layout->HasDepthImage())
+			if (Layout.HasDepthImage())
 			{
 				DepthRef = VkAttachmentReference
 				{
-					.attachment = Layout->GetDepthAttachmentLocation(),
-					.layout		= AutoCast(Layout->DepthDesc.value().Layout),
+					.attachment = Layout.GetDepthAttachmentLocation(),
+					.layout		= AutoCast(Layout.DepthDesc.value().Layout),
 				};
 				ClearValues.emplace_back(FClearValue{ .depthStencil{.depth = 1.0f, .stencil = 0} });
 			};
@@ -146,11 +146,11 @@ export namespace VE { namespace Runtime
 			};
 		}
 		
-		auto AttachmentDescriptions = Array<VkAttachmentDescription>(Layout->GetTotalAttachmentCount());
+		auto AttachmentDescriptions = Array<VkAttachmentDescription>(Layout.GetTotalAttachmentCount());
 
-		for (UInt8 Idx = 0; Idx < Layout->GetColorAttachmentCount(); ++Idx)
+		for (UInt8 Idx = 0; Idx < Layout.GetColorAttachmentCount(); ++Idx)
 		{
-			auto& ColorDesc    = Layout->ColorDescs[Idx];
+			auto& ColorDesc    = Layout.ColorDescs[Idx];
 			// Color Attachments
 			AttachmentDescriptions[Idx] = VkAttachmentDescription
 			{ 
@@ -165,10 +165,10 @@ export namespace VE { namespace Runtime
 				.finalLayout	= AutoCast(ColorDesc.FinalLayout),
 			};
 			// Resolve Attachments
-			if (Layout->HasResolveImage())
+			if (Layout.HasResolveImage())
 			{
-				auto& ResolveDesc   = Layout->ResolveDescs[Idx];
-				AttachmentDescriptions[Layout->GetColorAttachmentCount() + Idx] = VkAttachmentDescription
+				auto& ResolveDesc   = Layout.ResolveDescs[Idx];
+				AttachmentDescriptions[Layout.GetColorAttachmentCount() + Idx] = VkAttachmentDescription
 				{ 
 					.flags			= 0x0,
 					.format			= AutoCast(ResolveDesc.Format),
@@ -183,10 +183,10 @@ export namespace VE { namespace Runtime
 			}
 		}
 		// Depth Attachment
-		VE_ASSERT(Layout->HasDepthImage()); // Current Visera Pipeline will automatically create depth image!
-		if (Layout->HasDepthImage())
+		VE_ASSERT(Layout.HasDepthImage()); // Current Visera Pipeline will automatically create depth image!
+		if (Layout.HasDepthImage())
 		{
-			auto& DepthDesc   = Layout->DepthDesc.value();
+			auto& DepthDesc   = Layout.DepthDesc.value();
 			AttachmentDescriptions.back() = VkAttachmentDescription
 			{
 				.flags			= 0x0,
@@ -275,7 +275,8 @@ export namespace VE { namespace Runtime
 		};
 	}
 
-	Bool FVulkanRenderPass::HasSubpass(SharedPtr<const FVulkanRenderPipeline> _SubpassPipeline) const
+	Bool FVulkanRenderPass::
+	HasSubpass(SharedPtr<const FVulkanRenderPipeline> _SubpassPipeline) const
 	{
 		for (const auto& Subpass : Subpasses)
 		{

@@ -19,8 +19,8 @@ export namespace VE { namespace Runtime
 		friend class FVulkan;
 	public:
 		class SRecreation : public std::exception { public: SRecreation() noexcept = default; };
-		void WaitForNextImage(VkSemaphore* _SignalSemaphore_) throw(SRecreation);
-		void Present(VkSemaphore _WaitSemaphores[], UInt32 _WaitSemaphoreCount) throw(SRecreation);
+		void WaitForNextImage(const FVulkanSemaphore& _SignalSemaphore_) throw(SRecreation);
+		void Present(FVulkanSemaphore _WaitSemaphores[], UInt32 _WaitSemaphoreCount) throw(SRecreation);
 
 		auto GetCursor()		const   -> UInt32					{ return Cursor; }
 		auto GetFrameCount()	const	-> UInt8					{ return Images.size(); }
@@ -38,7 +38,6 @@ export namespace VE { namespace Runtime
 
 		UInt32					Cursor{ 0 };	// Current Frame Index
 		void MoveCursor(UInt32 Stride) { Cursor = (Cursor + Stride) % Images.size(); }
-		Array<FVulkanSemaphore> NextImageReadySemaphores;
 
 		Array<VkImage>			Images;			// Size: Clamp(minImageCount + 1, maxImageCount)
 		Array<VkImageView>		ImageViews;
@@ -208,9 +207,6 @@ export namespace VE { namespace Runtime
 			{ throw SRuntimeError("Failed to create Vulkan Image View!"); }
 		}
 
-		//Present Semaphores & Fences
-		NextImageReadySemaphores.resize(GetFrameCount());
-
 		//Init Frames
 		Cursor = 0;
 	}
@@ -218,8 +214,6 @@ export namespace VE { namespace Runtime
 	void FVulkanSwapchain::
 	Destroy()
 	{
-		NextImageReadySemaphores.clear();
-
 		for (auto ImageView : ImageViews)
 		{
 			vkDestroyImageView(GVulkan->Device->GetHandle(), ImageView, GVulkan->AllocationCallbacks);
@@ -230,16 +224,13 @@ export namespace VE { namespace Runtime
 	}
 
 	void FVulkanSwapchain::
-	WaitForNextImage(VkSemaphore* _SignalSemaphore_)
+	WaitForNextImage(const FVulkanSemaphore& _SignalSemaphore)
 	throw(SRecreation)
 	{
-		auto& CurrentFrameSemaphore = NextImageReadySemaphores[GetCursor()];
-		*_SignalSemaphore_ = CurrentFrameSemaphore;
-
 		auto Result = vkAcquireNextImageKHR(GVulkan->Device->GetHandle(),
 											Handle,
 											UINT64_MAX,
-								/*Signal*/  CurrentFrameSemaphore,
+								/*Signal*/  _SignalSemaphore,
 								/*Signal*/  VK_NULL_HANDLE,
 											&Cursor);
 
@@ -254,14 +245,14 @@ export namespace VE { namespace Runtime
 	}
 
 	void FVulkanSwapchain::
-	Present(VkSemaphore _WaitSemaphores[], UInt32 _WaitSemaphoreCount)
+	Present(FVulkanSemaphore _WaitSemaphores[], UInt32 _WaitSemaphoreCount)
 	throw(SRecreation)
 	{
 		VkPresentInfoKHR PresentInfo
 		{
 			.sType				= VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 			.waitSemaphoreCount = 1,
-			.pWaitSemaphores	= _WaitSemaphores,
+			.pWaitSemaphores	= reinterpret_cast<VkSemaphore*>(_WaitSemaphores),
 			.swapchainCount		= _WaitSemaphoreCount,
 			.pSwapchains		= &Handle,
 			.pImageIndices		= &Cursor,

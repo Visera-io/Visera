@@ -53,11 +53,11 @@ export namespace VE { namespace Runtime
 			.initialDataSize	= CacheFile->GetSize(),
 			.pInitialData		= CacheFile->GetData().data(),
 		};
-		if(VK_SUCCESS != vkCreatePipelineCache(
+		if(vkCreatePipelineCache(
 			GVulkan->Device->GetHandle(),
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
-			&Handle))
+			&Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan Pipeline Cache!"); }
 	}
 
@@ -69,6 +69,7 @@ export namespace VE { namespace Runtime
 			auto CacheFile = FileSystem::CreateBinaryFile(Path);
 			UInt64 CacheSize = 0;
 			vkGetPipelineCacheData(GVulkan->Device->GetHandle(), Handle, &CacheSize, nullptr);
+			CacheFile->Resize(CacheSize);
 			vkGetPipelineCacheData(GVulkan->Device->GetHandle(), Handle, &CacheSize, CacheFile->Access());
 			CacheFile->Save();
 		}

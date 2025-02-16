@@ -18,6 +18,7 @@ export namespace VE
  	    virtual void Load(Int32 LoadModes = 0x0) throw(SIOFailure) { LoadFrom(Path, LoadModes); }
 
         auto Access()             -> void*          { return Data.data(); }
+        void Resize(UInt64 _Size)                   { Data.resize(_Size); }
         auto GetData()      const -> StringView     { return Data; }
         auto GetRawData()   const -> const char*    { return Data.data(); }
         auto CopyData()     const -> String         { return Data; }

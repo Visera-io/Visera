@@ -28,6 +28,8 @@ export namespace VE { namespace Runtime
 
 		FVulkanRenderTarget() = default;
 		FVulkanRenderTarget(const Array<SharedPtr<FVulkanImage>>& _ColorImages, SharedPtr<FVulkanImage> _DepthImage);
+		FVulkanRenderTarget(FVulkanRenderTarget&& _Another) = default;
+		FVulkanRenderTarget& operator=(FVulkanRenderTarget&& _Another) = default;
 
 	private:
 		Array<SharedPtr<FVulkanImage>>		ColorImages;

@@ -19,23 +19,9 @@ export namespace VE { namespace Runtime
 		friend class ViseraRuntime;
 	public:
 		enum class ESystemRT { Color, Depth };
-
 		using FShader = FShader;
-		class FFrame
-		{
-			friend class Render;
-		public:
-			SharedPtr<RHI::FGraphicsCommandBuffer> DrawcallBuffer;
-		private:
-			Array<RHI::FSemaphore> WaitSemaphores;
-			Array<RHI::FSemaphore> SignalSemaphores;
-		};
 
 		VE_API CreateShader(StringView _ShaderFileName, StringView _EntryPoint, FShader::ECompileType _CompileType = FShader::ECompileType::Default) throw (SIOFailure, SRuntimeError) -> SharedPtr<FShader>;
-		VE_API GetCurrentFrame() -> FFrame& { return Frames[RHI::GetSwapchainCursor()]; }
-
-	private:
-		static inline Array<FFrame> Frames;
 
 	private:
 		static void Bootstrap();
@@ -59,38 +45,26 @@ export namespace VE { namespace Runtime
 	void Render::
 	Bootstrap()
 	{
-		Frames.resize(RHI::GetSwapchainFrameCount());
 
-		for (auto& Frame : Frames)
-		{
-			VE_WIP;
-			//Frame.DrawcallBuffer = RHI::CreateGraphicsCommandBuffer();
-			//auto& SignalSemaphore = Frame.SignalSemaphores.emplace_back(RHI::CreateSemaphore());
-			//Frame.DrawcallBuffer->AddSignalSemaphore(SignalSemaphore);
-			//auto& WaitRHIFrameSema = Frame.WaitSemaphores.emplace_back(RHI::CreateSemaphore());
-			//Frame.DrawcallBuffer->AddWaitSemaphore(WaitRHIFrameSema);
-		}
 	}
 
 	void Render::
 	Tick()
 	{
-		auto& CurrentFrame = GetCurrentFrame();
-		RHI::WaitNextFrame();
-
-		if (!CurrentFrame.DrawcallBuffer->IsIdle())
+		static UInt32 FrameCount = 0;
+		Log::Info("Frame ({})", ++FrameCount);
+		auto& Frame = RHI::WaitNextFrame();
 		{
-			Log::Warn("You may forget to stop recording DrawcallBuffer?");
-			CurrentFrame.DrawcallBuffer->StopRecording();
+			auto DrawCmds = Frame.GetGraphicsCommandBuffer();
+			
 		}
-
-		RHI::RenderAndPresent();
+		RHI::RenderAndPresentCurrentFrame();
 	}
 
 	void Render::
 	Terminate()
 	{
-		Frames.clear();
+		
 	}
 
 } } // namespace VE::Runtime

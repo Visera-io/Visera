@@ -350,7 +350,7 @@ export namespace VE { namespace Runtime
 		None							= VK_PIPELINE_STAGE_NONE,
 		All 							= VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT,
 
-		PipelineTop						= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+		PipelineTop						= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, // Wait All (Virtual Stage)
 
 		//1. Draw Processing
 		//ConditionalRendering			= VK_PIPELINE_STAGE_CONDITIONAL_RENDERING_BIT_EXT,
@@ -379,7 +379,7 @@ export namespace VE { namespace Runtime
 		//7. Pixel Processing
 		ColorAttachmentOutput			= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 	
-		PipelineBottom					= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+		PipelineBottom					= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, // Wait None (Virtual Stage)
 	};
 	
 	VE_ENUM_CLASS(EVulkanComputePipelineStage, VkPipelineStageFlags)

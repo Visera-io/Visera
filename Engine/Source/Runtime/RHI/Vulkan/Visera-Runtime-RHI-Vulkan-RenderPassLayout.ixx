@@ -16,7 +16,6 @@ export namespace VE { namespace Runtime
 	{
 		friend class FVulkanRenderPass;
 		friend class FVulkanFramebuffer;
-		enum { MaxSimultaneousRenderTargets = 8 };
 	public:
 		struct FAttachmentDescription
 		{
@@ -62,6 +61,18 @@ export namespace VE { namespace Runtime
 	FVulkanRenderPassLayout::
 	FVulkanRenderPassLayout()
 	{
+		AddColorAttachment(
+		{
+			.Layout			= EVulkanImageLayout::ColorAttachment,
+			.Format			= EVulkanFormat::U32_Normalized_R8_G8_B8_A8,
+			.SampleRate		= EVulkanSampleRate::X1,
+			.ViewType		= EVulkanImageViewType::Image2D,
+			.LoadOp			= EVulkanAttachmentIO::I_Whatever,
+			.StoreOp		= EVulkanAttachmentIO::O_Store,
+			.InitialLayout	= EVulkanImageLayout::Undefined,//[FIXME]
+			.FinalLayout	= EVulkanImageLayout::TransferSource,
+		});
+
 		DepthDesc = FAttachmentDescription
 		{
 			.Layout			= EVulkanImageLayout::DepthStencilAttachment,
@@ -89,7 +100,7 @@ export namespace VE { namespace Runtime
 		{
 			ResolveDescs.emplace_back(FAttachmentDescription
 			{
-				.Layout		= ColorDescs.back().Layout,
+				.Layout			= ColorDescs.back().Layout,
 				.Format			= ColorDescs.back().Format,
 				.SampleRate		= EVulkanSampleRate::X1,
 				.ViewType		= ColorDescs.back().ViewType,

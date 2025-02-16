@@ -4,11 +4,13 @@ export module Visera.Runtime.RHI.Vulkan:Synchronization;
 
 import Visera.Core.Signal;
 
+import :Common;
 import :Device;
 
 export namespace VE { namespace Runtime
 {
 	class RHI;
+	class FVulkanImage;
 
 	class FVulkanSemaphore
 	{
@@ -53,6 +55,17 @@ export namespace VE { namespace Runtime
 	};
 	static_assert(sizeof(FVulkanFence) == sizeof(VkFence));
 	static_assert(std::is_standard_layout_v<FVulkanFence>);
+
+	struct FVulkanImageMemoryBarrier
+	{
+		SharedPtr<const FVulkanImage> Image;
+		EVulkanImageLayout			  NewLayout;
+		EVulkanAccess				  SrcAccess;
+		EVulkanAccess				  DstAccess;
+
+		UInt32 SrcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		UInt32 DstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	};
 
 	FVulkanSemaphore::
 	FVulkanSemaphore(Bool bSignaled/* = False*/)

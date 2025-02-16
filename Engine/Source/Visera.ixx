@@ -71,13 +71,6 @@ export namespace VE
 					Log::Debug(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
 					StateCode = Signal.StateCode;
 				}
-#if defined(VISERA_RUNTIME)
-				Log::Debug("Terminating Visera Editor...");
-				Editor::ViseraEditor::Terminate();
-				Log::Debug("Terminating Visera Runtime...");
-				Runtime::ViseraRuntime::Terminate();
-#endif
-				ViseraCore::Terminate();
 			}
 			catch (const SEngineStop& Signal)
 			{
@@ -87,9 +80,17 @@ export namespace VE
 
 			if (App)
 			{
+				Log::Debug("Terminating Visera App...");
 				App->Terminate();
 				delete App;
 			}
+#if defined(VISERA_RUNTIME)
+			Log::Debug("Terminating Visera Editor...");
+			Editor::ViseraEditor::Terminate();
+			Log::Debug("Terminating Visera Runtime...");
+			Runtime::ViseraRuntime::Terminate();
+#endif
+				ViseraCore::Terminate();
 			return StateCode;
 		}
 

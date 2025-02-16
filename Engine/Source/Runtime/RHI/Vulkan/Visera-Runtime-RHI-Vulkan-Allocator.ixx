@@ -6,6 +6,7 @@ import :Common;
 import :Instance;
 import :Device;
 import :GPU;
+import :Synchronization;
 
 import Visera.Core.Signal;
 
@@ -102,7 +103,6 @@ export namespace VE { namespace Runtime
 		VE_NOT_COPYABLE(FVulkanImageView);
 		friend class FVulkanImage;
 	public:
-		
 		auto GetImage()	  const -> WeakPtr<const FVulkanImage>	{ return Image; }
 		auto GetHandle()		-> VkImageView			{ return Handle;}
 
@@ -154,6 +154,7 @@ export namespace VE { namespace Runtime
 		auto GetSampleRate()	const -> EVulkanSampleRate		{ return SampleRate;}
 		auto GetDetails()		const -> VmaAllocationInfo  { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
 		auto GetHandle()		const -> const VkImage { return Handle; }
+		auto GetMemoryBarrier(EVulkanImageLayout _NewLayout) const -> FVulkanImageMemoryBarrier;
 
 		Bool EnabledMSAA()const { return SampleRate > EVulkanSampleRate::X1; }
 		Bool IsReleased() const { return Handle == VK_NULL_HANDLE && Allocation == VK_NULL_HANDLE; }
@@ -245,6 +246,18 @@ export namespace VE { namespace Runtime
 		{ throw SRuntimeError("Failed to create Vulkan Image!"); }
 
 		return NewImage;
+	}
+
+	FVulkanImageMemoryBarrier FVulkanImage::
+	GetMemoryBarrier(EVulkanImageLayout _NewLayout) const
+	{
+		return FVulkanImageMemoryBarrier
+		{
+			.Image = shared_from_this(),
+			.NewLayout = _NewLayout,
+			.SrcAccess = EVulkanAccess::None,
+			.DstAccess = EVulkanAccess::W_ColorAttachment,
+		};
 	}
 
 	FVulkanImage::
