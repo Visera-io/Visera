@@ -94,6 +94,8 @@ if (NOT TARGET glfw)
     )
 endif()
 
+#define IMGUI_IMPL_VULKAN_USE_VOLK
+#define IMGUI_IMPL_VULKAN_NO_PROTOTYPES
 # # Dear ImGui
 # if (NOT TARGET imgui::imgui)
 #     message(STATUS "\nLoading Dear ImGui-Docking (imgui::imgui)")

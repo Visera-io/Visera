@@ -1,10 +1,9 @@
 module;
 #include <Visera.h>
-#define IMGUI_IMPL_VULKAN_USE_VOLK
-#define IMGUI_IMPL_VULKAN_NO_PROTOTYPES
-#include <volk.h>
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_vulkan.h"
+#include "backends/imgui.h"
+#include "backends/imgui_internal.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.h"
 export module Visera.Editor.UI:ImGui;
 import :UIRenderPass;
 
@@ -24,29 +23,28 @@ export namespace VE { namespace Editor
 	public:
 		void BeginFrame()
 		{
-			ImGui_ImplVulkan_NewFrame();
+			/*ImGui_ImplVulkan_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
-			ImGui::NewFrame();
+			ImGui::NewFrame();*/
 		}
 
 		void EndFrame(SharedPtr<RHI::FGraphicsCommandBuffer> _GraphicsCommandBuffer) const
 		{
-			ImGui::Render();
-			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(),_GraphicsCommandBuffer->GetHandle());
+			//ImGui::Render();
+			//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(),_GraphicsCommandBuffer->GetHandle());
 
-			//At the end of your render loop, generally after rendering your main viewport but before presenting/swapping it:
-			if (Configurations & ImGuiConfigFlags_ViewportsEnable)
-			{
-				ImGui::UpdatePlatformWindows();
-				ImGui::RenderPlatformWindowsDefault();
-			}
+			////At the end of your render loop, generally after rendering your main viewport but before presenting/swapping it:
+			//if (Configurations & ImGuiConfigFlags_ViewportsEnable)
+			//{
+			//	/*ImGui::UpdatePlatformWindows();
+			//	ImGui::RenderPlatformWindowsDefault();*/
+			//}
 		}
 
 	private:
 		SharedPtr<FUIRenderPass> EditorRenderPass;
-		UInt32					 Configurations = ImGuiConfigFlags_DockingEnable   | 
-												  ImGuiConfigFlags_ViewportsEnable |
-												  ImGuiConfigFlags_DockingEnable;
+		UInt32					 Configurations = 0/*ImGuiConfigFlags_ViewportsEnable |
+												  ImGuiConfigFlags_DockingEnable*/;
 
 		FImGui()
 		{
