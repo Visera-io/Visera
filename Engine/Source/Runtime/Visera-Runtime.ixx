@@ -21,11 +21,14 @@ export namespace VE { namespace Runtime
 		{	
 			try
 			{
-				World::Tick();
-				Window::Tick();
-				Render::Tick();
-				RHI::Tick();
-				if (Window::ShouldClose()) { throw SEngineStop("Window has been closed."); }
+				if (!Window::ShouldClose())
+				{
+					World::Tick();
+					Window::Tick();
+					Render::Tick();
+					RHI::Tick();
+				}
+				else { throw SEngineStop("Window has been closed."); }
 			}
 			catch(const SRuntimeError& RuntimeError)
 			{ Log::Fatal(Text("Visera Engine Internal Runtime Error:\n{}{}", RuntimeError.What(), RuntimeError.Where())); }

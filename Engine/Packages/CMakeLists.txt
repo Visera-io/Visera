@@ -94,12 +94,12 @@ if (NOT TARGET glfw)
     )
 endif()
 
-# Dear ImGui
-if (NOT TARGET imgui::imgui)
-    message(STATUS "\nLoading Dear ImGui-Docking (imgui::imgui)")
-    find_package(imgui REQUIRED)
-    target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE imgui::imgui)
-endif()
+# # Dear ImGui
+# if (NOT TARGET imgui::imgui)
+#     message(STATUS "\nLoading Dear ImGui-Docking (imgui::imgui)")
+#     find_package(imgui REQUIRED)
+#     target_link_libraries(VISERA_ENGINE_EXTERN INTERFACE imgui::imgui)
+# endif()
 
 # Intel OneAPI TBB
 if (NOT TARGET TBB::tbb)

@@ -40,6 +40,8 @@ export namespace VE { namespace Runtime
 		auto GetSwapchain()		const -> const FVulkanSwapchain&{ return Swapchain; }
 		auto GetGPU()			const -> const FVulkanGPU&		{ return GPU; }
 		auto GetDevice()		const -> const FVulkanDevice&	{ return Device; }
+		auto GetGraphicsPipelineCache() const -> const FVulkanPipelineCache& { return GraphicsPipelineCache; }
+		auto GetAllocationCallbacks()	const -> const VulkanAllocationCallbacks { return AllocationCallbacks; }
 		
 	private:
 		/* << Vulkan Objects >>*/

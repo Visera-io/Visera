@@ -61,29 +61,7 @@ export namespace VE { namespace Runtime
 	FVulkanRenderPassLayout::
 	FVulkanRenderPassLayout()
 	{
-		AddColorAttachment(
-		{
-			.Layout			= EVulkanImageLayout::ColorAttachment,
-			.Format			= EVulkanFormat::U32_Normalized_R8_G8_B8_A8,
-			.SampleRate		= EVulkanSampleRate::X1,
-			.ViewType		= EVulkanImageViewType::Image2D,
-			.LoadOp			= EVulkanAttachmentIO::I_Whatever,
-			.StoreOp		= EVulkanAttachmentIO::O_Store,
-			.InitialLayout	= EVulkanImageLayout::Undefined,//[FIXME]
-			.FinalLayout	= EVulkanImageLayout::TransferSource,
-		});
-
-		DepthDesc = FAttachmentDescription
-		{
-			.Layout			= EVulkanImageLayout::DepthStencilAttachment,
-			.Format			= EVulkanFormat::S32_Float_Depth32,
-			.SampleRate		= EVulkanSampleRate::X1,
-			.ViewType		= EVulkanImageViewType::Image2D,
-			.LoadOp			= EVulkanAttachmentIO::I_Clear,
-			.StoreOp		= EVulkanAttachmentIO::O_Whatever,
-			.InitialLayout  = EVulkanImageLayout::Undefined,//[FIXME]
-			.FinalLayout    = EVulkanImageLayout::DepthStencilAttachment,
-		};
+		
 	}
 
 	FVulkanRenderPassLayout::

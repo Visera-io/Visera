@@ -37,10 +37,10 @@ namespace VE
 		Set(TTimePoint<T> NewTimePoint) { LastTickTimePoint = NewTimePoint; }
 
 		inline void
-		Reset() { LastTickTimePoint = TTimePoint<T>{}; StartTimePoint = LastTickTimePoint;}
+		Reset() { StartTimePoint = Now(); LastTickTimePoint = StartTimePoint; }
 
 	public:
-		TClock() noexcept : StartTimePoint{ Now() }, LastTickTimePoint{ Now() } {}
+		TClock() noexcept : StartTimePoint{ Now() }, LastTickTimePoint{ StartTimePoint } {}
 
 	protected:
 		TTimePoint<T> StartTimePoint;

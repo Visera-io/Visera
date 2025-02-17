@@ -51,9 +51,7 @@ export namespace VE { namespace Runtime
 	void Render::
 	Tick()
 	{
-		static UInt32 FrameCount = 0;
-		Log::Info("Frame ({})", ++FrameCount);
-		auto& Frame = RHI::WaitNextFrame();
+		auto& Frame = RHI::WaitFrameReady();
 		{
 			auto DrawCmds = Frame.GetGraphicsCommandBuffer();
 			

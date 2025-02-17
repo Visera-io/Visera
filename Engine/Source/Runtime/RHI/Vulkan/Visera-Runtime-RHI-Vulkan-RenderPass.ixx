@@ -22,6 +22,7 @@ export namespace VE { namespace Runtime
 	{
 		friend class RHI;
 	public:
+		enum class ERenderPassType { Background, DefaultForward, Overlay, Customized };
 		struct FSubpass final
 		{
 			SharedPtr<FVulkanRenderPipeline>Pipeline;
@@ -34,9 +35,12 @@ export namespace VE { namespace Runtime
 			EVulkanAccess					SrcStageAccess			{ EVulkanAccess::None };
 			EVulkanGraphicsPipelineStage	DstStage				{ EVulkanGraphicsPipelineStage::None };
 			EVulkanAccess					DstStageAccess			{ EVulkanAccess::None };
-			Bool							bEnableDepthTest		= True;
+
 			Array<UInt8>					InputImageReferences;    // Input Image References from Previous Subpasses.
 			Array<UInt8>					PreserveImageReferences; // Const Image References Used in Subpasses.
+
+			Bool							bEnableDepthTest		= True;
+			Bool							bExternalSubpass		= False; // Load from external libs (e.g., ImGUI)
 		};
 
 		auto GetRenderArea()		  const -> const FVulkanRenderArea& { return RenderArea; }
@@ -47,10 +51,10 @@ export namespace VE { namespace Runtime
 		Bool HasSubpass(SharedPtr<const FVulkanRenderPipeline> _SubpassPipeline) const;
 	
 	protected:
+		ERenderPassType					Type;
 		VkRenderPass					Handle{ VK_NULL_HANDLE };
-		UInt32							Priority { 0 }; // Less is More
 		FVulkanRenderArea				RenderArea{ 0,0 };
-		FVulkanRenderPassLayout			Layout{}; // Default
+		FVulkanRenderPassLayout			Layout;
 		Array<FClearValue>				ClearValues;
 		Array<FVulkanFramebuffer>		Framebuffers;
 		Array<FSubpass>					Subpasses;
@@ -61,9 +65,82 @@ export namespace VE { namespace Runtime
 		void Destroy();
 
 	public:
-		FVulkanRenderPass()  noexcept = default;
+		FVulkanRenderPass() = delete;
+		FVulkanRenderPass(ERenderPassType _RenderPassType);
 		~FVulkanRenderPass() noexcept { Destroy(); }
 	};
+
+	FVulkanRenderPass::
+	FVulkanRenderPass(ERenderPassType _RenderPassType)
+		:Type{_RenderPassType}
+	{
+		switch (Type)
+		{
+		case ERenderPassType::Background:
+		{
+			Layout.AddColorAttachment(
+			{
+				.Layout			= EVulkanImageLayout::ColorAttachment,
+				.Format			= EVulkanFormat::U32_Normalized_R8_G8_B8_A8,
+				.SampleRate		= EVulkanSampleRate::X1,
+				.ViewType		= EVulkanImageViewType::Image2D,
+				.LoadOp			= EVulkanAttachmentIO::I_Clear,
+				.StoreOp		= EVulkanAttachmentIO::O_Store,
+				.InitialLayout	= EVulkanImageLayout::Undefined,//[FIXME]
+				.FinalLayout	= EVulkanImageLayout::ColorAttachment,
+			});
+			break;
+		}
+		case ERenderPassType::DefaultForward:
+		{
+			Layout.AddColorAttachment(
+			{
+				.Layout			= EVulkanImageLayout::ColorAttachment,
+				.Format			= EVulkanFormat::U32_Normalized_R8_G8_B8_A8,
+				.SampleRate		= EVulkanSampleRate::X1,
+				.ViewType		= EVulkanImageViewType::Image2D,
+				.LoadOp			= EVulkanAttachmentIO::I_Keep,
+				.StoreOp		= EVulkanAttachmentIO::O_Store,
+				.InitialLayout	= EVulkanImageLayout::ColorAttachment,
+				.FinalLayout	= EVulkanImageLayout::ColorAttachment,
+			});
+			break;
+		}
+		case ERenderPassType::Overlay:
+		{
+			Layout.AddColorAttachment(
+			{
+				.Layout			= EVulkanImageLayout::ColorAttachment,
+				.Format			= EVulkanFormat::U32_Normalized_R8_G8_B8_A8,
+				.SampleRate		= EVulkanSampleRate::X1,
+				.ViewType		= EVulkanImageViewType::Image2D,
+				.LoadOp			= EVulkanAttachmentIO::I_Keep,
+				.StoreOp		= EVulkanAttachmentIO::O_Store,
+				.InitialLayout	= EVulkanImageLayout::ColorAttachment,//[FIXME]
+				.FinalLayout	= EVulkanImageLayout::TransferSource,
+			});
+			break;
+		}
+		case ERenderPassType::Customized:
+		{
+			break;
+		}
+		default: throw SRuntimeError("Unkonwn RenderPassLayout Preset!");
+		}
+
+		//[TODO]: Currently, It has to load a depth image.
+		Layout.DepthDesc =
+		{
+			.Layout			= EVulkanImageLayout::DepthStencilAttachment,
+			.Format			= EVulkanFormat::S32_Float_Depth32,
+			.SampleRate		= EVulkanSampleRate::X1,
+			.ViewType		= EVulkanImageViewType::Image2D,
+			.LoadOp			= EVulkanAttachmentIO::I_Clear,
+			.StoreOp		= EVulkanAttachmentIO::O_Whatever,
+			.InitialLayout  = EVulkanImageLayout::Undefined,//[FIXME]
+			.FinalLayout    = EVulkanImageLayout::DepthStencilAttachment,
+		};
+	}
 
 	void FVulkanRenderPass::
 	Create(const FVulkanRenderArea& _RenderArea,
@@ -71,9 +148,10 @@ export namespace VE { namespace Runtime
 	{
 		VE_ASSERT(_RenderTargets.size() == GVulkan->Swapchain->GetFrameCount());
 		VE_ASSERT(_RenderArea.extent.width > 0 && _RenderArea.extent.height > 0);
+		VE_ASSERT(!Subpasses.empty());
 
 		RenderArea = _RenderArea;
-
+		
 		// Create RenderPass
 		Array<VkSubpassDescription> SubpassDescriptions(Subpasses.size());
 		Array<VkSubpassDependency>  SubpassDependencies(Subpasses.size());
@@ -183,7 +261,6 @@ export namespace VE { namespace Runtime
 			}
 		}
 		// Depth Attachment
-		VE_ASSERT(Layout.HasDepthImage()); // Current Visera Pipeline will automatically create depth image!
 		if (Layout.HasDepthImage())
 		{
 			auto& DepthDesc   = Layout.DepthDesc.value();
@@ -219,21 +296,26 @@ export namespace VE { namespace Runtime
 		{ throw SRuntimeError("Failed to create Vulkan RenderPass!"); }
 
 		// Create Subpasses (Setted in the derived class)
-		if (Subpasses.empty())
-		{ throw SRuntimeError("Cannot create a RenderPass with 0 Subpass!"); }
-		
 		for (UInt8 Idx = 0; Idx < Subpasses.size(); ++Idx)
 		{
 			auto& CurrentSubpass = Subpasses[Idx];
-			VE_ASSERT(CurrentSubpass.Pipeline != nullptr);
-			if (CurrentSubpass.VertexShader.expired())
-			{ throw SRuntimeError("WIP: Cannot reload the vertex shader!"); }
-			if (CurrentSubpass.FragmentShader.expired())
-			{ throw SRuntimeError("WIP: Cannot reload the fragment shader!"); }
 
-			CurrentSubpass.Pipeline->Create(Handle, Idx,
+			if (CurrentSubpass.Pipeline)
+			{			
+				if (CurrentSubpass.VertexShader.expired())
+				{ throw SRuntimeError("WIP: Cannot reload the vertex shader!"); }
+				if (CurrentSubpass.FragmentShader.expired())
+				{ throw SRuntimeError("WIP: Cannot reload the fragment shader!"); }
+
+				CurrentSubpass.Pipeline->Create(Handle, Idx,
 											CurrentSubpass.VertexShader.lock(),
 											CurrentSubpass.FragmentShader.lock());
+			}
+			else if (CurrentSubpass.bExternalSubpass)
+			{
+				
+			}
+			else { throw SRuntimeError("Cannot Create a Subpass without any Pipeline!"); }
 		}
 
 		// Create Framebuffers

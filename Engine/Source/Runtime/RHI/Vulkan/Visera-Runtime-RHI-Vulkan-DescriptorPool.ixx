@@ -26,6 +26,8 @@ export namespace VE { namespace Runtime
 			UInt32			Count = 0;
 		};
 
+		auto GetHandle() const -> const VkDescriptorPool {return Handle; }
+
 		FVulkanDescriptorPool() noexcept = default;
 		~FVulkanDescriptorPool() = default;
 	private:

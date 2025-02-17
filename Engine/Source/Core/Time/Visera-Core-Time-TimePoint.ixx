@@ -13,7 +13,7 @@ export namespace VE
     public:
         TTimePoint() = default;
         TTimePoint(const T::time_point& _NewTimePoint) : Value{ _NewTimePoint }{}
-        TTimePoint(T::time_point&& _NewTimePoint) : Value{ std::move(_NewTimePoint) }{}
+        TTimePoint(T::time_point&& _NewTimePoint) : Value{ std::move(_NewTimePoint) } {}
 
         operator T::time_point() const { return Value; }
     private:
@@ -48,12 +48,13 @@ export namespace VE
     public:
         TTimePoint() = default; //UNIX Time
         TTimePoint(std::chrono::system_clock::time_point Value) : Value{ std::move(Value) }{}
-        
+        TTimePoint(const TTimePoint<std::chrono::system_clock>& _NewTimePoint) : Value{ _NewTimePoint.Value }{}
+
         operator std::chrono::system_clock::time_point() const { return Value; }
         auto&   operator=(const TTimePoint<std::chrono::system_clock>& target) { Value = target.Value; return *this; }
         auto&   operator=(TTimePoint<std::chrono::system_clock>&& target)      { Value = std::move(target.Value); return *this; }
         auto    operator-(const std::chrono::system_clock::time_point& target) const { return TDuration<std::chrono::system_clock>{ Value - target }; }
-        auto    operator-(const TTimePoint<std::chrono::system_clock>& target)  const { return TDuration<std::chrono::system_clock>{ Value - target.Value }; }
+        auto    operator-(const TTimePoint<std::chrono::system_clock>& target) const { return TDuration<std::chrono::system_clock>{ Value - target.Value }; }
     private:
         std::chrono::system_clock::time_point Value;
     };

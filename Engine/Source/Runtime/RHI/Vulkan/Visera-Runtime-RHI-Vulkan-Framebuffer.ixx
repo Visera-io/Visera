@@ -43,7 +43,7 @@ export namespace VE { namespace Runtime
 	{
 		Extent = _Extent;
 		RenderTarget = std::move(_RenderTargets);
-
+		
 		RenderTargetViews.reserve(RenderTarget->GetTotalImageCount());
 		for (const auto& ColorImage : RenderTarget->ColorImages)
 		{

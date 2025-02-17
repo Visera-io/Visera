@@ -59,7 +59,11 @@ export namespace VE
 					Log::Debug("Bootstrapping the " VISERA_APP_NAME "...");
 					App->Bootstrap();
 					{
-						do { App->Tick(); } while (RuntimeTick());
+						do { 
+							Editor::UI::Tick();
+							App->Tick();
+							Editor::UI::RenderTick();
+						} while (RuntimeTick());
 					}
 				}
 				catch (const SRuntimeError& Signal)
