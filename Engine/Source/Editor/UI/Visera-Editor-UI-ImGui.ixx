@@ -1,13 +1,13 @@
 module;
 #include <Visera.h>
-#include "backends/imgui.h"
-#include "backends/imgui_internal.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_vulkan.h"
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_vulkan.h>
 export module Visera.Editor.UI:ImGui;
 import :UIRenderPass;
 
 import Visera.Core.Signal;
+import Visera.Core.Log;
 import Visera.Runtime.Window;
 import Visera.Runtime.RHI;
 
@@ -84,21 +84,16 @@ export namespace VE { namespace Editor
 				.DescriptorPoolSize = 0,
 
 				.Allocator		= API->GetAllocationCallbacks(),
-				.CheckVkResultFn = [](VkResult err) {
-					if (err != VK_SUCCESS) {
-						std::cerr << "ImGui Vulkan Error: " + std::to_string(err);
-					}},
+				.CheckVkResultFn = [](VkResult Err)
+				{
+					if (Err != VK_SUCCESS)
+					{ Log::Error("ImGUI Vulkan Error Code: {}", UInt32(Err)); }
+				},
 			};
 
 			ImGui_ImplGlfw_InitForVulkan(Window::GetHandle(), True); // Install callbacks via ImGUI
 			
 			auto VulkanInstanceHandle = API->GetInstance().GetHandle();
-			/*ImGui_ImplVulkan_LoadFunctions([](const char *function_name, void *vulkan_instance)
-				{
-					return vkGetInstanceProcAddr(
-						reinterpret_cast<VkInstance>(vulkan_instance),
-						function_name);
-				}, API->GetInstance().GetHandle());*/
 			ImGui_ImplVulkan_Init(&CreateInfo);
 
 			//[TODO]: Load Font

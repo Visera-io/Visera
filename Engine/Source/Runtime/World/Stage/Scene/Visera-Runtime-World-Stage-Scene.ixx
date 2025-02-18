@@ -22,7 +22,7 @@ export namespace VE { namespace Runtime
 	{
 	public:
 		auto GetHandle() const -> RTCScene		{ return Handle; }
-		auto GetFileName()   const -> FName			{ return Name; }
+		auto GetFileName()   const -> FName		{ return Name; }
 		auto GetPath()	 const -> StringView	{ return Path; }
 		auto IsLoaded()  const -> Bool			{ return Data != nullptr; }
 

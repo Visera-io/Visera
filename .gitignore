@@ -3,7 +3,7 @@
 
 #[Architecture]
 Apps/*
-Engine/Packages/*
+Engine/OldPackages/*
 Python/*
 __pycache__
 
