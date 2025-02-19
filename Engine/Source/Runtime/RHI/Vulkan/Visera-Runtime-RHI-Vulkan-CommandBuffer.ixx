@@ -98,7 +98,7 @@ export namespace VE { namespace Runtime
 		void SetViewport() const;
 		//void SetDepthBias() const;
 		void Draw(UInt32 _VertexCount, UInt32 _InstanceCount = 1, UInt32 _FirstVertex = 0, UInt32 _FirstInstance = 0) const { vkCmdDraw(Handle, _VertexCount, _InstanceCount, _FirstVertex, _FirstInstance); };
-		void LeaveRenderPass();
+		void LeaveRenderPass(SharedPtr<const FVulkanRenderPass> _RenderPass);
 
 		void BlitImage(SharedPtr<const FVulkanImage> _SrcImage, SharedPtr<FVulkanImage> _DstImage, EVulkanFilter _Filter) const;
 
@@ -275,9 +275,11 @@ export namespace VE { namespace Runtime
 	}
 
 	void FVulkanGraphicsCommandBuffer::
-	LeaveRenderPass()
+	LeaveRenderPass(SharedPtr<const FVulkanRenderPass> _RenderPass)
 	{
 		VE_ASSERT(IsInsideRenderPass());
+		VE_ASSERT(_RenderPass == CurrentRenderPass);
+
 		vkCmdEndRenderPass(Handle);
 		CurrentRenderPass.reset();
 	}

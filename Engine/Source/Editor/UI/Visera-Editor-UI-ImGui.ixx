@@ -21,17 +21,34 @@ export namespace VE { namespace Editor
 	{
 		friend class UI;
 	public:
+		enum class EStatus : UInt8 {Idle, InFrame};
 		void BeginFrame()
 		{
-			/*ImGui_ImplVulkan_NewFrame();
+			VE_ASSERT(Status != EStatus::InFrame);
+
+			ImGui_ImplVulkan_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
-			ImGui::NewFrame();*/
+			ImGui::NewFrame();
+
+			//[FIXME]: Testing
+			auto Cmd = RHI::GetCurrentFrame().GetGraphicsCommandBuffer();
+			Cmd->StartRecording();
+			Cmd->ReachRenderPass(EditorRenderPass);
+
+			Status = EStatus::InFrame;
 		}
 
-		void EndFrame(SharedPtr<RHI::FGraphicsCommandBuffer> _GraphicsCommandBuffer) const
+		void EndFrame(SharedPtr<RHI::FGraphicsCommandBuffer> _GraphicsCommandBuffer)
 		{
-			//ImGui::Render();
-			//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(),_GraphicsCommandBuffer->GetHandle());
+			VE_ASSERT(Status == EStatus::InFrame);
+
+			ImGui::Render();
+			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(),_GraphicsCommandBuffer->GetHandle());
+
+			//[FIXME]: Testing
+			auto Cmd = RHI::GetCurrentFrame().GetGraphicsCommandBuffer();
+			Cmd->LeaveRenderPass(EditorRenderPass);
+			Cmd->StopRecording();
 
 			////At the end of your render loop, generally after rendering your main viewport but before presenting/swapping it:
 			//if (Configurations & ImGuiConfigFlags_ViewportsEnable)
@@ -39,9 +56,13 @@ export namespace VE { namespace Editor
 			//	/*ImGui::UpdatePlatformWindows();
 			//	ImGui::RenderPlatformWindowsDefault();*/
 			//}
+			Status = EStatus::Idle;
 		}
 
+		void ShowDemoWindow() const { ImGui::ShowDemoWindow(); }
+
 	private:
+		EStatus					 Status{ EStatus::Idle };
 		SharedPtr<FUIRenderPass> EditorRenderPass;
 		UInt32					 Configurations = 0/*ImGuiConfigFlags_ViewportsEnable |
 												  ImGuiConfigFlags_DockingEnable*/;

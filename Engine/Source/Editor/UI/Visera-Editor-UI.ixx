@@ -14,7 +14,11 @@ export namespace VE { namespace Editor
 	class UI
 	{
 		VE_MODULE_MANAGER_CLASS(UI);
+	public:
+		VE_API CreateWindow() -> void { ImGui->ShowDemoWindow(); }
+
 	public://[TODO]:Remove  Testing Public
+
 		static void Bootstrap()
 		{
 			ImGui = new FImGui();
