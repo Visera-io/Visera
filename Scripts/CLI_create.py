@@ -33,7 +33,7 @@ project("{app_name}"
     VERSION "0.0.0"
     HOMEPAGE_URL ""
 )
-set(APP_NAME {app_name})''')
+set(VISERA_APP {app_name})''')
         
         CMakeLists.write('''
 # [Environment]
@@ -46,13 +46,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE  "${PROJECT_SOURCE_DIR}/Binaries/Rele
 file(GLOB_RECURSE APP_MODULE_INTERFACE   "${PROJECT_SOURCE_DIR}/Source/*.ixx")
 file(GLOB_RECURSE APP_MODULE_IMPLEMENT   "${PROJECT_SOURCE_DIR}/Source/*.cpp")
 
-add_executable(${APP_NAME}
+add_executable(${VISERA_APP}
             ${APP_MODULE_INTERFACE}
             ${APP_MODULE_IMPLEMENT})
 
 #[Link to Engine]
 target_link_libraries(
-            ${APP_NAME}
+            ${VISERA_APP}
             PRIVATE
             ${VISERA})
             
@@ -61,7 +61,7 @@ source_group(TREE ${PROJECT_SOURCE_DIR}
             ${APP_MODULE_INTERFACE}
             ${APP_MODULE_IMPLEMENT})
 #[IDE::Visual Studio]
-set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${APP_NAME})
+set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${VISERA_APP})
 
 #[Install]
 #install(TARGETS ${VISERA} RUNTIME DESTINATION ${VISERA_BINARY_DIR})''')

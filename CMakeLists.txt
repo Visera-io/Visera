@@ -7,7 +7,7 @@ SET(VISERA_VERSION_PATCH 0)
 SET(VISERA_VERSION "${VISERA_VERSION_MAJOR}.${VISERA_VERSION_MINOR}.${VISERA_VERSION_PATCH}")
 
 set(VISERA "Visera")
-project("${APP_NAME} (${VISERA} ${VISERA_VERSION})"
+project("${VISERA_APP} (${VISERA} ${VISERA_VERSION})"
     VERSION         "${VISERA_VERSION}"
     HOMEPAGE_URL    "www.visera.io"
     LANGUAGES       CXX
@@ -43,14 +43,14 @@ set(VISERA_CACHE_DIR    "${VISERA_DIR}/Cache")
 add_compile_definitions(NOMINMAX)
 add_compile_definitions(VISERA_DIR=\"${VISERA_DIR}\")
 add_compile_definitions(VISERA_ENGINE_NAME=\"${VISERA}\")
-add_compile_definitions(VISERA_APP_NAME=\"${APP_NAME}\")
-add_compile_definitions(VISERA_APP_NAMESPACE=${APP_NAME})
-add_compile_definitions(VISERA_APP_ASSETS_DIR=\"${VISERA_APP_DIR}/${APP_NAME}/Assets\")
-add_compile_definitions(VISERA_APP_SHADERS_DIR=\"${VISERA_APP_DIR}/${APP_NAME}/Shaders\")
-add_compile_definitions(VISERA_APP_CACHE_DIR=\"${VISERA_APP_DIR}/${APP_NAME}/Cache\")
+add_compile_definitions(VISERA_APP_NAME=\"${VISERA_APP}\")
+add_compile_definitions(VISERA_APP_NAMESPACE=${VISERA_APP})
+add_compile_definitions(VISERA_APP_ASSETS_DIR=\"${VISERA_APP_DIR}/${VISERA_APP}/Assets\")
+add_compile_definitions(VISERA_APP_SHADERS_DIR=\"${VISERA_APP_DIR}/${VISERA_APP}/Shaders\")
+add_compile_definitions(VISERA_APP_CACHE_DIR=\"${VISERA_APP_DIR}/${VISERA_APP}/Cache\")
 #[Packages]
 add_subdirectory("${VISERA_PACKAGES_DIR}")
 #[Engine]
 add_subdirectory("${VISERA_ENGINE_DIR}")
 #[App]
-add_subdirectory("${VISERA_APP_DIR}/${APP_NAME}")
+add_subdirectory("${VISERA_APP_DIR}/${VISERA_APP}")

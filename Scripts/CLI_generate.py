@@ -18,7 +18,7 @@ def Generate(argv) -> int:
                 "cmake",
                 "-S", VISERA_ROOT_PATH,
                 "-B", path.join(app_path, "Project"),
-                "-D", f"APP_NAME={app_name}",
+                "-D", f"VISERA_APP={app_name}",
                 "--preset", prj_preset,
                 ],
         cwd  = VISERA_ROOT_PATH).returncode

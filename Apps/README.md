@@ -1,2 +1,0 @@
-# Visera Canvas
- 
