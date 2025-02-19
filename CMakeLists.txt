@@ -34,13 +34,11 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
 endif()
 
 #[Environment]
-set(VISERA_DIR          "${PROJECT_SOURCE_DIR}")
+set(VISERA_DIR          "${CMAKE_CURRENT_SOURCE_DIR}")
 set(VISERA_APP_DIR      "${VISERA_DIR}/Apps")
+set(VISERA_PACKAGES_DIR "${VISERA_DIR}/Packages")
+set(VISERA_ENGINE_DIR   "${VISERA_DIR}/Engine")
 set(VISERA_CACHE_DIR    "${VISERA_DIR}/Cache")
-set(VISERA_SCRIPTS_DIR  "${VISERA_DIR}/Scripts")
-set(VISERA_ENGINE_DIR         "${VISERA_DIR}/Engine")
-set(VISERA_ENGINE_ASSETS_DIR  "${VISERA_ENGINE_DIR}/Assets")
-set(VISERA_ENGINE_SHADERS_DIR "${VISERA_ENGINE_DIR}/Shaders")
 #[Macros]
 add_compile_definitions(NOMINMAX)
 add_compile_definitions(VISERA_DIR=\"${VISERA_DIR}\")
@@ -50,6 +48,8 @@ add_compile_definitions(VISERA_APP_NAMESPACE=${APP_NAME})
 add_compile_definitions(VISERA_APP_ASSETS_DIR=\"${VISERA_APP_DIR}/${APP_NAME}/Assets\")
 add_compile_definitions(VISERA_APP_SHADERS_DIR=\"${VISERA_APP_DIR}/${APP_NAME}/Shaders\")
 add_compile_definitions(VISERA_APP_CACHE_DIR=\"${VISERA_APP_DIR}/${APP_NAME}/Cache\")
+#[Packages]
+add_subdirectory("${VISERA_PACKAGES_DIR}")
 #[Engine]
 add_subdirectory("${VISERA_ENGINE_DIR}")
 #[App]

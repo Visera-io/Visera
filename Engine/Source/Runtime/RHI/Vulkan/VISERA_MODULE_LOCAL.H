@@ -1,6 +1,5 @@
 #pragma once
 #include <Visera.h>
-
 #define VK_NO_PROTOTYPES
 #include <volk.h>
 #define GLFW_INCLUDE_VULKAN

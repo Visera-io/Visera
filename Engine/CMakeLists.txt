@@ -8,17 +8,12 @@ set(VISERA_ENGINE_SCRIPTS_DIR   "${VISERA_ENGINE_DIR}/Scripts")
 set(VISERA_ENGINE_SHADERS_DIR   "${VISERA_ENGINE_DIR}/Shaders")
 set(VISERA_ENGINE_SOURCE_DIR    "${VISERA_ENGINE_DIR}/Source")
 
-list(APPEND CMAKE_MODULE_PATH   "${VISERA_ENGINE_SCRIPTS_DIR}")
-
 #[Engine]
 file(GLOB_RECURSE VISERA_ENGINE_MODULES     "${VISERA_ENGINE_SOURCE_DIR}/*.h" "${VISERA_ENGINE_SOURCE_DIR}/*.ixx")
 file(GLOB_RECURSE VISERA_ENGINE_GLOBALS     "${VISERA_ENGINE_GLOBAL_DIR}/*")
-file(GLOB         VISERA_ENGINE_PACKAGES    "${VISERA_ENGINE_PACKAGE_DIR}/Manifest.json" "${VISERA_ENGINE_PACKAGE_DIR}/CMakeLists.txt")
 file(GLOB_RECURSE VISERA_ENGINE_SHADERS     "${VISERA_ENGINE_SHADERS_DIR}/*.slang")
 
 #[TODO]: Add a complile definition function in Package module.
-add_compile_definitions(IMGUI_IMPL_VULKAN_USE_VOLK)
-add_compile_definitions(IMGUI_IMPL_VULKAN_NO_PROTOTYPES)
 add_compile_definitions(VISERA_ENGINE_ASSETS_DIR=\"${VISERA_ENGINE_ASSETS_DIR}\")
 add_compile_definitions(VISERA_ENGINE_SHADERS_DIR=\"${VISERA_ENGINE_SHADERS_DIR}\")
 
@@ -28,21 +23,58 @@ add_library(${VISERA}
 target_sources(${VISERA}
                 PRIVATE
                 ${VISERA_ENGINE_GLOBALS}
-                ${VISERA_ENGINE_PACKAGES}
                 ${VISERA_ENGINE_SHADERS}
                 "TODO.md")
 
 target_include_directories(${VISERA} PUBLIC ${VISERA_ENGINE_GLOBAL_DIR})
+#message(FATAL_ERROR ${CMAKE_MODULE_PATH})
+#<< Install/Download Packages >>
+include(install_vulkan)
+link_vulkan(${VISERA})
+
+include(install_volk)
+link_volk(${VISERA})
+
+include(install_vma)
+link_vma(${VISERA})
+
+include(install_glfw)
+link_glfw(${VISERA})
+
+include(install_slang)
+link_slang(${VISERA})
+
+include(install_imgui)
+link_imgui(${VISERA})
+
+include(install_tbb)
+link_tbb(${VISERA})
+
+include(install_embree)
+link_embree(${VISERA})
+
+include(install_assimp)
+link_assimp(${VISERA})
+
+include(install_freeimage)
+link_freeimage(${VISERA})
+
+include(install_spdlog)
+link_spdlog(${VISERA})
+
+include(install_eigen)
+link_eigen(${VISERA})
+
+include(install_rapidjson)
+link_rapidjson(${VISERA})
+
+#target_link_libraries(${VISERA} PUBLIC Visera-Packages)
 
 source_group(TREE ${VISERA_ENGINE_DIR}
     FILES
     ${VISERA_ENGINE_GLOBALS}
     ${VISERA_ENGINE_MODULES}
-    ${VISERA_ENGINE_PACKAGES}
     ${VISERA_ENGINE_SHADERS})
 
-#[External Libraries]
-add_subdirectory("${VISERA_ENGINE_PACKAGE_DIR}")
-target_link_libraries(${VISERA} PUBLIC VISERA_ENGINE_PACKAGES)
 #[Project]
-set_target_properties(${VISERA} PROPERTIES FOLDER "Visera/Engine")
+set_target_properties(${VISERA} PROPERTIES FOLDER "Visera")
