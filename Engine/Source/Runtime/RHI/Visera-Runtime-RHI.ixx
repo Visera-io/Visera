@@ -131,6 +131,7 @@ export namespace VE
 		Bootstrap()
 		{
 			Vulkan = new FVulkan();
+
 			GlobalDescriptorPool.Create(
 				{
 					{EDescriptorType::UniformBuffer,		1000},
@@ -150,9 +151,12 @@ export namespace VE
 
 			Frames.resize(GetSwapchainFrameCount());
 
+			auto ImmeCmds = CreateImmediateCommandBuffer();
+			ImmeCmds->StartRecording();
+
 			for (auto& Frame : Frames)
 			{
-				Frame.RenderTarget->AddColorImage(CreateImage(
+				auto ColorImage = CreateImage(
 					EImageType::Image2D,
 					{ FFrameContext::RenderArea.extent.width, FFrameContext::RenderArea.extent.height, 1 },
 					EFormat::U32_Normalized_R8_G8_B8_A8,
@@ -160,8 +164,11 @@ export namespace VE
 					EImageUsage::ColorAttachment | EImageUsage::TransferSource,
 					EImageTiling::Optimal,
 					ESampleRate::X1
-				));
-				Frame.RenderTarget->AddDepthImage(CreateImage(
+				);
+				ImmeCmds->ConvertImageLayout(ColorImage, EVulkanImageLayout::ColorAttachment);
+				Frame.RenderTarget->AddColorImage(ColorImage);
+				
+				auto DepthImage = CreateImage(
 					EImageType::Image2D,
 					{ FFrameContext::RenderArea.extent.width, FFrameContext::RenderArea.extent.height, 1 },
 					EFormat::S32_Float_Depth32,
@@ -169,8 +176,58 @@ export namespace VE
 					EImageUsage::DepthStencilAttachment,
 					EImageTiling::Optimal,
 					ESampleRate::X1
-				));
+				);
+				ImmeCmds->ConvertImageLayout(DepthImage, EVulkanImageLayout::DepthStencilAttachment);
+				Frame.RenderTarget->AddDepthImage(DepthImage);
 			}
+
+			//[TODO]: Move to VulkanSwapchain Class?
+			for (auto& SwapchainImage : Vulkan->Swapchain.GetImages())
+			{
+				VkImageMemoryBarrier SwapchainTransferBarrier
+				{
+					.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+					.srcAccessMask = AutoCast(EAccessibility::None),
+					.dstAccessMask = AutoCast(EAccessibility::None),
+					.oldLayout = AutoCast(EImageLayout::Undefined),
+					.newLayout = AutoCast(EImageLayout::Present),
+					.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+					.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+					.image = SwapchainImage,
+					.subresourceRange
+					{
+						.aspectMask		= AutoCast(EImageAspect::Color),
+						.baseMipLevel	= 0,
+						.levelCount		= 1,
+						.baseArrayLayer = 0,
+						.layerCount		= 1
+					}
+				};
+				vkCmdPipelineBarrier(
+					ImmeCmds->Handle,
+					AutoCast(EGraphicsPipelineStage::PipelineTop),
+					AutoCast(EGraphicsPipelineStage::PipelineBottom),
+					0x0,		// Dependency Flags
+					0, nullptr,	// Memory Barrier
+					0, nullptr,	// Buffer Memory Barrier
+					1,
+					&SwapchainTransferBarrier);
+			}
+			ImmeCmds->StopRecording();
+			auto Fence = CreateFence();
+
+			ImmeCmds->Submit(
+				FCommandSubmitInfo
+				{
+					.WaitSemaphoreCount		= 0,
+					.pWaitSemaphores		= nullptr,
+					.WaitStages				= EGraphicsPipelineStage::PipelineTop,
+					.SignalSemaphoreCount	= 0,
+					.pSignalSemaphores		= nullptr,
+					.SignalFence			= &Fence,
+				});
+			
+			Fence.Wait();
 		}
 
 		static void inline
@@ -248,92 +305,136 @@ export namespace VE
 		auto& CurrentFrame = GetCurrentFrame();
 		try
 		{
-			CurrentFrame.GraphicsCommandBuffer->StopRecording();
 			CurrentFrame.EditorCommandBuffer->StopRecording();
-
-			if (CurrentFrame.EditorCommandBuffer->IsReadyToSubmit())
-			{
-				CurrentFrame.GraphicsCommandBuffer->Submit(
+			CurrentFrame.EditorCommandBuffer->Submit(
 				FCommandSubmitInfo
 				{
 					.WaitSemaphoreCount		= 1,
 					.pWaitSemaphores		= &CurrentFrame.SwapchainReadySemaphore,
-					.WaitStages				= EGraphicsPipelineStage::PipelineTop,
-					.SignalSemaphoreCount	= 1,
-					.pSignalSemaphores		= &CurrentFrame.GraphicsCommandsFinishedSemaphore,
-					.SignalFence			= nullptr,
-				});
-
-				CurrentFrame.EditorCommandBuffer->Submit(
-				FCommandSubmitInfo
-				{
-					.WaitSemaphoreCount		= 1,
-					.pWaitSemaphores		= &CurrentFrame.GraphicsCommandsFinishedSemaphore,
 					.WaitStages				= EGraphicsPipelineStage::FragmentShader,
 					.SignalSemaphoreCount	= 1,
 					.pSignalSemaphores		= &CurrentFrame.EditorCommandsFinishedSemaphore,
-					.SignalFence			= &CurrentFrame.InFlightFence,
+					.SignalFence			= nullptr,
 				});
 
-				//[TODO]: Testing
-				// CurrentFrame.GraphicsCommandBuffer->BlitImage
-				VkImageBlit BlitInfo
-				{
-					.srcSubresource
-					{
-						.aspectMask = AutoCast(CurrentFrame.RenderTarget->ColorImages[0]->GetAspects()),
-						.mipLevel	= CurrentFrame.RenderTarget->ColorImages[0]->GetMipmapLevels(),
-						.baseArrayLayer = 0,
-						.layerCount = CurrentFrame.RenderTarget->ColorImages[0]->GetArrayLayers(),
-					},
-					.srcOffsets
-					{
-						{0, 0, 0},
-						{Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().width),
-						 Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().height),
-						 Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().depth)},
-					},
-					.dstSubresource
-					{
-						.aspectMask = AutoCast(EImageAspect::Color),
-						.mipLevel		= 0,
-						.baseArrayLayer = 0,
-						.layerCount		= 1,
-					},
-					.dstOffsets
-					{
-						{0, 0, 0},
-						{Int32(Vulkan->Swapchain.GetExtent().width),
-						 Int32(Vulkan->Swapchain.GetExtent().height),
-						 1},
-					}
-				};
-
-				vkCmdBlitImage(
-					CurrentFrame.GraphicsCommandBuffer->Handle,
-					CurrentFrame.RenderTarget->ColorImages[0]->GetHandle(),
-					AutoCast(CurrentFrame.RenderTarget->ColorImages[0]->GetLayout()),
-					Vulkan->Swapchain.GetCurrentImage(),
-					AutoCast(EImageLayout::TransferDestination),
-					1,
-					&BlitInfo,
-					AutoCast(EFilter::Linear));
-				//vkCmdBlitImage()
-			}
-			else
+			//[TODO]: Testing
+			VkImageMemoryBarrier SwapchainTransferBarrier
 			{
-				VE_WIP;
-				CurrentFrame.GraphicsCommandBuffer->Submit(
+				.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+				.srcAccessMask = AutoCast(EAccessibility::R_Memory),
+				.dstAccessMask = AutoCast(EAccessibility::W_Transfer),
+				.oldLayout = AutoCast(EImageLayout::Present),
+				.newLayout = AutoCast(EImageLayout::TransferDestination),
+				.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+				.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+				.image = Vulkan->Swapchain.GetCurrentImage(),
+				.subresourceRange
+				{
+					.aspectMask		= AutoCast(EImageAspect::Color),
+					.baseMipLevel	= 0,
+					.levelCount		= 1,
+					.baseArrayLayer = 0,
+					.layerCount		= 1
+				}
+			};
+			vkCmdPipelineBarrier(
+				CurrentFrame.GraphicsCommandBuffer->Handle,
+				AutoCast(EGraphicsPipelineStage::PipelineTop),
+				AutoCast(EGraphicsPipelineStage::Transfer),
+				0x0,		// Dependency Flags
+				0, nullptr,	// Memory Barrier
+				0, nullptr,	// Buffer Memory Barrier
+				1,
+				&SwapchainTransferBarrier);
+
+			VkImageBlit BlitInfo
+			{
+				.srcSubresource
+				{
+					.aspectMask		= AutoCast(CurrentFrame.RenderTarget->ColorImages[0]->GetAspects()),
+					.mipLevel		= 0,
+					.baseArrayLayer = 0,
+					.layerCount = CurrentFrame.RenderTarget->ColorImages[0]->GetArrayLayers(),
+				},
+				.srcOffsets
+				{
+					{0, 0, 0},
+					{Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().width),
+						Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().height),
+						Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().depth)},
+				},
+				.dstSubresource
+				{
+					.aspectMask = AutoCast(EImageAspect::Color),
+					.mipLevel		= 0,
+					.baseArrayLayer = 0,
+					.layerCount		= 1,
+				},
+				.dstOffsets
+				{
+					{0, 0, 0},
+					{Int32(Vulkan->Swapchain.GetExtent().width),
+					 Int32(Vulkan->Swapchain.GetExtent().height),
+					 1},
+				}
+			};
+						
+			//[FIXME]: RenderPass FinalLayout Invalid???
+			CurrentFrame.GraphicsCommandBuffer->ConvertImageLayout(CurrentFrame.RenderTarget->ColorImages[0], EImageLayout::TransferSource);
+
+			vkCmdBlitImage(
+				CurrentFrame.GraphicsCommandBuffer->Handle,
+				CurrentFrame.RenderTarget->ColorImages[0]->GetHandle(),
+				AutoCast(CurrentFrame.RenderTarget->ColorImages[0]->GetLayout()),
+				Vulkan->Swapchain.GetCurrentImage(),
+				AutoCast(EImageLayout::TransferDestination),
+				1,
+				&BlitInfo,
+				AutoCast(EFilter::Linear));
+			
+			//[FIXME]: RenderPass FinalLayout Invalid???
+			CurrentFrame.GraphicsCommandBuffer->ConvertImageLayout(CurrentFrame.RenderTarget->ColorImages[0], EImageLayout::ColorAttachment);
+
+			VkImageMemoryBarrier SwapchainPresentBarrier
+			{
+				.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+				.srcAccessMask = AutoCast(EAccessibility::W_Transfer),
+				.dstAccessMask = AutoCast(EAccessibility::R_Memory),
+				.oldLayout = AutoCast(EImageLayout::TransferDestination),
+				.newLayout = AutoCast(EImageLayout::Present),
+				.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+				.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+				.image = Vulkan->Swapchain.GetCurrentImage(),
+				.subresourceRange
+				{
+					.aspectMask		= AutoCast(EImageAspect::Color),
+					.baseMipLevel	= 0,
+					.levelCount		= 1,
+					.baseArrayLayer = 0,
+					.layerCount		= 1,
+				}
+			};
+			vkCmdPipelineBarrier(
+				CurrentFrame.GraphicsCommandBuffer->Handle,
+				AutoCast(EGraphicsPipelineStage::Transfer),
+				AutoCast(EGraphicsPipelineStage::PipelineBottom),
+				0x0,		// Dependency Flags
+				0, nullptr,	// Memory Barrier
+				0, nullptr,	// Buffer Memory Barrier
+				1,
+				&SwapchainPresentBarrier);
+
+			CurrentFrame.GraphicsCommandBuffer->StopRecording();
+			CurrentFrame.GraphicsCommandBuffer->Submit(
 				FCommandSubmitInfo
 				{
 					.WaitSemaphoreCount		= 1,
-					.pWaitSemaphores		= &CurrentFrame.SwapchainReadySemaphore,
+					.pWaitSemaphores		= &CurrentFrame.EditorCommandsFinishedSemaphore,//[FIXME]: Temp!
 					.WaitStages				= EGraphicsPipelineStage::PipelineTop,
 					.SignalSemaphoreCount	= 1,
 					.pSignalSemaphores		= &CurrentFrame.GraphicsCommandsFinishedSemaphore,
 					.SignalFence			= &CurrentFrame.InFlightFence,
 				});
-			}
 
 			Vulkan->Swapchain.Present(&CurrentFrame.GraphicsCommandsFinishedSemaphore, 1);
 		}

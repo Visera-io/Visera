@@ -101,6 +101,7 @@ export namespace VE
 		void Draw(UInt32 _VertexCount, UInt32 _InstanceCount = 1, UInt32 _FirstVertex = 0, UInt32 _FirstInstance = 0) const { vkCmdDraw(Handle, _VertexCount, _InstanceCount, _FirstVertex, _FirstInstance); };
 		void LeaveRenderPass(SharedPtr<const FVulkanRenderPass> _RenderPass);
 
+		void ConvertImageLayout(SharedPtr<FVulkanImage> _Image, EVulkanImageLayout _NewLayout) const;
 		void BlitImage(SharedPtr<const FVulkanImage> _SrcImage, SharedPtr<FVulkanImage> _DstImage, EVulkanFilter _Filter) const;
 
 		Bool IsInsideRenderPass() const { return CurrentRenderPass != nullptr; }
@@ -115,6 +116,41 @@ export namespace VE
 			:FVulkanCommandBuffer{_Owner, EVulkanQueueFamily::Graphics, _Level}{}
 		FVulkanGraphicsCommandBuffer() noexcept = delete;
 	};
+
+	void FVulkanGraphicsCommandBuffer::
+	ConvertImageLayout(SharedPtr<FVulkanImage> _Image, EVulkanImageLayout _NewLayout) const
+	{
+		VkImageMemoryBarrier ImageMemoryBarrier
+		{
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+			.srcAccessMask = AutoCast(EVulkanAccess::R_Memory),
+			.dstAccessMask = AutoCast(EVulkanAccess::None),
+			.oldLayout = AutoCast(_Image->GetLayout()),
+			.newLayout = AutoCast(_NewLayout),
+			.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			.image = _Image->GetHandle(),
+			.subresourceRange
+			{
+				.aspectMask		= AutoCast(_Image->GetAspects()),
+				.baseMipLevel	= 0,
+				.levelCount		= _Image->GetMipmapLevels(),
+				.baseArrayLayer = 0,
+				.layerCount		= _Image->GetArrayLayers(),
+			}
+		};
+		vkCmdPipelineBarrier(
+			Handle,
+			AutoCast(EVulkanGraphicsPipelineStage::PipelineTop),
+			AutoCast(EVulkanGraphicsPipelineStage::PipelineBottom),
+			0x0,		// Dependency Flags
+			0, nullptr,	// Memory Barrier
+			0, nullptr,	// Buffer Memory Barrier
+			1,
+			&ImageMemoryBarrier);
+
+		_Image->Layout = _NewLayout;
+	}
 
 	void FVulkanGraphicsCommandBuffer::
 	BlitImage(SharedPtr<const FVulkanImage> _SrcImage,

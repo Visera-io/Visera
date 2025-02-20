@@ -24,21 +24,21 @@ export namespace VE
 			{
 				Layout.AddColorAttachment(
 				{
-					.Layout			= EVulkanImageLayout::ColorAttachment,
-					.Format			= EVulkanFormat::U32_Normalized_R8_G8_B8_A8,
-					.SampleRate		= EVulkanSampleRate::X1,
-					.ViewType		= EVulkanImageViewType::Image2D,
-					.LoadOp			= EVulkanAttachmentIO::I_Keep,
-					.StoreOp		= EVulkanAttachmentIO::O_Store,
-					.InitialLayout	= EVulkanImageLayout::Undefined,//[FIXME]
-					.FinalLayout	= EVulkanImageLayout::TransferSource,
+					.Layout			= RHI::EImageLayout::ColorAttachment,
+					.Format			= RHI::EFormat::U32_Normalized_R8_G8_B8_A8,
+					.SampleRate		= RHI::ESampleRate::X1,
+					.ViewType		= RHI::EImageViewType::Image2D,
+					.LoadOp			= RHI::EAttachmentIO::I_Keep,
+					.StoreOp		= RHI::EAttachmentIO::O_Store,
+					.InitialLayout	= RHI::EImageLayout::ColorAttachment,
+					.FinalLayout	= RHI::EImageLayout::ColorAttachment,
 				});
 				Subpasses.emplace_back(FSubpass
 				{ 
 					.ColorImageReferences = {0},
-					.SrcStage = RHI::EGraphicsPipelineStage::ColorAttachmentOutput,
+					.SrcStage		= RHI::EGraphicsPipelineStage::ColorAttachmentOutput,
 					.SrcStageAccess = RHI::EAccessibility::None,
-					.DstStage = RHI::EGraphicsPipelineStage::ColorAttachmentOutput,
+					.DstStage		= RHI::EGraphicsPipelineStage::ColorAttachmentOutput,
 					.DstStageAccess = RHI::EAccessibility::W_ColorAttachment,
 					.bExternalSubpass = True
 				});
@@ -98,7 +98,7 @@ export namespace VE
 				.QueueFamily	= QueueFamily.Index,
 				.Queue			= QueueFamily.Queues[0],
 				.DescriptorPool	= RHI::GetGlobalDescriptorPool().GetHandle(),
-				.RenderPass		= EditorRenderPass->GetHandle(), // Ignored if using dynamic rendering [TODO]
+				.RenderPass		= EditorRenderPass->GetHandle(), // Ignored if using dynamic rendering
 				
 				.MinImageCount	= UInt32(RHI::GetSwapchainFrameCount()),
 				.ImageCount		= UInt32(RHI::GetSwapchainFrameCount()),

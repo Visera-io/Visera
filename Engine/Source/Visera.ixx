@@ -109,6 +109,7 @@ export namespace VE
 		static inline void
 		Terminate(ViseraApp* _App)
 		{	
+			RHI::WaitDeviceIdle();
 			Log::Debug("Terminating ViseraEngine App...");
 			_App->Terminate();
 			delete _App;

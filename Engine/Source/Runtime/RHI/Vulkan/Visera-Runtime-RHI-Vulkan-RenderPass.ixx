@@ -85,7 +85,7 @@ export namespace VE
 				.ViewType		= EVulkanImageViewType::Image2D,
 				.LoadOp			= EVulkanAttachmentIO::I_Clear,
 				.StoreOp		= EVulkanAttachmentIO::O_Store,
-				.InitialLayout	= EVulkanImageLayout::Undefined,//[FIXME]
+				.InitialLayout	= EVulkanImageLayout::ColorAttachment,
 				.FinalLayout	= EVulkanImageLayout::ColorAttachment,
 			});
 			break;
@@ -115,8 +115,8 @@ export namespace VE
 				.ViewType		= EVulkanImageViewType::Image2D,
 				.LoadOp			= EVulkanAttachmentIO::I_Keep,
 				.StoreOp		= EVulkanAttachmentIO::O_Store,
-				.InitialLayout	= EVulkanImageLayout::ColorAttachment,//[FIXME]
-				.FinalLayout	= EVulkanImageLayout::TransferSource,
+				.InitialLayout	= EVulkanImageLayout::ColorAttachment,
+				.FinalLayout	= EVulkanImageLayout::TransferSource,//[FIXME]
 			});
 			break;
 		}
@@ -136,7 +136,7 @@ export namespace VE
 			.ViewType		= EVulkanImageViewType::Image2D,
 			.LoadOp			= EVulkanAttachmentIO::I_Clear,
 			.StoreOp		= EVulkanAttachmentIO::O_Whatever,
-			.InitialLayout  = EVulkanImageLayout::Undefined,//[FIXME]
+			.InitialLayout  = EVulkanImageLayout::DepthStencilAttachment,
 			.FinalLayout    = EVulkanImageLayout::DepthStencilAttachment,
 		};
 	}

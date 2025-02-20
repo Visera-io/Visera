@@ -14,6 +14,9 @@ export namespace VE
 {
 	class FVulkanBuffer;
 	class FVulkanImage;
+	class FVulkanGraphicsCommandBuffer;
+	class FVulkanComputeCommandBuffer;
+	class FVulkanTransferCommandBuffer;
 
 	class FVulkanAllocator
 	{
@@ -132,13 +135,14 @@ export namespace VE
 	{
 		VE_NOT_COPYABLE(FVulkanImage);
 		friend class FVulkanAllocator;
+		friend class FVulkanGraphicsCommandBuffer;
 	public:
 		auto CreateImageView(
-			EVulkanImageViewType		_Type   = EVulkanImageViewType::Auto,
-			EVulkanFormat				_Format = EVulkanFormat::None,
+			EVulkanImageViewType	_Type   = EVulkanImageViewType::Auto,
+			EVulkanFormat			_Format = EVulkanFormat::None,
 			EVulkanImageAspect		_Aspect = EVulkanImageAspect::Undefined,
-			Pair<UInt8, UInt8> _MipmapLevelRange = {0,0},
-			Pair<UInt8, UInt8> _ArrayLayerRange  = {0,0},
+			Pair<UInt8, UInt8>		_MipmapLevelRange = {0,0},
+			Pair<UInt8, UInt8>		_ArrayLayerRange  = {0,0},
 			const FVulkanComponentMapping& _ComponentMapping = {}) const -> SharedPtr<FVulkanImageView>;
 
 		auto GetExtent()		const -> const FVulkanExtent3D&	{ return Extent; }
@@ -162,9 +166,10 @@ export namespace VE
 		VE_API Free(VkImage* _pHandle, VmaAllocation* _pAllocation) { VE_ASSERT(_pHandle && _pAllocation); vmaDestroyImage(GVulkan->Allocator->GetHandle(), *_pHandle, *_pAllocation); *_pHandle = VK_NULL_HANDLE;  *_pAllocation = VK_NULL_HANDLE; }
 		auto   Release() -> ResultPackage<VkImage, VmaAllocation> { VkImage RawHandle = Handle; VmaAllocation RawAlloc = Allocation; Handle = VK_NULL_HANDLE; Allocation = VK_NULL_HANDLE; return { RawHandle, RawAlloc }; }
 		auto   Clone() const -> SharedPtr<FVulkanImage>;
+
 	protected:
 		VkImage				Handle;
-		EVulkanImageLayout	Layout{ EVulkanImageLayout::Undefined }; //[TODO]: Layout  Transfer
+		EVulkanImageLayout	Layout{ EVulkanImageLayout::Undefined };
 		EVulkanImageType	Type;
 		EVulkanFormat		Format;
 		FVulkanExtent3D		Extent;
@@ -178,6 +183,7 @@ export namespace VE
 		EVulkanMemoryUsage	Location;
 
 		VmaAllocation	Allocation;
+
 	public:	
 		FVulkanImage() = default;
 		FVulkanImage(FVulkanImage&& _Another)					= default;
