@@ -8,7 +8,7 @@ import Visera.Core.System;
 import Visera.Core.Log;
 import Visera.Core.Type;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class FStage
@@ -152,4 +152,4 @@ export namespace VE { namespace Runtime
 
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

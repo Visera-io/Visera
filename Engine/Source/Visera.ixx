@@ -1,24 +1,15 @@
 module;
 #include <Visera.h>
-
+#if defined(VE_ON_WINDOWS_SYSTEM)
+#include <Windows.h>
+#endif
 export module Visera;
 export import Visera.Core;
-#if defined(VISERA_RUNTIME)
-import Visera.Runtime;
+export import Visera.Runtime;
 export import Visera.Editor;
-export import Visera.Template;
-#endif
 
 export namespace VE
 {
-	using RHI		= VE::Runtime::RHI;
-	using RTC		= VE::Runtime::RTC;
-	using Render	= VE::Runtime::Render;
-	using Window	= VE::Runtime::Window;
-	using World		= VE::Runtime::World;
-	using Geometry  = VE::Runtime::Geometry;
-
-	using FRay		= VE::Runtime::FRay;
 
 	class ViseraApp
 	{
@@ -26,84 +17,111 @@ export namespace VE
 		virtual void Bootstrap() = 0;
 		virtual void Terminate() = 0;
 		virtual void Tick() = 0;
-		virtual void RenderTick() = 0;
 
 		void inline
-		Exit(const SAppStop& Message = SAppStop("Visera App Exited Successfully.")) const throw(SAppStop) { throw Message; }
+		Exit(const SAppStop& Message = SAppStop("ViseraEngine App Exited Successfully.")) const throw(SAppStop) { throw Message; }
 
 		ViseraApp()	 noexcept = default;
 		~ViseraApp() noexcept = default;
 	};
 
-	class Visera final
+	class ViseraEngine
 	{
+		VE_MODULE_MANAGER_CLASS(ViseraEngine);
 	public:
-		Int32 inline
-		Run()
+		VE_API Run(ViseraApp* App) -> ErrorCode
 		{
+			if (!App) { Log::Fatal("ViseraEngine App is not created!"); }
 			Int32 StateCode = EXIT_SUCCESS;
-			try
-			{
-				ViseraCore::Bootstrap();
-#if defined(VISERA_RUNTIME)
-				Log::Debug("Bootstrapping Visera Runtime...");
-				Runtime::ViseraRuntime::Bootstrap();
-				RuntimeTick = Runtime::ViseraRuntime::Tick;
-				Log::Debug("Bootstrapping Visera Edtior...");
-				Editor::ViseraEditor::Bootstrap();
-#endif
 
-				if (!App) { throw SEngineStop("Visera App is not created!"); }
+			Bootstrap(App);
+			{
 				try
 				{
 					Log::Debug("Bootstrapping the " VISERA_APP_NAME "...");
-					App->Bootstrap();
+					
 					{
-						do { 
-							Editor::UI::Tick();
-							App->Tick();
-							Editor::UI::RenderTick();
-						} while (RuntimeTick());
+						while (!Window::ShouldClose())
+						{
+							Window::PollEvents();
+
+							auto& Frame = RHI::WaitFrameReady();
+							Editor::BeginFrame(Frame.GetEditorCommandBuffer());
+
+							try
+							{
+								App->Tick();
+							}
+							catch (const SRuntimeError& Signal)
+							{
+								Log::Error("ViseraApp Runtime Error:\n{}{}", Signal.What(), Signal.Where());
+								StateCode = Signal.StateCode;
+								App->Exit();
+							}
+							World::Update();
+
+							Editor::EndFrame(Frame.GetEditorCommandBuffer());
+							RHI::RenderAndPresentCurrentFrame();
+						}
 					}
+
 				}
 				catch (const SRuntimeError& Signal)
 				{
-					Log::Fatal(Text("Visera Engine External Runtime Error:\n{}{}", Signal.What(), Signal.Where()));
+					Log::Error("ViseraEngine External Runtime Error:\n{}{}", Signal.What(), Signal.Where());
+					StateCode = Signal.StateCode;
 				}
 				catch (const SAppStop& Signal)
 				{
 					Log::Debug(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
 					StateCode = Signal.StateCode;
 				}
-			}
-			catch (const SEngineStop& Signal)
-			{
-				Log::Debug("Visera Engine Stopped:\n{}{}", Signal.What(), Signal.Where());
-				StateCode = Signal.StateCode;
+				catch (const SEngineStop& Signal)
+				{
+					Log::Debug("ViseraEngine Stopped:\n{}{}", Signal.What(), Signal.Where());
+					StateCode = Signal.StateCode;
+				}
 			}
 
-			if (App)
-			{
-				Log::Debug("Terminating Visera App...");
-				App->Terminate();
-				delete App;
-			}
-#if defined(VISERA_RUNTIME)
-			Log::Debug("Terminating Visera Editor...");
-			Editor::ViseraEditor::Terminate();
-			Log::Debug("Terminating Visera Runtime...");
-			Runtime::ViseraRuntime::Terminate();
-#endif
-				ViseraCore::Terminate();
+			Terminate(App);
 			return StateCode;
 		}
 
-		Visera(ViseraApp* App) : App{ App }{ }
-		~Visera(){ }
-
 	private:
-		ViseraApp* const App = nullptr;
-		static inline std::function<Bool()> RuntimeTick = []() -> Bool { return False; };
+		static inline void
+		Bootstrap(ViseraApp* _App)
+		{
+#if defined(VE_ON_WINDOWS_SYSTEM)
+			SetConsoleOutputCP(65001); // Enable Terminal WideString Output
+#endif
+			Log::Debug("Bootstrapping ViseraEngine Runtime...");
+			Window::Bootstrap();
+			RHI::Bootstrap();
+			World::Bootstrap();
+			Render::Bootstrap();
+
+			Log::Debug("Bootstrapping ViseraEngine Edtior...");
+			Editor::Bootstrap();
+
+			_App->Bootstrap();
+		}
+
+		static inline void
+		Terminate(ViseraApp* _App)
+		{	
+			Log::Debug("Terminating ViseraEngine App...");
+			_App->Terminate();
+			delete _App;
+
+			Log::Debug("Terminating ViseraEngine Editor...");
+			Editor::Terminate();
+
+			Log::Debug("Terminating ViseraEngine Runtime...");
+			Render::Terminate();
+			World::Terminate();
+			RHI::Terminate();
+			Window::Terminate();
+		}
 	};
 
 } // namespace VE

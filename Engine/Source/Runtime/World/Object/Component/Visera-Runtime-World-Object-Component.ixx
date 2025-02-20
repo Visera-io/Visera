@@ -5,9 +5,9 @@ export import :BasicComponent;
 export import :Mesh;
 export import :Transform;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	
 
-} } // namespace VE::Runtime
+} // namespace VE

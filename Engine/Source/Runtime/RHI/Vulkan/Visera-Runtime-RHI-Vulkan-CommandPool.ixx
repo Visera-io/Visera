@@ -9,7 +9,7 @@ import :CommandBuffer;
 
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	class RHI;
 
@@ -143,4 +143,4 @@ export namespace VE { namespace Runtime
 	}
 
 
-} } // namespace VE::Runtime
+} // namespace VE

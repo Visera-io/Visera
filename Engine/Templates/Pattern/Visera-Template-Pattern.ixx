@@ -3,9 +3,9 @@ module;
 export module Visera.Template.Pattern;
 export import :Prototype;
 
-export namespace VE { namespace Template
+export namespace VE
 {
 
 
 
-} } // namespace VE::Template
+} // namespace VE::Template

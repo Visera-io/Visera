@@ -6,7 +6,7 @@ import Visera.Core.Math;
 import Visera.Runtime.World.Object;
 import Visera.Runtime.World.Atlas;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	
 	class VCamera : VObject
@@ -48,4 +48,4 @@ export namespace VE { namespace Runtime
 
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

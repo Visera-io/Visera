@@ -4,7 +4,7 @@ export module Visera.Runtime.World.Object.Component:Mesh;
 
 import :BasicComponent;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class OCMesh : public OCBasicComponent
@@ -49,4 +49,4 @@ export namespace VE { namespace Runtime
 
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

@@ -3,7 +3,7 @@ module;
 #include <embree4/rtcore.h>
 export module Visera.Runtime.World.RTC.Embree:Common;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	VE_ENUM_CLASS(EEmbreeBuffer, RTCBufferType)
@@ -55,4 +55,4 @@ export namespace VE { namespace Runtime
 		None     = ~0U,
 	};
 	
-} } // namespace Visera::Runtime
+}// namespace VE

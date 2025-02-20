@@ -14,7 +14,7 @@ import :RenderTarget;
 
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	class RHI;
 
@@ -59,8 +59,7 @@ export namespace VE { namespace Runtime
 		Array<FVulkanFramebuffer>		Framebuffers;
 		Array<FSubpass>					Subpasses;
 
-	//private:
-		// Created by RHI Module (User : Render Module )
+	private:
 		void Create(const FVulkanRenderArea& _RenderArea, const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets);
 		void Destroy();
 
@@ -336,7 +335,7 @@ export namespace VE { namespace Runtime
 			{ Framebuffer.Destroy(); }
 
 			for (auto& Subpass : Subpasses)
-			{ Subpass.Pipeline->Destroy(); }
+			{ if (Subpass.Pipeline) Subpass.Pipeline->Destroy(); }
 
 			vkDestroyRenderPass(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 			Handle = VK_NULL_HANDLE;
@@ -370,4 +369,4 @@ export namespace VE { namespace Runtime
 		return False;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

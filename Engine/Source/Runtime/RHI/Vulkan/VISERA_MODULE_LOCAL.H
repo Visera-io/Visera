@@ -6,7 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <vma/vk_mem_alloc.h>
 
-namespace VE { namespace Runtime
+namespace VE
 {
 	class RHI;
 	class Vulkan;
@@ -42,4 +42,4 @@ namespace VE { namespace Runtime
 	};
 	inline const VulkanContext* GVulkan = nullptr;
 
-} } // namespace VE::Runtime
+} // namespace VE

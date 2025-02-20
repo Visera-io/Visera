@@ -25,7 +25,7 @@ export import :GPU;
 export import :Surface;
 export import :Swapchain;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	using VulkanAllocationCallbacks = VkAllocationCallbacks*;
 
@@ -113,4 +113,4 @@ export namespace VE { namespace Runtime
 		delete GVulkan;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

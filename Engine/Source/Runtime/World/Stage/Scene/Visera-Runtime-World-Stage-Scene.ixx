@@ -15,7 +15,7 @@ import Visera.Runtime.World.Geometry;
 import Visera.Runtime.World.RTC;
 import Visera.Runtime.RHI;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class FScene
@@ -134,4 +134,4 @@ export namespace VE { namespace Runtime
 
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

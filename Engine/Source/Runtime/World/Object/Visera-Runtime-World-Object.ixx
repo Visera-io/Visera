@@ -6,7 +6,7 @@ import Visera.Runtime.World.Object.Component;
 import Visera.Core.Type;
 import Visera.Core.System.Concurrency;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	class World;
 	class VObject;
@@ -50,4 +50,4 @@ export namespace VE { namespace Runtime
 		~VObject() noexcept = default; // Do NOT do anything in deconstructor!
 	};
 
-} } // namespace VE::Runtime
+} // namespace VE

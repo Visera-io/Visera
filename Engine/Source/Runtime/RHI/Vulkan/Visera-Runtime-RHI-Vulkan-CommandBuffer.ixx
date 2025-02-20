@@ -12,7 +12,7 @@ import :Synchronization;
 
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 { 
 	class RHI;
 	class FVulkanCommandPool;
@@ -97,6 +97,7 @@ export namespace VE { namespace Runtime
 		void SetScissor() const;
 		void SetViewport() const;
 		//void SetDepthBias() const;
+		//void ClearAttachment() const;
 		void Draw(UInt32 _VertexCount, UInt32 _InstanceCount = 1, UInt32 _FirstVertex = 0, UInt32 _FirstInstance = 0) const { vkCmdDraw(Handle, _VertexCount, _InstanceCount, _FirstVertex, _FirstInstance); };
 		void LeaveRenderPass(SharedPtr<const FVulkanRenderPass> _RenderPass);
 
@@ -247,7 +248,7 @@ export namespace VE { namespace Runtime
 			TargetQueueFamily.Queues[_SubmitInfo.QueueIndex],
 			1,
 			&SubmitInfo,
-			_SubmitInfo.SignalFence->GetHandle()) != VK_SUCCESS)
+			_SubmitInfo.SignalFence? _SubmitInfo.SignalFence->GetHandle() : VK_NULL_HANDLE) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to submit the Vulkan Graphics CommandBuffer(QueueIndex:{})", _SubmitInfo.QueueIndex); }
 
 		Status = EStatus::Submitted;
@@ -350,4 +351,4 @@ export namespace VE { namespace Runtime
 		SetViewport();
 	}
 	
-} } // namespace VE::Runtime
+} // namespace VE

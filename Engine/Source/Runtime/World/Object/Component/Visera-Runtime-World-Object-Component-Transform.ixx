@@ -5,7 +5,7 @@ export module Visera.Runtime.World.Object.Component:Transform;
 import :BasicComponent;
 import Visera.Core.Math;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class OCTransform : public OCBasicComponent
@@ -44,4 +44,4 @@ export namespace VE { namespace Runtime
 		void UpdateMatrix() { if (!Matrix.has_value()) { VE_WIP; }; }
 	};
 
-} } // namespace VE::Runtime
+} // namespace VE

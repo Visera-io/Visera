@@ -6,7 +6,7 @@ import  Visera.Runtime.World.RTC.Embree;
 
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	class World;
 
@@ -23,9 +23,8 @@ export namespace VE { namespace Runtime
 
 	private:
 		static inline FEmbree* Embree = nullptr;
-
-		VE_API Bootstrap() -> void { Embree = new FEmbree(); }
-		VE_API Terminate() -> void { delete Embree; }
+		static inline auto Bootstrap() -> void { Embree = new FEmbree(); }
+		static inline auto Terminate() -> void { delete Embree; }
 	};
 
-} } // namespace Visera::Runtime
+}// namespace VE

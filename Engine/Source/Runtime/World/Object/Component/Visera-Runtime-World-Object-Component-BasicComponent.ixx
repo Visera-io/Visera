@@ -5,7 +5,7 @@ export module Visera.Runtime.World.Object.Component:BasicComponent;
 import Visera.Core.Type;
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	class VObject;
 
@@ -33,4 +33,4 @@ export namespace VE { namespace Runtime
 		WeakPtr<VObject> Owner;
 	};
 
-} } // namespace VE::Runtime
+} // namespace VE

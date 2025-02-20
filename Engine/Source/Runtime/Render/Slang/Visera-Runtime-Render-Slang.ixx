@@ -8,7 +8,7 @@ import Visera.Runtime.Render.Shader;
 import Visera.Runtime.RHI;
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	class Render;
 	
@@ -138,4 +138,4 @@ export namespace VE { namespace Runtime
 		ShaderProgram->release();
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

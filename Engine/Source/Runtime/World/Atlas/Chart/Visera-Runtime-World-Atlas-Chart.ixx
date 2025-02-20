@@ -4,9 +4,9 @@ export module Visera.Runtime.World.Atlas.Chart;
 export import :Visera;
 export import :Mitsuba;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	
 
-} } // namespace VE::Runtime
+} // namespace VE

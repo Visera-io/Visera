@@ -9,7 +9,7 @@ import :GPU;
 import Visera.Core.Log;
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class FVulkanInstance
@@ -196,4 +196,4 @@ export namespace VE { namespace Runtime
 		return GPUs;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

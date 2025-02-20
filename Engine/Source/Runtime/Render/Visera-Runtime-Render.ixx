@@ -9,14 +9,11 @@ import Visera.Core.Type;
 import Visera.Core.Signal;
 import Visera.Runtime.RHI;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	class ViseraRuntime;
-
-	class Render
+	class Render //[TODO]: Remove and add funcs to RHI?
 	{
 		VE_MODULE_MANAGER_CLASS(Render);
-		friend class ViseraRuntime;
 	public:
 		enum class ESystemRT { Color, Depth };
 		using FShader = FShader;
@@ -24,9 +21,9 @@ export namespace VE { namespace Runtime
 		VE_API CreateShader(StringView _ShaderFileName, StringView _EntryPoint, FShader::ECompileType _CompileType = FShader::ECompileType::Default) throw (SIOFailure, SRuntimeError) -> SharedPtr<FShader>;
 
 	private:
-		static void Bootstrap();
-		static void Tick();
-		static void Terminate();
+		static void inline Bootstrap();
+		static void inline Tick();
+		static void inline Terminate();
 	};
 	
 	SharedPtr<FShader> Render::
@@ -49,20 +46,9 @@ export namespace VE { namespace Runtime
 	}
 
 	void Render::
-	Tick()
-	{
-		auto& Frame = RHI::WaitFrameReady();
-		{
-			auto DrawCmds = Frame.GetGraphicsCommandBuffer();
-			
-		}
-		RHI::RenderAndPresentCurrentFrame();
-	}
-
-	void Render::
 	Terminate()
 	{
 		
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

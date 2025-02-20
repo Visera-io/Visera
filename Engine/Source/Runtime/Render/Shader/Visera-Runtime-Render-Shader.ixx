@@ -7,7 +7,7 @@ export module Visera.Runtime.Render.Shader;
 import Visera.Core.Type;
 import Visera.Runtime.RHI;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	template<class T>
 	using COMPtr = Slang::ComPtr<T>;
@@ -49,4 +49,4 @@ export namespace VE { namespace Runtime
 		
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

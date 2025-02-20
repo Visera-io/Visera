@@ -10,7 +10,7 @@ import :Swapchain;
 
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	class FVulkanRenderPipeline;
 
@@ -158,4 +158,4 @@ export namespace VE { namespace Runtime
 		return DyncmicStateCreateInfo;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

@@ -8,7 +8,7 @@ import :PipelineLayout;
 
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class FVulkanPipeline
@@ -28,4 +28,4 @@ export namespace VE { namespace Runtime
 		SharedPtr<const FVulkanPipelineLayout>	Layout;
 	};
 
-} } // namespace VE::Runtime
+} // namespace VE

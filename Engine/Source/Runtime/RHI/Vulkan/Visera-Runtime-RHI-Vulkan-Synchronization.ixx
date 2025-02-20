@@ -7,7 +7,7 @@ import Visera.Core.Signal;
 import :Common;
 import :Device;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	class RHI;
 	class FVulkanImage;
@@ -119,4 +119,4 @@ export namespace VE { namespace Runtime
 		}
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

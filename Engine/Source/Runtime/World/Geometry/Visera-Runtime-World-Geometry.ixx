@@ -3,7 +3,7 @@ module;
 export module Visera.Runtime.World.Geometry;
 export import Visera.Runtime.World.Geometry.Mesh;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	
 	class Geometry
@@ -14,4 +14,4 @@ export namespace VE { namespace Runtime
 		VE_API CreateMesh(const FMesh::FCreateInfo& _CreateInfo) -> SharedPtr<FMesh> { return CreateSharedPtr<FMesh>(_CreateInfo); }
 	};
 
-} } // namespace Visera::Runtime
+}// namespace VE

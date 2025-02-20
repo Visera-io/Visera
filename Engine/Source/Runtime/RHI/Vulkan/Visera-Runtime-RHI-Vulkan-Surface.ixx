@@ -8,7 +8,7 @@ import Visera.Core.Signal;
 import :Instance;
 import :GPU;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class FVulkanSurface
@@ -56,4 +56,4 @@ export namespace VE { namespace Runtime
 		Handle = VK_NULL_HANDLE;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

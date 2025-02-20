@@ -14,14 +14,11 @@ import Visera.Core.Log;
 import Visera.Core.System.Concurrency;
 import Visera.Core.System.FileSystem;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	class ViseraRuntime;
-
 	class World
 	{
 		VE_MODULE_MANAGER_CLASS(World);
-		friend class ViseraRuntime;
 	public:
 		VE_API GetCoordinate() -> const FViseraChart& { return Atlas::Visera; }
 
@@ -33,13 +30,13 @@ export namespace VE { namespace Runtime
 		VE_API CreateStage(FName _StageName, const String& _StageFile) -> SharedPtr<FStage> { return CreateSharedPtr<FStage>(_StageName, _StageFile); }
 
 	private:
-		VE_API Bootstrap() -> void;
-		VE_API Tick() -> void;
-		VE_API Terminate() -> void;
+		static inline auto Bootstrap() -> void;
+		static inline auto Update() -> void;
+		static inline auto Terminate() -> void;
 
 	private:
 		static inline FRWLock RWLock;
-		VE_API ObjectTable = HashMap<FName, SharedPtr<VObject>>();
+		static inline auto ObjectTable = HashMap<FName, SharedPtr<VObject>>();
 	};
 
 	void World::
@@ -49,7 +46,7 @@ export namespace VE { namespace Runtime
 	}
 
 	void World::
-	Tick()
+	Update()
 	{
 
 	}
@@ -123,4 +120,4 @@ export namespace VE { namespace Runtime
 		return Result;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

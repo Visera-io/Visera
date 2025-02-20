@@ -4,7 +4,7 @@ export module Visera.Runtime.World.Atlas.Chart:Visera;
 
 import Visera.Core.Math;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	/*   [Visera World Coordinate]  * [Standard Vulkan Coordinate]  *
 	* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -51,4 +51,4 @@ export namespace VE { namespace Runtime
 		};
 	};
 
-} } // namespace VE::Runtime
+} // namespace VE

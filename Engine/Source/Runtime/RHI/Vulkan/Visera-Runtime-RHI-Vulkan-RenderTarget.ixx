@@ -6,14 +6,16 @@ import :Allocator;
 
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
+	class RHI;
 	class FVulkanRenderPass;
 	class FVulkanFramebuffer;
 
 	class FVulkanRenderTarget
 	{
 		VE_NOT_COPYABLE(FVulkanRenderTarget);
+		friend class RHI;
 		friend class FVulkanRenderPass;
 		friend class FVulkanFramebuffer;
 	public:
@@ -114,4 +116,4 @@ export namespace VE { namespace Runtime
 		return Result;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

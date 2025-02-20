@@ -7,7 +7,7 @@ import Visera.Core.Signal;
 import :Common;
 import :Device;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 		
 	class FVulkanShader
@@ -58,4 +58,4 @@ export namespace VE { namespace Runtime
 		Handle = VK_NULL_HANDLE;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

@@ -3,7 +3,7 @@ module;
 export module Visera.Runtime.World.Atlas;
 export import Visera.Runtime.World.Atlas.Chart;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class Atlas
@@ -13,4 +13,4 @@ export namespace VE { namespace Runtime
 		VE_API const Visera = FViseraChart();
 	};
 	
-} } // namespace VE::Runtime
+} // namespace VE

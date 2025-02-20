@@ -11,7 +11,7 @@ import :Synchronization;
 import Visera.Core.Signal;
 import Visera.Runtime.Window;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class FVulkanSwapchain
@@ -24,6 +24,7 @@ export namespace VE { namespace Runtime
 
 		auto GetCursor()		const   -> UInt32					{ return Cursor; }
 		auto GetFrameCount()	const	-> UInt8					{ return Images.size(); }
+		auto GetCurrentImage()	const   -> const VkImage			{ return Images[Cursor]; }
 		auto GetExtent()		const	-> const VkExtent2D&		{ return ImageExtent; }
 		auto GetFormat()		const	-> EVulkanFormat			{ return ImageFormat; }
 		auto GetColorSpace()	const	-> VkColorSpaceKHR			{ return ImageColorSpace; }
@@ -273,4 +274,4 @@ export namespace VE { namespace Runtime
 		MoveCursor(1);
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

@@ -8,7 +8,7 @@ import :RenderTarget;
 
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	class FVulkanRenderPass;
 
@@ -17,12 +17,12 @@ export namespace VE { namespace Runtime
 		friend class FVulkanRenderPass;
 	public:
 		auto GetHandle()	 const -> const VkFramebuffer { return Handle; }
-		Bool HasDepthImage() const { return RenderTarget->HasDepthImage(); }
+		Bool HasDepthImage() const { VE_ASSERT(!RenderTarget.expired()); return RenderTarget.lock()->HasDepthImage(); }
 	
 	private:
 		VkFramebuffer						Handle{ VK_NULL_HANDLE };
 		FVulkanExtent3D						Extent;
-		SharedPtr<FVulkanRenderTarget>		RenderTarget;
+		WeakPtr<FVulkanRenderTarget>		RenderTarget;
 		Array<VkImageView>					RenderTargetViews;
 		//[TODO]: Shading Rate Image & VkAttachmentDescriptionStencilLayout StencilDescription;
 	
@@ -42,19 +42,19 @@ export namespace VE { namespace Runtime
 		SharedPtr<FVulkanRenderTarget> _RenderTargets)
 	{
 		Extent = _Extent;
-		RenderTarget = std::move(_RenderTargets);
+		RenderTarget = _RenderTargets;
 		
-		RenderTargetViews.reserve(RenderTarget->GetTotalImageCount());
-		for (const auto& ColorImage : RenderTarget->ColorImages)
+		RenderTargetViews.reserve(_RenderTargets->GetTotalImageCount());
+		for (const auto& ColorImage : _RenderTargets->ColorImages)
 		{
 			RenderTargetViews.push_back(ColorImage->CreateImageView()->Release());
 		}
-		for (const auto& ResolveImage : RenderTarget->ResolveImages)
+		for (const auto& ResolveImage : _RenderTargets->ResolveImages)
 		{
 			RenderTargetViews.push_back(ResolveImage->CreateImageView()->Release());
 		}
 		if (HasDepthImage())
-		{ RenderTargetViews.push_back(RenderTarget->DepthImage->CreateImageView()->Release()); }
+		{ RenderTargetViews.push_back(_RenderTargets->DepthImage->CreateImageView()->Release()); }
 	
 		VkFramebufferCreateInfo CreateInfo
 		{
@@ -91,4 +91,4 @@ export namespace VE { namespace Runtime
 		}
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

@@ -8,7 +8,7 @@ import Visera.Core.Signal;
 import Visera.Core.Math;
 import Visera.Core.System.Memory;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	
 	class FMesh
@@ -131,4 +131,4 @@ export namespace VE { namespace Runtime
 		}
 	}
 
-} } // namespace Visera::Runtime
+}// namespace VE

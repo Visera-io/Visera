@@ -2,7 +2,7 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:Common;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	// VE_ENUM_CLASS(EVulkanTransferPipelineStage, VkPipelineStageFlags)
 	// VE_ENUM_CLASS(EVulkanComputePipelineStage, VkPipelineStageFlags)
@@ -508,4 +508,4 @@ export namespace VE { namespace Runtime
 
 	using FVulkanRenderArea	= VkRect2D;
 
-} } // namespace VE::Runtime
+} // namespace VE

@@ -4,14 +4,11 @@ module;
 export module Visera.Runtime.Window;
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	class ViseraRuntime;
-
 	class Window
 	{
 		VE_MODULE_MANAGER_CLASS(Window);
-		friend class ViseraRuntime;
 	public:
 		union Extent
 		{
@@ -71,10 +68,6 @@ export namespace VE { namespace Runtime
 				(VidMode->height   -   CurrentExtent.Height) >> 1);	// Mid
 			if (bMaximized) glfwMaximizeWindow(Handle);
 		}
-		VE_API Tick() -> void
-		{
-			glfwPollEvents();
-		}
 		VE_API Terminate() -> void
 		{
 			glfwDestroyWindow(Handle);
@@ -82,4 +75,4 @@ export namespace VE { namespace Runtime
 		}
 	};
 
-} } // namespace VE::Runtime
+} // namespace VE

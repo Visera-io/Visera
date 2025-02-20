@@ -1,6 +1,4 @@
 #pragma once
-// << Layers >>
-#define VISERA_RUNTIME
 
 #define VISERA_YEAR     2024
 #define VISERA_AUTHOR   "LJYC (ljyc.me)"
@@ -39,7 +37,8 @@
 #define VE_MODULE_MANAGER_CLASS(ClassName)\
     ClassName() noexcept = delete;\
     VE_NOT_COPYABLE(ClassName);\
-    VE_NOT_MOVABLE(ClassName);
+    VE_NOT_MOVABLE(ClassName);\
+    friend class ViseraEngine;
 
 #if defined(_WIN32) || defined(_WIN64)
 #define VE_IS_WINDOWS_SYSTEM true

@@ -6,7 +6,7 @@ import :RenderTarget;
 
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class FVulkanRenderPass;
@@ -91,4 +91,4 @@ export namespace VE { namespace Runtime
 		return *this;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

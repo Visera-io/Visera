@@ -7,15 +7,12 @@ import Visera.Runtime.RHI.Vulkan;
 import Visera.Core.Signal;
 import Visera.Core.Time;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-	class ViseraRuntime;
-
 	/* This is not a thread-safe RHI! */
 	class RHI
 	{
 		VE_MODULE_MANAGER_CLASS(RHI);
-		friend class ViseraRuntime;
 	public:
 		using FSemaphore			= FVulkanSemaphore;
 		using FGraphicsCommandPool	= FVulkanGraphicsCommandPool;
@@ -65,6 +62,7 @@ export namespace VE { namespace Runtime
 		using EImageAspect			= EVulkanImageAspect;
 		using EImageTiling			= EVulkanImageTiling;
 		using EFormat				= EVulkanFormat;
+		using EFilter				= EVulkanFilter;
 		using EPresentMode			= EVulkanPresentMode;
 
 		using SSwapchainRecreation = FVulkanSwapchain::SRecreation;
@@ -75,6 +73,7 @@ export namespace VE { namespace Runtime
 			friend class RHI;
 		public:
 			auto GetGraphicsCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer> { return GraphicsCommandBuffer; }
+			auto GetEditorCommandBuffer()   -> SharedPtr<FGraphicsCommandBuffer> { return EditorCommandBuffer;   }
 
 			Bool IsReady() const { return !InFlightFence.IsBlocking(); }
 
@@ -83,7 +82,9 @@ export namespace VE { namespace Runtime
 			SharedPtr<FRenderTarget> RenderTarget = CreateSharedPtr<FRenderTarget>();
 
 			SharedPtr<FGraphicsCommandBuffer> GraphicsCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
+			SharedPtr<FGraphicsCommandBuffer> EditorCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
 			FSemaphore GraphicsCommandsFinishedSemaphore= RHI::CreateSemaphore();
+			FSemaphore EditorCommandsFinishedSemaphore	= RHI::CreateSemaphore();
 
 			FSemaphore SwapchainReadySemaphore			= RHI::CreateSemaphore();
 			FFence	   InFlightFence					= RHI::CreateFence(FFence::EStatus::Signaled);
@@ -126,7 +127,7 @@ export namespace VE { namespace Runtime
 		static inline UInt32 FPS{ 0 };
 
 	private:
-		static void
+		static void inline
 		Bootstrap()
 		{
 			Vulkan = new FVulkan();
@@ -172,13 +173,7 @@ export namespace VE { namespace Runtime
 			}
 		}
 
-		static void
-		Tick()
-		{
-
-		}
-
-		static void
+		static void inline
 		Terminate()
 		{
 			WaitDeviceIdle();
@@ -226,15 +221,18 @@ export namespace VE { namespace Runtime
 		if (FrameTimer >= 1000000) // 1s
 		{ FPS = FrameCounter / (FrameTimer / 1000000.0); FPSTimer.Reset(); FrameTimer = 0; FrameCounter = 0; }
 
-		CurrentFrame.GraphicsCommandBuffer->Status = FGraphicsCommandBuffer::EStatus::Idle;
-		CurrentFrame.GraphicsCommandBuffer->Reset();
-		
 		try
 		{
 			Vulkan->Swapchain.WaitForNextImage(CurrentFrame.SwapchainReadySemaphore);
 
 			CurrentFrame.InFlightFence.Block();
+			CurrentFrame.GraphicsCommandBuffer->Status = FGraphicsCommandBuffer::EStatus::Idle;
+			CurrentFrame.GraphicsCommandBuffer->Reset();
 			CurrentFrame.GraphicsCommandBuffer->StartRecording();
+
+			CurrentFrame.EditorCommandBuffer->Status = FGraphicsCommandBuffer::EStatus::Idle;
+			CurrentFrame.EditorCommandBuffer->Reset();
+			CurrentFrame.EditorCommandBuffer->StartRecording();
 		}
 		catch (const SSwapchainRecreation& Signal)
 		{
@@ -251,7 +249,81 @@ export namespace VE { namespace Runtime
 		try
 		{
 			CurrentFrame.GraphicsCommandBuffer->StopRecording();
-			CurrentFrame.GraphicsCommandBuffer->Submit(
+			CurrentFrame.EditorCommandBuffer->StopRecording();
+
+			if (CurrentFrame.EditorCommandBuffer->IsReadyToSubmit())
+			{
+				CurrentFrame.GraphicsCommandBuffer->Submit(
+				FCommandSubmitInfo
+				{
+					.WaitSemaphoreCount		= 1,
+					.pWaitSemaphores		= &CurrentFrame.SwapchainReadySemaphore,
+					.WaitStages				= EGraphicsPipelineStage::PipelineTop,
+					.SignalSemaphoreCount	= 1,
+					.pSignalSemaphores		= &CurrentFrame.GraphicsCommandsFinishedSemaphore,
+					.SignalFence			= nullptr,
+				});
+
+				CurrentFrame.EditorCommandBuffer->Submit(
+				FCommandSubmitInfo
+				{
+					.WaitSemaphoreCount		= 1,
+					.pWaitSemaphores		= &CurrentFrame.GraphicsCommandsFinishedSemaphore,
+					.WaitStages				= EGraphicsPipelineStage::FragmentShader,
+					.SignalSemaphoreCount	= 1,
+					.pSignalSemaphores		= &CurrentFrame.EditorCommandsFinishedSemaphore,
+					.SignalFence			= &CurrentFrame.InFlightFence,
+				});
+
+				//[TODO]: Testing
+				// CurrentFrame.GraphicsCommandBuffer->BlitImage
+				VkImageBlit BlitInfo
+				{
+					.srcSubresource
+					{
+						.aspectMask = AutoCast(CurrentFrame.RenderTarget->ColorImages[0]->GetAspects()),
+						.mipLevel	= CurrentFrame.RenderTarget->ColorImages[0]->GetMipmapLevels(),
+						.baseArrayLayer = 0,
+						.layerCount = CurrentFrame.RenderTarget->ColorImages[0]->GetArrayLayers(),
+					},
+					.srcOffsets
+					{
+						{0, 0, 0},
+						{Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().width),
+						 Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().height),
+						 Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().depth)},
+					},
+					.dstSubresource
+					{
+						.aspectMask = AutoCast(EImageAspect::Color),
+						.mipLevel		= 0,
+						.baseArrayLayer = 0,
+						.layerCount		= 1,
+					},
+					.dstOffsets
+					{
+						{0, 0, 0},
+						{Int32(Vulkan->Swapchain.GetExtent().width),
+						 Int32(Vulkan->Swapchain.GetExtent().height),
+						 1},
+					}
+				};
+
+				vkCmdBlitImage(
+					CurrentFrame.GraphicsCommandBuffer->Handle,
+					CurrentFrame.RenderTarget->ColorImages[0]->GetHandle(),
+					AutoCast(CurrentFrame.RenderTarget->ColorImages[0]->GetLayout()),
+					Vulkan->Swapchain.GetCurrentImage(),
+					AutoCast(EImageLayout::TransferDestination),
+					1,
+					&BlitInfo,
+					AutoCast(EFilter::Linear));
+				//vkCmdBlitImage()
+			}
+			else
+			{
+				VE_WIP;
+				CurrentFrame.GraphicsCommandBuffer->Submit(
 				FCommandSubmitInfo
 				{
 					.WaitSemaphoreCount		= 1,
@@ -261,6 +333,7 @@ export namespace VE { namespace Runtime
 					.pSignalSemaphores		= &CurrentFrame.GraphicsCommandsFinishedSemaphore,
 					.SignalFence			= &CurrentFrame.InFlightFence,
 				});
+			}
 
 			Vulkan->Swapchain.Present(&CurrentFrame.GraphicsCommandsFinishedSemaphore, 1);
 		}
@@ -270,4 +343,4 @@ export namespace VE { namespace Runtime
 		}
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

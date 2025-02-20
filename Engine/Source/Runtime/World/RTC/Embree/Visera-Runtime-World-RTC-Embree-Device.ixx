@@ -5,7 +5,7 @@ export module Visera.Runtime.World.RTC.Embree:Device;
 
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	
 	class FEmbreeDevice
@@ -42,4 +42,4 @@ export namespace VE { namespace Runtime
 
 	}
 
-} } // namespace Visera::Runtime
+} // namespace VE

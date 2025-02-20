@@ -10,7 +10,7 @@ import :Synchronization;
 
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	class FVulkanBuffer;
 	class FVulkanImage;
@@ -395,4 +395,4 @@ export namespace VE { namespace Runtime
 			Location);
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

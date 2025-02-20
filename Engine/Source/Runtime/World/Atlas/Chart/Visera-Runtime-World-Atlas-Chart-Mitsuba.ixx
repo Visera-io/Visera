@@ -2,9 +2,9 @@ module;
 #include <Visera.h>
 export module Visera.Runtime.World.Atlas.Chart:Mitsuba;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	
 
-} } // namespace VE::Runtime
+} // namespace VE

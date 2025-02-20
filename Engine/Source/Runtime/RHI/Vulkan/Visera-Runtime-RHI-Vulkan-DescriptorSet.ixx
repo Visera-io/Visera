@@ -8,7 +8,7 @@ import :DescriptorSetLayout;
 
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	class FVulkanDescriptorPool;
 
@@ -40,4 +40,4 @@ export namespace VE { namespace Runtime
 		VE_ASSERT(Layout->GetHandle() != VK_NULL_HANDLE);
 	}
 	
-} } // namespace VE::Runtime
+} // namespace VE

@@ -66,7 +66,7 @@ export namespace VE
 		FAppLogger() noexcept
 		{
 			auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-			Spdlogger = std::make_unique<spdlog::logger>("Visera Log", console_sink);
+			Spdlogger = std::make_unique<spdlog::logger>("ViseraEngine Log", console_sink);
 	#ifndef NDEBUG
 			Spdlogger->set_level(spdlog::level::debug);
 	#else

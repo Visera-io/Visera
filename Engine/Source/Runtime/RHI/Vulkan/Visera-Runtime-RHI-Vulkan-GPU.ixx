@@ -6,7 +6,7 @@ import :Common;
 
 import Visera.Core.Log;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class FVulkanGPU
@@ -65,4 +65,4 @@ export namespace VE { namespace Runtime
 		}
 	};
 
-} } // namespace VE::Runtime
+} // namespace VE

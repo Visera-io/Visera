@@ -8,7 +8,7 @@ import :GPU;
 import Visera.Core.System.FileSystem;
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class FVulkanPipelineCache
@@ -77,4 +77,4 @@ export namespace VE { namespace Runtime
 		Handle = VK_NULL_HANDLE;
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE

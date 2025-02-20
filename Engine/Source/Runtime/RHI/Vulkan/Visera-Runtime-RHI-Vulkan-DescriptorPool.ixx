@@ -9,7 +9,7 @@ import :DescriptorSetLayout;
 
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	class RHI;
 
@@ -155,4 +155,4 @@ export namespace VE { namespace Runtime
 		return Children.emplace_back(std::move(DescriptorSet));
 	}
 	
-} } // namespace VE::Runtime
+} // namespace VE

@@ -2,7 +2,7 @@ module;
 #include <Visera.h>
 export module Visera.Runtime.World.Geometry.Mesh:HalfEdge;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	
 	class FHalfEdge
@@ -11,4 +11,4 @@ export namespace VE { namespace Runtime
 		FHalfEdge() { VE_WIP; }
 	};
 
-} } // namespace Visera::Runtime
+}// namespace VE

@@ -10,46 +10,7 @@ export import Visera.Runtime.World;
 import Visera.Core.Log;
 import Visera.Core.Signal;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
-
-	class ViseraRuntime
-	{
-		VE_MODULE_MANAGER_CLASS(ViseraRuntime);
-	public:
-		VE_API Tick() -> Bool
-		{	
-			try
-			{
-				if (!Window::ShouldClose())
-				{
-					World::Tick();
-					Window::Tick();
-					Render::Tick();
-					RHI::Tick();
-				}
-				else { throw SEngineStop("Window has been closed."); }
-			}
-			catch(const SRuntimeError& RuntimeError)
-			{ Log::Fatal(Text("Visera Engine Internal Runtime Error:\n{}{}", RuntimeError.What(), RuntimeError.Where())); }
-			return True;
-		}
-
-		VE_API Bootstrap() -> void
-		{
-			World::Bootstrap();
-			Window::Bootstrap();
-			RHI::Bootstrap();
-			Render::Bootstrap();
-		}
-
-		VE_API Terminate() -> void
-		{
-			Render::Terminate();
-			RHI::Terminate();
-			Window::Terminate();
-			World::Terminate();
-		}
-	};
 	
-} } // namespace VE::Runtime
+} // namespace VE

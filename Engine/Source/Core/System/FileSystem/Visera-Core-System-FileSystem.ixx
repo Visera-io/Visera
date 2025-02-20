@@ -13,18 +13,6 @@ export namespace VE
 	{
 		VE_MODULE_MANAGER_CLASS(FileSystem);
 	public:
-		/*struct EPath
-		{
-			public: struct APP
-			{
-				static inline const char* Assets = VISERA_APP_CACHE_DIR;
-				static inline const char* Cache  = VISERA_APP_ASSETS_DIR;
-			};
-			public: struct Engine
-			{
-				
-			};
-		};*/
 		VE_API IsExistedFile(const FPath& _Path)			-> Bool						{ return std::filesystem::exists(_Path.GetData() ); }
 		VE_API CreateFileIfNotExists(const FPath& _Path)	-> void;
 		VE_API CreateFile(const FPath& _FilePath)			-> SharedPtr<FFile>			{ return CreateSharedPtr<FFile>(_FilePath); };

@@ -5,7 +5,7 @@ export module Visera.Runtime.World.RTC.Embree;
 export import :Common;
 export import :Device;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 	class RHI;
 	
@@ -36,4 +36,4 @@ export namespace VE { namespace Runtime
 
 	}
 
-} } // namespace Visera::Runtime
+}// namespace VE

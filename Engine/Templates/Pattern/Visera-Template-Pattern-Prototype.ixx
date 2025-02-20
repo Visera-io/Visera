@@ -2,7 +2,7 @@ module;
 #include <Visera.h>
 export module Visera.Template.Pattern:Prototype;
 
-export namespace VE { namespace Template
+export namespace VE
 {
 
 	template<typename T>
@@ -12,4 +12,4 @@ export namespace VE { namespace Template
 		virtual T Clone() const = 0;
 	};
 
-} } // namespace VE::Template
+} // namespace VE

@@ -6,7 +6,7 @@ import Visera.Runtime.World.RTC;
 import Visera.Runtime.World.Stage;
 import Visera.Core.Math;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class FRay
@@ -60,4 +60,4 @@ export namespace VE { namespace Runtime
 		return HasHit();
 	}
 
-} } // namespace Visera::Runtime
+}// namespace VE

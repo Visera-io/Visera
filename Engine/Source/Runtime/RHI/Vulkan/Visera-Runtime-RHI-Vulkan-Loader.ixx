@@ -5,7 +5,7 @@ export module Visera.Runtime.RHI.Vulkan:Loader;
 
 import Visera.Core.Log;
 
-export namespace VE { namespace Runtime
+export namespace VE
 {
 
 	class FVulkanLoader
@@ -50,4 +50,4 @@ export namespace VE { namespace Runtime
 		volkLoadDevice(Device);
 	}
 
-} } // namespace VE::Runtime
+} // namespace VE
