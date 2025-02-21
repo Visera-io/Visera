@@ -68,7 +68,7 @@ export namespace VE
 				}
 				catch (const SRuntimeError& Signal)
 				{
-					Log::Error("ViseraEngine External Runtime Error:\n{}{}", Signal.What(), Signal.Where());
+					Log::Error("ViseraEngine Runtime Error:\n{}{}", Signal.What(), Signal.Where());
 					StateCode = Signal.StateCode;
 				}
 				catch (const SAppStop& Signal)

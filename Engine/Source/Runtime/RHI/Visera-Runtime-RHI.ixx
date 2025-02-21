@@ -78,7 +78,7 @@ export namespace VE
 			Bool IsReady() const { return !InFlightFence.IsBlocking(); }
 
 		private:
-			static inline FRenderArea RenderArea{ {0,0},{ 1920,1080 } };
+			static inline FRenderArea RenderArea{ {0,0},{ 1280,800 } }; //[FIXME]: Read from Config
 			SharedPtr<FRenderTarget> RenderTarget = CreateSharedPtr<FRenderTarget>();
 
 			SharedPtr<FGraphicsCommandBuffer> GraphicsCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
@@ -317,7 +317,7 @@ export namespace VE
 					.SignalFence			= nullptr,
 				});
 
-			//[TODO]: Testing
+			//[FIXME]: Testing
 			VkImageMemoryBarrier SwapchainTransferBarrier
 			{
 				.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
@@ -360,8 +360,8 @@ export namespace VE
 				{
 					{0, 0, 0},
 					{Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().width),
-						Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().height),
-						Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().depth)},
+					 Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().height),
+					 Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().depth)},
 				},
 				.dstSubresource
 				{
@@ -391,9 +391,12 @@ export namespace VE
 				1,
 				&BlitInfo,
 				AutoCast(EFilter::Linear));
-			
+
 			//[FIXME]: RenderPass FinalLayout Invalid???
 			CurrentFrame.GraphicsCommandBuffer->ConvertImageLayout(CurrentFrame.RenderTarget->ColorImages[0], EImageLayout::ColorAttachment);
+			
+			// [FIXME]: Currently clear in the EditorPass
+			// CurrentFrame.GraphicsCommandBuffer->ClearColorImage(CurrentFrame.RenderTarget->ColorImages[0]);
 
 			VkImageMemoryBarrier SwapchainPresentBarrier
 			{

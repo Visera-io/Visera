@@ -159,6 +159,7 @@ export namespace VE
 		auto GetDetails()		const -> VmaAllocationInfo  { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
 		auto GetHandle()		const -> const VkImage { return Handle; }
 		auto GetMemoryBarrier(EVulkanImageLayout _NewLayout) const -> FVulkanImageMemoryBarrier;
+		auto GetResourceRange() const -> VkImageSubresourceRange;
 
 		Bool EnabledMSAA()const { return SampleRate > EVulkanSampleRate::X1; }
 		Bool IsReleased() const { return Handle == VK_NULL_HANDLE && Allocation == VK_NULL_HANDLE; }
@@ -252,6 +253,19 @@ export namespace VE
 		{ throw SRuntimeError("Failed to create Vulkan Image!"); }
 
 		return NewImage;
+	}
+
+	VkImageSubresourceRange FVulkanImage::
+	GetResourceRange() const 
+	{
+		return VkImageSubresourceRange
+		{
+			.aspectMask = AutoCast(Aspects),
+			.baseMipLevel = 0,
+			.levelCount = MipmapLevels,
+			.baseArrayLayer = 0,
+			.layerCount = ArrayLayers,
+		};
 	}
 
 	FVulkanImageMemoryBarrier FVulkanImage::

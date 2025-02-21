@@ -97,6 +97,7 @@ export namespace VE
 		void SetScissor() const;
 		void SetViewport() const;
 		//void SetDepthBias() const;
+		void ClearColorImage(SharedPtr<FVulkanImage> _Image, FClearColor _ClearColor = { 0,0,0,1 });
 		//void ClearAttachment() const;
 		void Draw(UInt32 _VertexCount, UInt32 _InstanceCount = 1, UInt32 _FirstVertex = 0, UInt32 _FirstInstance = 0) const { vkCmdDraw(Handle, _VertexCount, _InstanceCount, _FirstVertex, _FirstInstance); };
 		void LeaveRenderPass(SharedPtr<const FVulkanRenderPass> _RenderPass);
@@ -116,6 +117,20 @@ export namespace VE
 			:FVulkanCommandBuffer{_Owner, EVulkanQueueFamily::Graphics, _Level}{}
 		FVulkanGraphicsCommandBuffer() noexcept = delete;
 	};
+
+	void FVulkanGraphicsCommandBuffer::
+	ClearColorImage(SharedPtr<FVulkanImage> _Image, FClearColor _ClearColor/* = { 0,0,0,1 }*/)
+	{
+		auto ResourceRange = _Image->GetResourceRange();
+		vkCmdClearColorImage(
+			Handle,
+			_Image->GetHandle(),
+			AutoCast(_Image->GetLayout()),
+			&_ClearColor,
+			1,
+			&ResourceRange
+		);
+	}
 
 	void FVulkanGraphicsCommandBuffer::
 	ConvertImageLayout(SharedPtr<FVulkanImage> _Image, EVulkanImageLayout _NewLayout) const

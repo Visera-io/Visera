@@ -28,7 +28,7 @@ export namespace VE
 					.Format			= RHI::EFormat::U32_Normalized_R8_G8_B8_A8,
 					.SampleRate		= RHI::ESampleRate::X1,
 					.ViewType		= RHI::EImageViewType::Image2D,
-					.LoadOp			= RHI::EAttachmentIO::I_Keep,
+					.LoadOp			= RHI::EAttachmentIO::I_Clear,
 					.StoreOp		= RHI::EAttachmentIO::O_Store,
 					.InitialLayout	= RHI::EImageLayout::ColorAttachment,
 					.FinalLayout	= RHI::EImageLayout::ColorAttachment,
@@ -48,7 +48,6 @@ export namespace VE
 		static void BeginFrame(SharedPtr<RHI::FGraphicsCommandBuffer> _EditorCommandBuffer)
 		{
 			VE_ASSERT(_EditorCommandBuffer->IsRecording());
-			//[TODO]: Blit Image
 
 			ImGui_ImplVulkan_NewFrame();
 			ImGui_ImplGlfw_NewFrame();

@@ -37,6 +37,7 @@ export namespace VE
 	// using	FVulkanRenderArea	= VkRect2D;
 	
 	using FClearValue = VkClearValue;
+	using FClearColor = VkClearColorValue;
 
 	VE_ENUM_CLASS(EVulkanFilter, VkFilter)
 	{
