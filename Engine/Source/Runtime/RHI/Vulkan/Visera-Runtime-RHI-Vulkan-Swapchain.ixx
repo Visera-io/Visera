@@ -183,29 +183,29 @@ export namespace VE
 			{
 				.sType		= VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 				.image		= Images[Idx],
-				.viewType	= VK_IMAGE_VIEW_TYPE_2D,
+				.viewType	= AutoCast(EVulkanImageViewType::Image2D),
 				.format		= AutoCast(ImageFormat),
 				.components{
-							.r = VK_COMPONENT_SWIZZLE_IDENTITY,
-							.g = VK_COMPONENT_SWIZZLE_IDENTITY,
-							.b = VK_COMPONENT_SWIZZLE_IDENTITY,
-							.a = VK_COMPONENT_SWIZZLE_IDENTITY
+							.r = AutoCast(EVulkanSwizzle::Identity),
+							.g = AutoCast(EVulkanSwizzle::Identity),
+							.b = AutoCast(EVulkanSwizzle::Identity),
+							.a = AutoCast(EVulkanSwizzle::Identity)
 							},
 
 				.subresourceRange{
-							.aspectMask		= VK_IMAGE_ASPECT_COLOR_BIT,
+							.aspectMask		= AutoCast(EVulkanImageAspect::Color),
 							.baseMipLevel	= 0,
 							.levelCount		= 1,
 							.baseArrayLayer = 0,
 							.layerCount		= 1
 							}
 			};
-			if(VK_SUCCESS != vkCreateImageView(
+			if(vkCreateImageView(
 				GVulkan->Device->GetHandle(),
 				&CreateInfo,
 				GVulkan->AllocationCallbacks,
-				&ImageViews[Idx]))
-			{ throw SRuntimeError("Failed to create Vulkan Image View!"); }
+				&ImageViews[Idx]) != VK_SUCCESS)
+			{ throw SRuntimeError("Failed to create Vulkan Image View at the Swapchain!"); }
 		}
 
 		//Init Frames

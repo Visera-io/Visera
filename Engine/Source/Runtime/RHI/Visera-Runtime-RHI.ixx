@@ -401,7 +401,7 @@ export namespace VE
 			VkImageMemoryBarrier SwapchainPresentBarrier
 			{
 				.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-				.srcAccessMask = AutoCast(EAccessibility::W_Transfer),
+				.srcAccessMask = AutoCast(EAccessibility::None),
 				.dstAccessMask = AutoCast(EAccessibility::R_Memory),
 				.oldLayout = AutoCast(EImageLayout::TransferDestination),
 				.newLayout = AutoCast(EImageLayout::Present),

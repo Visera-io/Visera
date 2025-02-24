@@ -37,7 +37,7 @@ export namespace VE
 				{ 
 					.ColorImageReferences = {0},
 					.SrcStage		= RHI::EGraphicsPipelineStage::ColorAttachmentOutput,
-					.SrcStageAccess = RHI::EAccessibility::None,
+					.SrcStageAccess = RHI::EAccessibility::W_ColorAttachment,
 					.DstStage		= RHI::EGraphicsPipelineStage::ColorAttachmentOutput,
 					.DstStageAccess = RHI::EAccessibility::W_ColorAttachment,
 					.bExternalSubpass = True

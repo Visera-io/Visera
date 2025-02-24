@@ -373,9 +373,9 @@ export namespace VE
 
 		//6. Fragment Processing
 		//FragmentShadingRate		= VK_PIPELINE_STAGE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR,
-		EarlyFragmentTests			= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+		EarlyFragmentTests			= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // LoadOp of DepthStencilAttachments
 		FragmentShader				= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-		LateFragmentTests			= VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+		LateFragmentTests			= VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,  // StoreOp of DepthStencilAttachments
 
 		//7. Pixel Processing
 		ColorAttachmentOutput		= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
