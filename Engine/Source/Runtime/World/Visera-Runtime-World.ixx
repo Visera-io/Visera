@@ -1,6 +1,5 @@
 module;
 #include <Visera.h>
-
 export module Visera.Runtime.World;
 export import Visera.Runtime.World.RTC;
 export import Visera.Runtime.World.Ray;
@@ -11,6 +10,7 @@ import Visera.Runtime.World.Stage;
 
 import Visera.Core.Type;
 import Visera.Core.Log;
+import Visera.Core.Math;
 import Visera.Core.System.Concurrency;
 import Visera.Core.System.FileSystem;
 
@@ -21,6 +21,7 @@ export namespace VE
 		VE_MODULE_MANAGER_CLASS(World);
 	public:
 		VE_API GetCoordinate() -> const FViseraChart& { return Atlas::Visera; }
+		VE_API CreateCoordinateSystem(const Vector3F& _Pivot) -> ResultPackage<Vector3F, Vector3F, Vector3F>;
 
 		using VObject = VObject;
 		template<VObjectType T> static inline 
@@ -66,6 +67,20 @@ export namespace VE
 		RTC::Terminate();
 	}
 
+	ResultPackage<Vector3F, Vector3F, Vector3F> World::
+	CreateCoordinateSystem(const Vector3F& _Pivot)
+	{
+		Float Sign = std::copysign(1.0f, _Pivot.z());
+		Float Coef_a = -1.0 / (Sign + _Pivot.z());
+		Float Coef_b = _Pivot.x() * _Pivot.y() * Coef_a;
+		Vector3F Va {(1 + Sign * (_Pivot.x() * _Pivot.x()) * Coef_a),
+					 (Sign * Coef_b),
+					 (-Sign * _Pivot.x())};
+		Vector3F Vb {(Coef_b),
+					 (Sign + (_Pivot.y() * _Pivot.y()) * Coef_a),
+					 (-_Pivot.y())};
+		return {_Pivot, Va, Vb};
+	}
 
 	template<VObjectType T>
 	SharedPtr<T> World::
