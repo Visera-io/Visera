@@ -11,9 +11,7 @@
             "hidden": true,
             "cacheVariables": {
                 "VISERA_SETUP_TIME": "2025-02-18 09:02:58.618242",
-                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/Packages/Vcpkg/scripts/buildsystems/vcpkg.cmake",
-                "CMAKE_C_FLAGS": "/D_UNICODE /DUNICODE",
-                "CMAKE_CXX_FLAGS": "/D_UNICODE /DUNICODE"
+                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/Packages/Vcpkg/scripts/buildsystems/vcpkg.cmake"
             }
         },
         {
@@ -35,7 +33,10 @@
         {
             "name": "windows",
             "hidden": true,
-            "cacheVariables": {}
+            "cacheVariables": {
+                "CMAKE_C_FLAGS": "/D_UNICODE /DUNICODE",
+                "CMAKE_CXX_FLAGS": "/D_UNICODE /DUNICODE"
+            }
         },
         {
             "name": "windows-debug",
@@ -53,6 +54,35 @@
             "description": "...",
             "inherits": [
                 "windows",
+                "release"
+            ],
+            "cacheVariables": {}
+        },
+        {
+            "name": "darwin",
+            "hidden": true,
+            "cacheVariables": {
+                "GENERATOR": "Ninja",
+                "CMAKE_C_COMPILER": "/opt/homebrew/Cellar/llvm/19.1.7/bin/clang",
+                "CMAKE_CXX_COMPILER": "/opt/homebrew/Cellar/llvm/19.1.7/bin/clang++"
+            }
+        },
+        {
+            "name": "darwin-debug",
+            "displayName": "MacOS (Debug)",
+            "description": "...",
+            "inherits": [
+                "darwin",
+                "debug"
+            ],
+            "cacheVariables": {}
+        },
+        {
+            "name": "darwin-release",
+            "displayName": "MacOS (Release)",
+            "description": "...",
+            "inherits": [
+                "darwin",
                 "release"
             ],
             "cacheVariables": {}
