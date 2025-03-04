@@ -1,5 +1,7 @@
 #[IDE]
 .vscode/
+.idea/
+cmake-build-debug-cmake--clang/
 
 #[Architecture]
 Apps/*
