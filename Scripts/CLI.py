@@ -39,11 +39,14 @@ class ViseraCLI:
             if command[0] == '@':
                 target = command[1:]
                 if target != "":
-                    if '.' not in target and VISERA_OS_TYPE == "Windows": target += ".exe"
+                    if '.' not in target:
+                        if VISERA_ON_WINDOWS: target += ".exe"
+
                     for path_family in VISERA_ENV_PATH.keys():
                         paths = VISERA_ENV_PATH[path_family]
                         for _path in paths:
                             candidate = path.join(_path, target)
+                            #print(candidate)
                             if path.isfile(candidate):
                                 arguments = [candidate] + arguments
                                 rc = subprocess.run(
@@ -51,7 +54,17 @@ class ViseraCLI:
                                     shell= True,
                                     cwd  = self.WorkDir).returncode
                                 return True
-                    Log.Error(f"Failed to find {candidate} in VISERA_ENV_PATH!")
+
+                            if VISERA_ON_MACOS: #Seach App
+                                candidate += ".app"
+                                if path.isdir(candidate):
+                                    arguments = ["open", "-a"] + [candidate] + arguments
+                                    rc = subprocess.run(
+                                        args = arguments,
+                                        shell= False,
+                                        cwd  = self.WorkDir).returncode
+                                    return True
+                    Log.Error(f"Failed to find \"{target}\" in VISERA_ENV_PATH!")
                     return True
                 else:
                     print(VISERA_ENV_PATH) #Help
