@@ -18,7 +18,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)  # Explicitly require the standard
 set(CMAKE_CXX_EXTENSIONS        OFF) # Vendor-specific Extensions
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+    set(CMAKE_CXX_SCAN_FOR_MODULES OFF) # Keep OFF, otherwise may failed to install glfw3
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmodules")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fmodules")
 endif()
