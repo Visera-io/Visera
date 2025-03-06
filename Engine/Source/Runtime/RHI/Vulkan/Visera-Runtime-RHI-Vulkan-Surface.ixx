@@ -1,12 +1,12 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:Surface;
+import :Context;
+import :Instance;
+import :GPU;
 
 import Visera.Runtime.Window;
 import Visera.Core.Signal;
-
-import :Instance;
-import :GPU;
 
 export namespace VE
 {

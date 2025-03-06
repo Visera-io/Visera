@@ -1,7 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:DescriptorPool;
-
+import :Context;
 import :Common;
 import :Device;
 import :DescriptorSet;
@@ -11,7 +11,6 @@ import Visera.Core.Signal;
 
 export namespace VE
 {
-	class RHI;
 
 	class FVulkanDescriptorPool : public std::enable_shared_from_this<FVulkanDescriptorPool>
 	{
@@ -36,7 +35,7 @@ export namespace VE
 		HashMap<EVulkanDescriptorType, Int32>			DescriptorTable;
 		List<SharedPtr<FVulkanDescriptorSet>>	Children;
 
-	private:
+	public:
 		void Create(const Array<FDescriptorEntry>& _DescriptorEntries, UInt32 _MaxSets);
 		void Destroy();
 		void CollectGarbages(Bool _bDestroyMode = False);

@@ -4,8 +4,6 @@ export module Visera.Internal.NamePool:Common;
 
 import Visera.Core.Math.Hash;
 
-namespace VE { class FName; }
-
 export namespace VE { namespace Internal
 {
 	/*
@@ -35,7 +33,7 @@ export namespace VE { namespace Internal
 		enum
         {
             /*L:[ 0~31]: Token Index*/
-            UnmaskedTokenIndexMask          = (1U << 32) - 1,
+            UnmaskedTokenIndexMask          = ~0U,
             /*H:[32~39]: TokenTableSection Index*/
             TokenTableSectionIndexBits      = 8,
             TokenTableSectionIndexMask      = (1U << TokenTableSectionIndexBits) - 1,

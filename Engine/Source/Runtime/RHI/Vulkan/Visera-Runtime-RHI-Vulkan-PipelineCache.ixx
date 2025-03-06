@@ -1,7 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:PipelineCache;
-
+import :Context;
 import :Device;
 import :GPU;
 
@@ -67,7 +67,8 @@ export namespace VE
 		if (IsExpired())
 		{
 			auto CacheFile = FileSystem::CreateBinaryFile(Path);
-			UInt64 CacheSize = 0;
+			std::size_t CacheSize = 0;
+
 			vkGetPipelineCacheData(GVulkan->Device->GetHandle(), Handle, &CacheSize, nullptr);
 			CacheFile->Resize(CacheSize);
 			vkGetPipelineCacheData(GVulkan->Device->GetHandle(), Handle, &CacheSize, CacheFile->Access());

@@ -22,7 +22,7 @@ export namespace VE
 		Bool IsVisible()    const { return bVisible; }
 
 		auto GetTopology()	const -> ETopology { return Topology; }
-		auto GetHandle()	const -> const RTCGeometry const { return Handle; }
+		auto GetHandle()	const -> const RTCGeometry { return Handle; }
 
 		void SetVertices(const Float* _Vertices, UInt32 _VertexCount = 0, UInt32 _Offset = 0) { Memory::Memcpy((Vertices + _Offset), _Vertices, (_VertexCount ? _VertexCount : VertexCount) * VertexByteSize); }
 		void SetIndices(const UInt32* _Indices, UInt32 _IndexCount = 0, UInt32 _Offset = 0) { Memory::Memcpy((Indices + _Offset), _Indices, (_IndexCount ? _IndexCount : IndexCount) * IndexByteSize); }

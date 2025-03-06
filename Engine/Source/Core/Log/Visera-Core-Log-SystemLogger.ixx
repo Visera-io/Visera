@@ -48,7 +48,6 @@ public:
 
 	inline void
 	Fatal(const String& message, const std::source_location& location = std::source_location::current())
-	throw (SEngineStop)
 	{
 		SEngineStop Signal{ message, VISERA_ENGINE_ERROR, location };
 		Spdlogger->critical("{}{}", Signal.What(), Signal.Where());

@@ -13,8 +13,8 @@ export namespace VE
     class FBinaryFile :public FBasicFile
     {
     public:
- 	    virtual void SaveAs(const FPath& FilePath,   Int32 SaveModes)	throw(SIOFailure) override;
- 	    virtual void LoadFrom(const FPath& FilePath, Int32 LoadModes)	throw(SIOFailure) override;
+ 	    virtual void SaveAs(const FPath& FilePath,   Int32 SaveModes) override;
+ 	    virtual void LoadFrom(const FPath& FilePath, Int32 LoadModes) override;
 
  	    FBinaryFile(const FPath& FilePath) noexcept : FBasicFile{ FilePath } {};
  	    virtual ~FBinaryFile() noexcept = default;
@@ -24,7 +24,7 @@ export namespace VE
     };
 
     void FBinaryFile::
-    SaveAs(const FPath& FilePath, Int32 SaveModes) throw(SIOFailure)
+    SaveAs(const FPath& FilePath, Int32 SaveModes)
     {
  	    SaveModes |= std::ios::binary;
  	    if (auto* OutputFile = OpenOStream(SaveModes))
@@ -40,7 +40,7 @@ export namespace VE
     }
 
     void FBinaryFile::
-    LoadFrom(const FPath& FilePath, Int32 LoadModes) throw(SIOFailure)
+    LoadFrom(const FPath& FilePath, Int32 LoadModes)
     {
  	    LoadModes |= std::ios::binary;
  	    if (auto* InputFile = OpenIStream(LoadModes))

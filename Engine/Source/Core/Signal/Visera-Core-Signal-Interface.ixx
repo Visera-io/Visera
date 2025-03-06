@@ -42,7 +42,7 @@ export namespace VE
 		}
 
 	private:
-		_NODISCARD virtual char const* what() const override
+		virtual char const* what() const noexcept override
 		{ return std::exception::what(); }
 	};
 

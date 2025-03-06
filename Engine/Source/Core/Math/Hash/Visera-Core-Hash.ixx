@@ -5,7 +5,6 @@ import :CityHash;
 
 export namespace VE
 {
-
 	class Hash
 	{
 		VE_MODULE_MANAGER_CLASS(Hash);

@@ -47,7 +47,6 @@ export namespace VE
 
 		inline void
 		Fatal(const String& Message, const std::source_location& Location)
-		throw (SAppStop)
 		{ 
 			SAppStop Signal{ Message, VISERA_APP_ERROR, Location };
 			Spdlogger->critical("{}{}", Signal.What(), Signal.Where());

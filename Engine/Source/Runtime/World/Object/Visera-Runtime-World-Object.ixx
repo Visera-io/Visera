@@ -6,12 +6,13 @@ import Visera.Runtime.World.Object.Component;
 import Visera.Core.Type;
 import Visera.Core.System.Concurrency;
 
-export namespace VE
+namespace VE
 {
 	class World;
-	class VObject;
-	template<typename T>
-	concept VObjectType = std::is_class_v<VObject>;
+}
+
+export namespace VE
+{
 
 	class VObject : public std::enable_shared_from_this<VObject>
 	{
@@ -31,8 +32,8 @@ export namespace VE
 		virtual void Create()	= 0; // You may attach components here
 		virtual void Destroy()	= 0;
 		
-		void AttachTransformComponent() { TransformComponent	= CreateSharedPtr<OCTransform>(FName("Component::Transform"), shared_from_this()); }
-		void AttachMeshComponent()		{ MeshComponent			= CreateSharedPtr<OCMesh>(FName("Component::Mesh"), shared_from_this()); }
+		void AttachTransformComponent() { VE_WIP; /*TransformComponent	= CreateSharedPtr<OCTransform>(FName("Component::Transform"), shared_from_this());*/ }
+		void AttachMeshComponent()		{ VE_WIP; /*MeshComponent			= CreateSharedPtr<OCMesh>(FName("Component::Mesh"), shared_from_this()); */ }
 		void AttachCustomizedComponent(SharedPtr<OCBasicComponent> _Component) { CustomizedComponents.push_back(_Component); };
 
 	protected:
@@ -49,5 +50,8 @@ export namespace VE
 		VObject() noexcept = default;
 		~VObject() noexcept = default; // Do NOT do anything in deconstructor!
 	};
+
+	template<typename T>
+	concept VObjectType = std::is_class_v<VObject>;
 
 } // namespace VE

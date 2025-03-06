@@ -7,7 +7,6 @@ import Visera.Core.Math;
 
 export namespace VE
 {
-
 	class OCTransform : public OCBasicComponent
 	{
 	public:
@@ -32,8 +31,8 @@ export namespace VE
 
 	public:
 		OCTransform() = delete;
-		OCTransform(FName _Name, SharedPtr<VObject> _Owner)
-			:OCBasicComponent(_Name, _Owner) { }
+		OCTransform(FName _Name)
+			:OCBasicComponent(_Name) { }
 
 	private:
 		Optional<Matrix4x4F> Matrix;

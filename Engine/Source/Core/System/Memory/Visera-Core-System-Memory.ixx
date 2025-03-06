@@ -15,16 +15,16 @@ export namespace VE
     class Memory
     {
         VE_MODULE_MANAGER_CLASS(Memory);
-
+    public:
         class FBuffer; //RAII
-        VE_API Allocate(UInt64 _Size, UInt32 _Alignment = 0) throw (SRuntimeError) { return CreateSharedPtr<FBuffer>(_Size, _Alignment); }
+        VE_API Allocate(UInt64 _Size, UInt32 _Alignment = 0) { return CreateSharedPtr<FBuffer>(_Size, _Alignment); }
         VE_API AllocateNow(UInt64 _Size, UInt32 _Alignment = 0, Int32 _Value = 0) { auto Buffer = CreateSharedPtr<FBuffer>(_Size, _Alignment); Memset(Buffer->GetData(), _Value, Buffer->GetSize()); return Buffer; }
 
-        VE_API Malloc(UInt64 _Size, UInt32 _Alignment) throw (SRuntimeError) -> void*;
+        VE_API Malloc(UInt64 _Size, UInt32 _Alignment) -> void*;
         VE_API MallocNow(UInt64 _Size, UInt32 _Alignment, Int32 _Value = 0) -> void* { void* AllocatedMemory = Malloc(_Size, _Alignment); Memset(AllocatedMemory, _Value, _Size); return AllocatedMemory; }
         VE_API Memset(void* _Memory, Int32 _Value, UInt64 _Size) -> void;
         VE_API Memcpy(void* _Destination, const void* _Source, UInt64 _Size) -> void { std::memcpy(_Destination, _Source, _Size); }
-        VE_API Realloc(void* _Memory, UInt64 _NewSize, UInt32 _NewAlignment) throw (SRuntimeError) -> void*;
+        VE_API Realloc(void* _Memory, UInt64 _OldSize, UInt32 _OldAlignment, UInt64 _NewSize, UInt32 _NewAlignment) -> void*;
         VE_API Free(void* _Memory, UInt32 _Alignment) -> void;
 
         VE_API Prefetch(const void* _Memory, UInt32 _Offset = 0) -> void;
@@ -49,7 +49,7 @@ export namespace VE
 
             Bool IsAligned()    const { return Alignment != 0; }
             Bool IsZero() const { return Memory::IsZero(Data, Size); }
-            void Resize(UInt64 _NewSize, UInt32 _NewAlignment = 0) { if (!_NewAlignment) _NewAlignment = Alignment; Data = Memory::Realloc(Data, _NewSize, _NewAlignment); Size = _NewSize; Alignment = _NewAlignment; }
+            void Resize(UInt64 _NewSize, UInt32 _NewAlignment = 0) { if (!_NewAlignment) _NewAlignment = Alignment; Data = Memory::Realloc(Data, Size, Alignment, _NewSize, _NewAlignment); Size = _NewSize; Alignment = _NewAlignment; }
 
             FBuffer() = delete;
             FBuffer(UInt64 _Size, UInt32 _Alignment = 0);
@@ -82,17 +82,16 @@ export namespace VE
 
     void* Memory::
     Malloc(UInt64 _Size, UInt32 _Alignment)
-    throw (SRuntimeError)
     { 
         VE_ASSERT(IsValidAllocation(_Size, _Alignment));
 
         void* AllocatedMemory = nullptr;
         if (_Alignment)
         {
-#if defined(VE_IS_WINDOWS_SYSTEM)
+#if defined(VE_ON_WINDOWS_SYSTEM)
             AllocatedMemory = _aligned_malloc(_Size, _Alignment);
 #else
-            AllocatedMemory = std::aligned_alloc(_Size, _Alignment);
+            AllocatedMemory = std::aligned_alloc(_Alignment, _Size);
 #endif
         }
         else AllocatedMemory = std::malloc(_Size);
@@ -109,18 +108,19 @@ export namespace VE
     }
 
     void* Memory::
-    Realloc(void* _Memory, UInt64 _NewSize, UInt32 _NewAlignment)
-    throw (SRuntimeError)
+    Realloc(void* _Memory, UInt64 _OldSize, UInt32 _OldAlignment, UInt64 _NewSize, UInt32 _NewAlignment)
     {
         VE_ASSERT(IsValidAllocation(_NewSize, _NewAlignment));
 
         void* ReallocatedMemory = nullptr;
         if (_NewAlignment)
         {
-#if defined(VE_IS_WINDOWS_SYSTEM)
+#if defined(VE_ON_WINDOWS_SYSTEM)
             ReallocatedMemory = _aligned_realloc(_Memory, _NewSize, _NewAlignment);
 #else
-            ReallocatedMemory = std::aligned_realloc(_Memory, _NewSize, _NewAlignment);
+            ReallocatedMemory = Malloc(_NewSize, _NewAlignment);
+            Memcpy(ReallocatedMemory, _Memory, std::min(_OldSize, _NewSize));
+            Free(_Memory, _OldAlignment);
 #endif 
         }
         else ReallocatedMemory = std::realloc(_Memory, _NewSize);
@@ -142,7 +142,7 @@ export namespace VE
 #if defined(VE_ON_WINDOWS_SYSTEM)
             _aligned_free(_Memory);
 #else
-            std::aligned_free(_Memory);
+            std::free(_Memory); // Safe
 #endif
         }
         else std::free(_Memory);
@@ -158,7 +158,8 @@ export namespace VE
 #	if defined(_MSC_VER)
 		__prefetch(static_cast<const char*>(_Memory) + _Offset);
 #	else
-		__asm__ __volatile__("prfm pldl1keep, [%[ptr]]\n" ::[ptr] "r"(Ptr) : );
+        VE_WIP;
+		//__asm__ __volatile__("prfm pldl1keep, [%[ptr]]\n" ::[ptr] "r"(Ptr) : );
 #	endif
 #else
 #	error Unknown architecture

@@ -2,7 +2,7 @@ module;
 #define VOLK_IMPLEMENTATION
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:Loader;
-
+import :Context;
 import Visera.Core.Log;
 
 export namespace VE

@@ -1,7 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:Synchronization;
-
+import :Context;
 import Visera.Core.Signal;
 
 import :Common;
@@ -9,7 +9,6 @@ import :Device;
 
 export namespace VE
 {
-	class RHI;
 	class FVulkanImage;
 
 	class FVulkanSemaphore

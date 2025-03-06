@@ -16,10 +16,10 @@ VISERA_ON_WINDOWS   =   VISERA_OS_TYPE == "Windows"
 VISERA_ON_MACOS     =   VISERA_OS_TYPE == "Darwin"
 
 VISERA_ENV_PATH     =   {
-                            "Vulkan" : [path.join(environ["VULKAN_SDK"], "bin")], #vulkanCapsViewer, vkconfig, vkcube [TODO]:Alias
+                           # "Vulkan" : [path.join(environ["VULKAN_SDK"], "bin")], #vulkanCapsViewer, vkconfig, vkcube [TODO]:Alias
                             "Vcpkg"  : [path.join(VISERA_ENGINE_PATH, "Packages", "Vcpkg")]
                         }
-if VISERA_ON_MACOS: VISERA_ENV_PATH["Vulkan"].append(path.join(environ["VULKAN_SDK_DIR"], "Applications"))
+#if VISERA_ON_MACOS: VISERA_ENV_PATH["Vulkan"].append(path.join(environ["VULKAN_SDK_DIR"], "Applications"))
 
 VISERA_SUCCESS      =   0
 VISERA_FAILED       =   not VISERA_SUCCESS

@@ -1,6 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan;
+import :Context;
 export import :CommandPool;
 export import :CommandBuffer;
 export import :DescriptorPool;
@@ -29,20 +30,19 @@ export namespace VE
 {
 	using VulkanAllocationCallbacks = VkAllocationCallbacks*;
 
-	class RHI;
-
 	class FVulkan
 	{
 		friend class RHI;
 	public:
-		auto GetInstance()		const -> const FVulkanInstance& { return Instance; }
-		auto GetSurface()		const -> const FVulkanSurface&  { return Surface; }
-		auto GetSwapchain()		const -> const FVulkanSwapchain&{ return Swapchain; }
-		auto GetGPU()			const -> const FVulkanGPU&		{ return GPU; }
-		auto GetDevice()		const -> const FVulkanDevice&	{ return Device; }
-		auto GetGraphicsPipelineCache() const -> const FVulkanPipelineCache& { return GraphicsPipelineCache; }
-		auto GetAllocationCallbacks()	const -> const VulkanAllocationCallbacks { return AllocationCallbacks; }
-		
+		auto GetAllocator()	 -> FVulkanAllocator&{ return Allocator; }
+		auto GetInstance()	 -> FVulkanInstance& { return Instance; }
+		auto GetSurface()	 -> FVulkanSurface&  { return Surface; }
+		auto GetSwapchain()	 -> FVulkanSwapchain&{ return Swapchain; }
+		auto GetGPU()		 -> FVulkanGPU&		{ return GPU; }
+		auto GetDevice()	 -> FVulkanDevice&	{ return Device; }
+		auto GetGraphicsPipelineCache() -> FVulkanPipelineCache& { return GraphicsPipelineCache; }
+		auto GetAllocationCallbacks()   -> VulkanAllocationCallbacks { return AllocationCallbacks; }
+
 	private:
 		/* << Vulkan Objects >>*/
 		FVulkanLoader		Loader		{};
@@ -60,7 +60,8 @@ export namespace VE
 
 		FVulkanGraphicsCommandPool* ResetableGraphicsCommandPool;
 		FVulkanGraphicsCommandPool* TransientGraphicsCommandPool;
-	
+
+	public:
 		FVulkan();
 		~FVulkan();
 	};
@@ -68,8 +69,8 @@ export namespace VE
 	FVulkan::
 	FVulkan()
 	{
-		GVulkan = new VulkanContext();
-		auto* Context = const_cast<VulkanContext* const>(GVulkan);
+		GVulkan = new FVulkanContext();
+		auto* Context = const_cast<FVulkanContext* const>(GVulkan);
 		Context->Instance	= &Instance;
 		Context->Surface	= &Surface;
 		Context->GPU		= &GPU;

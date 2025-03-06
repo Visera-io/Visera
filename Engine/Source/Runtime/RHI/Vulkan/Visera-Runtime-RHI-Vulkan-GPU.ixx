@@ -1,7 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:GPU;
-
+import :Context;
 import :Common;
 
 import Visera.Core.Log;
@@ -13,15 +13,15 @@ export namespace VE
 	{
 		friend class FVulkan;
 	public:
-		auto GetFileName()					const -> RawString								{ return Properties.deviceName; }
-		auto GetHandle()				const -> const VkPhysicalDevice					{ return Handle; }
+		auto GetFileName()				const -> RawString								{ return Properties.deviceName; }
+		auto GetHandle()				const -> VkPhysicalDevice						{ return Handle; }
 		auto GetFeatures()				const -> const VkPhysicalDeviceFeatures&		{ return Features; }
 		auto GetProperties()			const -> const VkPhysicalDeviceProperties&		{ return Properties; }
 		auto GetMemoryProperties()		const -> const VkPhysicalDeviceMemoryProperties&{ return MemoryProperties; }
 		auto GetQueueFamilyProperties() const -> const Array<VkQueueFamilyProperties>&	{ return QueueFamilyProperties; }
 		auto GetExtensionProperties()	const -> const Array<VkExtensionProperties>&	{ return ExtensionProperties; }
 
-		auto QueryFormatProperties(EVulkanFormat Format)			const -> VkFormatProperties { VkFormatProperties Properties; vkGetPhysicalDeviceFormatProperties(Handle, AutoCast(Format), &Properties); return Properties; }
+		auto QueryFormatProperties(EVulkanFormat Format) const -> VkFormatProperties { VkFormatProperties Properties; vkGetPhysicalDeviceFormatProperties(Handle, AutoCast(Format), &Properties); return Properties; }
 
 		Bool IsDiscreteGPU() const { return Properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU; }
 		

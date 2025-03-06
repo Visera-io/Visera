@@ -43,6 +43,8 @@
 #if defined(_WIN32) || defined(_WIN64)
 #define VE_IS_WINDOWS_SYSTEM true
 #define VE_ON_WINDOWS_SYSTEM
+#else
+#define VE_IS_WINDOWS_SYSTEM false
 #endif
 #if (defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__amd64__) || defined(__x86_64__)) && !defined(_M_ARM64EC)
 #define VE_IS_X86_CPU true
@@ -66,6 +68,9 @@
 #include <chrono>
 #include <cstdlib>
 #include <format>
+#include <vector>
+#include <list>
+#include <bit>
 #include <algorithm>
 #include <array>
 #include <bitset>
@@ -85,141 +90,141 @@
 #include <variant>
 #include <type_traits>
 
-namespace VE {
-/* <<  Concepts >>
-        
-*/
-template <typename T>
-concept Hashable = requires(T type) {{ std::hash<T>{}(type) } -> std::same_as<std::size_t>;};
+namespace VE
+{
+	class ViseraEngine;
 
-template<typename T>
-concept UnsignedIntegerol = std::unsigned_integral<T>;
+	template <typename T>
+	concept Hashable = requires(T type) {{ std::hash<T>{}(type) } -> std::same_as<std::size_t>;};
 
-template<typename T>
-concept SignedInteger = std::integral<T>;
+	template<typename T>
+	concept UnsignedIntegerol = std::unsigned_integral<T>;
 
-template<typename T>
-concept Integer = std::integral<T> || std::unsigned_integral<T>;
+	template<typename T>
+	concept SignedInteger = std::integral<T>;
 
-template<typename T>
-concept FloatingPoint = std::floating_point<T>;
+	template<typename T>
+	concept Integer = std::integral<T> || std::unsigned_integral<T>;
 
-template<typename T>
-concept Number = std::floating_point<T> || std::integral<T>;
+	template<typename T>
+	concept FloatingPoint = std::floating_point<T>;
 
-template<typename T>
-concept Pointer = std::is_pointer_v<T>;
+	template<typename T>
+	concept Number = std::floating_point<T> || std::integral<T>;
 
-template<typename T>
-concept Alignable = std::integral<T> || std::is_pointer_v<T>;
+	template<typename T>
+	concept Pointer = std::is_pointer_v<T>;
 
-template<typename T>
-concept ClockType = std::is_class_v<std::chrono::system_clock>          ||
-                    std::is_class_v<std::chrono::high_resolution_clock>;
+	template<typename T>
+	concept Alignable = std::integral<T> || std::is_pointer_v<T>;
 
-/* <<  Basic Types >>
-        
-*/
-using Bool		= bool;
-using Float  	= float;
-using Double 	= double;
-using Int8      = char;
-using UInt8     = unsigned char;
-using Int16     = int16_t;
-using UInt16    = uint16_t;
-using Int32  	= std::int32_t;
-using UInt32 	= std::uint32_t;
-using Int64  	= std::int64_t;
-using UInt64 	= std::uint64_t;
+	template<typename T>
+	concept ClockType = std::is_class_v<std::chrono::system_clock>          ||
+	                    std::is_class_v<std::chrono::high_resolution_clock>;
 
-using ANSIChar   = char;
-using WideChar   = wchar_t;
-using String	 = std::string;
-using StringView = std::string_view;
-using RawString  = const char*;
+	/* <<  Basic Types >>
 
-template <class... _Types> inline
-String
-Text(const std::format_string<_Types...> _Fmt, _Types&&... _Args)
-{ return std::format(_Fmt, std::forward<_Types>(_Args)...); }
+	*/
+	using Bool		= bool;
+	using Float  	= float;
+	using Double 	= double;
+	using Int8      = char;
+	using UInt8     = unsigned char;
+	using Int16     = int16_t;
+	using UInt16    = uint16_t;
+	using Int32  	= std::int32_t;
+	using UInt32 	= std::uint32_t;
+	using Int64  	= std::int64_t;
+	using UInt64 	= std::uint64_t;
 
-template<unsigned int _Size>
-using Bits      = std::bitset<_Size>;
-using Byte		= unsigned char;
-constexpr Byte    OneByte  = 1;
-constexpr UInt64  OneKByte = 1024 * OneByte;
-constexpr UInt64  OneMByte = 1024 * OneKByte;
-constexpr UInt64  OneGByte = 1024 * OneMByte;
-using EnumMask	= std::uint32_t;
-using EnumBit	= std::uint32_t;
-template<typename T> inline
-UInt64 BytesOf() { return sizeof(T); }
-template<typename T> inline
-UInt64 BitsOf()  { return 8 * BytesOf<T>(); }
-template<Integer T> inline
-Bool IsPowerOfTwo(T _Number) { return (_Number > 0) && ((_Number & (_Number - 1)) == 0); }
+	using ANSIChar   = char;
+	using WideChar   = wchar_t;
+	using String	 = std::string;
+	using StringView = std::string_view;
+	using RawString  = const char*;
 
-using ID		= UInt32;
-using Token		= std::uint64_t;
-using Address   = void*;
-using ErrorCode = std::int32_t;
+	template <class... _Types> inline
+	String
+	Text(const std::format_string<_Types...> _Fmt, _Types&&... _Args)
+	{ return std::format(_Fmt, std::forward<_Types>(_Args)...); }
 
-constexpr Bool False   = false;
-constexpr Bool True    = !False;
+	template<unsigned int _Size>
+	using Bits      = std::bitset<_Size>;
+	using Byte		= unsigned char;
+	constexpr Byte    OneByte  = 1;
+	constexpr UInt64  OneKByte = 1024 * OneByte;
+	constexpr UInt64  OneMByte = 1024 * OneKByte;
+	constexpr UInt64  OneGByte = 1024 * OneMByte;
+	using EnumMask	= std::uint32_t;
+	using EnumBit	= std::uint32_t;
+	template<typename T> inline
+	UInt64 BytesOf() { return sizeof(T); }
+	template<typename T> inline
+	UInt64 BitsOf()  { return 8 * BytesOf<T>(); }
+	template<Integer T> inline
+	Bool IsPowerOfTwo(T _Number) { return (_Number > 0) && ((_Number & (_Number - 1)) == 0); }
 
-/* <<  Containers >>
-    1. Array
-    2. Set
-    3. HashMap
-    4. Segment
-*/
+	using ID		= UInt32;
+	using Token		= std::uint64_t;
+	using Address   = void*;
+	using ErrorCode = std::int32_t;
 
-template<typename T>
-using Array	   = std::vector<T>;
+	constexpr Bool False   = false;
+	constexpr Bool True    = !False;
 
-template<typename T>
-using List	   = std::list<T>;
+	/* <<  Containers >>
+	    1. Array
+	    2. Set
+	    3. HashMap
+	    4. Segment
+	*/
 
-template<typename T>
-using Set	   = std::unordered_set<T>;
+	template<typename T>
+	using Array	   = std::vector<T>;
 
-template<typename Key, typename Value>
-using HashMap  = std::unordered_map<Key, Value>;
+	template<typename T>
+	using List	   = std::list<T>;
 
-template<typename T, size_t Length>
-using Segment  = std::array<T, Length>;
+	template<typename T>
+	using Set	   = std::unordered_set<T>;
 
-template<typename T1, typename T2>
-using Pair      = std::pair<T1, T2>;
+	template<typename Key, typename Value>
+	using HashMap  = std::unordered_map<Key, Value>;
 
-template<typename T1, typename T2> constexpr
-Bool IsOrderedPair(const Pair<T1, T2>& _Pair) { return _Pair.second >= _Pair.first; }
+	template<typename T, size_t Length>
+	using Segment  = std::array<T, Length>;
 
-template <typename... Args>
-using ResultPackage = std::tuple<Args...>;
+	template<typename T1, typename T2>
+	using Pair      = std::pair<T1, T2>;
 
-/* <<  Pointers >>
-    1. SharedPtr
-    2. WeakPtr
-    3. UniquePtr
-*/
+	template<typename T1, typename T2> constexpr
+	Bool IsOrderedPair(const Pair<T1, T2>& _Pair) { return _Pair.second >= _Pair.first; }
 
-template<typename T>
-using SharedPtr   = std::shared_ptr<T>;
-template<typename T, typename... Args>
-inline SharedPtr<T>
-CreateSharedPtr(Args &&...args) { return std::make_shared<T>(std::forward<Args>(args)...); }
+	template <typename... Args>
+	using ResultPackage = std::tuple<Args...>;
 
-template<typename T>
-using WeakPtr	  = std::weak_ptr<T>;
+	/* <<  Pointers >>
+	    1. SharedPtr
+	    2. WeakPtr
+	    3. UniquePtr
+	*/
 
-template<typename T>
-using UniquePtr   = std::unique_ptr<T>;
-template<typename T, typename... Args>
-inline UniquePtr<T> 
-CreateUniquePtr(Args &&...args) { return std::make_unique<T>(std::forward<Args>(args)...); }
+	template<typename T>
+	using SharedPtr   = std::shared_ptr<T>;
+	template<typename T, typename... Args>
+	inline SharedPtr<T>
+	CreateSharedPtr(Args &&...args) { return std::make_shared<T>(std::forward<Args>(args)...); }
 
-template<typename T>
-using Optional	  = std::optional<T>;
+	template<typename T>
+	using WeakPtr	  = std::weak_ptr<T>;
+
+	template<typename T>
+	using UniquePtr   = std::unique_ptr<T>;
+	template<typename T, typename... Args>
+	inline UniquePtr<T>
+	CreateUniquePtr(Args &&...args) { return std::make_unique<T>(std::forward<Args>(args)...); }
+
+	template<typename T>
+	using Optional	  = std::optional<T>;
     
 } // namespace VE

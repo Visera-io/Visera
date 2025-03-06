@@ -2,6 +2,7 @@ module;
 
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:Framebuffer;
+import :Context;
 import :Common;
 import :Device;
 import :RenderTarget;

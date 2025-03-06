@@ -1,7 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:Swapchain;
-
+import :Context;
 import :Common;
 import :GPU;
 import :Device;
@@ -19,8 +19,8 @@ export namespace VE
 		friend class FVulkan;
 	public:
 		class SRecreation : public std::exception { public: SRecreation() noexcept = default; };
-		void WaitForNextImage(const FVulkanSemaphore& _SignalSemaphore_) throw(SRecreation);
-		void Present(FVulkanSemaphore _WaitSemaphores[], UInt32 _WaitSemaphoreCount) throw(SRecreation);
+		void WaitForNextImage(const FVulkanSemaphore& _SignalSemaphore_);
+		void Present(FVulkanSemaphore _WaitSemaphores[], UInt32 _WaitSemaphoreCount);
 
 		auto GetCursor()		const   -> UInt32					{ return Cursor; }
 		auto GetFrameCount()	const	-> UInt8					{ return Images.size(); }
@@ -226,7 +226,6 @@ export namespace VE
 
 	void FVulkanSwapchain::
 	WaitForNextImage(const FVulkanSemaphore& _SignalSemaphore)
-	throw(SRecreation)
 	{
 		auto Result = vkAcquireNextImageKHR(GVulkan->Device->GetHandle(),
 											Handle,
@@ -247,7 +246,6 @@ export namespace VE
 
 	void FVulkanSwapchain::
 	Present(FVulkanSemaphore _WaitSemaphores[], UInt32 _WaitSemaphoreCount)
-	throw(SRecreation)
 	{
 		VkPresentInfoKHR PresentInfo
 		{

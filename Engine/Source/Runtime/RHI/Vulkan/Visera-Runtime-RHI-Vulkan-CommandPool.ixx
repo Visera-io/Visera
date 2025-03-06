@@ -1,7 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:CommandPool;
-
+import :Context;
 import :Common;
 import :Device;
 import :Synchronization;
@@ -11,7 +11,6 @@ import Visera.Core.Signal;
 
 export namespace VE
 {
-	class RHI;
 
 	class FVulkanCommandPool : public std::enable_shared_from_this<FVulkanCommandPool>
 	{

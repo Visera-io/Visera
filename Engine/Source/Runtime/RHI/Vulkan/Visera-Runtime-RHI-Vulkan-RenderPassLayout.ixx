@@ -1,6 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:RenderPassLayout;
+import :Context;
 import :Common;
 import :RenderTarget;
 

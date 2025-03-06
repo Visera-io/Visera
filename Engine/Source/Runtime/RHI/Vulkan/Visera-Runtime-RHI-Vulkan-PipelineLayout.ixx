@@ -1,7 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:PipelineLayout;
-
+import :Context;
 import :Common;
 import :Device;
 import :DescriptorSetLayout;
@@ -10,8 +10,6 @@ import Visera.Core.Signal;
 
 export namespace VE
 {
-	class RHI;
-
 	class FVulkanPipelineLayout
 	{
 		friend class RHI; // Created by RHI module

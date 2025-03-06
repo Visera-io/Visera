@@ -95,8 +95,8 @@ export namespace VE
 		VE_API CreateDescriptorSet(SharedPtr<FDescriptorSetLayout> _SetLayout)				-> SharedPtr<FDescriptorSet> { return GlobalDescriptorPool.CreateDescriptorSet(_SetLayout);		}
 		VE_API CreateGraphicsCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return ResetableGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
 		VE_API CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return TransientGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
-		VE_API CreateImage(EImageType _Type, FExtent3D _Extent, EFormat _Format, EImageAspect _Aspects, EImageUsage _Usages, EImageTiling _Tiling = EImageTiling::Optimal,ESampleRate _SampleRate = ESampleRate::X1, UInt8 _MipmapLevels = 1,UInt8 _ArrayLayers = 1, ESharingMode	_SharingMode = ESharingMode::Exclusive,EMemoryUsage	_Location = EMemoryUsage::Auto)->SharedPtr<FImage> { return Vulkan->Allocator.CreateImage(_Type, _Extent, _Format, _Aspects, _Usages, _Tiling, _SampleRate, _MipmapLevels, _ArrayLayers, _SharingMode, _Location); }
-		VE_API CreateBuffer(UInt64 _Size, EBufferUsage _Usages, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive, EMemoryUsage _Location = EMemoryUsage::Auto) -> SharedPtr<FBuffer> { return Vulkan->Allocator.CreateBuffer(_Size, _Usages, _SharingMode, _Location); }
+		VE_API CreateImage(EImageType _Type, FExtent3D _Extent, EFormat _Format, EImageAspect _Aspects, EImageUsage _Usages, EImageTiling _Tiling = EImageTiling::Optimal,ESampleRate _SampleRate = ESampleRate::X1, UInt8 _MipmapLevels = 1,UInt8 _ArrayLayers = 1, ESharingMode	_SharingMode = ESharingMode::Exclusive,EMemoryUsage	_Location = EMemoryUsage::Auto)->SharedPtr<FImage> { return Vulkan->GetAllocator().CreateImage(_Type, _Extent, _Format, _Aspects, _Usages, _Tiling, _SampleRate, _MipmapLevels, _ArrayLayers, _SharingMode, _Location); }
+		VE_API CreateBuffer(UInt64 _Size, EBufferUsage _Usages, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive, EMemoryUsage _Location = EMemoryUsage::Auto) -> SharedPtr<FBuffer> { return Vulkan->GetAllocator().CreateBuffer(_Size, _Usages, _SharingMode, _Location); }
 		VE_API CreateFence(FFence::EStatus _Status = FFence::EStatus::Blocking)				-> FFence		 { return FFence{_Status};	}
 		VE_API CreateSemaphore()															-> FSemaphore	 { return FSemaphore();	}
 		VE_API CreateShader(EShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize) -> SharedPtr<FShader> { return CreateSharedPtr<FShader>(_ShaderStage, _SPIRVCode, _CodeSize); }
@@ -108,11 +108,11 @@ export namespace VE
 		VE_API RenderAndPresentCurrentFrame()	-> void;
 		VE_API GetFPS()							-> UInt32 { return FPS; }
 
-		VE_API GetSwapchainFrameCount()	-> UInt32		  { return Vulkan->Swapchain.GetFrameCount(); }
-		VE_API GetSwapchainCursor()		-> UInt32		  { return Vulkan->Swapchain.GetCursor(); }
-		VE_API GetSwapchainFormat()		-> EFormat		  { return Vulkan->Swapchain.GetFormat(); }
+		VE_API GetSwapchainFrameCount()	-> UInt32		  { return Vulkan->GetSwapchain().GetFrameCount(); }
+		VE_API GetSwapchainCursor()		-> UInt32		  { return Vulkan->GetSwapchain().GetCursor(); }
+		VE_API GetSwapchainFormat()		-> EFormat		  { return Vulkan->GetSwapchain().GetFormat(); }
 
-		VE_API WaitDeviceIdle()			-> void		{ Vulkan->Device.WaitIdle(); }
+		VE_API WaitDeviceIdle()			-> void		{ Vulkan->GetDevice().WaitIdle(); }
 		VE_API GetAPI()					-> const FVulkan* { return Vulkan; }
 		VE_API GetGlobalDescriptorPool()-> const FDescriptorPool& { return GlobalDescriptorPool; }
 
@@ -182,7 +182,7 @@ export namespace VE
 			}
 
 			//[TODO]: Move to VulkanSwapchain Class?
-			for (auto& SwapchainImage : Vulkan->Swapchain.GetImages())
+			for (auto& SwapchainImage : Vulkan->GetSwapchain().GetImages())
 			{
 				VkImageMemoryBarrier SwapchainTransferBarrier
 				{
@@ -204,7 +204,7 @@ export namespace VE
 					}
 				};
 				vkCmdPipelineBarrier(
-					ImmeCmds->Handle,
+					ImmeCmds->GetHandle(),
 					AutoCast(EGraphicsPipelineStage::PipelineTop),
 					AutoCast(EGraphicsPipelineStage::PipelineBottom),
 					0x0,		// Dependency Flags
@@ -280,7 +280,7 @@ export namespace VE
 
 		try
 		{
-			Vulkan->Swapchain.WaitForNextImage(CurrentFrame.SwapchainReadySemaphore);
+			Vulkan->GetSwapchain().WaitForNextImage(CurrentFrame.SwapchainReadySemaphore);
 
 			CurrentFrame.InFlightFence.Block();
 			CurrentFrame.GraphicsCommandBuffer->Status = FGraphicsCommandBuffer::EStatus::Idle;
@@ -327,7 +327,7 @@ export namespace VE
 				.newLayout = AutoCast(EImageLayout::TransferDestination),
 				.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
 				.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-				.image = Vulkan->Swapchain.GetCurrentImage(),
+				.image = Vulkan->GetSwapchain().GetCurrentImage(),
 				.subresourceRange
 				{
 					.aspectMask		= AutoCast(EImageAspect::Color),
@@ -373,8 +373,8 @@ export namespace VE
 				.dstOffsets
 				{
 					{0, 0, 0},
-					{Int32(Vulkan->Swapchain.GetExtent().width),
-					 Int32(Vulkan->Swapchain.GetExtent().height),
+					{Int32(Vulkan->GetSwapchain().GetExtent().width),
+					 Int32(Vulkan->GetSwapchain().GetExtent().height),
 					 1},
 				}
 			};
@@ -386,7 +386,7 @@ export namespace VE
 				CurrentFrame.GraphicsCommandBuffer->Handle,
 				CurrentFrame.RenderTarget->ColorImages[0]->GetHandle(),
 				AutoCast(CurrentFrame.RenderTarget->ColorImages[0]->GetLayout()),
-				Vulkan->Swapchain.GetCurrentImage(),
+				Vulkan->GetSwapchain().GetCurrentImage(),
 				AutoCast(EImageLayout::TransferDestination),
 				1,
 				&BlitInfo,
@@ -407,7 +407,7 @@ export namespace VE
 				.newLayout = AutoCast(EImageLayout::Present),
 				.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
 				.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-				.image = Vulkan->Swapchain.GetCurrentImage(),
+				.image = Vulkan->GetSwapchain().GetCurrentImage(),
 				.subresourceRange
 				{
 					.aspectMask		= AutoCast(EImageAspect::Color),
@@ -439,7 +439,7 @@ export namespace VE
 					.SignalFence			= &CurrentFrame.InFlightFence,
 				});
 
-			Vulkan->Swapchain.Present(&CurrentFrame.GraphicsCommandsFinishedSemaphore, 1);
+			Vulkan->GetSwapchain().Present(&CurrentFrame.GraphicsCommandsFinishedSemaphore, 1);
 		}
 		catch (const SSwapchainRecreation& Signal)
 		{

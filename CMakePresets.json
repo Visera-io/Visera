@@ -61,8 +61,8 @@
         {
             "name": "darwin",
             "hidden": true,
+            "generator": "Ninja",
             "cacheVariables": {
-                "GENERATOR": "Ninja",
                 "CMAKE_C_COMPILER": "/opt/homebrew/Cellar/llvm/19.1.7/bin/clang",
                 "CMAKE_CXX_COMPILER": "/opt/homebrew/Cellar/llvm/19.1.7/bin/clang++"
             }

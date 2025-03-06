@@ -6,7 +6,6 @@ export import Visera.Core.System.FileSystem;
 export import Visera.Core.System.Concurrency;
 
 import Visera.Core.Time;
-import std;
 
 export namespace VE
 {

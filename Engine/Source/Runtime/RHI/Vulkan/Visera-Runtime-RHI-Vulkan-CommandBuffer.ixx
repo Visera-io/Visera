@@ -1,6 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:CommandBuffer;
+import :Context;
 import :Common;
 import :Allocator;
 import :Device;
@@ -13,8 +14,7 @@ import :Synchronization;
 import Visera.Core.Signal;
 
 export namespace VE
-{ 
-	class RHI;
+{
 	class FVulkanCommandPool;
 	class FVulkanGraphicsCommandPool;
 
@@ -53,7 +53,7 @@ export namespace VE
 		auto GetLevel()				const -> EVulkanCommandLevel	{ return IsPrimary()? EVulkanCommandLevel::Primary : EVulkanCommandLevel::Secondary; }
 		auto GetHandle()			const -> const VkCommandBuffer	{ return Handle; }
 
-	protected: //Selective Export API
+	public: //Selective Export API
 		void Submit(const FVulkanCommandSubmitInfo& _SubmitInfo);
 		void Reset() const { VE_ASSERT(IsIdle() && IsResettable()); vkResetCommandBuffer(Handle, 0x0); }
 

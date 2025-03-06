@@ -14,8 +14,6 @@ export namespace VE
         TTimePoint() = default;
         TTimePoint(const T::time_point& _NewTimePoint) : Value{ _NewTimePoint }{}
         TTimePoint(T::time_point&& _NewTimePoint) : Value{ std::move(_NewTimePoint) } {}
-
-        operator T::time_point() const { return Value; }
     private:
         T::time_point Value;
     };

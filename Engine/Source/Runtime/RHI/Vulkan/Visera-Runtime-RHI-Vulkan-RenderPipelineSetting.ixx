@@ -2,7 +2,7 @@ module;
 #include <Visera.h>
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:RenderPipelineSetting;
-
+import :Context;
 import :Common;
 import :Device;
 import :Shader;

@@ -2,7 +2,7 @@ module;
 #include <Visera.h>
 #include <embree4/rtcore.h>
 export module Visera.Runtime.World.RTC;
-import  Visera.Runtime.World.RTC.Embree;
+export import  Visera.Runtime.World.RTC.Embree;
 
 import Visera.Core.Signal;
 
@@ -15,9 +15,9 @@ export namespace VE
 		VE_MODULE_MANAGER_CLASS(RTC);
 		friend class World;
 	public:
-		using EBuffer	= EEmbreeBuffer;
-		using ECompileType		= EEmbreeType;
-		using ETopology = EEmbreeTopology;
+		using EBuffer	   = EEmbreeBuffer;
+		using ECompileType = EEmbreeType;
+		using ETopology    = EEmbreeTopology;
 
 		VE_API GetAPI() -> const FEmbree* { return Embree; }
 

@@ -12,7 +12,6 @@ export import Visera.Core.Media;
 
 export namespace VE
 {
-	class ViseraEngine;
 
 	class ViseraCore
 	{

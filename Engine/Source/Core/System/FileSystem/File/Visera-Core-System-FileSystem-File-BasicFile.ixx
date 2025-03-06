@@ -12,10 +12,10 @@ export namespace VE
     class FBasicFile
     {
     public:
- 	    virtual void SaveAs(const FPath& FilePath,   Int32 SaveModes) throw(SIOFailure); //Check out the demo below
- 	    virtual void LoadFrom(const FPath& FilePath, Int32 LoadModes) throw(SIOFailure); //Check out the demo below
- 	    virtual void Save(Int32 SaveModes = 0x0) throw(SIOFailure) { SaveAs(Path,   SaveModes); }
- 	    virtual void Load(Int32 LoadModes = 0x0) throw(SIOFailure) { LoadFrom(Path, LoadModes); }
+ 	    virtual void SaveAs(const FPath& FilePath,   Int32 SaveModes); //Check out the demo below
+ 	    virtual void LoadFrom(const FPath& FilePath, Int32 LoadModes); //Check out the demo below
+ 	    virtual void Save(Int32 SaveModes = 0x0) { SaveAs(Path,   SaveModes); }
+ 	    virtual void Load(Int32 LoadModes = 0x0) { LoadFrom(Path, LoadModes); }
 
         auto Access()             -> void*          { return Data.data(); }
         void Resize(UInt64 _Size)                   { Data.resize(_Size); }
@@ -44,7 +44,7 @@ export namespace VE
     };
 
     void FBasicFile::
-    SaveAs(const FPath& FilePath, Int32 SaveModes)	throw(SIOFailure)
+    SaveAs(const FPath& FilePath, Int32 SaveModes)
     {
  	    //Tips: Add SaveModes via SaveModes |= NewMode
  	    if (auto* OutputFile = OpenOStream(SaveModes))
@@ -60,7 +60,7 @@ export namespace VE
     }
 
     void FBasicFile::
-    LoadFrom(const FPath& FilePath, Int32 LoadModes) throw(SIOFailure)
+    LoadFrom(const FPath& FilePath, Int32 LoadModes)
     {
  	    //Tips: Add LoadModes via LoadModes |= NewMode
  	    if (auto* InputFile = OpenIStream(LoadModes))

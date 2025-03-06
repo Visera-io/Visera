@@ -25,7 +25,7 @@ export namespace VE { namespace Internal
             MaxNameNumber       = INT32_MAX,
         };
     public:
-        auto Register(String _Name) throw (SRuntimeError) -> ResultPackage<UInt32, UInt32>; //[Handle_, Number_]
+        auto Register(String _Name) -> ResultPackage<UInt32, UInt32>; //[Handle_, Number_]
         auto FetchNameString(UInt32 _NameHandle /*NameEntryHandle*/) const->StringView;
         auto FetchNameString(EName _PreservedName) const -> StringView;
 

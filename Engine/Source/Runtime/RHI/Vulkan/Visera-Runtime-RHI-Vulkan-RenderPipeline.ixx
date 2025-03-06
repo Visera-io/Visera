@@ -1,7 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:RenderPipeline;
-
+import :Context;
 import :Common;
 import :Pipeline;
 import :PipelineLayout;

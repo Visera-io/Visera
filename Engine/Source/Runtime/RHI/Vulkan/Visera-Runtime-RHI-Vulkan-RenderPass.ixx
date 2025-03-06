@@ -1,6 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:RenderPass;
+import :Context;
 import :Common;
 import :Allocator;
 import :Device;
@@ -16,7 +17,6 @@ import Visera.Core.Signal;
 
 export namespace VE
 {
-	class RHI;
 
 	class FVulkanRenderPass
 	{

@@ -1,7 +1,6 @@
 module;
 #include <Visera.h>
 export module Visera.Runtime.World.Object.Component:Mesh;
-
 import :BasicComponent;
 
 export namespace VE
@@ -27,8 +26,7 @@ export namespace VE
 
 	public:
 		OCMesh() = delete;
-		OCMesh(FName _Name, SharedPtr<VObject> _Owner)
-			:OCBasicComponent(_Name, _Owner)
+		OCMesh(FName _Name):OCBasicComponent(_Name)
 		{
 			
 		}
