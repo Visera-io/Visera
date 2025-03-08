@@ -21,12 +21,24 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_SCAN_FOR_MODULES ON)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmodules")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fmodules")
+
+    include(CheckCXXCompilerFlag)
+    CHECK_CXX_COMPILER_FLAG("-stdlib=libc++" HAS_LIBCPP)
+
+    if (HAS_LIBCPP)
+        message(FATAL_ERROR "Visera: Using Libc++")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -D_LIBCPP_VERSION")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++")
+    else()
+        message(FATAL_ERROR "libc++ is recommended in conjunction with clang. Please insteall the libc++ development headers, provided e.g. by the packages 'libc++-dev' and 'libc++abi-dev' on Debian/Ubuntu.")
+    endif()
 endif()
 
-#[Properties]
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+if (CMAKE_GENERATOR MATCHES "Visual Studio")
+    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+endif()
 
-#[Project]
 if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
     message(FATAL_ERROR
       "\n"
