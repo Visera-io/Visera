@@ -91,30 +91,49 @@ export namespace VE
 		};
 
 	public:
-		VE_API CreateDescriptorSetLayout(const Array<FDescriptorBinding> _Bindings)			-> SharedPtr<FDescriptorSetLayout> { return CreateSharedPtr<FDescriptorSetLayout>(_Bindings); }
-		VE_API CreateDescriptorSet(SharedPtr<FDescriptorSetLayout> _SetLayout)				-> SharedPtr<FDescriptorSet> { return GlobalDescriptorPool.CreateDescriptorSet(_SetLayout);		}
-		VE_API CreateGraphicsCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return ResetableGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
-		VE_API CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return TransientGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
-		VE_API CreateImage(EImageType _Type, FExtent3D _Extent, EFormat _Format, EImageAspect _Aspects, EImageUsage _Usages, EImageTiling _Tiling = EImageTiling::Optimal,ESampleRate _SampleRate = ESampleRate::X1, UInt8 _MipmapLevels = 1,UInt8 _ArrayLayers = 1, ESharingMode	_SharingMode = ESharingMode::Exclusive,EMemoryUsage	_Location = EMemoryUsage::Auto)->SharedPtr<FImage> { return Vulkan->GetAllocator().CreateImage(_Type, _Extent, _Format, _Aspects, _Usages, _Tiling, _SampleRate, _MipmapLevels, _ArrayLayers, _SharingMode, _Location); }
-		VE_API CreateBuffer(UInt64 _Size, EBufferUsage _Usages, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive, EMemoryUsage _Location = EMemoryUsage::Auto) -> SharedPtr<FBuffer> { return Vulkan->GetAllocator().CreateBuffer(_Size, _Usages, _SharingMode, _Location); }
-		VE_API CreateFence(FFence::EStatus _Status = FFence::EStatus::Blocking)				-> FFence		 { return FFence{_Status};	}
-		VE_API CreateSemaphore()															-> FSemaphore	 { return FSemaphore();	}
-		VE_API CreateShader(EShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize) -> SharedPtr<FShader> { return CreateSharedPtr<FShader>(_ShaderStage, _SPIRVCode, _CodeSize); }
-		template<typename T> static inline
-		auto   CreateRenderPass() -> SharedPtr<T>;
+		static inline auto
+		CreateDescriptorSetLayout(const Array<FDescriptorBinding> _Bindings)		-> SharedPtr<FDescriptorSetLayout> { return CreateSharedPtr<FDescriptorSetLayout>(_Bindings); }
+		static inline auto
+		CreateDescriptorSet(SharedPtr<FDescriptorSetLayout> _SetLayout)				-> SharedPtr<FDescriptorSet> { return GlobalDescriptorPool.CreateDescriptorSet(_SetLayout);		}
+		static inline auto
+		CreateGraphicsCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return ResetableGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
+		static inline auto
+		CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return TransientGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
+		static inline auto
+		CreateImage(EImageType _Type, FExtent3D _Extent, EFormat _Format, EImageAspect _Aspects, EImageUsage _Usages, EImageTiling _Tiling = EImageTiling::Optimal,ESampleRate _SampleRate = ESampleRate::X1, UInt8 _MipmapLevels = 1,UInt8 _ArrayLayers = 1, ESharingMode	_SharingMode = ESharingMode::Exclusive,EMemoryUsage	_Location = EMemoryUsage::Auto)->SharedPtr<FImage> { return Vulkan->GetAllocator().CreateImage(_Type, _Extent, _Format, _Aspects, _Usages, _Tiling, _SampleRate, _MipmapLevels, _ArrayLayers, _SharingMode, _Location); }
+		static inline auto
+		CreateBuffer(UInt64 _Size, EBufferUsage _Usages, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive, EMemoryUsage _Location = EMemoryUsage::Auto) -> SharedPtr<FBuffer> { return Vulkan->GetAllocator().CreateBuffer(_Size, _Usages, _SharingMode, _Location); }
+		static inline auto
+		CreateFence(FFence::EStatus _Status = FFence::EStatus::Blocking)			-> FFence		 { return FFence{_Status};	}
+		static inline auto
+		CreateSemaphore()															-> FSemaphore	 { return FSemaphore();	}
+		static inline auto
+		CreateShader(EShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize) -> SharedPtr<FShader> { return CreateSharedPtr<FShader>(_ShaderStage, _SPIRVCode, _CodeSize); }
+		template<typename T> static auto
+		CreateRenderPass() -> SharedPtr<T>;
 
-		VE_API WaitFrameReady()					-> FFrameContext&;
-		VE_API GetCurrentFrame()				-> FFrameContext&;
-		VE_API RenderAndPresentCurrentFrame()	-> void;
-		VE_API GetFPS()							-> UInt32 { return FPS; }
+		static inline auto
+		WaitFrameReady() -> FFrameContext&;
+		static inline auto
+		GetCurrentFrame() -> FFrameContext&;
+		static inline auto
+		RenderAndPresentCurrentFrame() -> void;
+		static inline auto
+		GetFPS() -> UInt32 { return FPS; }
 
-		VE_API GetSwapchainFrameCount()	-> UInt32		  { return Vulkan->GetSwapchain().GetFrameCount(); }
-		VE_API GetSwapchainCursor()		-> UInt32		  { return Vulkan->GetSwapchain().GetCursor(); }
-		VE_API GetSwapchainFormat()		-> EFormat		  { return Vulkan->GetSwapchain().GetFormat(); }
+		static inline auto
+		GetSwapchainFrameCount()	-> UInt32		  { return Vulkan->GetSwapchain().GetFrameCount(); }
+		static inline auto
+		GetSwapchainCursor()		-> UInt32		  { return Vulkan->GetSwapchain().GetCursor(); }
+		static inline auto
+		GetSwapchainFormat()		-> EFormat		  { return Vulkan->GetSwapchain().GetFormat(); }
 
-		VE_API WaitDeviceIdle()			-> void		{ Vulkan->GetDevice().WaitIdle(); }
-		VE_API GetAPI()					-> const FVulkan* { return Vulkan; }
-		VE_API GetGlobalDescriptorPool()-> const FDescriptorPool& { return GlobalDescriptorPool; }
+		static inline auto
+		WaitDeviceIdle()		 -> void { Vulkan->GetDevice().WaitIdle(); }
+		static inline auto
+		GetAPI()				 -> const FVulkan* { return Vulkan; }
+		static inline auto
+		GetGlobalDescriptorPool()-> const FDescriptorPool& { return GlobalDescriptorPool; }
 
 	private:
 		static inline FVulkan*							Vulkan;
@@ -134,11 +153,11 @@ export namespace VE
 
 			GlobalDescriptorPool.Create(
 				{
-					{EDescriptorType::UniformBuffer,		1000},
-					{EDescriptorType::StorageBuffer,		1000},
-					{EDescriptorType::DynamicStorageBuffer, 1000},
-					{EDescriptorType::DynamicUniformBuffer, 1000},
-					{EDescriptorType::CombinedImageSampler, 1000},
+					{EDescriptorType::UniformBuffer,			1000},
+					{EDescriptorType::StorageBuffer,			1000},
+					{EDescriptorType::DynamicStorageBuffer,  1000},
+					{EDescriptorType::DynamicUniformBuffer,  1000},
+					{EDescriptorType::CombinedImageSampler,  1000},
 					{EDescriptorType::InputAttachment,		1000},
 					{EDescriptorType::SampledImage,			1000},
 					{EDescriptorType::StorageImage,			1000},

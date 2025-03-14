@@ -89,8 +89,8 @@ export namespace VE
 		auto   Release() -> ResultPackage<VkBuffer, VmaAllocation> { VkBuffer RawHandle = Handle; VmaAllocation RawAlloc = Allocation; Handle = VK_NULL_HANDLE; Allocation = VK_NULL_HANDLE; return { RawHandle, RawAlloc }; }
 		auto   Clone() const -> SharedPtr<FVulkanBuffer>;
 	private:
-		VkBuffer		Handle{ VK_NULL_HANDLE };
-		VmaAllocation	Allocation;
+		VkBuffer			Handle{ VK_NULL_HANDLE };
+		VmaAllocation		Allocation;
 		EVulkanBufferUsage	Usages;
 		EVulkanSharingMode	SharingMode;
 		EVulkanMemoryUsage	Location;
@@ -289,9 +289,9 @@ export namespace VE
 	}
 	
 	SharedPtr<FVulkanImageView> FVulkanImage::
-	CreateImageView(EVulkanImageViewType	   _Type  /*= EImageViewType::Auto*/,
-					EVulkanFormat			   _Format/* = EFormat::None*/,
-					EVulkanImageAspect	   _Aspect/* = EImageAspect::Undefined*/,
+	CreateImageView(EVulkanImageViewType _Type  /*= EImageViewType::Auto*/,
+					EVulkanFormat	   _Format/* = EFormat::None*/,
+					EVulkanImageAspect _Aspect/* = EImageAspect::Undefined*/,
 					Pair<UInt8, UInt8> _MipmapLevelRange/* = { 0,0 }*/,
 					Pair<UInt8, UInt8> _ArrayLayerRange /* = { 0,0 }*/,
 					const FVulkanComponentMapping& _ComponentMapping/* = {}*/) const

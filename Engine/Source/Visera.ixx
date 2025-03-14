@@ -39,7 +39,6 @@ export namespace VE
 				try
 				{
 					Log::Debug("Bootstrapping the " VISERA_APP_NAME "...");
-					
 					{
 						while (!Window::ShouldClose())
 						{

@@ -26,7 +26,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     CHECK_CXX_COMPILER_FLAG("-stdlib=libc++" HAS_LIBCPP)
 
     if (HAS_LIBCPP)
-        message(FATAL_ERROR "Visera: Using Libc++")
+        message(STATUS "Visera: Using Libc++")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -D_LIBCPP_VERSION")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++")
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++")

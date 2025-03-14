@@ -1,24 +1,23 @@
 module;
 #include <Visera.h>
-
 export module Visera.Core.Math.Basic:Operation;
 
 export namespace VE
 {
-	template<FloatingPoint T>
-	constexpr auto Epsilon() { return std::numeric_limits<T>::epsilon(); }
+	template<FloatingPoint T> constexpr auto
+	Epsilon() { return std::numeric_limits<T>::epsilon(); }
 
-	template<Integer T>
-	constexpr auto Epsilon() { return 1; }
+	template<Integer T> constexpr auto
+	Epsilon() { return 1; }
 
-	template<Number T>
-	constexpr auto UpperBound() { return std::numeric_limits<T>::max(); }
+	template<Number T> constexpr auto
+	UpperBound() { return std::numeric_limits<T>::max(); }
 
-	template<Number T>
-	constexpr auto LowerBound() { return std::numeric_limits<T>::min(); }
+	template<Number T> constexpr auto
+	LowerBound() { return std::numeric_limits<T>::min(); }
 
-	template<FloatingPoint T>
-	Bool Equal(T A, T B) { return std::abs(A - B) <= Epsilon<T>(); }
+	template<FloatingPoint T> Bool
+	Equal(T A, T B) { return std::abs(A - B) <= Epsilon<T>(); }
 
 	template<Number NumT, Number FloorT, Number CeilT>
 	void Clamp(NumT* Value, FloorT Floor, CeilT Ceil)

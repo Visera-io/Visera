@@ -36,7 +36,7 @@ target_sources(${VISERA}
                 "TODO.md")
 
 target_include_directories(${VISERA} PUBLIC ${VISERA_ENGINE_GLOBAL_DIR})
-#message(FATAL_ERROR ${CMAKE_MODULE_PATH})
+
 #<< Install/Download Packages >>
 include(install_vulkan)
 link_vulkan(${VISERA})

@@ -7,7 +7,7 @@ export import Visera.Core.Math.Hash;
 export namespace VE
 {
 
-    auto ComputeTriangleArea(const Vector3F& _Pa, const Vector3F& _Pb, const Vector3F& _Pc,) -> float
+    Float ComputeTriangleArea(const Vector3F& _Pa, const Vector3F& _Pb, const Vector3F& _Pc) 
     {
         //[FIXME]:Not checked
         // A_triangle = 1/2 * Cross(Vab, Vac) = sqrt( ||Vab||^2 * ||Vac||^2 - (Dot(Vab, Vac)^2) )
@@ -17,8 +17,8 @@ export namespace VE
         float SqrArea = Vab.norm() * Vac.norm() - (DotVabVac * DotVabVac);
         return 0.5 * std::sqrt(SqrArea);
     }
-s
-	ResultPackage<Vector3F, Vector3F, Vector3F> World::
+
+	ResultPackage<Vector3F, Vector3F, Vector3F>
 	ComputeOrthogonalCoordinate(const Vector3F& _Pivot)
 	{
 		Float Sign = std::copysign(1.0f, _Pivot.z());

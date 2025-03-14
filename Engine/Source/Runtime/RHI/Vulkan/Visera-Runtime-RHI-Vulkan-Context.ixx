@@ -2,19 +2,18 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:Context;
 
-namespace VE
+export namespace VE
 {
-    export class RHI;
-    export class FVulkan;
-    export class FVulkanInstance;
-    export class FVulkanGPU;
-    export class FVulkanDevice;
-    export class FVulkanAllocator;
-    export class FVulkanSurface;
-    export class FVulkanSwapchain;
-    export class FVulkanPipelineCache;
+    class FVulkan;
+    class FVulkanInstance;
+    class FVulkanGPU;
+    class FVulkanDevice;
+    class FVulkanAllocator;
+    class FVulkanSurface;
+    class FVulkanSwapchain;
+    class FVulkanPipelineCache;
 
-    export class FVulkanContext
+    class FVulkanContext
     {
         friend class FVulkan;
     public:
@@ -36,6 +35,6 @@ namespace VE
         static inline bool bCreated = False;
         ~FVulkanContext() noexcept = default;
     };
-    export inline const FVulkanContext* GVulkan = nullptr;
+    inline const FVulkanContext* GVulkan = nullptr;
 
 } // namespace VE

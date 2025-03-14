@@ -20,15 +20,19 @@ export namespace VE
 	{
 		VE_MODULE_MANAGER_CLASS(World);
 	public:
-		VE_API GetCoordinate() -> const FViseraChart& { return Atlas::Visera; }
-		VE_API CreateCoordinateSystem(const Vector3F& _Pivot) -> ResultPackage<Vector3F, Vector3F, Vector3F>;
-
 		using VObject = VObject;
-		template<VObjectType T> static inline 
-		SharedPtr<T> CreateObject(FName _Name);
-		VE_API SearchObject(FName _Name)->SharedPtr<VObject>;
-		
-		VE_API CreateStage(FName _StageName, const String& _StageFile) -> SharedPtr<FStage> { return CreateSharedPtr<FStage>(_StageName, _StageFile); }
+
+		static inline auto
+		GetCoordinate() -> const FViseraChart& { return Atlas::Visera; }
+		static inline auto
+		CreateCoordinateSystem(const Vector3F& _Pivot) -> ResultPackage<Vector3F, Vector3F, Vector3F>;
+
+		template<VObjectType T> static auto
+		CreateObject(FName _Name) -> SharedPtr<T> ;
+		static inline auto
+		SearchObject(FName _Name)->SharedPtr<VObject>;
+		static inline auto
+		CreateStage(FName _StageName, const String& _StageFile) -> SharedPtr<FStage> { return CreateSharedPtr<FStage>(_StageName, _StageFile); }
 
 	private:
 		static inline auto Bootstrap() -> void;

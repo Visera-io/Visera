@@ -63,10 +63,8 @@
             "hidden": true,
             "generator": "Ninja",
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "/Users/ljyc/LLVM/LLVM-20.1.0-macOS-ARM64/bin/clang",
-                "CMAKE_CXX_COMPILER": "/Users/ljyc/LLVM/LLVM-20.1.0-macOS-ARM64/bin/clang++",
-                "CMAKE_C_COMPILER2": "/opt/homebrew/Cellar/llvm/19.1.7/bin/clang",
-                "CMAKE_CXX_COMPILER2": "/opt/homebrew/Cellar/llvm/19.1.7/bin/clang++"
+                "CMAKE_C_COMPILER": "/opt/homebrew/Cellar/llvm/19.1.7_1/bin/clang",
+                "CMAKE_CXX_COMPILER": "/opt/homebrew/Cellar/llvm/19.1.7_1/bin/clang++"
             }
         },
         {

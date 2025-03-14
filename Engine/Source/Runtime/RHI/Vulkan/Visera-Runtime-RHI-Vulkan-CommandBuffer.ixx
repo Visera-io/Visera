@@ -15,7 +15,6 @@ import Visera.Core.Signal;
 
 export namespace VE
 {
-	class RHI;
 	class FVulkanCommandPool;
 	class FVulkanGraphicsCommandPool;
 
