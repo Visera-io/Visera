@@ -31,7 +31,7 @@ export namespace VE
 			auto& ImageSlot = ImageTable[_Name];
 			if (ImageSlot == nullptr)
 			{ 
-				ImageSlot =  CreateSharedPtr<FImage>(_Name, _Path);
+				ImageSlot =  CreateSharedPtr<FImage>(_Path);
 				Result    = ImageSlot;
 			}
 		}

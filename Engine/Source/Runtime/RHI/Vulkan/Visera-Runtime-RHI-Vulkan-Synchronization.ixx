@@ -14,7 +14,6 @@ export namespace VE
 	class FVulkanSemaphore
 	{
 		VE_NOT_COPYABLE(FVulkanSemaphore);
-		friend class RHI;
 	public:
 		auto GetHandle() const -> const VkSemaphore { return Handle; }
 		operator const VkSemaphore() const { return Handle; }
@@ -33,7 +32,6 @@ export namespace VE
 	class FVulkanFence
 	{
 		VE_NOT_COPYABLE(FVulkanFence);
-		friend class RHI;
 	public:
 		enum class EStatus { Blocking = 0, Signaled = VK_FENCE_CREATE_SIGNALED_BIT };
 		auto GetHandle() const -> const VkFence { return Handle; }

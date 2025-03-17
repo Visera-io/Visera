@@ -2,12 +2,12 @@ module;
 #include <Visera.h>
 export module Visera.Runtime.World.Object.Component:Transform;
 
-import :BasicComponent;
+import :Interface;
 import Visera.Core.Math;
 
 export namespace VE
 {
-	class OCTransform : public OCBasicComponent
+	class OCTransform : public IObjectComponent
 	{
 	public:
 		//auto GetMatrix()		const   -> const Matrix4x4F& { return Affine.matrix(); }
@@ -30,9 +30,7 @@ export namespace VE
 		virtual void Destroy() override {};
 
 	public:
-		OCTransform() = delete;
-		OCTransform(FName _Name)
-			:OCBasicComponent(_Name) { }
+		OCTransform() : IObjectComponent(FName{"component::transform"}) {};
 
 	private:
 		Optional<Matrix4x4F> Matrix;

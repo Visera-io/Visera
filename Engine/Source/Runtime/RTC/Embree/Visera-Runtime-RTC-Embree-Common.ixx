@@ -1,12 +1,12 @@
 module;
 #include <Visera.h>
 #include <embree4/rtcore.h>
-export module Visera.Runtime.World.RTC.Embree:Common;
+export module Visera.Runtime.RTC.Embree:Common;
 
 export namespace VE
 {
 
-	VE_ENUM_CLASS(EEmbreeBuffer, RTCBufferType)
+	VE_ENUM_CLASS(EEmbreeBufferType, RTCBufferType)
 	{
 		Index				= RTC_BUFFER_TYPE_INDEX,
 		Vertex				= RTC_BUFFER_TYPE_VERTEX,
@@ -28,7 +28,7 @@ export namespace VE
 		Transform			= RTC_BUFFER_TYPE_TRANSFORM,
 	};
 
-	VE_ENUM_CLASS(EEmbreeType, RTCFormat)
+	VE_ENUM_CLASS(EEmbreeFormat, RTCFormat)
 	{
 		Float				= RTC_FORMAT_FLOAT,
 		UInt32				= RTC_FORMAT_UINT,

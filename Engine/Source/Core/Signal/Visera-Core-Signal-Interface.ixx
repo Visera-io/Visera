@@ -30,7 +30,7 @@ export namespace VE
 		const std::source_location Location;
 		const Int32 StateCode;
 
-		explicit SSignal(
+		SSignal(
 			const String& Message, Int32 _StateCode,
 			const std::source_location& Location = std::source_location::current())
 			:

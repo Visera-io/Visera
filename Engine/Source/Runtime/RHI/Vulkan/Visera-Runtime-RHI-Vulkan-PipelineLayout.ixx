@@ -12,7 +12,6 @@ export namespace VE
 {
 	class FVulkanPipelineLayout
 	{
-		friend class RHI; // Created by RHI module
 	public:
 		// PushConstantRange is device-specified (usually 256B limit), check the limit via @vulkanCapsViewer.
 		struct FPushConstantRange

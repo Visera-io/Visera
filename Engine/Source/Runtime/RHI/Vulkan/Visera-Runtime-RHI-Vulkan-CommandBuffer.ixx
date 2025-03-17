@@ -38,7 +38,6 @@ export namespace VE
 
 	class FVulkanCommandBuffer : public std::enable_shared_from_this<FVulkanCommandBuffer>
 	{
-		friend class RHI;
 		friend class FVulkanCommandPool;
 	public:
 		enum class EStatus { Expired, Idle, Recording, ReadyToSubmit, Submitted }; //[FIXME]: Currrent Status is not trustable
@@ -50,10 +49,12 @@ export namespace VE
 		Bool IsResettable()			const { return bIsResettable;   }
 		Bool IsPrimary()			const { return bIsPrimary;		}
 
+		auto GetStatus()			const -> EStatus				{ return Status; }
 		auto GetLevel()				const -> EVulkanCommandLevel	{ return IsPrimary()? EVulkanCommandLevel::Primary : EVulkanCommandLevel::Secondary; }
 		auto GetHandle()			const -> const VkCommandBuffer	{ return Handle; }
 
-	public: //Selective Export API
+		void SetStatus(EStatus _NewStatus) { Status = _NewStatus; }
+
 		void Submit(const FVulkanCommandSubmitInfo& _SubmitInfo);
 		void Reset() const { VE_ASSERT(IsIdle() && IsResettable()); vkResetCommandBuffer(Handle, 0x0); }
 
@@ -85,7 +86,6 @@ export namespace VE
 
 	class FVulkanGraphicsCommandBuffer : public FVulkanCommandBuffer
 	{
-		friend class RHI;
 		friend class FVulkanGraphicsCommandPool;
 	public:
 		void StartRecording() { FVulkanCommandBuffer::StartRecording(); }

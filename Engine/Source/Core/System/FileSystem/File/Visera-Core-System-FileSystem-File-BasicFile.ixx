@@ -4,7 +4,6 @@ export module Visera.Core.System.FileSystem.File:BasicFile;
 
 import Visera.Core.System.FileSystem.Path;
 import Visera.Core.Signal;
-import Visera.Core.Log;
 
 export namespace VE
 {

@@ -32,7 +32,6 @@ export namespace VE
 
 	class FVulkan
 	{
-		friend class RHI;
 	public:
 		auto GetAllocator()	 -> FVulkanAllocator&{ return Allocator; }
 		auto GetInstance()	 -> FVulkanInstance& { return Instance; }

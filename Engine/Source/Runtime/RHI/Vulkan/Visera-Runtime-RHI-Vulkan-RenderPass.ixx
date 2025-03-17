@@ -20,7 +20,6 @@ export namespace VE
 
 	class FVulkanRenderPass
 	{
-		friend class RHI;
 	public:
 		enum class ERenderPassType { Background, DefaultForward, Overlay, Customized };
 		struct FSubpass final
@@ -49,6 +48,9 @@ export namespace VE
 		auto GetHandle()			  const	-> const VkRenderPass { return Handle; }
 
 		Bool HasSubpass(SharedPtr<const FVulkanRenderPipeline> _SubpassPipeline) const;
+
+		void Create(const FVulkanRenderArea& _RenderArea, const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets);
+		void Destroy();
 	
 	protected:
 		ERenderPassType					Type;
@@ -58,10 +60,6 @@ export namespace VE
 		Array<FClearValue>				ClearValues;
 		Array<FVulkanFramebuffer>		Framebuffers;
 		Array<FSubpass>					Subpasses;
-
-	private:
-		void Create(const FVulkanRenderArea& _RenderArea, const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets);
-		void Destroy();
 
 	public:
 		FVulkanRenderPass() = delete;

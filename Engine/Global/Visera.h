@@ -37,14 +37,19 @@
 #define VE_MODULE_MANAGER_CLASS(ClassName)\
     ClassName() noexcept = delete;\
     VE_NOT_COPYABLE(ClassName);\
-    VE_NOT_MOVABLE(ClassName);\
-    friend class ViseraEngine;
+    VE_NOT_MOVABLE(ClassName);
 
 #if defined(_WIN32) || defined(_WIN64)
 #define VE_IS_WINDOWS_SYSTEM true
 #define VE_ON_WINDOWS_SYSTEM
 #else
 #define VE_IS_WINDOWS_SYSTEM false
+#endif
+#if defined(__APPLE__)
+#define VE_IS_APPLE_SYSTEM true
+#define VE_ON_APPLE_SYSTEM
+#else
+#define VE_IS_APPLE_SYSTEM false
 #endif
 #if (defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__amd64__) || defined(__x86_64__)) && !defined(_M_ARM64EC)
 #define VE_IS_X86_CPU true
@@ -92,7 +97,6 @@
 
 namespace VE
 {
-	class ViseraEngine;
 
 	template <typename T>
 	concept Hashable = requires(T type) {{ std::hash<T>{}(type) } -> std::same_as<std::size_t>;};
@@ -226,5 +230,5 @@ namespace VE
 
 	template<typename T>
 	using Optional	  = std::optional<T>;
-    
+
 } // namespace VE

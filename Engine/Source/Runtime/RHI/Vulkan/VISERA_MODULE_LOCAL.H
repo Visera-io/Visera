@@ -9,8 +9,3 @@
 #else //if defined(VE_ON_X86_CPU)
 #include <vma/vk_mem_alloc.h>
 #endif
-
-namespace VE
-{
-    class RHI;
-}

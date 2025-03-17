@@ -1,13 +1,12 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.World.Object.Component;
+export module Visera.Runtime.RTC.Geometry;
 export import :Interface;
 export import :Mesh;
-export import :Transform;
 
 export namespace VE
 {
 
-	
 
-} // namespace VE
+
+}// namespace VE

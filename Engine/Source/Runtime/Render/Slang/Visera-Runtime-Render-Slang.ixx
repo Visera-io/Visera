@@ -10,25 +10,20 @@ import Visera.Core.Signal;
 
 export namespace VE
 {
-	class Render;
-	
-	template<class T>
-	using COMPtr = Slang::ComPtr<T>;
 
 	class FSlang
 	{
-		friend class Render;
 	public:
-		void CompileShader(SharedPtr<FShader> _Shader) const throw (SRuntimeError);
+		void CompileShader(SharedPtr<FShader> _Shader) const;
 
 		FSlang();
 		~FSlang() = default;
 
 	private:
-		COMPtr<slang::IGlobalSession> Context;		//[Note] Currently, the global session type is not thread-safe. Applications that wish to compile on multiple threads will need to ensure that each concurrent thread compiles with a distinct global session.
+		Slang::ComPtr<slang::IGlobalSession> Context;		//[Note] Currently, the global session type is not thread-safe. Applications that wish to compile on multiple threads will need to ensure that each concurrent thread compiles with a distinct global session.
 		struct FCompiler
 		{
-			COMPtr<slang::ISession>   Session;
+			Slang::ComPtr<slang::ISession>   Session;
 			slang::TargetDesc		  Target;
 			Array<RawString>		  ShaderPaths;
 		};
@@ -66,14 +61,13 @@ export namespace VE
 
 	void FSlang::
 	CompileShader(SharedPtr<FShader> _Shader) const
-	throw (SRuntimeError)
 	{
 		VE_ASSERT(!_Shader->IsCompiled());
 
-		COMPtr<slang::IBlob>  Diagnostics;
+		Slang::ComPtr<slang::IBlob>  Diagnostics;
 		// Select Compiler
 		const FSlang::FCompiler* Compiler = nullptr;
-		switch (_Shader->Type)
+		switch (_Shader->GetType())
 		{
 		case FShader::ECompileType::VulkanSPIRV:
 			Compiler = &VulkanSPIRVCompiler;
@@ -83,11 +77,11 @@ export namespace VE
 		}
 
 		// Create Shader Module
-		COMPtr<slang::IModule> ShaderModule{ Compiler->Session->loadModule(_Shader->GetFileName().data(), Diagnostics.writeRef()) };
+		Slang::ComPtr<slang::IModule> ShaderModule{ Compiler->Session->loadModule(_Shader->GetFileName().data(), Diagnostics.writeRef()) };
 		if (Diagnostics) { throw SRuntimeError(Text("Failed to create Slang Shader Module:\n{}", RawString(Diagnostics->getBufferPointer()))); }
 		
 		// Create Shader Program
-		COMPtr<slang::IEntryPoint> ShaderEntryPoint;
+		Slang::ComPtr<slang::IEntryPoint> ShaderEntryPoint;
 		if (ShaderModule->findEntryPointByName(
 			_Shader->GetEntryPoint().data(),
 			ShaderEntryPoint.writeRef()) != SLANG_OK)
@@ -99,7 +93,7 @@ export namespace VE
 			reinterpret_cast<slang::IComponentType*>(ShaderEntryPoint.get())
 		};
 
-		COMPtr<slang::IComponentType> ShaderProgram {nullptr};
+		Slang::ComPtr<slang::IComponentType> ShaderProgram {nullptr};
 		if (Compiler->Session->createCompositeComponentType(
 			ShaderComponents.data(),
 			ShaderComponents.size(),
@@ -107,7 +101,7 @@ export namespace VE
 			Diagnostics.writeRef()) != SLANG_OK)
 		{ throw SRuntimeError(Text("Failed to create the Shader({}):\n{}", _Shader->GetFileName(), RawString(Diagnostics->getBufferPointer()))); }
 	
-		COMPtr<slang::IBlob> CompiledCode;
+		Slang::ComPtr<slang::IBlob> CompiledCode;
 		if (ShaderProgram->getEntryPointCode(
 			0,
 			0,
@@ -131,9 +125,10 @@ export namespace VE
 
 		std::cerr << Text("Warn: Func(ReflectShader) is WIP but is still being used for testing!\n");
 		
-		_Shader->Handle = RHI::CreateShader(ShaderStage,
-											CompiledCode->getBufferPointer(),
-											CompiledCode->getBufferSize());
+		_Shader->Create(RHI::CreateShader(
+						ShaderStage,
+						CompiledCode->getBufferPointer(),
+						CompiledCode->getBufferSize()));
 
 		ShaderProgram->release();
 	}

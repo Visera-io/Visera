@@ -16,7 +16,6 @@ export namespace VE
 	public:
 		VE_API CreateWindow() -> void { ImGui::ShowDemoWindow(); }
 
-	private:
 		class FUIRenderPass : public RHI::FRenderPass
 		{
 		public:
@@ -45,7 +44,8 @@ export namespace VE
 			}
 		};
 
-		static void BeginFrame(SharedPtr<RHI::FGraphicsCommandBuffer> _EditorCommandBuffer)
+		static void
+		BeginFrame(SharedPtr<RHI::FGraphicsCommandBuffer> _EditorCommandBuffer)
 		{
 			VE_ASSERT(_EditorCommandBuffer->IsRecording());
 
@@ -56,7 +56,8 @@ export namespace VE
 			_EditorCommandBuffer->ReachRenderPass(EditorRenderPass);
 		}
 
-		static void EndFrame(SharedPtr<RHI::FGraphicsCommandBuffer> _EditorCommandBuffer)
+		static void
+		EndFrame(SharedPtr<RHI::FGraphicsCommandBuffer> _EditorCommandBuffer)
 		{
 			ImGui::Render();
 			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), _EditorCommandBuffer->GetHandle());
@@ -101,7 +102,7 @@ export namespace VE
 				
 				.MinImageCount	= UInt32(RHI::GetSwapchainFrameCount()),
 				.ImageCount		= UInt32(RHI::GetSwapchainFrameCount()),
-				.MSAASamples	= AutoCast(RHI::ESampleRate::X1),
+				.MSAASamples	= VK_SAMPLE_COUNT_1_BIT,
 
 				.PipelineCache	= API->GetGraphicsPipelineCache().GetHandle(),
 				.Subpass		= 0,

@@ -14,7 +14,6 @@ export namespace VE
 
 	class FVulkanCommandPool : public std::enable_shared_from_this<FVulkanCommandPool>
 	{
-		friend class RHI;
 	public:
 		auto GetHandle()	const -> const VkCommandPool { return Handle; }
 

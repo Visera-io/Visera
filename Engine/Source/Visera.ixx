@@ -1,6 +1,7 @@
 module;
 #include <Visera.h>
-#if defined(VE_ON_WINDOWS_SYSTEM)
+#include <string>
+#if (VE_IS_WINDOWS_SYSTEM)
 #include <Windows.h>
 #endif
 export module Visera;
@@ -18,8 +19,8 @@ export namespace VE
 		virtual void Terminate() = 0;
 		virtual void Tick() = 0;
 
-		void inline
-		Exit(const SAppStop& Message = SAppStop("ViseraEngine App Exited Successfully.")) const throw(SAppStop) { throw Message; }
+		// void inline
+		// Exit(const SAppStop& Message = SAppStop("ViseraEngine App Exited Successfully.")) const { throw Message; }
 
 		ViseraApp()	 noexcept = default;
 		~ViseraApp() noexcept = default;
@@ -31,55 +32,54 @@ export namespace VE
 	public:
 		VE_API Run(ViseraApp* App) -> ErrorCode
 		{
-			if (!App) { Log::Fatal("ViseraEngine App is not created!"); }
 			Int32 StateCode = EXIT_SUCCESS;
 
-			Bootstrap(App);
+			try
 			{
-				try
+				if (!App) { Log::Fatal("ViseraEngine App is not created!"); }
+
+				Log::Debug("Bootstrapping the " VISERA_APP_NAME "...");
+				Bootstrap(App);
 				{
-					Log::Debug("Bootstrapping the " VISERA_APP_NAME "...");
+					while (!Window::ShouldClose())
 					{
-						while (!Window::ShouldClose())
+						Window::PollEvents();
+
+						auto& Frame = RHI::WaitFrameReady();
+						Editor::BeginFrame(Frame.GetEditorCommandBuffer());
+
+						try
 						{
-							Window::PollEvents();
-
-							auto& Frame = RHI::WaitFrameReady();
-							Editor::BeginFrame(Frame.GetEditorCommandBuffer());
-
-							try
-							{
-								App->Tick();
-							}
-							catch (const SRuntimeError& Signal)
-							{
-								Log::Error("ViseraApp Runtime Error:\n{}{}", Signal.What(), Signal.Where());
-								StateCode = Signal.StateCode;
-								App->Exit();
-							}
-							World::Update();
-
-							Editor::EndFrame(Frame.GetEditorCommandBuffer());
-							RHI::RenderAndPresentCurrentFrame();
+							App->Tick();
 						}
-					}
+						catch (const SRuntimeError& Signal)
+						{
+							Log::Error("ViseraApp Runtime Error:\n{}{}", Signal.What(), Signal.Where());
+							StateCode = Signal.StateCode;
+							//App->Exit();
+						}
+						World::Update();
 
+						Editor::EndFrame(Frame.GetEditorCommandBuffer());
+						RHI::RenderAndPresentCurrentFrame();
+					}
 				}
-				catch (const SRuntimeError& Signal)
-				{
-					Log::Error("ViseraEngine Runtime Error:\n{}{}", Signal.What(), Signal.Where());
-					StateCode = Signal.StateCode;
-				}
-				catch (const SAppStop& Signal)
-				{
-					Log::Debug(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
-					StateCode = Signal.StateCode;
-				}
-				catch (const SEngineStop& Signal)
-				{
-					Log::Debug("ViseraEngine Stopped:\n{}{}", Signal.What(), Signal.Where());
-					StateCode = Signal.StateCode;
-				}
+
+			}
+			catch (const SRuntimeError& Signal)
+			{
+				Log::Error("ViseraEngine Runtime Error:\n{}{}", Signal.What(), Signal.Where());
+				StateCode = Signal.StateCode;
+			}
+			catch (const SAppStop& Signal)
+			{
+				Log::Debug(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
+				StateCode = Signal.StateCode;
+			}
+			catch (const SEngineStop& Signal)
+			{
+				Log::Debug("ViseraEngine Stopped:\n{}{}", Signal.What(), Signal.Where());
+				StateCode = Signal.StateCode;
 			}
 
 			Terminate(App);

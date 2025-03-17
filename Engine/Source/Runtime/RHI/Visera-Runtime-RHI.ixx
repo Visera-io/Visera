@@ -34,7 +34,7 @@ export namespace VE
 		using FRenderPass			= FVulkanRenderPass;
 		using FRenderPassLayout		= FVulkanRenderPassLayout;
 		using FRenderTarget			= FVulkanRenderTarget;
-		using FRenderPipeline		= FVulkanRenderPipeline;	
+		using FRenderPipeline		= FVulkanRenderPipeline;
 		using FPipelineLayout		= FVulkanPipelineLayout;
 		using FRenderPipelineSetting= FVulkanRenderPipelineSetting;
 		using FPushConstantRange	= FVulkanPipelineLayout::FPushConstantRange;
@@ -66,7 +66,7 @@ export namespace VE
 		using EPresentMode			= EVulkanPresentMode;
 
 		using SSwapchainRecreation = FVulkanSwapchain::SRecreation;
-	
+
 		enum class ESystemRenderTarget{ Color, Depth };
 		class FFrameContext
 		{
@@ -131,7 +131,7 @@ export namespace VE
 		static inline auto
 		WaitDeviceIdle()		 -> void { Vulkan->GetDevice().WaitIdle(); }
 		static inline auto
-		GetAPI()				 -> const FVulkan* { return Vulkan; }
+		GetAPI()				 -> FVulkan* { return Vulkan; }
 		static inline auto
 		GetGlobalDescriptorPool()-> const FDescriptorPool& { return GlobalDescriptorPool; }
 
@@ -145,7 +145,7 @@ export namespace VE
 		static inline Array<FFrameContext> Frames;
 		static inline UInt32 FPS{ 0 };
 
-	private:
+	public:
 		static void inline
 		Bootstrap()
 		{
@@ -186,7 +186,7 @@ export namespace VE
 				);
 				ImmeCmds->ConvertImageLayout(ColorImage, EVulkanImageLayout::ColorAttachment);
 				Frame.RenderTarget->AddColorImage(ColorImage);
-				
+
 				auto DepthImage = CreateImage(
 					EImageType::Image2D,
 					{ FFrameContext::RenderArea.extent.width, FFrameContext::RenderArea.extent.height, 1 },
@@ -245,7 +245,7 @@ export namespace VE
 					.pSignalSemaphores		= nullptr,
 					.SignalFence			= &Fence,
 				});
-			
+
 			Fence.Wait();
 		}
 
@@ -302,11 +302,11 @@ export namespace VE
 			Vulkan->GetSwapchain().WaitForNextImage(CurrentFrame.SwapchainReadySemaphore);
 
 			CurrentFrame.InFlightFence.Block();
-			CurrentFrame.GraphicsCommandBuffer->Status = FGraphicsCommandBuffer::EStatus::Idle;
+			CurrentFrame.GraphicsCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
 			CurrentFrame.GraphicsCommandBuffer->Reset();
 			CurrentFrame.GraphicsCommandBuffer->StartRecording();
 
-			CurrentFrame.EditorCommandBuffer->Status = FGraphicsCommandBuffer::EStatus::Idle;
+			CurrentFrame.EditorCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
 			CurrentFrame.EditorCommandBuffer->Reset();
 			CurrentFrame.EditorCommandBuffer->StartRecording();
 		}
@@ -357,7 +357,7 @@ export namespace VE
 				}
 			};
 			vkCmdPipelineBarrier(
-				CurrentFrame.GraphicsCommandBuffer->Handle,
+				CurrentFrame.GraphicsCommandBuffer->GetHandle(),
 				AutoCast(EGraphicsPipelineStage::PipelineTop),
 				AutoCast(EGraphicsPipelineStage::Transfer),
 				0x0,		// Dependency Flags
@@ -370,17 +370,17 @@ export namespace VE
 			{
 				.srcSubresource
 				{
-					.aspectMask		= AutoCast(CurrentFrame.RenderTarget->ColorImages[0]->GetAspects()),
+					.aspectMask		= AutoCast(CurrentFrame.RenderTarget->GetColorImage(0)->GetAspects()),
 					.mipLevel		= 0,
 					.baseArrayLayer = 0,
-					.layerCount = CurrentFrame.RenderTarget->ColorImages[0]->GetArrayLayers(),
+					.layerCount = CurrentFrame.RenderTarget->GetColorImage(0)->GetArrayLayers(),
 				},
 				.srcOffsets
 				{
 					{0, 0, 0},
-					{Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().width),
-					 Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().height),
-					 Int32(CurrentFrame.RenderTarget->ColorImages[0]->GetExtent().depth)},
+					{Int32(CurrentFrame.RenderTarget->GetColorImage(0)->GetExtent().width),
+					 Int32(CurrentFrame.RenderTarget->GetColorImage(0)->GetExtent().height),
+					 Int32(CurrentFrame.RenderTarget->GetColorImage(0)->GetExtent().depth)},
 				},
 				.dstSubresource
 				{
@@ -397,14 +397,14 @@ export namespace VE
 					 1},
 				}
 			};
-						
+
 			//[FIXME]: RenderPass FinalLayout Invalid???
-			CurrentFrame.GraphicsCommandBuffer->ConvertImageLayout(CurrentFrame.RenderTarget->ColorImages[0], EImageLayout::TransferSource);
+			CurrentFrame.GraphicsCommandBuffer->ConvertImageLayout(CurrentFrame.RenderTarget->GetColorImage(0), EImageLayout::TransferSource);
 
 			vkCmdBlitImage(
-				CurrentFrame.GraphicsCommandBuffer->Handle,
-				CurrentFrame.RenderTarget->ColorImages[0]->GetHandle(),
-				AutoCast(CurrentFrame.RenderTarget->ColorImages[0]->GetLayout()),
+				CurrentFrame.GraphicsCommandBuffer->GetHandle(),
+				CurrentFrame.RenderTarget->GetColorImage(0)->GetHandle(),
+				AutoCast(CurrentFrame.RenderTarget->GetColorImage(0)->GetLayout()),
 				Vulkan->GetSwapchain().GetCurrentImage(),
 				AutoCast(EImageLayout::TransferDestination),
 				1,
@@ -412,10 +412,10 @@ export namespace VE
 				AutoCast(EFilter::Linear));
 
 			//[FIXME]: RenderPass FinalLayout Invalid???
-			CurrentFrame.GraphicsCommandBuffer->ConvertImageLayout(CurrentFrame.RenderTarget->ColorImages[0], EImageLayout::ColorAttachment);
-			
+			CurrentFrame.GraphicsCommandBuffer->ConvertImageLayout(CurrentFrame.RenderTarget->GetColorImage(0), EImageLayout::ColorAttachment);
+
 			// [FIXME]: Currently clear in the EditorPass
-			// CurrentFrame.GraphicsCommandBuffer->ClearColorImage(CurrentFrame.RenderTarget->ColorImages[0]);
+			// CurrentFrame.GraphicsCommandBuffer->ClearColorImage(CurrentFrame.RenderTarget->GetColorImage(0));
 
 			VkImageMemoryBarrier SwapchainPresentBarrier
 			{
@@ -437,7 +437,7 @@ export namespace VE
 				}
 			};
 			vkCmdPipelineBarrier(
-				CurrentFrame.GraphicsCommandBuffer->Handle,
+				CurrentFrame.GraphicsCommandBuffer->GetHandle(),
 				AutoCast(EGraphicsPipelineStage::Transfer),
 				AutoCast(EGraphicsPipelineStage::PipelineBottom),
 				0x0,		// Dependency Flags

@@ -1,9 +1,6 @@
 module;
 #include <Visera.h>
 export module Visera.Runtime.World;
-export import Visera.Runtime.World.RTC;
-export import Visera.Runtime.World.Ray;
-export import Visera.Runtime.World.Geometry;
 import Visera.Runtime.World.Atlas;
 import Visera.Runtime.World.Object;
 import Visera.Runtime.World.Stage;
@@ -24,17 +21,14 @@ export namespace VE
 
 		static inline auto
 		GetCoordinate() -> const FViseraChart& { return Atlas::Visera; }
-		static inline auto
-		CreateCoordinateSystem(const Vector3F& _Pivot) -> ResultPackage<Vector3F, Vector3F, Vector3F>;
 
 		template<VObjectType T> static auto
 		CreateObject(FName _Name) -> SharedPtr<T> ;
 		static inline auto
 		SearchObject(FName _Name)->SharedPtr<VObject>;
-		static inline auto
-		CreateStage(FName _StageName, const String& _StageFile) -> SharedPtr<FStage> { return CreateSharedPtr<FStage>(_StageName, _StageFile); }
+		// static inline auto
+		// CreateStage(FName _StageName, const String& _StageFile) -> SharedPtr<FStage> { return CreateSharedPtr<FStage>(_StageName, _StageFile); }
 
-	private:
 		static inline auto Bootstrap() -> void;
 		static inline auto Update() -> void;
 		static inline auto Terminate() -> void;
@@ -47,7 +41,7 @@ export namespace VE
 	void World::
 	Bootstrap()
 	{
-		RTC::Bootstrap();
+
 	}
 
 	void World::
@@ -67,8 +61,6 @@ export namespace VE
 			}
 		}
 		RWLock.StopWriting();
-
-		RTC::Terminate();
 	}
 
 	template<VObjectType T>
@@ -111,7 +103,7 @@ export namespace VE
 			auto Target = ObjectTable.find(_Name);
 			if (Target != ObjectTable.end())
 			{
-				if (Target->second->bRecollectable &&
+				if (Target->second->IsRecollectable() &&
 					Target->second.use_count() == 1)
 				{
 					Log::Warn("The searched object({}) is about to be recollected!", _Name.GetNameWithNumber());

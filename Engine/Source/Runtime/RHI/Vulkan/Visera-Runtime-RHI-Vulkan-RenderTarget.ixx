@@ -15,15 +15,17 @@ export namespace VE
 	class FVulkanRenderTarget
 	{
 		VE_NOT_COPYABLE(FVulkanRenderTarget);
-		friend class RHI;
 		friend class FVulkanRenderPass;
 		friend class FVulkanFramebuffer;
 	public:
 		void AddColorImage(SharedPtr<FVulkanImage> _ColorImage);
 		void AddDepthImage(SharedPtr<FVulkanImage> _DepthImage);
+
+		auto GetColorImage(UInt8 _Index)	-> SharedPtr<FVulkanImage> { VE_ASSERT(_Index < ColorImages.size()); return ColorImages[_Index]; };
 		auto GetTotalImageCount()	const	-> UInt8 { return GetColorImageCount() + GetResolveImageCount() + (HasDepthImage()? 1 : 0); }
 		auto GetColorImageCount()	const	-> UInt8 { return ColorImages.size(); }
 		auto GetResolveImageCount() const	-> UInt8 { return ResolveImages.size(); }
+
 		Bool HasDepthImage() const { return DepthImage != nullptr; }
 
 		auto Clone() const -> SharedPtr<FVulkanRenderTarget>;

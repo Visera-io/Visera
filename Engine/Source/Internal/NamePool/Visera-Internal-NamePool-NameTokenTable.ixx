@@ -64,7 +64,13 @@ export namespace VE { namespace Internal
     FNameTokenTable::FNameTokenTableSection::
     FNameTokenTableSection()
     {
-        Tokens   = (FNameToken*)Memory::MallocNow(InitSectionSize, alignof(FNameToken));
+#if (VE_IS_WINDOWS_SYSTEM)
+        constexpr UInt32 TokenAlignment = alignof(FNameToken);
+#elif (VE_IS_APPLE_SYSTEM)
+        constexpr UInt32 TokenAlignment = ((alignof(FNameToken) / sizeof(void*)) + 1) * sizeof(void*);
+#endif
+
+        Tokens   = (FNameToken*)Memory::MallocNow(InitSectionSize, TokenAlignment);
         Capacity = InitNameTokens;
         UseCount = 0;
     }

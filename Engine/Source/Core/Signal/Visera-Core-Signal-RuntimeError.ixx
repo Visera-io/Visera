@@ -10,7 +10,7 @@ export namespace VE
 	class SRuntimeError final : public SSignal
 	{
 	public:
-		explicit SRuntimeError(
+		SRuntimeError(
 			const String& Message, Int32 _StateCode = 0,
 			const std::source_location& Location = std::source_location::current())
 			:

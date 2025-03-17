@@ -3,9 +3,9 @@ module;
 #include <FreeImagePlus.h>
 export module Visera.Core.Media.Image;
 
-import Visera.Core.System.FileSystem;
-import Visera.Core.Signal;
+import Visera.Core.System.FileSystem.Path;
 import Visera.Core.Type;
+import Visera.Core.Signal;
 
 export namespace VE
 {
@@ -28,7 +28,17 @@ export namespace VE
 			ArrayInt32		= FIT_INT32,	//! array of long			: signed 32-bit
 			ArrayFloat		= FIT_FLOAT,	//! array of float			: 32-bit IEEE floating point
 			ArrayDouble		= FIT_DOUBLE,	//! array of double			: 64-bit IEEE floating point
-			ArrayComplex	= FIT_COMPLEX,	//! array of FICOMPLEX		: 2 x 64-bit IEEE floating point	
+			ArrayComplex	= FIT_COMPLEX,	//! array of FICOMPLEX		: 2 x 64-bit IEEE floating point
+		};
+
+		enum class EFilter
+		{
+			Box = FREE_IMAGE_FILTER::FILTER_BOX,
+			Bicubic = FREE_IMAGE_FILTER::FILTER_BICUBIC,
+			BSpline = FREE_IMAGE_FILTER::FILTER_BSPLINE,
+			Lanczos3 = FREE_IMAGE_FILTER::FILTER_LANCZOS3,
+			Bilinear = FREE_IMAGE_FILTER::FILTER_BILINEAR,
+			CatmullRom = FREE_IMAGE_FILTER::FILTER_CATMULLROM,
 		};
 
 		struct FPixel
@@ -36,11 +46,13 @@ export namespace VE
 			//[TODO]: Pixel Iterator (Avoid the SLOW Boundary Check)
 			union
 			{
-				Byte	R, G, B, A;
+				struct { UInt8 B, G, R, A; };
 				RGBQUAD Data{ 255, 0, 255, 255 };
 			};
 		};
-		
+
+		void Resize(UInt32 _NewWidth, UInt32 _NewHeight, EFilter _Filter) { Handle.rescale(_NewWidth, _NewHeight, FREE_IMAGE_FILTER(_Filter)); }
+
 		auto GetPixel(UInt32 _X, UInt32 _Y) const -> Optional<FPixel> { FPixel Pixel; if (!Handle.getPixelColor(_X, _Y, &Pixel.Data)) { return {}; } else { return Pixel; } }
 		Bool SetPixel(UInt32 _X, UInt32 _Y, FPixel _Value) { VE_ASSERT(!IsGrayScale()); return Handle.setPixelColor(_X, _Y, &_Value.Data); }
 		auto GetData()		const -> Byte*		{ return Handle.accessPixels(); }
@@ -52,23 +64,22 @@ export namespace VE
 		Bool IsValid()		const { return Handle.isValid(); }
 		Bool IsGrayScale()	const { return Handle.isGrayscale(); }
 #if defined(VE_ON_ARM_CPU)
-		void Save() const { if (!Handle.save(Path.GetData().c_str())) { throw SIOFailure(Text("Failed to save the image({})!", Name.GetNameWithNumber())); } }
+		void Save() const { if (!Handle.save(Path.GetData().c_str())) { throw std::runtime_error(Text("Failed to save the image({})!", Path.GetData().c_str())); } }
 #else
 		void Save() const { if (!Handle.saveU(Path.GetData().c_str())) { throw SIOFailure(Text("Failed to save the image({})!", Name.GetNameWithNumber())); } }
 #endif
 
 		FImage() = delete;
-		FImage(FName _Name, const FPath& _Path);
+		FImage(const FPath& _Path);
 		~FImage() = default;
 
 	private:
-		FName  Name;
-		FPath  Path;
-		mutable fipImage Handle;
+		const	FPath		Path;
+		mutable fipImage	Handle;
 
 		//FreeImagePlus Doc: https://freeimage.sourceforge.io/fip/index.html
 		struct FFreeImage
-		{		
+		{
 			FFreeImage()  { FreeImage_Initialise();   };
 			~FFreeImage() { FreeImage_DeInitialise(); };
 		};
@@ -76,15 +87,15 @@ export namespace VE
 	};
 
 	FImage::
-	FImage(FName _Name, const FPath& _Path) : Name{_Name}, Path{_Path}
+	FImage(const FPath& _Path) : Path{_Path}
 	{
 		const static FFreeImage FreeImage;
-#if defined(VE_ON_ARM_CPU)
+#if (VE_IS_APPLE_SYSTEM)
 		if (!Handle.load(Path.GetData().c_str()))
-		{ throw SIOFailure(Text("Failed to load the image({})!", _Name.GetNameWithNumber())); }
+		{ throw SIOFailure(Text("Failed to load the image({})!", Path.GetData().c_str())); }
 #else
 		if (!Handle.loadU(Path.GetData().c_str()))
-		{ throw SIOFailure(Text("Failed to load the image({})!", _Name.GetNameWithNumber())); }
+		{ throw SIOFailure(Text("Failed to load the image({})!", Path.GetData().c_str())); }
 #endif
 	}
 

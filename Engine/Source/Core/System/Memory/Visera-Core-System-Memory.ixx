@@ -90,8 +90,10 @@ export namespace VE
         {
 #if defined(VE_ON_WINDOWS_SYSTEM)
             AllocatedMemory = _aligned_malloc(_Size, _Alignment);
+#elif defined(VE_ON_APPLE_SYSTEM)
+            posix_memalign(&AllocatedMemory, _Alignment, _Size);
 #else
-            AllocatedMemory = std::aligned_alloc(_Alignment, _Size);
+            AllocatedMemory = std::aligned_alloc(_Alignment, 8);
 #endif
         }
         else AllocatedMemory = std::malloc(_Size);
@@ -168,7 +170,17 @@ export namespace VE
 
     Bool Memory::
     IsValidAllocation(UInt64 _Size, UInt32 _Alignment)
-    { return _Size && (!_Alignment || (IsPowerOfTwo(_Alignment) && (_Size % _Alignment == 0))); }
+    {
+        return _Size
+                && (!_Alignment
+                    ||
+                    (IsPowerOfTwo(_Alignment)
+                    && (_Size % _Alignment == 0))
+#if defined(VE_ON_APPLE_SYSTEM)
+                    && (_Alignment % sizeof(void*) == 0)
+#endif
+        );
+    }
 
     Bool Memory::
     IsZero(const void* _Memory, UInt64 _Size)

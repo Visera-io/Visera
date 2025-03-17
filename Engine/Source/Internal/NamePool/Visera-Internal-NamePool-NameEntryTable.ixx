@@ -21,7 +21,11 @@ export namespace VE { namespace Internal
 
 			MaxSectionBits		= 13,
 			MaxSections			= (1U << MaxSectionBits),		// 8192 Sections
+#if defined(VE_ON_WINDOWS_SYSTEM)
 			NameEntryAlignment	= alignof(FNameEntry),
+#elif defined(VE_ON_APPLE_SYSTEM)
+			NameEntryAlignment	= (alignof(FNameEntry) / sizeof(void*) + 1) * sizeof(void*),
+#endif
 			NameEntryByteStride = NameEntryAlignment,
 
 			SectionOffsetBits	= 16, // Since NameEntryAlignment and NameEntryByteStride are same (2), we can use 16bits to encode 65536 offsets (remeber these factor!)

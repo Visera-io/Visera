@@ -11,7 +11,6 @@ import Visera.Core.Signal;
 
 export namespace VE
 {
-
 	class FVulkanInstance
 	{
 		friend class FVulkan;
@@ -114,7 +113,7 @@ export namespace VE
 				if (strcmp(RequiredLayer, AvailableLayer.layerName) == 0)
 				{ Found = true; break; }
 			}
-			if (!Found) Log::Fatal(Text("Failed to enable the Vulkan Validation Layer {}", RequiredLayer));
+			if (!Found) { Log::Fatal(Text("Failed to enable the Vulkan Validation Layer {}", RequiredLayer)); }
 		}
 
 		const VkApplicationInfo AppInfo
@@ -130,12 +129,12 @@ export namespace VE
 		VkDebugUtilsMessengerCreateInfoEXT MessengerCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
-			.messageSeverity=  
+			.messageSeverity=
 				//VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
 				VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT    |
 				VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
 				VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
-			.messageType    =      
+			.messageType    =
 				//VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT     |
 				VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT  |
 				VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
@@ -156,11 +155,11 @@ export namespace VE
 			.enabledExtensionCount	= UInt32(Extensions.size()),
 			.ppEnabledExtensionNames= Extensions.data(),
 		};
-		if(VK_SUCCESS != vkCreateInstance(
-			&InstanceCreateInfo,
-			GVulkan->AllocationCallbacks,
-			&Handle))
-		{ throw SRuntimeError("Failed to create Vulkan Instance!"); }
+		auto Result = vkCreateInstance(&InstanceCreateInfo,
+										GVulkan->AllocationCallbacks,
+										&Handle);
+		if(Result != VK_SUCCESS)
+		{ throw SRuntimeError(Text("Failed to create Vulkan Instance ({})!", Int32(Result))); }
 
 		return Handle;
 	}

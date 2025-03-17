@@ -1,17 +1,17 @@
 module;
 #include <Visera.h>
 #include <embree4/rtcore.h>
-export module Visera.Runtime.World.RTC.Embree:Device;
+export module Visera.Runtime.RTC.Embree:Device;
 
 import Visera.Core.Signal;
 
 export namespace VE
 {
-	
+
 	class FEmbreeDevice
 	{
 	public:
-		auto GetHandle() const -> const RTCDevice { return Handle; }
+		auto GetHandle() const -> RTCDevice { return Handle; }
 		operator RTCDevice() const { return Handle; }
 
 	private:

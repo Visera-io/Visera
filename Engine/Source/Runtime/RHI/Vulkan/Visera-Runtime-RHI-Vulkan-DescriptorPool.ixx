@@ -14,7 +14,6 @@ export namespace VE
 
 	class FVulkanDescriptorPool : public std::enable_shared_from_this<FVulkanDescriptorPool>
 	{
-		friend class RHI;
 	public:
 		// Return nullptr when exceeded MaxSets Limit.
 		auto CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _Layout) -> SharedPtr<FVulkanDescriptorSet>;

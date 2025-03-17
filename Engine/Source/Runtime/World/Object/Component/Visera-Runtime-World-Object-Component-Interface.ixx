@@ -1,13 +1,13 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.World.Object.Component:BasicComponent;
+export module Visera.Runtime.World.Object.Component:Interface;
 import Visera.Core.Type;
 import Visera.Core.Signal;
 
 export namespace VE
 {
 
-	class OCBasicComponent
+	class IObjectComponent
 	{
 	public:
 		auto GetComponentName()				-> StringView { return Name.GetFileName(); }
@@ -19,9 +19,9 @@ export namespace VE
 		virtual void Destroy() = 0;
 
 	public:
-		OCBasicComponent() = delete;
-		OCBasicComponent(FName _Name):Name{ _Name } { VE_ASSERT(!Name.IsNone()); }
-		virtual ~OCBasicComponent() = default;
+		IObjectComponent() = delete;
+		IObjectComponent(FName _Name):Name{ _Name } { VE_ASSERT(!Name.IsNone()); }
+		virtual ~IObjectComponent() = default;
 				
 	private:
 		FName Name;

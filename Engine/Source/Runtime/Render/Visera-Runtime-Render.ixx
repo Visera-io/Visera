@@ -18,11 +18,9 @@ export namespace VE
 		enum class ESystemRT { Color, Depth };
 		using FShader = FShader;
 
-		VE_API CreateShader(StringView _ShaderFileName, StringView _EntryPoint, FShader::ECompileType _CompileType = FShader::ECompileType::Default) throw (SIOFailure, SRuntimeError) -> SharedPtr<FShader>;
+		VE_API CreateShader(StringView _ShaderFileName, StringView _EntryPoint, FShader::ECompileType _CompileType = FShader::ECompileType::Default) -> SharedPtr<FShader>;
 
-	private:
 		static void inline Bootstrap();
-		static void inline Tick();
 		static void inline Terminate();
 	};
 	
@@ -30,7 +28,6 @@ export namespace VE
 	CreateShader(StringView _ShaderFileName,
 				 StringView _EntryPoint,
 				 FShader::ECompileType _CompileType/*Default*/)
-	throw (SIOFailure, SRuntimeError)
 	{ 
 		static FSlang Slang{}; // Lazy Load
 		auto Shader = CreateSharedPtr<FShader>(_ShaderFileName, _EntryPoint);
