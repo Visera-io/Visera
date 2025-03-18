@@ -154,6 +154,7 @@ export namespace VE
 		Array<VkSubpassDependency>  SubpassDependencies(Subpasses.size());
 		Array<Array<VkAttachmentReference>> ColorRefTable(Subpasses.size());
 		Array<Array<VkAttachmentReference>> ResolveRefTable(Subpasses.size());
+		Array<VkAttachmentReference>		DepthRefTable(Subpasses.size());
 		
 		ClearValues.reserve(Layout.GetTotalAttachmentCount());
 
@@ -182,8 +183,8 @@ export namespace VE
 					ClearValues.emplace_back(FClearValue{ .color{1.0f, 0.0f, 0.0f, 1.0f} });
 				}
 			}
-	
-			Optional<VkAttachmentReference> DepthRef;
+
+			auto& DepthRef = DepthRefTable[Idx];
 			if (Layout.HasDepthImage())
 			{
 				DepthRef = VkAttachmentReference
@@ -203,7 +204,7 @@ export namespace VE
 				.colorAttachmentCount	= UInt32(ColorRefs.size()),
 				.pColorAttachments		= ColorRefs.data(),
 				.pResolveAttachments	= ResolveRefs.empty()? nullptr : ResolveRefs.data(),
-				.pDepthStencilAttachment= &DepthRef.value(),
+				.pDepthStencilAttachment= &DepthRef,
 				.preserveAttachmentCount= 0,
 				.pPreserveAttachments	= nullptr,
 			};
