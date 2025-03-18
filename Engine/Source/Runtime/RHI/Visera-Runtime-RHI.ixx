@@ -6,6 +6,7 @@ import Visera.Runtime.RHI.Vulkan;
 
 import Visera.Core.Signal;
 import Visera.Core.Time;
+import Visera.Runtime.Window;
 
 export namespace VE
 {
@@ -78,7 +79,7 @@ export namespace VE
 			Bool IsReady() const { return !InFlightFence.IsBlocking(); }
 
 		private:
-			static inline FRenderArea RenderArea{ {0,0},{ 1280,800 } }; //[FIXME]: Read from Config
+			static inline FRenderArea RenderArea{ {0,0},{UInt32(Window::GetExtent().Width), UInt32(Window::GetExtent().Height) } }; //[FIXME]: Read from Config
 			SharedPtr<FRenderTarget> RenderTarget = CreateSharedPtr<FRenderTarget>();
 
 			SharedPtr<FGraphicsCommandBuffer> GraphicsCommandBuffer	= RHI::CreateGraphicsCommandBuffer();

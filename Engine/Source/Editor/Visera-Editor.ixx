@@ -59,6 +59,10 @@ export namespace VE
 		static void
 		EndFrame(SharedPtr<RHI::FGraphicsCommandBuffer> _EditorCommandBuffer)
 		{
+			ImGui::ShowDemoWindow();
+			ImGui::Begin("SSS");
+			ImGui::End();
+
 			ImGui::Render();
 			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), _EditorCommandBuffer->GetHandle());
 

@@ -18,14 +18,18 @@ export namespace VE
 		};
 
 	public:
-		static inline GLFWwindow*
-		GetHandle() { return Handle; }
-		static inline StringView
-		GetTitle() { return Title; }
 		static inline Bool
 		ShouldClose() { return glfwWindowShouldClose(Handle); }
 		static inline void
 		PollEvents() { glfwPollEvents(); }
+
+		static inline GLFWwindow*
+		GetHandle() { return Handle; }
+		static inline StringView
+		GetTitle() { return Title; }
+		static inline Extent
+		GetExtent() { return CurrentExtent; }
+
 		static inline Extent
 		QueryFrameBufferExtent() { Extent FrameBufferExtent; glfwGetFramebufferSize(Handle, &FrameBufferExtent.Width, &FrameBufferExtent.Height); return FrameBufferExtent; }
 		static inline void
@@ -41,7 +45,7 @@ export namespace VE
 
 	private:
 		static inline String	Title				= VISERA_APP_NAME;
-		static inline Extent	CurrentExtent		{{.Width = 1280, .Height = 800}};
+		static inline Extent	CurrentExtent		{{.Width = 1920, .Height = 1080}};
 		static inline Bool		bMaximized			= False;
 
 		static inline GLFWwindow*  Handle		= nullptr;
@@ -55,7 +59,15 @@ export namespace VE
 			glfwWindowHint(GLFW_RESIZABLE,	GLFW_TRUE);
 
 			//Create Window
-			Handle = glfwCreateWindow(CurrentExtent.Width, CurrentExtent.Height, Title.c_str(), NULL, NULL);
+			Handle = glfwCreateWindow(
+#if (VE_IS_APPLE_SYSTEM)
+			CurrentExtent.Width >> 1, CurrentExtent.Height >> 1, // Retina Display
+#else
+			CurrentExtent.Width, CurrentExtent.Height,
+#endif
+				Title.c_str(),
+				NULL,
+				NULL);
 			if (!Handle)
 			{ throw SRuntimeError("Failed to create GLFWwindow!"); }
 			
