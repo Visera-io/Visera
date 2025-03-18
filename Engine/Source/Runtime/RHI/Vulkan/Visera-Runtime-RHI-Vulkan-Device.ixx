@@ -8,6 +8,7 @@ import :GPU;
 import :Surface;
 
 import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -16,15 +17,6 @@ export namespace VE
 	{
 		friend class FVulkan;
 	public:
-		void WaitIdle()  const { vkDeviceWaitIdle(Handle); }
-		void SubmitCommands(EVulkanQueueFamily _QueueFamily, const VkSubmitInfo _SubmitInfos[], UInt32 _SubmitCounts, VkFence _Fence, UInt32 _QueueIndex = 0) const;
-		auto GetHandle() const -> const VkDevice { return Handle; }
-
-	private:
-		VkDevice				Handle{ VK_NULL_HANDLE };
-		Array<RawString>		Extensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-											VK_KHR_MAINTENANCE1_EXTENSION_NAME };
-	public:
 		struct FQueueFamily
 		{
 			UInt32				Index = UINT32_MAX;
@@ -32,7 +24,25 @@ export namespace VE
 			Array<Float>		QueuePriorities{ 1.0 };
 			Bool IsValid() const { return Index != UINT32_MAX; }
 		};
+
+		void WaitIdle()  const { vkDeviceWaitIdle(Handle); }
+		void SubmitCommands(EVulkanQueueFamily _QueueFamily, const VkSubmitInfo _SubmitInfos[], UInt32 _SubmitCounts, VkFence _Fence, UInt32 _QueueIndex = 0) const;
+
+		auto GetHandle() const -> const VkDevice { return Handle; }
 		auto GetQueueFamily(EVulkanQueueFamily Type) const -> const FQueueFamily& { return QueueFamilies[AutoCast(Type)]; }
+
+		Bool IsSupportingExclusiveSwapchain() const { return GetQueueFamily(EVulkanQueueFamily::Present).Index == GetQueueFamily(EVulkanQueueFamily::Graphics).Index; }
+
+	private:
+		VkDevice				Handle{ VK_NULL_HANDLE };
+		Array<RawString>		Extensions
+								{
+#if (VE_IS_APPLE_SYSTEM)
+									"VK_KHR_portability_subset",
+#endif
+									VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+									VK_KHR_MAINTENANCE1_EXTENSION_NAME
+								};
 
 	private:
 		Array<FQueueFamily> QueueFamilies;
@@ -61,9 +71,7 @@ export namespace VE
 		for (const auto& GPUCandidate : GPUs)
 		{
 			//Features
-			if (!GPUCandidate.IsDiscreteGPU() ||
-				!GPUCandidate.GetFeatures().samplerAnisotropy)
-			{ continue; }
+			if (!GPUCandidate.GetFeatures().samplerAnisotropy) { continue; }
 
 			//Queue Families Properties
 			QueueFamilies.resize(AutoCast(EVulkanQueueFamily::All));
@@ -108,7 +116,7 @@ export namespace VE
 						QueueFamilies[AutoCast(EVulkanQueueFamily::Transfer)].Index = IdxB;
 						for (UInt32 IdxC : ComputeQueueFamilies)
 						{
-							if (IdxC == IdxB) continue;
+							if (IdxC == IdxB || IdxC == IdxA) continue;
 							QueueFamilies[AutoCast(EVulkanQueueFamily::Compute)].Index = IdxC;
 							Found = True;
 						}
@@ -139,12 +147,14 @@ export namespace VE
 				UInt32 FormatCount = 0;
 				vkGetPhysicalDeviceSurfaceFormatsKHR(GPUCandidate.GetHandle(), Surface->GetHandle(), &FormatCount, nullptr);
 				if (!FormatCount) continue;
+
 				Array<VkSurfaceFormatKHR> Formats(FormatCount);
 				vkGetPhysicalDeviceSurfaceFormatsKHR(GPUCandidate.GetHandle(), Surface->GetHandle(), &FormatCount, Formats.data());
 
 				UInt32 PresentModeCount = 0;
 				vkGetPhysicalDeviceSurfacePresentModesKHR(GPUCandidate.GetHandle(), Surface->GetHandle(), &PresentModeCount, nullptr);
 				if (!PresentModeCount) continue;
+
 				Array<VkPresentModeKHR> PresentModes(PresentModeCount);
 				vkGetPhysicalDeviceSurfacePresentModesKHR(GPUCandidate.GetHandle(), Surface->GetHandle(), &PresentModeCount, PresentModes.data());
 				Surface->SetFormats(std::move(Formats));
@@ -156,6 +166,9 @@ export namespace VE
 		}
 		if (GVulkan->GPU->GetHandle() == VK_NULL_HANDLE)
 		{ throw SRuntimeError("Failed to find a suitable Physical Device on current computer!"); }
+
+		if (!GVulkan->GPU->IsDiscreteGPU())
+		{ Log::Warn("Current GPU is not a discrete GPU!"); }
 
 		auto& GraphicsQueueFamily	= QueueFamilies[AutoCast(EVulkanQueueFamily::Graphics)];
 		auto& PresentQueueFamily	= QueueFamilies[AutoCast(EVulkanQueueFamily::Present)];
@@ -212,10 +225,10 @@ export namespace VE
 			.ppEnabledExtensionNames= Extensions.data(),
 			.pEnabledFeatures = &GVulkan->GPU->GetFeatures()/*m_physical_device_features2.has_value() ? nullptr : &m_physical_device_features*/// (If pNext includes a VkPhysicalDeviceFeatures2, here should be NULL)
 		};
-		if(VK_SUCCESS != vkCreateDevice(
+		if(vkCreateDevice(
 			GVulkan->GPU->GetHandle(),
 			&DeviceCreateInfo,
-			GVulkan->AllocationCallbacks,&Handle))
+			GVulkan->AllocationCallbacks,&Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan Device!"); }
 
 		//Retrieve Queues

@@ -56,7 +56,8 @@ export namespace VE
 
 			//Create Window
 			Handle = glfwCreateWindow(CurrentExtent.Width, CurrentExtent.Height, Title.c_str(), NULL, NULL);
-			if (!Handle) throw SRuntimeError("Failed to create GLFWwindow!");
+			if (!Handle)
+			{ throw SRuntimeError("Failed to create GLFWwindow!"); }
 			
 			if (!glfwVulkanSupported())
 			{ throw SRuntimeError("GLFW: Vulkan Not Supported\n"); }
@@ -66,7 +67,7 @@ export namespace VE
 			SetPosition(
 				(VidMode->width    -   CurrentExtent.Width ) >> 1,	// Mid
 				(VidMode->height   -   CurrentExtent.Height) >> 1);	// Mid
-			if (bMaximized) glfwMaximizeWindow(Handle);
+			if (bMaximized) { glfwMaximizeWindow(Handle); }
 		}
 		VE_API Terminate() -> void
 		{

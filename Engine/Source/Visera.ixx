@@ -23,7 +23,7 @@ export namespace VE
 		// Exit(const SAppStop& Message = SAppStop("ViseraEngine App Exited Successfully.")) const { throw Message; }
 
 		ViseraApp()	 noexcept = default;
-		~ViseraApp() noexcept = default;
+		virtual ~ViseraApp() noexcept = default;
 	};
 
 	class ViseraEngine
@@ -37,8 +37,6 @@ export namespace VE
 			try
 			{
 				if (!App) { Log::Fatal("ViseraEngine App is not created!"); }
-
-				Log::Debug("Bootstrapping the " VISERA_APP_NAME "...");
 				Bootstrap(App);
 				{
 					while (!Window::ShouldClose())
@@ -102,6 +100,7 @@ export namespace VE
 			Log::Debug("Bootstrapping ViseraEngine Edtior...");
 			Editor::Bootstrap();
 
+			Log::Debug("Bootstrapping the " VISERA_APP_NAME "...");
 			_App->Bootstrap();
 		}
 

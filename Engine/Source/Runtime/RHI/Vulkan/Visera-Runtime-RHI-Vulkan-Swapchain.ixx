@@ -9,6 +9,7 @@ import :Surface;
 import :Synchronization;
 
 import Visera.Core.Signal;
+import Visera.Core.Log;
 import Visera.Runtime.Window;
 
 export namespace VE
@@ -35,7 +36,7 @@ export namespace VE
 	private:
 		VkSwapchainKHR			Handle{ VK_NULL_HANDLE };
 		
-		EVulkanPresentMode		PresentMode		= EVulkanPresentMode::Mailbox;
+		EVulkanPresentMode		PresentMode		= EVulkanPresentMode::Mailbox; // If Mailbox mode is NOT supported, use FIFO by default.
 
 		UInt32					Cursor{ 0 };	// Current Frame Index
 		void MoveCursor(UInt32 Stride) { Cursor = (Cursor + Stride) % Images.size(); }
@@ -81,7 +82,11 @@ export namespace VE
 				if (SurfacePresentMode != AutoCast(PresentMode)) continue;
 				bPresentModeSupport = True;
 			}
-			if (!bPresentModeSupport) throw SRuntimeError("Failed to create the Swapchain since required Present Mode is unsupported!");
+			if (!bPresentModeSupport)
+			{
+				Log::Warn("Preferred Swapchain Present Mode is NOT supported! - Using FIFO mode by default.");
+				PresentMode = EVulkanPresentMode::FIFO;
+			}
 		
 			Bool bZBufferFormatSupport = False;
 			//Check Depth Buffer (ZBuffer) Format
@@ -141,11 +146,12 @@ export namespace VE
 				ImageExtent = SurfaceCapabilities.currentExtent;
 		}
 
-		Array<UInt32> QueuefamilyIndices
+		Segment<UInt32, 2> QueuefamilyIndices
 		{
 			GVulkan->Device->GetQueueFamily(EVulkanQueueFamily::Graphics).Index,
 			GVulkan->Device->GetQueueFamily(EVulkanQueueFamily::Present).Index
 		};
+
 		VkSwapchainCreateInfoKHR CreateInfo
 		{
 			.sType					= VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -157,9 +163,9 @@ export namespace VE
 			.imageArrayLayers		= 1,
 			.imageUsage				= AutoCast( EVulkanImageUsage::ColorAttachment |
 												EVulkanImageUsage::TransferDestination),
-			.imageSharingMode		= GVulkan->GPU->IsDiscreteGPU()? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT,
-			.queueFamilyIndexCount	= GVulkan->GPU->IsDiscreteGPU()? 0U : 2U,
-			.pQueueFamilyIndices	= GVulkan->GPU->IsDiscreteGPU()? nullptr : QueuefamilyIndices.data(),
+			.imageSharingMode		= GVulkan->Device->IsSupportingExclusiveSwapchain()? VK_SHARING_MODE_EXCLUSIVE : VK_SHARING_MODE_CONCURRENT,
+			.queueFamilyIndexCount	= GVulkan->Device->IsSupportingExclusiveSwapchain()? 0U		 : UInt32(QueuefamilyIndices.size()),
+			.pQueueFamilyIndices	= GVulkan->Device->IsSupportingExclusiveSwapchain()? nullptr : QueuefamilyIndices.data(),
 			.preTransform			= SurfaceCapabilities.currentTransform, // Do not want any pretransformation
 			.compositeAlpha			= VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 			.presentMode			= AutoCast(PresentMode),

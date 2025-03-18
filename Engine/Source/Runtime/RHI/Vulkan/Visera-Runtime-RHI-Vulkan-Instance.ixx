@@ -26,8 +26,24 @@ export namespace VE
 		VkInstance				Handle		{ VK_NULL_HANDLE };
 			
 		UInt32					APIVersion;
-		Array<RawString>		Layers;
-		Array<RawString>		Extensions;
+		Array<RawString>		Layers
+								{
+										"VK_LAYER_KHRONOS_validation"
+								};
+		Array<RawString>		Extensions
+								{
+									// Implicitly import some platform surface extensions via glFW.
+#if (VE_IS_APPLE_SYSTEM)
+									VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
+#endif
+									VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+									VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+								};
+		VkFlags					Flags = 0
+#if (VE_IS_APPLE_SYSTEM)
+										| VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR
+#endif
+								;
 			
 		struct {
 			VkDebugUtilsMessengerEXT			 Handle{ VK_NULL_HANDLE };
@@ -72,30 +88,9 @@ export namespace VE
 	VkInstance FVulkanInstance::
 	Create()
 	{
-		VE_ASSERT(VK_API_VERSION_1_3 != 0);
-		// Layers
-		Array<RawString> EnabledLayers
-		{
-			"VK_LAYER_KHRONOS_validation",
-		};
-		Layers.resize(EnabledLayers.size());
-		for (Int32 i = 0; i < Layers.size(); ++i)
-		{ Layers[i] = EnabledLayers[i]; }
-
-		// Extensions
-		Array<RawString> EnabledExtensions
-		{
-			VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-			VK_EXT_DEBUG_REPORT_EXTENSION_NAME
-		};
-
 		// GLFW Necessary Extensions
 		UInt32 GLFWExtensionCount = 0;
 		const char** GLFWExtensions = glfwGetRequiredInstanceExtensions(&GLFWExtensionCount); // Include WSI extensions
-
-		UInt32 TotalExtensionCount = GLFWExtensionCount + EnabledExtensions.size();
-
-		for (const auto& Extension : EnabledExtensions) { Extensions.emplace_back(Extension); }
 		for (UInt32 i = 0; i < GLFWExtensionCount; ++i) { Extensions.emplace_back(*(GLFWExtensions + i)); }
 
 		UInt32 LayerPropertyCount = 0;
@@ -104,7 +99,7 @@ export namespace VE
 
 		Array<VkLayerProperties> LayerProperties(LayerPropertyCount);
 		vkEnumerateInstanceLayerProperties(&LayerPropertyCount, LayerProperties.data());
-			
+
 		for (auto RequiredLayer : Layers)
 		{
 			bool Found = False;
@@ -121,6 +116,8 @@ export namespace VE
 			.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
 			.pApplicationName	= AppName,
 			.applicationVersion = AppVersion,
+			.pEngineName		= VISERA_ENGINE_NAME,
+			.engineVersion		= VK_MAKE_VERSION(1,0,0),
 			.apiVersion			= APIVersion,
 		};
 
@@ -145,10 +142,12 @@ export namespace VE
 	#else
 			
 	#endif
+
 		VkInstanceCreateInfo InstanceCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
 			.pNext = Next,
+			.flags = Flags,
 			.pApplicationInfo		= &AppInfo,
 			.enabledLayerCount		= UInt32(Layers.size()),
 			.ppEnabledLayerNames	= Layers.data(),

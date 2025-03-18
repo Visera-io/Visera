@@ -240,7 +240,7 @@ export namespace VE
 				{
 					.WaitSemaphoreCount		= 0,
 					.pWaitSemaphores		= nullptr,
-					.WaitStages				= EGraphicsPipelineStage::PipelineTop,
+					.WaitStages				= {EGraphicsPipelineStage::PipelineTop},
 					.SignalSemaphoreCount	= 0,
 					.pSignalSemaphores		= nullptr,
 					.SignalFence			= &Fence,
@@ -330,7 +330,7 @@ export namespace VE
 				{
 					.WaitSemaphoreCount		= 1,
 					.pWaitSemaphores		= &CurrentFrame.SwapchainReadySemaphore,
-					.WaitStages				= EGraphicsPipelineStage::FragmentShader,
+					.WaitStages				= {EGraphicsPipelineStage::FragmentShader},
 					.SignalSemaphoreCount	= 1,
 					.pSignalSemaphores		= &CurrentFrame.EditorCommandsFinishedSemaphore,
 					.SignalFence			= nullptr,
@@ -452,7 +452,7 @@ export namespace VE
 				{
 					.WaitSemaphoreCount		= 1,
 					.pWaitSemaphores		= &CurrentFrame.EditorCommandsFinishedSemaphore,//[FIXME]: Temp!
-					.WaitStages				= EGraphicsPipelineStage::PipelineTop,
+					.WaitStages				= {EGraphicsPipelineStage::PipelineTop},
 					.SignalSemaphoreCount	= 1,
 					.pSignalSemaphores		= &CurrentFrame.GraphicsCommandsFinishedSemaphore,
 					.SignalFence			= &CurrentFrame.InFlightFence,
