@@ -1,6 +1,6 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.World.Stage.Camera;
+export module Visera.Runtime.World.Camera;
 
 import Visera.Core.Math;
 import Visera.Runtime.World.Object;

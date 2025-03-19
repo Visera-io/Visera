@@ -20,8 +20,7 @@ file(GLOB_RECURSE VISERA_ENGINE_TEMPLATES   "${VISERA_ENGINE_TEMPLATES_DIR}/*")
 add_compile_definitions(VISERA_ENGINE_ASSETS_DIR=\"${VISERA_ENGINE_ASSETS_DIR}\")
 add_compile_definitions(VISERA_ENGINE_SHADERS_DIR=\"${VISERA_ENGINE_SHADERS_DIR}\")
 
-add_library(${VISERA}
-            ${VISERA_ENGINE_MODULES})
+add_library(${VISERA})
 
 target_sources(${VISERA}
                 PUBLIC
