@@ -63,11 +63,8 @@ export namespace VE
 
 		Bool IsValid()		const { return Handle.isValid(); }
 		Bool IsGrayScale()	const { return Handle.isGrayscale(); }
-#if (VE_IS_WINDOWS_SYSTEM)
-		void Save() const { if (!Handle.saveU(Path.ToPlatformString().data())) { throw SIOFailure(Text("Failed to save the image({})!", FText::ToUTF8(Path.ToPlatformString()))); } }
-#elif (VE_IS_APPLE_SYSTEM)
+
 		void Save() const { if (!Handle.save(Path.ToPlatformString().data())) { throw SIOFailure(Text("Failed to save the image({})!", Path.ToPlatformString())); } }
-#endif
 
 		FImage() = delete;
 		FImage(const FPath& _Path);
@@ -90,13 +87,9 @@ export namespace VE
 	FImage(const FPath& _Path) : Path{_Path}
 	{
 		const static FFreeImage FreeImage;
-#if (VE_IS_APPLE_SYSTEM)
+
 		if (!Handle.load(Path.ToPlatformString().data()))
-		{ throw SIOFailure(Text("Failed to load the image({})!", Path.ToPlatformString().data())); }
-#elif (VE_IS_WINDOWS_SYSTEM)
-		if (!Handle.loadU(Path.ToPlatformString().data()))
-		{ throw SIOFailure(Text("Failed to load the image({})!", FText::ToUTF8(Path.ToPlatformString()))); }
-#endif
+		{ throw SIOFailure(Text("Failed to load the image({})!", Path.ToPlatformString())); }
 	}
 
 } // namespace VE

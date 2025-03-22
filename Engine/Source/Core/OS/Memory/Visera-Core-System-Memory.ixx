@@ -88,9 +88,9 @@ export namespace VE
         void* AllocatedMemory = nullptr;
         if (_Alignment)
         {
-#if defined(VE_ON_WINDOWS_SYSTEM)
+#if (VE_IS_WINDOWS_SYSTEM)
             AllocatedMemory = _aligned_malloc(_Size, _Alignment);
-#elif defined(VE_ON_APPLE_SYSTEM)
+#elif (VE_IS_APPLE_SYSTEM)
             posix_memalign(&AllocatedMemory, _Alignment, _Size);
 #else
             AllocatedMemory = std::aligned_alloc(_Alignment, 8);

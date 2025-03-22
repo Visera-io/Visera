@@ -25,12 +25,17 @@ export namespace VE { namespace Internal
             MaxNameNumber       = INT32_MAX,
         };
     public:
+        static inline auto
+        GetInstance() -> FNamePool& { static FNamePool Instance{}; return Instance; }
+
         auto Register(String _Name) -> ResultPackage<UInt32, UInt32>; //[Handle_, Number_]
         auto FetchNameString(UInt32 _NameHandle /*NameEntryHandle*/) const->StringView;
         auto FetchNameString(EName _PreservedName) const -> StringView;
 
+    private:
         FNamePool();
         ~FNamePool() = default;
+
     private:
         FNameEntryTable NameEntryTable;
         FNameTokenTable NameTokenTable{ &NameEntryTable };

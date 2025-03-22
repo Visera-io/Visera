@@ -2,6 +2,7 @@ module;
 #include <Visera.h>
 #include <GLFW/glfw3.h>
 export module Visera.Runtime.Window;
+
 import Visera.Core.Signal;
 
 export namespace VE
@@ -45,7 +46,7 @@ export namespace VE
 
 	private:
 		static inline String	Title				= VISERA_APP_NAME;
-		static inline Extent	CurrentExtent		{{.Width = 1920, .Height = 1080}};
+		static inline Extent	CurrentExtent		{{.Width = 1280, .Height = 960}};
 		static inline Bool		bMaximized			= False;
 
 		static inline GLFWwindow*  Handle		= nullptr;

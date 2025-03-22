@@ -10,7 +10,6 @@
 #define VE_ASSERT(Expression)	assert(Expression);
 #define VE_API public: static inline auto
 #define VE_WIP assert(false && "Work In Progress...")
-#define VE_PATH(Path) VE::PathStringView(L##Path)
 
 #define VE_REGISTER_AUTOCAST(IType, OType) constexpr OType AutoCast(IType src) { return static_cast<OType>(src); }
 
@@ -63,6 +62,13 @@
 #else
 #define VE_IS_ARM_CPU false
 #endif
+
+#if (VE_IS_WINDOWS_SYSTEM)
+#define VE_PATH(Path) L##Path
+#else
+#define VE_PATH(Path) Path
+#endif
+
 // << STD Modules >>
 #include <cassert>
 #include <sstream>

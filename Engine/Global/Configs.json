@@ -2,10 +2,17 @@
     "Engine":
     {
         "Version": "1.0.0",
+        "Settings":
+        {
+            "Window":
+            {
+                "Title":  "${AppName}",
+                "Extent": [1280, 960]
+            }
+        }
         "Path":
         {
-            "Assets" :"Engine/Assets/",
-            "Shaders":"Engine/Shaders/"
+            
         },
         "PlugIns":
         {

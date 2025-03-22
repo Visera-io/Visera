@@ -6,15 +6,16 @@ import Visera.Internal.NamePool;
 
 export namespace VE
 {
+	using namespace Internal;
 	using EName = Internal::EName;
 
 	/* Case-Ignored String */
 	class FName
 	{
-		VE_API FetchNameString(EName _Name) -> StringView	 { return NamePool.FetchNameString(_Name); }
-		VE_API FetchNameString(FName _Name) -> StringView	 { return NamePool.FetchNameString(_Name.Handle); }
+		VE_API FetchNameString(EName _Name) -> StringView	{ return FNamePool::GetInstance().FetchNameString(_Name); }
+		VE_API FetchNameString(FName _Name) -> StringView	{ return FNamePool::GetInstance().FetchNameString(_Name.Handle); }
 	public:
-		auto GetFileName()			 const -> StringView { return NamePool.FetchNameString(Handle); }
+		auto GetFileName()			 const -> StringView	{ return FNamePool::GetInstance().FetchNameString(Handle); }
 		auto GetNameWithNumber() const -> String	 { return Text("{}_{}", GetFileName(), Number); }
 		auto GetHandle() const -> UInt32 { return Handle; }
 		auto GetNumber() const -> UInt32 { return Number; }
@@ -23,15 +24,14 @@ export namespace VE
 		auto HasNumber() const -> Bool	 { return !!Number; }
 	
 		FName() = default;
-		FName(StringView _Name)					{ auto [Handle_, Number_] = NamePool.Register(String(_Name)); Handle = Handle_; Number = Number_; }
+		FName(StringView _Name)					{ auto [Handle_, Number_] = FNamePool::GetInstance().Register(String(_Name)); Handle = Handle_; Number = Number_; }
 		FName(const FName& _Another)			= default;
 		FName(FName&& _Another)					= default;
-		FName& operator=(StringView _Name)		{ auto [Handle_, Number_] = NamePool.Register(String(_Name)); Handle = Handle_; Number = Number_; }
+		FName& operator=(StringView _Name)		{ auto [Handle_, Number_] = FNamePool::GetInstance().Register(String(_Name)); Handle = Handle_; Number = Number_; }
 		FName& operator=(const FName& _Another) = default;
 		FName& operator=(FName&& _Another)		= default;
 		Bool operator==(const FName& _Another) const { return GetIdentifier() == _Another.GetIdentifier(); }
 	private:
-		static inline Internal::FNamePool NamePool;
 		UInt32		Handle;		//FNameEntryHandle
 		UInt32		Number{ 0 };
 	};

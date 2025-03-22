@@ -32,6 +32,8 @@ export namespace VE
 		FPath() = default;
 		FPath(StringView _Path)		:Data{ _Path } { Data.make_preferred(); }
 		FPath(WideStringView _Path)	:Data{ _Path } { Data.make_preferred(); }
+		FPath(const char* _Path)	:Data{ _Path } { Data.make_preferred(); }
+		FPath(const wchar_t* _Path)	:Data{ _Path } { Data.make_preferred(); }
 		FPath(const FPath& _Path)	:Data{ _Path.Data } {}
 		FPath(FPath&& _Path)		:Data{ std::move(_Path.Data) } {}
 		FPath(std::filesystem::path _Path) :Data{ std::move(_Path) } { Data.make_preferred(); }

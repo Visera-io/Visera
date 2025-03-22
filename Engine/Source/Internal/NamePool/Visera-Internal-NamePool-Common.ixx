@@ -19,7 +19,7 @@ export namespace VE { namespace Internal
 
 	class FNamePool;
 	class FNameEntryTable;
-	class FNameTokenTablel;
+	class FNameTokenTable;
 
 	class FNameHash;
 	class FNameEntry;
