@@ -55,7 +55,7 @@ export namespace VE
     {
         static Assimp::Importer Importer;
 
-        Data = Importer.ReadFile(FText::ToUTF8(Path.ToPlatformString()).data(),
+        Data = Importer.ReadFile(Path.ToPlatformString().data(),
                 aiProcess_Triangulate	        |
                 aiProcess_ConvertToLeftHanded   |
                 aiProcess_FixInfacingNormals);

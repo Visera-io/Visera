@@ -34,7 +34,7 @@ export namespace VE
 	ToUTF8(WideStringView _Source)
 	{
 		if (_Source.empty()) { return {}; }
-
+#if (VE_IS_WINDOWS_SYSTEM)
 		int sizeNeeded = WideCharToMultiByte(
 			CP_UTF8,
 			0,
@@ -56,6 +56,13 @@ export namespace VE
 			sizeNeeded,
 			nullptr,
 			nullptr);
+#elif (VE_IS_APPLE_SYSTEM)
+		size_t Size = wcstombs(nullptr, _Source.data(), 0);
+		if (Size == static_cast<size_t>(-1)) { return {}; }
+
+		String Sink(Size, 0);
+		wcstombs(Sink.data(), _Source.data(), Size);
+#endif
 		return Sink;
 	}
 	

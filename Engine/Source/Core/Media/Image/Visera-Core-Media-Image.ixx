@@ -66,7 +66,7 @@ export namespace VE
 #if (VE_IS_WINDOWS_SYSTEM)
 		void Save() const { if (!Handle.saveU(Path.ToPlatformString().data())) { throw SIOFailure(Text("Failed to save the image({})!", FText::ToUTF8(Path.ToPlatformString()))); } }
 #elif (VE_IS_APPLE_SYSTEM)
-		void Save() const { if (!Handle.save(ToPlatformString().data())) { throw std::runtime_error(Text("Failed to save the image({})!", Path.ToPlatformString())); } }
+		void Save() const { if (!Handle.save(Path.ToPlatformString().data())) { throw SIOFailure(Text("Failed to save the image({})!", Path.ToPlatformString())); } }
 #endif
 
 		FImage() = delete;
@@ -91,8 +91,8 @@ export namespace VE
 	{
 		const static FFreeImage FreeImage;
 #if (VE_IS_APPLE_SYSTEM)
-		if (!Handle.load(ToPlatformString().data()))
-		{ throw SIOFailure(Text("Failed to load the image({})!", ToPlatformString().data())); }
+		if (!Handle.load(Path.ToPlatformString().data()))
+		{ throw SIOFailure(Text("Failed to load the image({})!", Path.ToPlatformString().data())); }
 #elif (VE_IS_WINDOWS_SYSTEM)
 		if (!Handle.loadU(Path.ToPlatformString().data()))
 		{ throw SIOFailure(Text("Failed to load the image({})!", FText::ToUTF8(Path.ToPlatformString()))); }
