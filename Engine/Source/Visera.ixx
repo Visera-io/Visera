@@ -22,8 +22,11 @@ export namespace VE
 		// void inline
 		// Exit(const SAppStop& Message = SAppStop("ViseraEngine App Exited Successfully.")) const { throw Message; }
 
-		ViseraApp()	 noexcept = default;
-		virtual ~ViseraApp() noexcept = default;
+		ViseraApp()	 noexcept { RuntimeCounter = System::GetRunningTime().milliseconds(); }
+		virtual ~ViseraApp() noexcept { Log::Info("App Running Time {}ms", System::GetRunningTime().milliseconds() - RuntimeCounter); }
+
+	private:
+		UInt64 RuntimeCounter = 0;
 	};
 
 	class ViseraEngine
