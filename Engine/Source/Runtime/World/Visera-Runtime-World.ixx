@@ -8,8 +8,8 @@ import Visera.Runtime.World.Stage;
 import Visera.Core.Type;
 import Visera.Core.Log;
 import Visera.Core.Math;
-import Visera.Core.System.Concurrency;
-import Visera.Core.System.FileSystem;
+import Visera.Core.OS.Concurrency;
+import Visera.Core.OS.FileSystem;
 
 export namespace VE
 {

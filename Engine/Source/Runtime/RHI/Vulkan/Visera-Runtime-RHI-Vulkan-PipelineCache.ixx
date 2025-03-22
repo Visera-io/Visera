@@ -5,7 +5,7 @@ import :Context;
 import :Device;
 import :GPU;
 
-import Visera.Core.System.FileSystem;
+import Visera.Core.OS.FileSystem;
 import Visera.Core.Signal;
 
 export namespace VE

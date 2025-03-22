@@ -5,7 +5,7 @@ export module Visera.Runtime.RTC.Geometry:Interface;
 
 import Visera.Runtime.RTC.Embree;
 import Visera.Core.Signal;
-import Visera.Core.System.Memory;
+import Visera.Core.OS.Memory;
 
 export namespace VE
 {

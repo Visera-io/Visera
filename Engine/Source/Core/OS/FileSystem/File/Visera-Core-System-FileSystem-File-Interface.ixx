@@ -1,14 +1,14 @@
 module;
 #include <Visera.h>
-export module Visera.Core.System.FileSystem.File:BasicFile;
+export module Visera.Core.OS.FileSystem.File:Interface;
 
-import Visera.Core.System.FileSystem.Path;
+import Visera.Core.Type;
 import Visera.Core.Signal;
 
 export namespace VE
 {
 
-    class FBasicFile
+    class IFile
     {
     public:
  	    virtual void SaveAs(const FPath& FilePath,   Int32 SaveModes); //Check out the demo below
@@ -28,8 +28,8 @@ export namespace VE
  	    Bool IsEmpty()  const { return Data.empty(); }
  	    Bool IsOpened() const { return IOStream.Address != nullptr; }
 
- 	    FBasicFile(const FPath& FilePath) noexcept : Path{ FilePath } {};
- 	    virtual ~FBasicFile() noexcept = default;
+ 	    IFile(const FPath& FilePath) noexcept : Path{ FilePath } {};
+ 	    virtual ~IFile() noexcept = default;
 
     protected:
  	    auto OpenIStream(Int32 IModes) -> std::ifstream*;
@@ -42,7 +42,7 @@ export namespace VE
  	    union { void* Address = nullptr; std::ifstream* IStream; std::ofstream* OStream; } IOStream;
     };
 
-    void FBasicFile::
+    void IFile::
     SaveAs(const FPath& FilePath, Int32 SaveModes)
     {
  	    //Tips: Add SaveModes via SaveModes |= NewMode
@@ -58,7 +58,7 @@ export namespace VE
  	    else throw SIOFailure(Text("Failed to open {}", "FilePath.GetData().c_str()"));	
     }
 
-    void FBasicFile::
+    void IFile::
     LoadFrom(const FPath& FilePath, Int32 LoadModes)
     {
  	    //Tips: Add LoadModes via LoadModes |= NewMode
@@ -74,16 +74,16 @@ export namespace VE
  	    else throw SIOFailure(Text("Failed to open {}", "FilePath.GetData().c_str()"));
     }
 
-    std::ifstream* FBasicFile::
+    std::ifstream* IFile::
     OpenIStream(Int32 IModes)
     { 
  	    if (IOStream.IStream) return nullptr;
- 	    IOStream.IStream = new std::ifstream(Path.GetData(), IModes);
+ 	    IOStream.IStream = new std::ifstream(Path.ToPlatformString().data(), IModes);
  	    if (!IOStream.IStream->is_open()) return nullptr;
  	    return IOStream.IStream;
     }
 
-    void FBasicFile::
+    void IFile::
     CloseIStream()
     {
  	    VE_ASSERT(IOStream.IStream != nullptr);
@@ -92,16 +92,16 @@ export namespace VE
  	    IOStream.IStream = nullptr;
     }
 
-    std::ofstream* FBasicFile::
+    std::ofstream* IFile::
     OpenOStream(Int32 OModes)
     {
  	    if (IOStream.OStream) return nullptr;
- 	    IOStream.OStream = new std::ofstream(Path.GetData(), OModes);
+ 	    IOStream.OStream = new std::ofstream(Path.ToPlatformString().data(), OModes);
  	    if (!IOStream.OStream->is_open()) return nullptr;
  	    return IOStream.OStream;
     }
 
-    void FBasicFile::
+    void IFile::
     CloseOStream()
     {
  	    VE_ASSERT(IOStream.OStream != nullptr);

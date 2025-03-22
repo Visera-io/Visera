@@ -5,7 +5,7 @@ module;
 #elif defined(VE_ON_ARM_CPU)
 #include <arm_acle.h>
 #endif
-export module Visera.Core.System.Memory;
+export module Visera.Core.OS.Memory;
 
 import Visera.Core.Signal;
 

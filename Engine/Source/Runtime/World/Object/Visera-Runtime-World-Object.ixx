@@ -4,7 +4,7 @@ export module Visera.Runtime.World.Object;
 import Visera.Runtime.World.Object.Component;
 
 import Visera.Core.Type;
-import Visera.Core.System.Concurrency;
+import Visera.Core.OS.Concurrency;
 
 export namespace VE
 {

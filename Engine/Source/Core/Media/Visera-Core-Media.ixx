@@ -3,8 +3,8 @@ module;
 export module Visera.Core.Media;
 import Visera.Core.Media.Image;
 import Visera.Core.Type;
-import Visera.Core.System.FileSystem;
-import Visera.Core.System.Concurrency;
+import Visera.Core.OS.FileSystem;
+import Visera.Core.OS.Concurrency;
 
 export namespace VE
 {

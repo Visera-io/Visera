@@ -1,22 +1,21 @@
 module;
 #include <Visera.h>
+export module Visera.Core.OS.FileSystem.File:BinaryFile;
+import :Interface;
 
-export module Visera.Core.System.FileSystem.File:BinaryFile;
-import :BasicFile;
-
-import Visera.Core.System.FileSystem.Path;
+import Visera.Core.Type;
 import Visera.Core.Signal;
 
 export namespace VE
 {
 	
-    class FBinaryFile :public FBasicFile
+    class FBinaryFile :public IFile
     {
     public:
  	    virtual void SaveAs(const FPath& FilePath,   Int32 SaveModes) override;
  	    virtual void LoadFrom(const FPath& FilePath, Int32 LoadModes) override;
 
- 	    FBinaryFile(const FPath& FilePath) noexcept : FBasicFile{ FilePath } {};
+ 	    FBinaryFile(const FPath& FilePath) noexcept : IFile{ FilePath } {};
  	    virtual ~FBinaryFile() noexcept = default;
 
     protected:

@@ -1,6 +1,6 @@
 module;
 #include <Visera.h>
-export module Visera.Core.System.Concurrency.Mutex;
+export module Visera.Core.OS.Concurrency.Mutex;
 export import :RWLock;
 
 export namespace VE

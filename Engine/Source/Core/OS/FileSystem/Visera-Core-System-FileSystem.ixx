@@ -1,10 +1,10 @@
 module;
 #include <Visera.h>
-export module Visera.Core.System.FileSystem;
-export import Visera.Core.System.FileSystem.Path;
-export import Visera.Core.System.FileSystem.File;
+export module Visera.Core.OS.FileSystem;
+export import Visera.Core.OS.FileSystem.File;
 
 import Visera.Core.Signal;
+export import Visera.Core.Type;
 
 export namespace VE
 {
@@ -13,7 +13,7 @@ export namespace VE
 	{
 		VE_MODULE_MANAGER_CLASS(FileSystem);
 	public:
-		VE_API IsExistedFile(const FPath& _Path)			-> Bool						{ return std::filesystem::exists(_Path.GetData() ); }
+		VE_API IsExistedFile(const FPath& _Path)			-> Bool						{ return std::filesystem::exists(_Path.ToPlatformString()); }
 		VE_API CreateFileIfNotExists(const FPath& _Path)	-> void;
 		VE_API CreateFile(const FPath& _FilePath)			-> SharedPtr<FFile>			{ return CreateSharedPtr<FFile>(_FilePath); };
 		VE_API CreateBinaryFile(const FPath& _FilePath)		-> SharedPtr<FBinaryFile>	{ return CreateSharedPtr<FBinaryFile>(_FilePath); };
@@ -24,7 +24,7 @@ export namespace VE
 	{
 		if (!IsExistedFile(_Path))
  	    {
- 		    std::ofstream NewFile(_Path.GetData());
+ 		    std::ofstream NewFile(_Path.ToPlatformString().data());
  		    if (NewFile.is_open()) NewFile.close();
 			else throw SIOFailure(Text("Failed to create a new file at {}", "_Path"));
  	    }

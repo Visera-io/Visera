@@ -4,8 +4,8 @@ export module Visera.Internal.NamePool:NameEntryTable;
 
 import :Common;
 
-import Visera.Core.System.Memory;
-import Visera.Core.System.Concurrency;
+import Visera.Core.OS.Memory;
+import Visera.Core.OS.Concurrency;
 import Visera.Core.Log;
 import Visera.Core.Signal;
 

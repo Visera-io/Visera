@@ -6,7 +6,7 @@ import :Interface;
 
 import Visera.Runtime.RTC.Embree;
 import Visera.Core.Signal;
-import Visera.Core.System.Memory;
+import Visera.Core.OS.Memory;
 
 export namespace VE
 {

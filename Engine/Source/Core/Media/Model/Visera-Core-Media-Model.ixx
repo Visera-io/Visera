@@ -5,10 +5,9 @@ module;
 #include <assimp/postprocess.h>
 export module Visera.Core.Media.Model;
 
-import Visera.Core.System.FileSystem.Path;
 import Visera.Core.Type;
 import Visera.Core.Signal;
-import Visera.Core.System.Memory;
+import Visera.Core.OS.Memory;
 
 export namespace VE
 {
@@ -56,14 +55,14 @@ export namespace VE
     {
         static Assimp::Importer Importer;
 
-        Data = Importer.ReadFile(Path.GetData().c_str(),
-                aiProcess_Triangulate	 |
-                aiProcess_ConvertToLeftHanded|
-                aiProcess_FixInfacingNormals
-                );
+        Data = Importer.ReadFile(FText::ToUTF8(Path.ToPlatformString()).data(),
+                aiProcess_Triangulate	        |
+                aiProcess_ConvertToLeftHanded   |
+                aiProcess_FixInfacingNormals);
+
         if (!Data ||
-            Data->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
-            !Data->mRootNode)
+            !Data->mRootNode ||
+            Data->mFlags & AI_SCENE_FLAGS_INCOMPLETE)
         { throw SRuntimeError("Failed to load Model!"); }
 
         if (Data->mNumMeshes > 0)

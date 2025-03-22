@@ -1,22 +1,20 @@
 module;
 #include <Visera.h>
-export module Visera.Core.System.FileSystem.Path;
+export module Visera.Core.Type:Path;
+
+import :Text;
 
 export namespace VE
 {
-	
-	enum class EPath
-	{
-
-	};
-
-	using PathString		= std::wstring;
-	using PathStringView	= std::wstring_view;
 
 	class FPath
 	{
 	public:
-		auto GetData() const { return Data; }
+#if (VE_IS_WINDOWS_SYSTEM)
+		auto ToPlatformString() const -> WideStringView	{ return Data.c_str(); }
+#else
+		auto ToPlatformString() const -> StringView		{ return Data.c_str(); }
+#endif
 
 		Bool HasFileName() const  { return Data.has_filename(); }
 		//auto GetFileName() const -> PathString { if (HasFileName()) { return Handle.filename().c_str(); } else { return L""; } }
@@ -32,13 +30,13 @@ export namespace VE
 		FPath& operator+=(const FPath& _Path)   { Join(_Path); return *this; }
 		
 		FPath() = default;
-		FPath(PathString _Path)		:Data{ _Path } { Data.make_preferred(); }
-		FPath(PathStringView _Path)	:Data{ _Path } { Data.make_preferred(); }
+		FPath(StringView _Path)		:Data{ _Path } { Data.make_preferred(); }
+		FPath(WideStringView _Path)	:Data{ _Path } { Data.make_preferred(); }
 		FPath(const FPath& _Path)	:Data{ _Path.Data } {}
 		FPath(FPath&& _Path)		:Data{ std::move(_Path.Data) } {}
 		FPath(std::filesystem::path _Path) :Data{ std::move(_Path) } { Data.make_preferred(); }
-		void operator=(PathString _Path)		{ Data = _Path; }
-		void operator=(PathStringView _Path)	{ Data = _Path; }
+		void operator=(StringView _Path)		{ Data = _Path; }
+		void operator=(WideStringView _Path)	{ Data = _Path; }
 		void operator=(const FPath& _Path)		{ Data = _Path.Data; }
 		void operator=(FPath&& _Path)			{ Data = std::move(_Path.Data); }
 

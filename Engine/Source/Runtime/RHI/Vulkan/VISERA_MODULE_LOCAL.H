@@ -4,7 +4,7 @@
 #include <volk.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-#if defined(VE_ON_ARM_CPU)
+#if (VE_IS_APPLE_SYSTEM)
 #include <vk_mem_alloc.h>
 #else //if defined(VE_ON_X86_CPU)
 #include <vma/vk_mem_alloc.h>

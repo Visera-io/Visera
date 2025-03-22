@@ -1,9 +1,9 @@
 module;
 #include <Visera.h>
 export module Visera.Core.System;
-export import Visera.Core.System.Memory;
-export import Visera.Core.System.FileSystem;
-export import Visera.Core.System.Concurrency;
+export import Visera.Core.OS.Memory;
+export import Visera.Core.OS.FileSystem;
+export import Visera.Core.OS.Concurrency;
 
 import Visera.Core.Time;
 

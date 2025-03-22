@@ -3,7 +3,7 @@ module;
 #include <FreeImagePlus.h>
 export module Visera.Core.Media.Image;
 
-import Visera.Core.System.FileSystem.Path;
+import Visera.Core.Type;
 import Visera.Core.Type;
 import Visera.Core.Signal;
 
@@ -63,10 +63,10 @@ export namespace VE
 
 		Bool IsValid()		const { return Handle.isValid(); }
 		Bool IsGrayScale()	const { return Handle.isGrayscale(); }
-#if defined(VE_ON_ARM_CPU)
-		void Save() const { if (!Handle.save(Path.GetData().c_str())) { throw std::runtime_error(Text("Failed to save the image({})!", Path.GetData().c_str())); } }
-#else
-		void Save() const { if (!Handle.saveU(Path.GetData().c_str())) { throw SIOFailure(Text("Failed to save the image({})!", Name.GetNameWithNumber())); } }
+#if (VE_IS_WINDOWS_SYSTEM)
+		void Save() const { if (!Handle.saveU(Path.ToPlatformString().data())) { throw SIOFailure(Text("Failed to save the image({})!", FText::ToUTF8(Path.ToPlatformString()))); } }
+#elif (VE_IS_APPLE_SYSTEM)
+		void Save() const { if (!Handle.save(ToPlatformString().data())) { throw std::runtime_error(Text("Failed to save the image({})!", Path.ToPlatformString())); } }
 #endif
 
 		FImage() = delete;
@@ -91,11 +91,11 @@ export namespace VE
 	{
 		const static FFreeImage FreeImage;
 #if (VE_IS_APPLE_SYSTEM)
-		if (!Handle.load(Path.GetData().c_str()))
-		{ throw SIOFailure(Text("Failed to load the image({})!", Path.GetData().c_str())); }
-#else
-		if (!Handle.loadU(Path.GetData().c_str()))
-		{ throw SIOFailure(Text("Failed to load the image({})!", Path.GetData().c_str())); }
+		if (!Handle.load(ToPlatformString().data()))
+		{ throw SIOFailure(Text("Failed to load the image({})!", ToPlatformString().data())); }
+#elif (VE_IS_WINDOWS_SYSTEM)
+		if (!Handle.loadU(Path.ToPlatformString().data()))
+		{ throw SIOFailure(Text("Failed to load the image({})!", FText::ToUTF8(Path.ToPlatformString()))); }
 #endif
 	}
 
