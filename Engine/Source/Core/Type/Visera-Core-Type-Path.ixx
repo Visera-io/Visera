@@ -11,9 +11,9 @@ export namespace VE
 	{
 	public:
 #if (VE_IS_WINDOWS_SYSTEM)
-		auto ToPlatformString() const -> WideStringView	{ return Data.c_str(); }
+		auto ToPlatformString() const -> String	{ return FText::ToUTF8(Data.c_str()); }
 #else
-		auto ToPlatformString() const -> StringView		{ return Data.c_str(); }
+		auto ToPlatformString() const -> String	{ return Data.c_str(); }
 #endif
 
 		Bool HasFileName() const  { return Data.has_filename(); }
