@@ -10,6 +10,7 @@ import :GPU;
 import :Synchronization;
 
 import Visera.Core.Signal;
+import Visera.Core.OS.Memory;
 
 export namespace VE
 {
@@ -80,6 +81,8 @@ export namespace VE
 		VE_NOT_COPYABLE(FVulkanBuffer);
 		friend class FVulkanAllocator;
 	public:
+		void Write(void* _Data, UInt64 _Size);
+
 		auto GetSize()		const	-> VkDeviceSize { return Allocation->GetSize(); }
 		auto GetDetails()	const	-> VmaAllocationInfo { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
 		auto GetHandle()	const	-> const VkBuffer { return Handle; }
@@ -109,6 +112,7 @@ export namespace VE
 	public:
 		auto GetImage()	  const -> WeakPtr<const FVulkanImage>	{ return Image; }
 		auto GetHandle()		-> VkImageView			{ return Handle;}
+		auto GetLayoutView() const -> EVulkanImageLayout { return LayoutView; }
 
 		Bool IsReleased() const { return Handle == VK_NULL_HANDLE; }
 		Bool IsExpired()  const	{ return Image.expired(); }
@@ -118,6 +122,7 @@ export namespace VE
 	private:
 		VkImageView					Handle{ VK_NULL_HANDLE };
 		WeakPtr<const FVulkanImage>	Image;
+		EVulkanImageLayout			LayoutView; // May be expired since this layout was saved at the time of creating the view.
 		EVulkanImageViewType		TypeView;
 		EVulkanImageAspect			AspectView;
 		EVulkanFormat				FormatView;
@@ -301,6 +306,7 @@ export namespace VE
 		VE_ASSERT(Type != EVulkanImageType::Undefined && "Cannot create the image view for an undefined image!");
 
 		auto NewImageView = CreateSharedPtr<FVulkanImageView>(shared_from_this());
+		NewImageView->LayoutView = GetLayout();
 		NewImageView->TypeView   = (_Type   == EVulkanImageViewType::Auto)? EVulkanImageViewType(this->Type) : _Type;
 		NewImageView->FormatView = (_Format == EVulkanFormat::None)? this->Format : _Format;
 		NewImageView->AspectView = (_Aspect == EVulkanImageAspect::Undefined)? this->Aspects : _Aspect;
@@ -366,8 +372,9 @@ export namespace VE
 
 		VmaAllocationCreateInfo AllocationCreateInfo
 		{
-			.flags = 0x0,
-			.usage = AutoCast(_Location)
+			.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,//[TODO]: Set as a dynamic parameter.
+			.usage = AutoCast(_Location),
+			.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, //[TODO]: Set as a dynamic parameter.
 		};
 
 		if(vmaCreateBuffer(
@@ -414,6 +421,15 @@ export namespace VE
 			ArrayLayers,
 			SharingMode,
 			Location);
+	}
+
+	void FVulkanBuffer::
+	Write(void* _Data, UInt64 _Size)
+	{
+		void* SwapArea;
+		vmaMapMemory(GVulkan->Allocator->GetHandle(), Allocation, &SwapArea);
+		Memory::Memcpy(SwapArea, _Data, _Size);
+		vmaUnmapMemory(GVulkan->Allocator->GetHandle(), Allocation);
 	}
 
 } // namespace VE

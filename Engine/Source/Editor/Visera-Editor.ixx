@@ -7,6 +7,7 @@ export module Visera.Editor;
 import Visera.Runtime.Window;
 import Visera.Runtime.RHI;
 import Visera.Core.Log;
+import Visera.Core.OS.FileSystem;
 
 export namespace VE
 {
@@ -16,6 +17,7 @@ export namespace VE
 	public:
 		VE_API CreateWindow() -> void { ImGui::ShowDemoWindow(); }
 
+	public:
 		class FUIRenderPass : public RHI::FRenderPass
 		{
 		public:
@@ -36,9 +38,9 @@ export namespace VE
 				{ 
 					.ColorImageReferences = {0},
 					.SrcStage		= RHI::EGraphicsPipelineStage::ColorAttachmentOutput,
-					.SrcStageAccess = RHI::EAccessibility::W_ColorAttachment,
+					.SrcStageAccess = RHI::EAccess::W_ColorAttachment,
 					.DstStage		= RHI::EGraphicsPipelineStage::ColorAttachmentOutput,
-					.DstStageAccess = RHI::EAccessibility::W_ColorAttachment,
+					.DstStageAccess = RHI::EAccess::W_ColorAttachment,
 					.bExternalSubpass = True
 				});
 			}
@@ -81,6 +83,7 @@ export namespace VE
 			auto& io = ImGui::GetIO();
 
 			// Configuration
+			FileSystem::CreateFileIfNotExists(FPath{VISERA_APP_CACHE_DIR"/Editor.layout"});
 			io.IniFilename =  VISERA_APP_CACHE_DIR"/Editor.layout";
 			io.ConfigFlags |= Configurations;
 
@@ -97,7 +100,7 @@ export namespace VE
 				.Device			= API->GetDevice().GetHandle(),
 				.QueueFamily	= QueueFamily.Index,
 				.Queue			= QueueFamily.Queues[0],
-				.DescriptorPool	= RHI::GetGlobalDescriptorPool().GetHandle(),
+				.DescriptorPool	= RHI::GetGlobalDescriptorPool()->GetHandle(),
 				.RenderPass		= EditorRenderPass->GetHandle(), // Ignored if using dynamic rendering
 				
 				.MinImageCount	= UInt32(RHI::GetSwapchainFrameCount()),

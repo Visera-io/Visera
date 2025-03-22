@@ -4,6 +4,7 @@ export module Visera.Runtime.RHI.Vulkan:DescriptorSetLayout;
 import :Context;
 import :Common;
 import :Device;
+import :Sampler;
 
 import Visera.Core.Signal;
 
@@ -21,11 +22,12 @@ export namespace VE
 			EVulkanDescriptorType DescriptorType;
 			UInt16				  DescriptorCount;
 			EVulkanShaderStage    ShaderStages;
-			//SharedPtr<FVulkanSampler> Sampler;
-			const VkSampler* Samplers = nullptr;
+			Array<VkSampler>      ImmutableSamplers;
 		};
 
 		auto GetHandle() const -> const VkDescriptorSetLayout { return Handle; }
+		auto GetBindingCount() const -> size_t { return BindingSlots.size(); }
+		auto GetBinding(UInt32 _Position) -> const FBinding& { VE_ASSERT(_Position < GetBindingCount()); return BindingSlots[_Position]; }
 
 		FVulkanDescriptorSetLayout() = delete;
 		FVulkanDescriptorSetLayout(const Array<FBinding>& _Bindings);
@@ -42,16 +44,17 @@ export namespace VE
 		Array<VkDescriptorSetLayoutBinding> Bindings(BindingSlots.size());
 		std::transform(BindingSlots.begin(), BindingSlots.end(),
 					   Bindings.begin(),
-					   [](const auto& _BindingSlot)->VkDescriptorSetLayoutBinding
+					   [](const FBinding& _BindingSlot)->VkDescriptorSetLayoutBinding
 						{
 							VE_ASSERT(_BindingSlot.BindPoint >= 0);
+			
 							return VkDescriptorSetLayoutBinding
 							{
 								.binding		 = UInt32(_BindingSlot.BindPoint),
 								.descriptorType  = AutoCast(_BindingSlot.DescriptorType),
 								.descriptorCount = _BindingSlot.DescriptorCount,
 								.stageFlags		 = AutoCast(_BindingSlot.ShaderStages),
-								.pImmutableSamplers = _BindingSlot.Samplers,
+								.pImmutableSamplers = _BindingSlot.ImmutableSamplers.empty()? nullptr : _BindingSlot.ImmutableSamplers.data(),
 							};
 						});
 

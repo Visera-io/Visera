@@ -47,11 +47,14 @@ export namespace VE
 			union
 			{
 				struct { UInt8 B, G, R, A; };
-				RGBQUAD Data{ 255, 0, 255, 255 };
+				RGBQUAD Data{ 0, 0, 0, 255 };
 			};
 		};
 
 		void Resize(UInt32 _NewWidth, UInt32 _NewHeight, EFilter _Filter) { Handle.rescale(_NewWidth, _NewHeight, FREE_IMAGE_FILTER(_Filter)); }
+		void FlipVertical()		{ Handle.flipVertical(); }
+		void FlipHorizontal()	{ Handle.flipHorizontal(); }
+		void ToRGBA()			{ Handle.convertToRGBAF(); }
 
 		auto GetPixel(UInt32 _X, UInt32 _Y) const -> Optional<FPixel> { FPixel Pixel; if (!Handle.getPixelColor(_X, _Y, &Pixel.Data)) { return {}; } else { return Pixel; } }
 		Bool SetPixel(UInt32 _X, UInt32 _Y, FPixel _Value) { VE_ASSERT(!IsGrayScale()); return Handle.setPixelColor(_X, _Y, &_Value.Data); }
@@ -63,8 +66,10 @@ export namespace VE
 
 		Bool IsValid()		const { return Handle.isValid(); }
 		Bool IsGrayScale()	const { return Handle.isGrayscale(); }
+		Bool HasAlpha()		const { return FreeImage_GetBPP(Handle) == 32; }
 
 		void Save() const { if (!Handle.save(Path.ToPlatformString().data())) { throw SIOFailure(Text("Failed to save the image({})!", Path.ToPlatformString())); } }
+		void SaveAs(const FPath& _Path) const { if (!Handle.save(_Path.ToPlatformString().data())) { throw SIOFailure(Text("Failed to save the image({})!", _Path.ToPlatformString())); } }
 
 		FImage() = delete;
 		FImage(const FPath& _Path);
@@ -90,6 +95,13 @@ export namespace VE
 
 		if (!Handle.load(Path.ToPlatformString().data()))
 		{ throw SIOFailure(Text("Failed to load the image({})!", Path.ToPlatformString())); }
+
+		// Force Convert to 32Bit Bitmap for Vulkan.
+		if (!HasAlpha())
+		{
+			if (!Handle.convertTo32Bits())
+			{ throw SRuntimeError(Text("Failed to convert the image({}) to 32Bits!", Path.ToPlatformString())); }
+		}
 	}
 
 } // namespace VE

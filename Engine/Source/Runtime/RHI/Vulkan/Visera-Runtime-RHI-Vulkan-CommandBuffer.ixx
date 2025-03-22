@@ -41,6 +41,7 @@ export namespace VE
 		friend class FVulkanCommandPool;
 	public:
 		enum class EStatus { Expired, Idle, Recording, ReadyToSubmit, Submitted }; //[FIXME]: Currrent Status is not trustable
+
 		Bool IsExpired()			const { return Status == EStatus::Expired;		}
 		Bool IsIdle()				const { return Status == EStatus::Idle;			}
 		Bool IsRecording()			const { return Status == EStatus::Recording;	}
@@ -90,6 +91,8 @@ export namespace VE
 	public:
 		void StartRecording() { FVulkanCommandBuffer::StartRecording(); }
 		void StopRecording()  { FVulkanCommandBuffer::StopRecording();  }
+
+		void WriteImage(SharedPtr<FVulkanImage> _Image, SharedPtr<const FVulkanBuffer> _StagingBuffer);
 
 		void ReachRenderPass(SharedPtr<const FVulkanRenderPass> _RenderPass);
 		void BindVertexBuffer(SharedPtr<const FVulkanBuffer> _VertexBuffer) const;
@@ -401,5 +404,44 @@ export namespace VE
 		SetScissor();
 		SetViewport();
 	}
+
+
+	void FVulkanGraphicsCommandBuffer::
+	WriteImage(SharedPtr<FVulkanImage> _Image, SharedPtr<const FVulkanBuffer> _StagingBuffer)
+	{
+		if (VkFlags(_Image->GetUsages() & EVulkanImageUsage::TransferDestination) == 0)
+		{ throw SRuntimeError("Failed to write the image! - Not transferable!"); }
+
+		auto OriginalImageLayout = _Image->GetLayout();
+		if (OriginalImageLayout != EVulkanImageLayout::TransferDestination)
+		{ ConvertImageLayout(_Image, EVulkanImageLayout::TransferDestination); }
+
+		VkBufferImageCopy WriteInfo
+		{
+			.bufferOffset		= 0,
+			.bufferRowLength	= 0,
+			.bufferImageHeight	= 0,
+			.imageSubresource
+			{
+				.aspectMask		= AutoCast(_Image->GetAspects()),
+				.mipLevel		= 0,
+				.baseArrayLayer = 0,
+				.layerCount		= 1,
+			},
+			.imageOffset		= {0, 0, 0},
+			.imageExtent		= _Image->GetExtent(),
+		};
+		vkCmdCopyBufferToImage(
+			Handle,
+			_StagingBuffer->GetHandle(),
+			_Image->GetHandle(),
+			AutoCast(_Image->GetLayout()),
+			1,
+			&WriteInfo);
+
+		if (OriginalImageLayout != _Image->GetLayout())
+		{ ConvertImageLayout(_Image, OriginalImageLayout); }
+	}
+
 	
 } // namespace VE

@@ -1,14 +1,15 @@
 module;
 #include <Visera.h>
 export module Visera.Core.Media;
-import Visera.Core.Media.Image;
+export import Visera.Core.Media.Image;
+export import Visera.Core.Media.Model;
+
 import Visera.Core.Type;
 import Visera.Core.OS.FileSystem;
 import Visera.Core.OS.Concurrency;
 
 export namespace VE
 {
-
 	class Media
 	{
 		VE_MODULE_MANAGER_CLASS(Media);

@@ -26,6 +26,7 @@ export namespace VE
 		using FShader				= FVulkanShader;
 		using FBuffer				= FVulkanBuffer;
 		using FImage				= FVulkanImage;
+		using FImageView			= FVulkanImageView;
 		using FImageMemoryBarrier   = FVulkanImageMemoryBarrier;
 		using FExtent2D				= FVulkanExtent2D;
 		using FExtent3D				= FVulkanExtent3D;
@@ -41,6 +42,7 @@ export namespace VE
 		using FPushConstantRange	= FVulkanPipelineLayout::FPushConstantRange;
 		using FCommandSubmitInfo	= FVulkanCommandSubmitInfo;
 		using FRenderArea			= FVulkanRenderArea;
+		using FSampler				= FVulkanSampler;
 
 		using ESharingMode			= EVulkanSharingMode;
 		using ESampleRate			= EVulkanSampleRate;
@@ -48,7 +50,7 @@ export namespace VE
 		using ECommandPoolType		= EVulkanCommandPoolType;
 		using ECommandLevel			= EVulkanCommandLevel;
 		using EShaderStage			= EVulkanShaderStage;
-		using EAccessibility		= EVulkanAccess;
+		using EAccess				= EVulkanAccess;
 		using EGraphicsPipelineStage= EVulkanGraphicsPipelineStage;
 		using EComputePipelineStage = EVulkanComputePipelineStage;
 		using ETransferPipelineStage= EVulkanTransferPipelineStage;
@@ -65,6 +67,9 @@ export namespace VE
 		using EFormat				= EVulkanFormat;
 		using EFilter				= EVulkanFilter;
 		using EPresentMode			= EVulkanPresentMode;
+		using EBorderColor			= EVulkanBorderColor;
+		using ESamplerMipmapMode	= EVulkanSamplerMipmapMode;
+		using ESamplerAddressMode	= EVulkanSamplerAddressMode;
 
 		using SSwapchainRecreation = FVulkanSwapchain::SRecreation;
 
@@ -93,9 +98,11 @@ export namespace VE
 
 	public:
 		static inline auto
-		CreateDescriptorSetLayout(const Array<FDescriptorBinding> _Bindings)		-> SharedPtr<FDescriptorSetLayout> { return CreateSharedPtr<FDescriptorSetLayout>(_Bindings); }
+		CreateDescriptorSetLayout(const Array<FDescriptorBinding> _Bindings)		-> SharedPtr<FDescriptorSetLayout>	{ return CreateSharedPtr<FDescriptorSetLayout>(_Bindings); }
 		static inline auto
-		CreateDescriptorSet(SharedPtr<FDescriptorSetLayout> _SetLayout)				-> SharedPtr<FDescriptorSet> { return GlobalDescriptorPool.CreateDescriptorSet(_SetLayout);		}
+		CreateDescriptorSet(SharedPtr<FDescriptorSetLayout> _SetLayout)				-> SharedPtr<FDescriptorSet>		{ return GlobalDescriptorPool->CreateDescriptorSet(_SetLayout);		}
+		static inline auto
+		CreateSampler()																-> SharedPtr<FSampler>				{ return CreateSharedPtr<FSampler>(); }
 		static inline auto
 		CreateGraphicsCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return ResetableGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
 		static inline auto
@@ -134,12 +141,12 @@ export namespace VE
 		static inline auto
 		GetAPI()				 -> FVulkan* { return Vulkan; }
 		static inline auto
-		GetGlobalDescriptorPool()-> const FDescriptorPool& { return GlobalDescriptorPool; }
+		GetGlobalDescriptorPool() -> SharedPtr<const FDescriptorPool> { return GlobalDescriptorPool; }
 
 	private:
 		static inline FVulkan*							Vulkan;
 		//[TODO]: ThreadSafe Paradigm
-		static inline FDescriptorPool					GlobalDescriptorPool{};
+		static inline SharedPtr<FDescriptorPool>		GlobalDescriptorPool{};
 		static inline SharedPtr<FGraphicsCommandPool>	ResetableGraphicsCommandPool{};
 		static inline SharedPtr<FGraphicsCommandPool>	TransientGraphicsCommandPool{};
 
@@ -151,8 +158,8 @@ export namespace VE
 		Bootstrap()
 		{
 			Vulkan = new FVulkan();
-
-			GlobalDescriptorPool.Create(
+			GlobalDescriptorPool = CreateSharedPtr<FDescriptorPool>();
+			GlobalDescriptorPool->Create(
 				{
 					{EDescriptorType::UniformBuffer,			1000},
 					{EDescriptorType::StorageBuffer,			1000},
@@ -207,8 +214,8 @@ export namespace VE
 				VkImageMemoryBarrier SwapchainTransferBarrier
 				{
 					.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-					.srcAccessMask = AutoCast(EAccessibility::None),
-					.dstAccessMask = AutoCast(EAccessibility::None),
+					.srcAccessMask = AutoCast(EAccess::None),
+					.dstAccessMask = AutoCast(EAccess::None),
 					.oldLayout = AutoCast(EImageLayout::Undefined),
 					.newLayout = AutoCast(EImageLayout::Present),
 					.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
@@ -257,7 +264,7 @@ export namespace VE
 			Frames.clear();
 			TransientGraphicsCommandPool.reset();
 			ResetableGraphicsCommandPool.reset();
-			GlobalDescriptorPool.Destroy();
+			GlobalDescriptorPool->Destroy();
 			delete Vulkan;
 		}
 	};
@@ -341,8 +348,8 @@ export namespace VE
 			VkImageMemoryBarrier SwapchainTransferBarrier
 			{
 				.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-				.srcAccessMask = AutoCast(EAccessibility::R_Memory),
-				.dstAccessMask = AutoCast(EAccessibility::W_Transfer),
+				.srcAccessMask = AutoCast(EAccess::R_Memory),
+				.dstAccessMask = AutoCast(EAccess::W_Transfer),
 				.oldLayout = AutoCast(EImageLayout::Present),
 				.newLayout = AutoCast(EImageLayout::TransferDestination),
 				.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
@@ -421,8 +428,8 @@ export namespace VE
 			VkImageMemoryBarrier SwapchainPresentBarrier
 			{
 				.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-				.srcAccessMask = AutoCast(EAccessibility::None),
-				.dstAccessMask = AutoCast(EAccessibility::R_Memory),
+				.srcAccessMask = AutoCast(EAccess::None),
+				.dstAccessMask = AutoCast(EAccess::R_Memory),
 				.oldLayout = AutoCast(EImageLayout::TransferDestination),
 				.newLayout = AutoCast(EImageLayout::Present),
 				.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,

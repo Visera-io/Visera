@@ -8,6 +8,7 @@ export import :DescriptorPool;
 export import :DescriptorSet;
 export import :DescriptorSetLayout;
 export import :Shader;
+export import :Sampler;
 export import :PipelineLayout;
 export import :RenderPass;
 export import :RenderPassLayout;

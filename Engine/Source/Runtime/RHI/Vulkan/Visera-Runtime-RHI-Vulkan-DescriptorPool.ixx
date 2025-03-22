@@ -93,6 +93,7 @@ export namespace VE
 				{ Trashbin.resize(Trashbin.size() << 1); }
 
 				Trashbin[CollectionCount++] = Child->Handle;
+				Child->Layout.reset();
 				Child->Status				= FVulkanDescriptorSet::EStatus::Expired;
 				Child->Handle				= VK_NULL_HANDLE;
 			}
@@ -107,6 +108,7 @@ export namespace VE
 					if (CollectionCount >= Trashbin.size())
 					{ Trashbin.resize(Trashbin.size() << 1); }
 
+					Child->Layout.reset();
 					Trashbin[CollectionCount++] = Child->Handle;
 					Child->Handle = VK_NULL_HANDLE;
 				

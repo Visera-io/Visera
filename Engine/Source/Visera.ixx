@@ -84,6 +84,7 @@ export namespace VE
 			}
 
 			Terminate(App);
+			Log::Debug("ViseraEngine has been terminated successfully!");
 			return StateCode;
 		}
 
