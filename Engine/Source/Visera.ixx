@@ -19,8 +19,8 @@ export namespace VE
 		virtual void Terminate() = 0;
 		virtual void Tick() = 0;
 
-		// void inline
-		// Exit(const SAppStop& Message = SAppStop("ViseraEngine App Exited Successfully.")) const { throw Message; }
+		void inline
+		Exit(const SAppStop& Message = SAppStop("ViseraEngine App Exited Successfully.")) const { throw Message; }
 
 		ViseraApp()	 noexcept { RuntimeCounter = System::GetRunningTime().milliseconds(); }
 		virtual ~ViseraApp() noexcept { Log::Info("App Running Time {}ms", System::GetRunningTime().milliseconds() - RuntimeCounter); }
@@ -137,7 +137,7 @@ public:
 	virtual void Tick() override
 	{
 		//VE::Log::Info(VISERA_APP_NAME": Hello World!");
-		//Exit();
+		Exit();
 		//throw VE::SAppStop(":");
 	}
 
