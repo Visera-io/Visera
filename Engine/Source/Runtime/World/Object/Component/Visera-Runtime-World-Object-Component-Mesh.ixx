@@ -20,7 +20,7 @@ export namespace VE
 		Array<Float> Indices;
 
 	protected:
-		virtual void Update();
+		virtual void Update()  override;
 		virtual void Create()  override;
 		virtual void Destroy() override;
 
