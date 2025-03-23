@@ -102,7 +102,7 @@ export namespace VE
 		static inline auto
 		CreateDescriptorSet(SharedPtr<FDescriptorSetLayout> _SetLayout)				-> SharedPtr<FDescriptorSet>		{ return GlobalDescriptorPool->CreateDescriptorSet(_SetLayout);		}
 		static inline auto
-		CreateSampler()																-> SharedPtr<FSampler>				{ return CreateSharedPtr<FSampler>(); }
+		CreateSampler(EFilter _Filter, ESamplerAddressMode _AddressMode = ESamplerAddressMode::ClampToEdge)																-> SharedPtr<FSampler>				{ return CreateSharedPtr<FSampler>(_Filter, _AddressMode); }
 		static inline auto
 		CreateGraphicsCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return ResetableGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
 		static inline auto

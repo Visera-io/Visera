@@ -4,6 +4,7 @@ export module Visera.Runtime.RHI.Vulkan:DescriptorSet;
 import :Context;
 import :Common;
 import :Allocator;
+import :Sampler;
 import :Device;
 import :DescriptorSetLayout;
 

@@ -16,28 +16,29 @@ export namespace VE
     public:
         auto GetHandle() const -> const VkSampler { return Handle; }
 
-        FVulkanSampler();
+        FVulkanSampler(EVulkanFilter _Filter = EVulkanFilter::Linear,
+                       EVulkanSamplerAddressMode _AddressMode = EVulkanSamplerAddressMode::ClampToEdge);
         ~FVulkanSampler();
 
     private:
         VkSampler Handle {VK_NULL_HANDLE};
         union
         {
-            EVulkanSamplerAddressMode Modes[3]
+            EVulkanSamplerAddressMode Data[3]
             {
-                EVulkanSamplerAddressMode::Repeat,
-                EVulkanSamplerAddressMode::Repeat,
-                EVulkanSamplerAddressMode::Repeat,
+                EVulkanSamplerAddressMode::ClampToEdge,
+                EVulkanSamplerAddressMode::ClampToEdge,
+                EVulkanSamplerAddressMode::ClampToEdge,
             };
             struct {EVulkanSamplerAddressMode U, V, W;};
         } AddressModes;
 
         union
         {
-            EVulkanFilter Filters[2]
+            EVulkanFilter Data[2]
             {
-                EVulkanFilter::Nearest,
-                EVulkanFilter::Nearest,
+                EVulkanFilter::Linear,
+                EVulkanFilter::Linear,
             };
             struct {EVulkanFilter ZoomIn, ZoomOut;};
         } Filters;
@@ -45,11 +46,16 @@ export namespace VE
         EVulkanBorderColor		    BorderColor = EVulkanBorderColor::Black_Int;
         EVulkanSamplerMipmapMode    MipmapMode  = EVulkanSamplerMipmapMode::Linear;
         EVulkanCompareOp	        CompareMode = EVulkanCompareOp::Never;
-        VkBool32                    bAnisotropy = VK_TRUE;
+        Bool                        bAnisotropy = True;
     };
 
     FVulkanSampler::
-    FVulkanSampler()
+    FVulkanSampler(
+        EVulkanFilter             _Filter      /* = EVulkanFilter::Linear*/,
+        EVulkanSamplerAddressMode _AddressMode /* = EVulkanSamplerAddressMode::ClampToEdge*/)
+        :
+        Filters{ .ZoomIn{_Filter}, .ZoomOut{_Filter} },
+        AddressModes{ .U{_AddressMode}, .V{_AddressMode}, .W{_AddressMode} }
     {
         VkSamplerCreateInfo CreateInfo
         {
@@ -66,7 +72,7 @@ export namespace VE
 
             .mipLodBias   = 0.0,
 
-            .anisotropyEnable = bAnisotropy,
+            .anisotropyEnable = bAnisotropy? VK_TRUE : VK_FALSE,
             .maxAnisotropy	  = GVulkan->GPU->GetProperties().limits.maxSamplerAnisotropy,
 
             .compareEnable	= AutoCast(CompareMode)? VK_TRUE : VK_FALSE,

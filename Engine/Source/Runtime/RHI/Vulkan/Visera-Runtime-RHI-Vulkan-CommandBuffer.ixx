@@ -412,10 +412,6 @@ export namespace VE
 		if (VkFlags(_Image->GetUsages() & EVulkanImageUsage::TransferDestination) == 0)
 		{ throw SRuntimeError("Failed to write the image! - Not transferable!"); }
 
-		auto OriginalImageLayout = _Image->GetLayout();
-		if (OriginalImageLayout != EVulkanImageLayout::TransferDestination)
-		{ ConvertImageLayout(_Image, EVulkanImageLayout::TransferDestination); }
-
 		VkBufferImageCopy WriteInfo
 		{
 			.bufferOffset		= 0,
@@ -438,9 +434,6 @@ export namespace VE
 			AutoCast(_Image->GetLayout()),
 			1,
 			&WriteInfo);
-
-		if (OriginalImageLayout != _Image->GetLayout())
-		{ ConvertImageLayout(_Image, OriginalImageLayout); }
 	}
 
 	

@@ -27,7 +27,7 @@ export namespace VE
 		CreateWidget(FName _Name) -> SharedPtr<T>;
 
 	private:
-		static inline FPath LayoutFilePath{VE_PATH(VISERA_APP_CACHE_DIR"/Editor.layout")};
+		static inline FPath LayoutFilePath{VISERA_APP_CACHE_DIR"/Editor.ini"};
 		static inline HashMap<FName, SharedPtr<IWidget>> Widgets;
 
 	public:
@@ -120,7 +120,7 @@ export namespace VE
 				
 				.MinImageCount	= UInt32(RHI::GetSwapchainFrameCount()),
 				.ImageCount		= UInt32(RHI::GetSwapchainFrameCount()),
-				.MSAASamples	= VK_SAMPLE_COUNT_1_BIT,
+				.MSAASamples	= AutoCast(RHI::ESampleRate::X1),
 
 				.PipelineCache	= API->GetGraphicsPipelineCache().GetHandle(),
 				.Subpass		= 0,
