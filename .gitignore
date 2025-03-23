@@ -1,7 +1,6 @@
 #[IDE]
 .vscode/
 .idea/
-.DS_Store/
 
 #[Architecture]
 Apps/*
@@ -14,3 +13,6 @@ CMakeUserPresets.json
 
 #[Exceptions]
 !README.md
+.DS_Store
+Engine/.DS_Store
+Engine/Source/.DS_Store

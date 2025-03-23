@@ -4,9 +4,13 @@ module;
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 export module Visera.Editor;
+export import Visera.Editor.Widget;
+
 import Visera.Runtime.Window;
 import Visera.Runtime.RHI;
 import Visera.Core.Log;
+import Visera.Core.Type;
+import Visera.Core.Signal;
 import Visera.Core.OS.FileSystem;
 
 export namespace VE
@@ -16,6 +20,14 @@ export namespace VE
 		VE_MODULE_MANAGER_CLASS(Editor);
 	public:
 		VE_API CreateWindow() -> void { ImGui::ShowDemoWindow(); }
+		static inline void
+		RenderWidgets() { for (const auto& [Name, Widget] : Widgets) {Widget->Render(); } }
+
+		template<typename T> static auto
+		CreateWidget(FName _Name) -> SharedPtr<T>;
+
+	private:
+		static inline HashMap<FName, SharedPtr<IWidget>> Widgets;
 
 	public:
 		class FUIRenderPass : public RHI::FRenderPass
@@ -126,8 +138,6 @@ export namespace VE
 			
 			auto VulkanInstanceHandle = API->GetInstance().GetHandle();
 			ImGui_ImplVulkan_Init(&CreateInfo);
-
-			//[TODO]: Load Font
 		}
 
 		static void Terminate()
@@ -142,5 +152,17 @@ export namespace VE
 		static inline UInt32				   Configurations = 0/*ImGuiConfigFlags_ViewportsEnable |
 																   ImGuiConfigFlags_DockingEnable*/;
 	};
+
+	template<typename T> SharedPtr<T> Editor::
+	CreateWidget(FName _Name)
+	{
+		if (Widgets.count(_Name))
+		{ throw SRuntimeError("Widget already exists"); }
+
+		auto NewWidget = CreateSharedPtr<T>();
+		Widgets[_Name] = NewWidget;
+
+		return NewWidget;
+	}
 
 }
