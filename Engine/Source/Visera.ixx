@@ -136,9 +136,8 @@ class App final : public VE::ViseraApp
 public:
 	virtual void Tick() override
 	{
-		//VE::Log::Info(VISERA_APP_NAME": Hello World!");
-		Exit();
-		//throw VE::SAppStop(":");
+		VE::Editor::CreateWindow();
+
 	}
 
 	virtual void Bootstrap() override

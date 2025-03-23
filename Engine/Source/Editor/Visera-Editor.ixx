@@ -80,12 +80,14 @@ export namespace VE
 
 			IMGUI_CHECKVERSION();
 			ImGui::CreateContext();
-			auto& io = ImGui::GetIO();
+			auto& IO = ImGui::GetIO();
 
 			// Configuration
 			FileSystem::CreateFileIfNotExists(FPath{VISERA_APP_CACHE_DIR"/Editor.layout"});
-			io.IniFilename =  VISERA_APP_CACHE_DIR"/Editor.layout";
-			io.ConfigFlags |= Configurations;
+			IO.IniFilename =  VISERA_APP_CACHE_DIR"/Editor.layout";
+			IO.ConfigFlags |= Configurations;
+
+			ImFont* EditorFont = IO.Fonts->AddFontFromFileTTF(VISERA_ENGINE_FONTS_DIR"/HelveticaNeueMedium.ttf", 14);
 
 			ImGui::StyleColorsDark();
 			//ImGui::StyleColorsLight();
