@@ -143,6 +143,8 @@ export namespace VE
 		static void Terminate()
 		{
 			EditorRenderPass.reset();
+
+			ImGui::SaveIniSettingsToDisk(VISERA_APP_CACHE_DIR"/Editor.layout");
 			ImGui_ImplVulkan_Shutdown();
 			ImGui_ImplGlfw_Shutdown();
 		}
