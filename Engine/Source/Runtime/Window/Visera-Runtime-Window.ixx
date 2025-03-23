@@ -77,9 +77,14 @@ export namespace VE
 
 			// Set Window Position
 			const GLFWvidmode* VidMode = GetVideoMode(GetPrimaryMonitor());
+#if (VE_IS_APPLE_SYSTEM)
+			SetPosition(400, 200);
+#else
 			SetPosition(
 				(VidMode->width    -   CurrentExtent.Width ) >> 1,	// Mid
 				(VidMode->height   -   CurrentExtent.Height) >> 1);	// Mid
+#endif
+			
 			if (bMaximized) { glfwMaximizeWindow(Handle); }
 		}
 		VE_API Terminate() -> void

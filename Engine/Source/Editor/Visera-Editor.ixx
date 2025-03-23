@@ -27,6 +27,7 @@ export namespace VE
 		CreateWidget(FName _Name) -> SharedPtr<T>;
 
 	private:
+		static inline FPath LayoutFilePath{VE_PATH(VISERA_APP_CACHE_DIR"/Editor.layout")};
 		static inline HashMap<FName, SharedPtr<IWidget>> Widgets;
 
 	public:
@@ -95,8 +96,8 @@ export namespace VE
 			auto& IO = ImGui::GetIO();
 
 			// Configuration
-			FileSystem::CreateFileIfNotExists(FPath{VISERA_APP_CACHE_DIR"/Editor.layout"});
-			IO.IniFilename =  VISERA_APP_CACHE_DIR"/Editor.layout";
+			FileSystem::CreateFileIfNotExists(LayoutFilePath);
+			IO.IniFilename =  LayoutFilePath.ToPlatformString().c_str();
 			IO.ConfigFlags |= Configurations;
 
 			ImFont* EditorFont = IO.Fonts->AddFontFromFileTTF(VISERA_ENGINE_FONTS_DIR"/HelveticaNeueMedium.ttf", 14);
@@ -144,7 +145,7 @@ export namespace VE
 		{
 			EditorRenderPass.reset();
 
-			ImGui::SaveIniSettingsToDisk(VISERA_APP_CACHE_DIR"/Editor.layout");
+			ImGui::SaveIniSettingsToDisk(LayoutFilePath.ToPlatformString().c_str());
 			ImGui_ImplVulkan_Shutdown();
 			ImGui_ImplGlfw_Shutdown();
 		}
