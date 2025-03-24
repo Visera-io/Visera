@@ -120,7 +120,7 @@ export namespace VE
 				
 				.MinImageCount	= UInt32(RHI::GetSwapchainFrameCount()),
 				.ImageCount		= UInt32(RHI::GetSwapchainFrameCount()),
-				.MSAASamples	= AutoCast(RHI::ESampleRate::X1),
+				.MSAASamples	= VK_SAMPLE_COUNT_1_BIT,
 
 				.PipelineCache	= API->GetGraphicsPipelineCache().GetHandle(),
 				.Subpass		= 0,

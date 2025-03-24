@@ -44,7 +44,7 @@ export namespace VE
 		Array<VkImage>			Images;			// Size: Clamp(minImageCount + 1, maxImageCount)
 		Array<VkImageView>		ImageViews;
 		VkExtent2D				ImageExtent;
-		EVulkanFormat			ImageFormat		= EVulkanFormat::U32_Normalized_R8_G8_B8_A8;
+		EVulkanFormat			ImageFormat		= EVulkanFormat::U32_Normalized_B8_G8_R8_A8;
 		EVulkanColorSpace		ImageColorSpace	= EVulkanColorSpace::sRGB_Nonlinear;
 
 		EVulkanFormat			DepthImageFormat= EVulkanFormat::S32_Float_Depth32;
@@ -63,9 +63,8 @@ export namespace VE
 		//First Time Creation
 		if (Handle == VK_NULL_HANDLE)
 		{
-			Bool bImageFormatSupport = False;
-			
 			//Check Image Format Support
+			Bool bImageFormatSupport = False;
 			for(const auto& SurfaceFormat : GVulkan->Surface->GetFormats())
 			{
 				if (SurfaceFormat.format	 != AutoCast(ImageFormat) ||
@@ -73,7 +72,8 @@ export namespace VE
 					continue;
 				bImageFormatSupport = True;
 			}
-			if (!bImageFormatSupport) throw SRuntimeError("Failed to create the Swapchain since required Image FormatView is unsupported!");
+			if (!bImageFormatSupport)
+			{ throw SRuntimeError("Failed to create the Swapchain since required Image FormatView is unsupported!"); }
 
 			Bool bPresentModeSupport = False;
 			//Check Image Format Support
