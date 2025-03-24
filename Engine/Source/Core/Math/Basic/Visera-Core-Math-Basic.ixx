@@ -10,6 +10,9 @@ export namespace VE
 {
     constexpr Float E = 2.71828182845904523536028747135266250;
 
+    template <Number NumT> NumT
+    Sqrt(NumT _Num) { return std::sqrt(_Num); }
+
     String inline
     Text(const	Vector2F& Vector)	{ return Text("[{}, {}]", Vector[0], Vector[1]); }
     String inline

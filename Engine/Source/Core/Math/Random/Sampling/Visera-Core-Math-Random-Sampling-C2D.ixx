@@ -8,9 +8,18 @@ export namespace VE
 {
 
     inline auto
-    SampleUnitSquare(Float& _Ux, Float& _Uy) -> Vector2F
+    SampleUnitSquare(Float _Ux, Float _Uy) -> Vector2F
     {
         return { _Ux, _Uy };
+    }
+
+    inline auto
+    SampleUnitDisk(Float _URadius, Float _UTheta) -> Vector2F
+    {
+        Float X = Sqrt(_URadius);
+        Float Y = 2 * PI * _UTheta;
+
+        return {X, Y};
     }
 
     inline auto
