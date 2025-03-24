@@ -1,8 +1,9 @@
 module;
 #include <Visera.h>
 export module Visera.Runtime.World;
-import Visera.Runtime.World.Atlas;
-import Visera.Runtime.World.Object;
+export import Visera.Runtime.World.Atlas;
+export import Visera.Runtime.World.Object;
+export import Visera.Runtime.World.Camera;
 import Visera.Runtime.World.Stage;
 
 import Visera.Core.Type;
