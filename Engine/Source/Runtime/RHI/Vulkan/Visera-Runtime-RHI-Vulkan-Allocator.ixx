@@ -372,9 +372,10 @@ export namespace VE
 
 		VmaAllocationCreateInfo AllocationCreateInfo
 		{
-			.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,//[TODO]: Set as a dynamic parameter.
+			.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT | 
+					 VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,//[TODO]: Set as a dynamic parameter.
 			.usage = AutoCast(_Location),
-			.requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, //[TODO]: Set as a dynamic parameter.
+			.requiredFlags = 0x0, //[TODO]: Set as a dynamic parameter.
 		};
 
 		if(vmaCreateBuffer(

@@ -2,7 +2,7 @@ module;
 #include <Visera.h>
 export module Visera.Runtime.World.Stage;
 
-import Visera.Core.System;
+import Visera.Core.OS;
 import Visera.Core.Log;
 import Visera.Core.Type;
 

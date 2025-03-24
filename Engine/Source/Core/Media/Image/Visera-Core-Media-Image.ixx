@@ -95,7 +95,7 @@ export namespace VE
 
 		if (!Handle.load(Path.ToPlatformString().data()))
 		{ throw SIOFailure(Text("Failed to load the image({})!", Path.ToPlatformString())); }
-
+		
 		// Force Convert to 32Bit Bitmap for Vulkan.
 		if (!HasAlpha())
 		{

@@ -409,7 +409,7 @@ export namespace VE
 	void FVulkanGraphicsCommandBuffer::
 	WriteImage(SharedPtr<FVulkanImage> _Image, SharedPtr<const FVulkanBuffer> _StagingBuffer)
 	{
-		if (VkFlags(_Image->GetUsages() & EVulkanImageUsage::TransferDestination) == 0)
+		if (_Image->GetLayout() != EVulkanImageLayout::TransferDestination)
 		{ throw SRuntimeError("Failed to write the image! - Not transferable!"); }
 
 		VkBufferImageCopy WriteInfo

@@ -28,7 +28,7 @@ export namespace VE
 		auto GetCurrentImage()	const   -> const VkImage			{ return Images[Cursor]; }
 		auto GetExtent()		const	-> const VkExtent2D&		{ return ImageExtent; }
 		auto GetFormat()		const	-> EVulkanFormat			{ return ImageFormat; }
-		auto GetColorSpace()	const	-> VkColorSpaceKHR			{ return ImageColorSpace; }
+		auto GetColorSpace()	const	-> EVulkanColorSpace		{ return ImageColorSpace; }
 		auto GetImages()		const	-> const Array<VkImage>&	{ return Images; }
 		auto GetImageViews()	const	-> const Array<VkImageView> { return ImageViews; }
 		auto GetHandle()		const	-> const VkSwapchainKHR		{ return Handle; }
@@ -44,8 +44,8 @@ export namespace VE
 		Array<VkImage>			Images;			// Size: Clamp(minImageCount + 1, maxImageCount)
 		Array<VkImageView>		ImageViews;
 		VkExtent2D				ImageExtent;
-		EVulkanFormat			ImageFormat		= EVulkanFormat::U32_sRGB_B8_G8_R8_A8;
-		VkColorSpaceKHR			ImageColorSpace	= VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+		EVulkanFormat			ImageFormat		= EVulkanFormat::U32_Normalized_R8_G8_B8_A8;
+		EVulkanColorSpace		ImageColorSpace	= EVulkanColorSpace::sRGB_Nonlinear;
 
 		EVulkanFormat			DepthImageFormat= EVulkanFormat::S32_Float_Depth32;
 		EVulkanImageTiling		DepthImageTiling= EVulkanImageTiling::Optimal;
@@ -69,7 +69,7 @@ export namespace VE
 			for(const auto& SurfaceFormat : GVulkan->Surface->GetFormats())
 			{
 				if (SurfaceFormat.format	 != AutoCast(ImageFormat) ||
-					SurfaceFormat.colorSpace != ImageColorSpace)
+					SurfaceFormat.colorSpace != AutoCast(ImageColorSpace))
 					continue;
 				bImageFormatSupport = True;
 			}
@@ -158,7 +158,7 @@ export namespace VE
 			.surface				= GVulkan->Surface->GetHandle(),
 			.minImageCount			= UInt32(Images.size()), // Note that, this is just a minimum number of images in the swap chain, the implementation could make it more.
 			.imageFormat			= AutoCast(ImageFormat),
-			.imageColorSpace		= ImageColorSpace,
+			.imageColorSpace		= AutoCast(ImageColorSpace),
 			.imageExtent			= ImageExtent,
 			.imageArrayLayers		= 1,
 			.imageUsage				= AutoCast( EVulkanImageUsage::ColorAttachment |

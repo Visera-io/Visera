@@ -4,6 +4,7 @@ export module Visera.Runtime.RHI.Vulkan:Common;
 
 export namespace VE
 {
+	// VE_ENUM_CLASS(EVulkanColorSpace,				VkColorSpaceKHR)
 	// VE_ENUM_CLASS(EVulkanBorderColor,			VkBorderColor)
 	// VE_ENUM_CLASS(EVulkanSamplerMimapMode,		VkSamplerMipmapMode)
 	// VE_ENUM_CLASS(EVulkanSamplerAddressMode,		VkSamplerAddressMode)
@@ -41,6 +42,11 @@ export namespace VE
 	
 	using FClearValue = VkClearValue;
 	using FClearColor = VkClearColorValue;
+
+	VE_ENUM_CLASS(EVulkanColorSpace, VkColorSpaceKHR)
+	{
+		sRGB_Nonlinear = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+	};
 
 	VE_ENUM_CLASS(EVulkanBorderColor, VkBorderColor)
 	{

@@ -28,7 +28,12 @@ export namespace VE
 		UInt32					APIVersion;
 		Array<RawString>		Layers
 								{
-										"VK_LAYER_KHRONOS_validation"
+#if (NDEBUG)
+										// Release Layers
+#else
+										// Debug Layers
+										"VK_LAYER_KHRONOS_validation",
+#endif
 								};
 		Array<RawString>		Extensions
 								{
@@ -36,8 +41,14 @@ export namespace VE
 #if (VE_IS_APPLE_SYSTEM)
 									VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
 #endif
+
+#if (NDEBUG)
+									// Release Extensions
+#else
+									// Debug Extensions
 									VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 									VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+#endif
 								};
 		VkFlags					Flags = 0
 #if (VE_IS_APPLE_SYSTEM)
