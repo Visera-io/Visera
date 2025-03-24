@@ -3,6 +3,7 @@ module;
 export module Visera.Core.Math;
 export import Visera.Core.Math.Basic;
 export import Visera.Core.Math.Hash;
+//export import Visera.Core.Math.Random;
 
 export namespace VE
 {

@@ -8,6 +8,8 @@ export import :Operation;
 
 export namespace VE
 {
+    constexpr Float E = 2.71828182845904523536028747135266250;
+
     String inline
     Text(const	Vector2F& Vector)	{ return Text("[{}, {}]", Vector[0], Vector[1]); }
     String inline

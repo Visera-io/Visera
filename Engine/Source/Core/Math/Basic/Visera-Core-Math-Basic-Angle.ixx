@@ -9,7 +9,7 @@ import :Operation;
 export namespace VE
 {	
 	using AngleAxis   = Eigen::AngleAxisf;
-	constexpr Double PI { 3.141592653589793 }; // 180 Degrees
+	constexpr Float PI { 3.14159265358979323846264338327950288 };
 
 	class Degree;
 	class Radian
