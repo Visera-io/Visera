@@ -25,6 +25,7 @@ export namespace VE
           {1, 0}); // UV Flipped.
       ImGui::End();
     }
+    void Write(SharedPtr<const FImage> _NewImage, Bool _bFreeOldSet = True);
 
     FCanvas() = delete;
     FCanvas(SharedPtr<const FImage> _Image, SharedPtr<const RHI::FSampler> _Sampler, SharedPtr<const RHI::FDescriptorSetLayout> _ImGuiDSLayout);
@@ -33,9 +34,11 @@ export namespace VE
     String  Title;
     ImVec2  Extent;
     WeakPtr<const FImage>          ImageReference;
+    SharedPtr<const RHI::FSampler> Sampler;
     SharedPtr<RHI::FImage>         RHIImage;
     SharedPtr<RHI::FImageView>     RHIImageView;
     SharedPtr<RHI::FDescriptorSet> DescriptorSet;
+    SharedPtr<const RHI::FDescriptorSetLayout> DescriptorSetLayout;
   };
 
   FCanvas::
@@ -43,17 +46,34 @@ export namespace VE
     : IWidget{ FName{Text("editor::widget::canvas_{}", ID++)} },
       Title  { GetName().GetNameWithNumber() },
       Extent { Float(_Image->GetWidth()), Float(_Image->GetHeight()) },
-      ImageReference {_Image}
+      ImageReference {_Image},
+      Sampler{std::move(_Sampler)},
+      DescriptorSet{ RHI::CreateDescriptorSet(_ImGuiDSLayout) },
+      DescriptorSetLayout{ _ImGuiDSLayout }
   {
-    RHIImage = RHI::CreateImage(
-        RHI::EImageType::Image2D,
-        RHI::FExtent3D{_Image->GetWidth(), _Image->GetHeight(), 1},
-        _Image->IsSRGB()? RHI::EFormat::U32_sRGB_B8_G8_R8_A8 : RHI::EFormat::U32_Normalized_B8_G8_R8_A8,
-        RHI::EImageAspect::Color,
-        RHI::EImageUsage::Sampled | RHI::EImageUsage::TransferDestination);
+      Write(_Image, False);
+  }
 
-    auto StagingBuffer = RHI::CreateStagingBuffer(_Image->GetSize());
-    StagingBuffer->Write(_Image->GetData(), _Image->GetSize());
+  void FCanvas::
+  Write(SharedPtr<const FImage> _NewImage, Bool _bFreeOldSet /* = True*/)
+  {
+    if (_bFreeOldSet)
+    {
+      RHI::WaitDeviceIdle(); //[TODO]: Fixme
+      RHI::FreeDescriptorSet(DescriptorSet);
+      DescriptorSet = RHI::CreateDescriptorSet(DescriptorSetLayout);
+    }
+
+    RHIImageView.reset();
+    RHIImage = RHI::CreateImage(
+          RHI::EImageType::Image2D,
+          RHI::FExtent3D{_NewImage->GetWidth(), _NewImage->GetHeight(), 1},
+          _NewImage->IsSRGB()? RHI::EFormat::U32_sRGB_B8_G8_R8_A8 : RHI::EFormat::U32_Normalized_B8_G8_R8_A8,
+          RHI::EImageAspect::Color,
+          RHI::EImageUsage::Sampled | RHI::EImageUsage::TransferDestination);
+
+    auto StagingBuffer = RHI::CreateStagingBuffer(_NewImage->GetSize());
+    StagingBuffer->Write(_NewImage->GetData(), _NewImage->GetSize());
 
     auto Fence = RHI::CreateFence();
     auto ImmeCmd = RHI::CreateImmediateCommandBuffer();
@@ -71,9 +91,8 @@ export namespace VE
                     });
     Fence.Wait();
 
-    RHIImageView = RHIImage->CreateImageView();
-    DescriptorSet = RHI::CreateDescriptorSet(_ImGuiDSLayout);
-    DescriptorSet->WriteImage(0, RHIImageView, _Sampler);
+    RHIImageView  = RHIImage->CreateImageView();
+    DescriptorSet->WriteImage(0, RHIImageView, Sampler);
   }
 
 } // namespace VE

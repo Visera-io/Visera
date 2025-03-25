@@ -23,7 +23,7 @@ export namespace VE
         auto inline
         GetIndices() const -> const Array<UInt32>& { return Indices; }
         auto inline
-        GetIndexCount() const -> size_t { return Indices.size(); }
+        GetIndexCount() const -> size_t { return Indices.size() / 3; }
         auto inline
         GetIndexData() const -> const UInt32* { return Indices.data(); }
 

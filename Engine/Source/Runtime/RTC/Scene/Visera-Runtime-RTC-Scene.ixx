@@ -31,7 +31,6 @@ export namespace VE
 		FScene(StringView _Name);
 		FScene() = delete;
 		~FScene();
-
 	};
 
 	void FScene::

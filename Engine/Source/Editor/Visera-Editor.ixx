@@ -16,14 +16,17 @@ import Visera.Core.OS.FileSystem;
 
 export namespace VE
 {
+
 	class Editor
 	{
 		VE_MODULE_MANAGER_CLASS(Editor);
 	public:
+		using FCanvas = FCanvas;
+
 		static inline void
 		RenderWidgets() { for (const auto& [Name, Widget] : Widgets) {Widget->Render(); } }
-		static inline void
-		CreateCanvas(SharedPtr<const FImage> _Image);
+		static inline auto
+		CreateCanvas(SharedPtr<const FImage> _Image) -> WeakPtr<FCanvas>;
 
 	private:
 		static inline FPath LayoutFilePath{VISERA_APP_CACHE_DIR"/Editor.ini"};
@@ -163,10 +166,11 @@ export namespace VE
 																   ImGuiConfigFlags_DockingEnable*/;
 	};
 
-	void Editor::
+	WeakPtr<FCanvas> Editor::
 	CreateCanvas(SharedPtr<const FImage> _Image)
 	{
 		auto NewCanvas = CreateSharedPtr<FCanvas>(_Image, DefaultImageSampler, ImGuiDescriptorSetLayout);
 		Widgets[NewCanvas->GetName()] = NewCanvas;
+		return NewCanvas;
 	}
 }

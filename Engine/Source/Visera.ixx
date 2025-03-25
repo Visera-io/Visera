@@ -99,6 +99,7 @@ export namespace VE
 			Log::Debug("Bootstrapping ViseraEngine Runtime...");
 			Window::Bootstrap();
 			RHI::Bootstrap();
+			RTC::Bootstrap();
 			World::Bootstrap();
 			Render::Bootstrap();
 
@@ -123,6 +124,7 @@ export namespace VE
 			Log::Debug("Terminating ViseraEngine Runtime...");
 			Render::Terminate();
 			World::Terminate();
+			RTC::Terminate();
 			RHI::Terminate();
 			Window::Terminate();
 		}

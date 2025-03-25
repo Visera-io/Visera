@@ -25,6 +25,7 @@ export namespace VE
 		Bool IsExpired() const { return Status == EStatus::Expired; }
 
 		auto GetHandle() const -> const VkDescriptorSet { return Handle; }
+		auto GetOwner()  const -> SharedPtr<const FVulkanDescriptorPool> { return Owner; }
 
 		FVulkanDescriptorSet() = delete;
 		FVulkanDescriptorSet(SharedPtr<FVulkanDescriptorPool> _Owner, SharedPtr<const FVulkanDescriptorSetLayout> _Layout);

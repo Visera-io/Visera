@@ -26,11 +26,11 @@ export namespace VE
 
 		struct FCreateInfo
 		{
-			Embree::ETopology	Topology	 = Embree::ETopology::None;
-			UInt64		    VertexCount	 = 0;
-			Float*		    Vertices		 = nullptr;
-			UInt64		    IndexCount	 = 0;
-			UInt32*		    Indices		 = nullptr;
+			Embree::ETopology Topology	 = Embree::ETopology::None;
+			const UInt64	  VertexCount= 0;
+			const Float*	  Vertices	 = nullptr;
+			const UInt64	  IndexCount = 0;
+			const UInt32*	  Indices	 = nullptr;
 
 		};
 		IGeometry() = delete;

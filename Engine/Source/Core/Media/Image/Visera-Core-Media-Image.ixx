@@ -4,7 +4,6 @@ module;
 export module Visera.Core.Media.Image;
 
 import Visera.Core.Type;
-import Visera.Core.Type;
 import Visera.Core.Signal;
 
 export namespace VE
@@ -18,7 +17,7 @@ export namespace VE
 			White	= FIC_MINISWHITE,		//! min value is white
 			Black	= FIC_MINISBLACK,		//! min value is black
 			RGB		= FIC_RGB       ,		//! RGB color model
-			Palette =  FIC_PALETTE	,		//! color map indexed
+			Palette = FIC_PALETTE	,		//! color map indexed
 			RGBA	= FIC_RGBALPHA  ,		//! RGB color model with alpha channel
 			CMYK	= FIC_CMYK      		//! CMYK color model
 		};
@@ -71,6 +70,7 @@ export namespace VE
 		auto GetSize()		const -> UInt64		{ return Handle.getImageSize(); }
 		auto GetHeight()    const -> UInt32		{ return Handle.getHeight(); }
 		auto GetWidth()     const -> UInt32		{ return Handle.getWidth(); }
+		auto GetPixelCount()const -> UInt64		{ return GetHeight() * GetWidth(); }
 		auto GetFormat()	const -> EFormat	{ return static_cast<EFormat>(Handle.getImageType()); }
 		auto GetColorType() const -> EColorType { return ColorType; }
 
@@ -79,12 +79,18 @@ export namespace VE
 		Bool IsSRGB()		const { return ColorType == EColorType::RGBA || ColorType == EColorType::RGB; }
 		Bool HasAlpha()		const { return FreeImage_GetBPP(Handle) == 32; }
 
+		void ConvertToSRGB()		{ Handle.convertTo32Bits(); }
+
 		void Save() const { if (!Handle.save(Path.ToPlatformString().data())) { throw SIOFailure(Text("Failed to save the image({})!", Path.ToPlatformString())); } }
 		void SaveAs(const FPath& _Path) const { if (!Handle.save(_Path.ToPlatformString().data())) { throw SIOFailure(Text("Failed to save the image({})!", _Path.ToPlatformString())); } }
 
 		FImage() = delete;
+		FImage(UInt32 _Width, UInt32 _Height, UInt32 _BPP = 4*8);
 		FImage(const FPath& _Path);
 		~FImage() = default;
+
+	private:
+		void LoadFreeImage() const { const static FFreeImage FreeImage; }
 
 	private:
 		const	FPath		Path;
@@ -97,13 +103,12 @@ export namespace VE
 			FFreeImage()  { FreeImage_Initialise();   };
 			~FFreeImage() { FreeImage_DeInitialise(); };
 		};
-		;
 	};
 
 	FImage::
 	FImage(const FPath& _Path) : Path{_Path}
 	{
-		const static FFreeImage FreeImage;
+		LoadFreeImage();
 
 		if (!Handle.load(Path.ToPlatformString().data()))
 		{ throw SIOFailure(Text("Failed to load the image({})!", Path.ToPlatformString())); }
@@ -114,6 +119,18 @@ export namespace VE
 			if (!Handle.convertTo32Bits())
 			{ throw SRuntimeError(Text("Failed to convert the image({}) to 32Bits!", Path.ToPlatformString())); }
 		}
+
+		ColorType = static_cast<EColorType>(Handle.getColorType());
+	}
+
+	FImage::
+	FImage(UInt32 _Width, UInt32 _Height, UInt32 _BPP/* = 4*8 */)
+	{
+		LoadFreeImage();
+		VE_ASSERT(_Width > 0 && _Height > 0 && _BPP > 0 && _BPP % 8 == 0);
+
+		if (!Handle.setSize(FIT_BITMAP, _Width, _Height, _BPP))
+		{ throw SRuntimeError(Text("Failed to create a blank image ({}x{}x{})!", _Width, _Height, _BPP / 4)); }
 
 		ColorType = static_cast<EColorType>(Handle.getColorType());
 	}
