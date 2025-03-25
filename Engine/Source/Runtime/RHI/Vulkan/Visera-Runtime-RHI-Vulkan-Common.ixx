@@ -1,6 +1,6 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
-export module Visera.Runtime.RHI.Vulkan:Common;
+export module Visera.Runtime.RHI.Vulkan.Common;
 
 export namespace VE
 {

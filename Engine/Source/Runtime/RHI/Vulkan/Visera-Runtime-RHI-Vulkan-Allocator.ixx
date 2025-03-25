@@ -3,7 +3,7 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:Allocator;
 import :Context;
-import :Common;
+import Visera.Runtime.RHI.Vulkan.Common;
 import :Instance;
 import :Device;
 import :GPU;

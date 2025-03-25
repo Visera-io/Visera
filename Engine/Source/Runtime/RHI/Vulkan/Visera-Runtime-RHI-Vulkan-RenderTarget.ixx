@@ -2,7 +2,7 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:RenderTarget;
 import :Context;
-import :Common;
+import Visera.Runtime.RHI.Vulkan.Common;
 import :Allocator;
 
 import Visera.Core.Signal;

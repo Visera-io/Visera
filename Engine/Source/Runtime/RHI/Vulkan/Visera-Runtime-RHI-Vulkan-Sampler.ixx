@@ -4,7 +4,7 @@ export module Visera.Runtime.RHI.Vulkan:Sampler;
 import :Context;
 import Visera.Core.Signal;
 
-import :Common;
+import Visera.Runtime.RHI.Vulkan.Common;
 import :Device;
 import :GPU;
 

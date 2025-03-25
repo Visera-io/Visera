@@ -2,7 +2,7 @@ module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan:RenderPass;
 import :Context;
-import :Common;
+import Visera.Runtime.RHI.Vulkan.Common;
 import :Allocator;
 import :Device;
 import :Swapchain;

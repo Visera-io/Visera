@@ -4,7 +4,7 @@ export module Visera.Runtime.RHI.Vulkan:Shader;
 import :Context;
 import Visera.Core.Signal;
 
-import :Common;
+import Visera.Runtime.RHI.Vulkan.Common;
 import :Device;
 
 export namespace VE

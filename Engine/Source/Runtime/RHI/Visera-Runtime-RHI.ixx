@@ -3,6 +3,7 @@ module;
 #include "Vulkan/VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI;
 import Visera.Runtime.RHI.Vulkan;
+export import Visera.Runtime.RHI.Vulkan.Common;
 
 import Visera.Core.Signal;
 import Visera.Core.Time;

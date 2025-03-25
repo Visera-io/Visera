@@ -1,6 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.RHI.Vulkan;
+export import Visera.Runtime.RHI.Vulkan.Common;
 import :Context;
 export import :CommandPool;
 export import :CommandBuffer;
@@ -17,7 +18,6 @@ export import :RenderPipelineSetting;
 export import :RenderTarget;
 export import :Framebuffer;
 export import :Synchronization;
-export import :Common;
 export import :Loader;
 export import :Allocator;
 export import :PipelineCache;
