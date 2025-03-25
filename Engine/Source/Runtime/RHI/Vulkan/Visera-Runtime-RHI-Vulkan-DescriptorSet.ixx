@@ -20,24 +20,24 @@ export namespace VE
 	public:
 		enum class EStatus { Expired, Idle, Updating };
 
-		void WriteImage(UInt32 _BindPoint, SharedPtr<FVulkanImageView> _ImageView, SharedPtr<FVulkanSampler> _Sampler = nullptr);
+		void WriteImage(UInt32 _BindPoint, SharedPtr<const FVulkanImageView> _ImageView, SharedPtr<const FVulkanSampler> _Sampler = nullptr);
 
 		Bool IsExpired() const { return Status == EStatus::Expired; }
 
 		auto GetHandle() const -> const VkDescriptorSet { return Handle; }
 
 		FVulkanDescriptorSet() = delete;
-		FVulkanDescriptorSet(SharedPtr<FVulkanDescriptorPool> _Owner, SharedPtr<FVulkanDescriptorSetLayout> _Layout);
+		FVulkanDescriptorSet(SharedPtr<FVulkanDescriptorPool> _Owner, SharedPtr<const FVulkanDescriptorSetLayout> _Layout);
 		~FVulkanDescriptorSet() = default; // Recollected via its owner automatically.
 	private:
 		EStatus			 Status { EStatus::Idle  };
 		VkDescriptorSet  Handle { VK_NULL_HANDLE };
-		SharedPtr<FVulkanDescriptorPool>	  Owner;
-		SharedPtr<FVulkanDescriptorSetLayout> Layout;
+		SharedPtr<FVulkanDescriptorPool>			Owner;
+		SharedPtr<const FVulkanDescriptorSetLayout> Layout;
 	};
 
 	FVulkanDescriptorSet::
-	FVulkanDescriptorSet(SharedPtr<FVulkanDescriptorPool> _Owner, SharedPtr<FVulkanDescriptorSetLayout> _Layout)
+	FVulkanDescriptorSet(SharedPtr<FVulkanDescriptorPool> _Owner, SharedPtr<const FVulkanDescriptorSetLayout> _Layout)
 		: Owner{ std::move(_Owner) },
 		  Layout { std::move(_Layout) }
 	{
@@ -45,7 +45,7 @@ export namespace VE
 	}
 
 	void FVulkanDescriptorSet::
-	WriteImage(UInt32 _BindPoint, SharedPtr<FVulkanImageView> _ImageView, SharedPtr<FVulkanSampler> _Sampler/* = nullptr */)
+	WriteImage(UInt32 _BindPoint, SharedPtr<const FVulkanImageView> _ImageView, SharedPtr<const FVulkanSampler> _Sampler/* = nullptr */)
 	{
 		if (_ImageView->IsExpired())
 		{ throw SRuntimeError("Failed to write an expired VulkanImage to the descriptor set!"); }

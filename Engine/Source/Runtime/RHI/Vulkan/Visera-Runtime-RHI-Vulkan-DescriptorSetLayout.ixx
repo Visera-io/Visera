@@ -27,7 +27,7 @@ export namespace VE
 
 		auto GetHandle() const -> const VkDescriptorSetLayout { return Handle; }
 		auto GetBindingCount() const -> size_t { return BindingSlots.size(); }
-		auto GetBinding(UInt32 _Position) -> const FBinding& { VE_ASSERT(_Position < GetBindingCount()); return BindingSlots[_Position]; }
+		auto GetBinding(UInt32 _Position) const -> const FBinding& { VE_ASSERT(_Position < GetBindingCount()); return BindingSlots[_Position]; }
 
 		FVulkanDescriptorSetLayout() = delete;
 		FVulkanDescriptorSetLayout(const Array<FBinding>& _Bindings);

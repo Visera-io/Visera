@@ -4,13 +4,14 @@ module;
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 export module Visera.Editor;
-export import Visera.Editor.Widget;
+import Visera.Editor.Widget;
 
 import Visera.Runtime.Window;
 import Visera.Runtime.RHI;
 import Visera.Core.Log;
 import Visera.Core.Type;
 import Visera.Core.Signal;
+import Visera.Core.Media.Image;
 import Visera.Core.OS.FileSystem;
 
 export namespace VE
@@ -19,16 +20,17 @@ export namespace VE
 	{
 		VE_MODULE_MANAGER_CLASS(Editor);
 	public:
-		VE_API CreateWindow() -> void { ImGui::ShowDemoWindow(); }
 		static inline void
 		RenderWidgets() { for (const auto& [Name, Widget] : Widgets) {Widget->Render(); } }
-
-		template<typename T> static auto
-		CreateWidget(FName _Name) -> SharedPtr<T>;
+		static inline void
+		CreateCanvas(SharedPtr<const FImage> _Image);
 
 	private:
 		static inline FPath LayoutFilePath{VISERA_APP_CACHE_DIR"/Editor.ini"};
 		static inline HashMap<FName, SharedPtr<IWidget>> Widgets;
+
+		static inline SharedPtr<RHI::FDescriptorSetLayout> ImGuiDescriptorSetLayout;
+		static inline SharedPtr<RHI::FSampler>			   DefaultImageSampler;
 
 	public:
 		class FUIRenderPass : public RHI::FRenderPass
@@ -128,11 +130,27 @@ export namespace VE
 			
 			auto VulkanInstanceHandle = API->GetInstance().GetHandle();
 			ImGui_ImplVulkan_Init(&CreateInfo);
+
+			DefaultImageSampler = RHI::CreateSampler(RHI::EFilter::Nearest);
+			ImGuiDescriptorSetLayout = RHI::CreateDescriptorSetLayout(
+			{
+				RHI::FDescriptorBinding
+				{
+					.BindPoint = 0,
+					.DescriptorType = RHI::EDescriptorType::CombinedImageSampler,
+					.DescriptorCount = 1,
+					.ShaderStages = RHI::EShaderStage::Fragment,
+				}
+			});
 		}
 
 		static void Terminate()
 		{
+			Widgets.clear();
+
 			EditorRenderPass.reset();
+			DefaultImageSampler.reset();
+			ImGuiDescriptorSetLayout.reset();
 
 			ImGui::SaveIniSettingsToDisk(LayoutFilePath.ToPlatformString().c_str());
 			ImGui_ImplVulkan_Shutdown();
@@ -145,16 +163,10 @@ export namespace VE
 																   ImGuiConfigFlags_DockingEnable*/;
 	};
 
-	template<typename T> SharedPtr<T> Editor::
-	CreateWidget(FName _Name)
+	void Editor::
+	CreateCanvas(SharedPtr<const FImage> _Image)
 	{
-		if (Widgets.count(_Name))
-		{ throw SRuntimeError("Widget already exists"); }
-
-		auto NewWidget = CreateSharedPtr<T>();
-		Widgets[_Name] = NewWidget;
-
-		return NewWidget;
+		auto NewCanvas = CreateSharedPtr<FCanvas>(_Image, DefaultImageSampler, ImGuiDescriptorSetLayout);
+		Widgets[NewCanvas->GetName()] = NewCanvas;
 	}
-
 }

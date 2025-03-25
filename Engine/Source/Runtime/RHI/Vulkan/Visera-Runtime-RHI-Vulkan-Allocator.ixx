@@ -27,7 +27,8 @@ export namespace VE
 		auto CreateBuffer(VkDeviceSize _Size,
 						  EVulkanBufferUsage _Usages,
 						  EVulkanSharingMode _SharingMode = EVulkanSharingMode::Exclusive,
-						  EVulkanMemoryUsage _Location    = EVulkanMemoryUsage::Auto) const -> SharedPtr<FVulkanBuffer>;
+						  EVulkanMemoryUsage _Location    = EVulkanMemoryUsage::Auto,
+						  VmaPoolCreateFlags _VMAFlags    = 0x0) const -> SharedPtr<FVulkanBuffer>;
 		auto CreateImage(EVulkanImageType		_Type,
 						FVulkanExtent3D	_Extent,
 						EVulkanFormat			_Format,
@@ -110,9 +111,9 @@ export namespace VE
 		VE_NOT_COPYABLE(FVulkanImageView);
 		friend class FVulkanImage;
 	public:
-		auto GetImage()	  const -> WeakPtr<const FVulkanImage>	{ return Image; }
-		auto GetHandle()		-> VkImageView			{ return Handle;}
-		auto GetLayoutView() const -> EVulkanImageLayout { return LayoutView; }
+		auto GetImage()		 const -> WeakPtr<const FVulkanImage>	{ return Image; }
+		auto GetHandle()     const -> const VkImageView				{ return Handle;}
+		auto GetLayoutView() const -> EVulkanImageLayout			{ return LayoutView; }
 
 		Bool IsReleased() const { return Handle == VK_NULL_HANDLE; }
 		Bool IsExpired()  const	{ return Image.expired(); }
@@ -349,7 +350,8 @@ export namespace VE
 	CreateBuffer(VkDeviceSize _Size,
 				 EVulkanBufferUsage _Usages,
 				 EVulkanSharingMode _SharingMode/* = ESharingMode::Exclusive*/,
-				 EVulkanMemoryUsage _Location/* = EMemoryUsage::Auto*/) const
+				 EVulkanMemoryUsage _Location/* = EMemoryUsage::Auto*/,
+				 VmaPoolCreateFlags _VMAFlags/* = 0x0 */) const
 	{
 		VE_ASSERT(_Size > 0);
 
@@ -372,8 +374,7 @@ export namespace VE
 
 		VmaAllocationCreateInfo AllocationCreateInfo
 		{
-			.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT | 
-					 VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,//[TODO]: Set as a dynamic parameter.
+			.flags = _VMAFlags,
 			.usage = AutoCast(_Location),
 			.requiredFlags = 0x0, //[TODO]: Set as a dynamic parameter.
 		};

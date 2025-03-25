@@ -16,7 +16,7 @@ export namespace VE
 	{
 	public:
 		// Return nullptr when exceeded MaxSets Limit.
-		auto CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _Layout) -> SharedPtr<FVulkanDescriptorSet>;
+		auto CreateDescriptorSet(SharedPtr<const FVulkanDescriptorSetLayout> _Layout) -> SharedPtr<FVulkanDescriptorSet>;
 
 		struct FDescriptorEntry
 		{
@@ -123,7 +123,7 @@ export namespace VE
 	}
 
 	SharedPtr<FVulkanDescriptorSet> FVulkanDescriptorPool::
-	CreateDescriptorSet(SharedPtr<FVulkanDescriptorSetLayout> _Layout)
+	CreateDescriptorSet(SharedPtr<const FVulkanDescriptorSetLayout> _Layout)
 	{
 		if (Children.size() >= MaxSets)
 		{ throw SRuntimeError(Text("Cannot create more DescriptorSet from this DescriptorPool! -- (MaxSets:{})", MaxSets)); }

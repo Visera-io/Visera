@@ -134,7 +134,7 @@ export namespace VE
 				.Format			= GVulkan->Swapchain->GetFormat(),
 				.SampleRate		= EVulkanSampleRate::X1,
 				.ViewType		= EVulkanImageViewType::Image2D,
-				.LoadOp			= EVulkanAttachmentIO::I_Clear, // Render all overlay widgets in one renderpass!
+				.LoadOp			= EVulkanAttachmentIO::I_Clear,
 				.StoreOp		= EVulkanAttachmentIO::O_Store,
 				.InitialLayout	= EVulkanImageLayout::Present,
 				.FinalLayout	= EVulkanImageLayout::Present,
@@ -327,7 +327,7 @@ export namespace VE
 		RenderArea = _RenderArea;
 		FVulkanExtent3D Extent{ RenderArea.extent.width, RenderArea.extent.height, 1 };
 
-		if (!_RenderTargets.empty())
+		if (Type != EType::Overlay)
 		{
 			VE_ASSERT(_RenderTargets.size() == GVulkan->Swapchain->GetFrameCount());
 			Framebuffers.resize(_RenderTargets.size());
@@ -339,6 +339,7 @@ export namespace VE
 		}
 		else //[TODO]: Redesign this API
 		{
+			ClearValues[0] = FClearValue{ .color{0.0f, 0.0f, 0.0f, 1.0f} };
 			const auto& SwapchainImages = GVulkan->Swapchain->GetImages();
 			const auto SwapchainFormat = AutoCast(GVulkan->Swapchain->GetFormat());
 			// Create Swapchain Image Views
