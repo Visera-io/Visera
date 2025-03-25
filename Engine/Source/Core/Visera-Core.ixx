@@ -13,23 +13,4 @@ export import Visera.Core.Media;
 export namespace VE
 {
 
-	class ViseraCore
-	{
-		VE_MODULE_MANAGER_CLASS(ViseraCore);
-		VE_API Bootstrap() -> void;
-		VE_API Terminate() -> void;
-	};
-
-	void ViseraCore::
-	Bootstrap()
-	{
-
-	}
-
-	void ViseraCore::
-	Terminate()
-	{
-
-	}
-
 } // namespace VE

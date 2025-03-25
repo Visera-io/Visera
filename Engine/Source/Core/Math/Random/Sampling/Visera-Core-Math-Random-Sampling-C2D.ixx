@@ -16,9 +16,10 @@ export namespace VE
     inline auto
     SampleUnitDisk(Float _URadius, Float _UTheta) -> Vector2F
     {
-        Float X = Sqrt(_URadius);
-        Float Y = 2 * PI * _UTheta;
-
+        Float  Radius = Sqrt(_URadius);
+        Radian Theta = 2 * PI * _UTheta;
+        Float  X = Radius * Sin(Theta);
+        Float  Y = Radius * Cos(Theta);
         return {X, Y};
     }
 

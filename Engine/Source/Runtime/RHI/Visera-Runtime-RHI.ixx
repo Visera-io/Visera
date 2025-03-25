@@ -10,6 +10,9 @@ import Visera.Runtime.Window;
 
 export namespace VE
 {
+	template<typename T>
+	concept TRenderPass = std::is_base_of_v<FVulkanRenderPass, T>;
+
 	/* This is not a thread-safe RHI! */
 	class RHI
 	{
@@ -117,7 +120,7 @@ export namespace VE
 		CreateSemaphore()															-> FSemaphore	 { return FSemaphore();	}
 		static inline auto
 		CreateShader(EShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize) -> SharedPtr<FShader> { return CreateSharedPtr<FShader>(_ShaderStage, _SPIRVCode, _CodeSize); }
-		template<typename T> static auto
+		template<TRenderPass T> static auto
 		CreateRenderPass() -> SharedPtr<T>;
 
 		static inline auto
@@ -275,19 +278,40 @@ export namespace VE
 		return Frames[GetSwapchainCursor()];
 	}
 
-	template<typename T>
+	template<TRenderPass T>
 	SharedPtr<T> RHI::
 	CreateRenderPass()
 	{
 		auto NewRenderPass = CreateSharedPtr<T>();
-
 		Array<SharedPtr<FRenderTarget>> RenderTargets;
-		RenderTargets.resize(Frames.size());
-		for (UInt8 Idx = 0; Idx < RenderTargets.size();++Idx)
+
+		switch (FRenderPass::EType(NewRenderPass->GetType()))
 		{
-			RenderTargets[Idx] = Frames[Idx].RenderTarget;
+		case FRenderPass::EType::Background:
+		case FRenderPass::EType::Customized:
+		case FRenderPass::EType::DefaultForward:
+		{
+			RenderTargets.resize(Frames.size());
+			for (UInt8 Idx = 0; Idx < RenderTargets.size(); ++Idx)
+			{ RenderTargets[Idx] = Frames[Idx].RenderTarget; }
+
+			NewRenderPass->Create(FFrameContext::RenderArea, RenderTargets);
+			break;
 		}
-		NewRenderPass->Create(FFrameContext::RenderArea, RenderTargets);
+		case FRenderPass::EType::Overlay:
+		{
+			auto SwapchainExtent = Vulkan->GetSwapchain().GetExtent();
+			FRenderArea SwapchainArea
+			{
+				.offset = {0,0},
+				.extent = {SwapchainExtent.width, SwapchainExtent.height},
+			};
+			NewRenderPass->Create(SwapchainArea, {/*Handle inside the Renderpass*/});
+			break;
+		}
+		default:
+			throw SRuntimeError("Failed to create the renderpass -- Unknown RenderPass Type!");
+		}
 
 		return NewRenderPass;
 	}
@@ -343,116 +367,116 @@ export namespace VE
 					.pSignalSemaphores		= &CurrentFrame.EditorCommandsFinishedSemaphore,
 					.SignalFence			= nullptr,
 				});
-
-			//[FIXME]: Testing
-			VkImageMemoryBarrier SwapchainTransferBarrier
-			{
-				.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-				.srcAccessMask = AutoCast(EAccess::R_Memory),
-				.dstAccessMask = AutoCast(EAccess::W_Transfer),
-				.oldLayout = AutoCast(EImageLayout::Present),
-				.newLayout = AutoCast(EImageLayout::TransferDestination),
-				.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-				.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-				.image = Vulkan->GetSwapchain().GetCurrentImage(),
-				.subresourceRange
-				{
-					.aspectMask		= AutoCast(EImageAspect::Color),
-					.baseMipLevel	= 0,
-					.levelCount		= 1,
-					.baseArrayLayer = 0,
-					.layerCount		= 1
-				}
-			};
-			vkCmdPipelineBarrier(
-				CurrentFrame.GraphicsCommandBuffer->GetHandle(),
-				AutoCast(EGraphicsPipelineStage::PipelineTop),
-				AutoCast(EGraphicsPipelineStage::Transfer),
-				0x0,		// Dependency Flags
-				0, nullptr,	// Memory Barrier
-				0, nullptr,	// Buffer Memory Barrier
-				1,
-				&SwapchainTransferBarrier);
-
-			VkImageBlit BlitInfo
-			{
-				.srcSubresource
-				{
-					.aspectMask		= AutoCast(CurrentFrame.RenderTarget->GetColorImage(0)->GetAspects()),
-					.mipLevel		= 0,
-					.baseArrayLayer = 0,
-					.layerCount = CurrentFrame.RenderTarget->GetColorImage(0)->GetArrayLayers(),
-				},
-				.srcOffsets
-				{
-					{0, 0, 0},
-					{Int32(CurrentFrame.RenderTarget->GetColorImage(0)->GetExtent().width),
-					 Int32(CurrentFrame.RenderTarget->GetColorImage(0)->GetExtent().height),
-					 Int32(CurrentFrame.RenderTarget->GetColorImage(0)->GetExtent().depth)},
-				},
-				.dstSubresource
-				{
-					.aspectMask = AutoCast(EImageAspect::Color),
-					.mipLevel		= 0,
-					.baseArrayLayer = 0,
-					.layerCount		= 1,
-				},
-				.dstOffsets
-				{
-					{0, 0, 0},
-					{Int32(Vulkan->GetSwapchain().GetExtent().width),
-					 Int32(Vulkan->GetSwapchain().GetExtent().height),
-					 1},
-				}
-			};
-
-			//[FIXME]: RenderPass FinalLayout Invalid???
-			CurrentFrame.GraphicsCommandBuffer->ConvertImageLayout(CurrentFrame.RenderTarget->GetColorImage(0), EImageLayout::TransferSource);
-
-			vkCmdBlitImage(
-				CurrentFrame.GraphicsCommandBuffer->GetHandle(),
-				CurrentFrame.RenderTarget->GetColorImage(0)->GetHandle(),
-				AutoCast(CurrentFrame.RenderTarget->GetColorImage(0)->GetLayout()),
-				Vulkan->GetSwapchain().GetCurrentImage(),
-				AutoCast(EImageLayout::TransferDestination),
-				1,
-				&BlitInfo,
-				AutoCast(EFilter::Linear));
-
-			//[FIXME]: RenderPass FinalLayout Invalid???
-			CurrentFrame.GraphicsCommandBuffer->ConvertImageLayout(CurrentFrame.RenderTarget->GetColorImage(0), EImageLayout::ColorAttachment);
+			//
+			// //[FIXME]: Testing
+			// VkImageMemoryBarrier SwapchainTransferBarrier
+			// {
+			// 	.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+			// 	.srcAccessMask = AutoCast(EAccess::R_Memory),
+			// 	.dstAccessMask = AutoCast(EAccess::W_Transfer),
+			// 	.oldLayout = AutoCast(EImageLayout::Present),
+			// 	.newLayout = AutoCast(EImageLayout::TransferDestination),
+			// 	.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			// 	.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			// 	.image = Vulkan->GetSwapchain().GetCurrentImage(),
+			// 	.subresourceRange
+			// 	{
+			// 		.aspectMask		= AutoCast(EImageAspect::Color),
+			// 		.baseMipLevel	= 0,
+			// 		.levelCount		= 1,
+			// 		.baseArrayLayer = 0,
+			// 		.layerCount		= 1
+			// 	}
+			// };
+			// vkCmdPipelineBarrier(
+			// 	CurrentFrame.GraphicsCommandBuffer->GetHandle(),
+			// 	AutoCast(EGraphicsPipelineStage::PipelineTop),
+			// 	AutoCast(EGraphicsPipelineStage::Transfer),
+			// 	0x0,		// Dependency Flags
+			// 	0, nullptr,	// Memory Barrier
+			// 	0, nullptr,	// Buffer Memory Barrier
+			// 	1,
+			// 	&SwapchainTransferBarrier);
+			//
+			// VkImageBlit BlitInfo
+			// {
+			// 	.srcSubresource
+			// 	{
+			// 		.aspectMask		= AutoCast(CurrentFrame.RenderTarget->GetColorImage(0)->GetAspects()),
+			// 		.mipLevel		= 0,
+			// 		.baseArrayLayer = 0,
+			// 		.layerCount = CurrentFrame.RenderTarget->GetColorImage(0)->GetArrayLayers(),
+			// 	},
+			// 	.srcOffsets
+			// 	{
+			// 		{0, 0, 0},
+			// 		{Int32(CurrentFrame.RenderTarget->GetColorImage(0)->GetExtent().width),
+			// 		 Int32(CurrentFrame.RenderTarget->GetColorImage(0)->GetExtent().height),
+			// 		 Int32(CurrentFrame.RenderTarget->GetColorImage(0)->GetExtent().depth)},
+			// 	},
+			// 	.dstSubresource
+			// 	{
+			// 		.aspectMask = AutoCast(EImageAspect::Color),
+			// 		.mipLevel		= 0,
+			// 		.baseArrayLayer = 0,
+			// 		.layerCount		= 1,
+			// 	},
+			// 	.dstOffsets
+			// 	{
+			// 		{0, 0, 0},
+			// 		{Int32(Vulkan->GetSwapchain().GetExtent().width),
+			// 		 Int32(Vulkan->GetSwapchain().GetExtent().height),
+			// 		 1},
+			// 	}
+			// };
+			//
+			// //[FIXME]: RenderPass FinalLayout Invalid???
+			// CurrentFrame.GraphicsCommandBuffer->ConvertImageLayout(CurrentFrame.RenderTarget->GetColorImage(0), EImageLayout::TransferSource);
+			//
+			// vkCmdBlitImage(
+			// 	CurrentFrame.GraphicsCommandBuffer->GetHandle(),
+			// 	CurrentFrame.RenderTarget->GetColorImage(0)->GetHandle(),
+			// 	AutoCast(CurrentFrame.RenderTarget->GetColorImage(0)->GetLayout()),
+			// 	Vulkan->GetSwapchain().GetCurrentImage(),
+			// 	AutoCast(EImageLayout::TransferDestination),
+			// 	1,
+			// 	&BlitInfo,
+			// 	AutoCast(EFilter::Linear));
+			//
+			// //[FIXME]: RenderPass FinalLayout Invalid???
+			// CurrentFrame.GraphicsCommandBuffer->ConvertImageLayout(CurrentFrame.RenderTarget->GetColorImage(0), EImageLayout::ColorAttachment);
 
 			// [FIXME]: Currently clear in the EditorPass
 			// CurrentFrame.GraphicsCommandBuffer->ClearColorImage(CurrentFrame.RenderTarget->GetColorImage(0));
 
-			VkImageMemoryBarrier SwapchainPresentBarrier
-			{
-				.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-				.srcAccessMask = AutoCast(EAccess::None),
-				.dstAccessMask = AutoCast(EAccess::R_Memory),
-				.oldLayout = AutoCast(EImageLayout::TransferDestination),
-				.newLayout = AutoCast(EImageLayout::Present),
-				.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-				.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-				.image = Vulkan->GetSwapchain().GetCurrentImage(),
-				.subresourceRange
-				{
-					.aspectMask		= AutoCast(EImageAspect::Color),
-					.baseMipLevel	= 0,
-					.levelCount		= 1,
-					.baseArrayLayer = 0,
-					.layerCount		= 1,
-				}
-			};
-			vkCmdPipelineBarrier(
-				CurrentFrame.GraphicsCommandBuffer->GetHandle(),
-				AutoCast(EGraphicsPipelineStage::Transfer),
-				AutoCast(EGraphicsPipelineStage::PipelineBottom),
-				0x0,		// Dependency Flags
-				0, nullptr,	// Memory Barrier
-				0, nullptr,	// Buffer Memory Barrier
-				1,
-				&SwapchainPresentBarrier);
+			// VkImageMemoryBarrier SwapchainPresentBarrier
+			// {
+			// 	.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+			// 	.srcAccessMask = AutoCast(EAccess::None),
+			// 	.dstAccessMask = AutoCast(EAccess::R_Memory),
+			// 	.oldLayout = AutoCast(EImageLayout::TransferDestination),
+			// 	.newLayout = AutoCast(EImageLayout::Present),
+			// 	.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			// 	.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			// 	.image = Vulkan->GetSwapchain().GetCurrentImage(),
+			// 	.subresourceRange
+			// 	{
+			// 		.aspectMask		= AutoCast(EImageAspect::Color),
+			// 		.baseMipLevel	= 0,
+			// 		.levelCount		= 1,
+			// 		.baseArrayLayer = 0,
+			// 		.layerCount		= 1,
+			// 	}
+			// };
+			// vkCmdPipelineBarrier(
+			// 	CurrentFrame.GraphicsCommandBuffer->GetHandle(),
+			// 	AutoCast(EGraphicsPipelineStage::Transfer),
+			// 	AutoCast(EGraphicsPipelineStage::PipelineBottom),
+			// 	0x0,		// Dependency Flags
+			// 	0, nullptr,	// Memory Barrier
+			// 	0, nullptr,	// Buffer Memory Barrier
+			// 	1,
+			// 	&SwapchainPresentBarrier);
 
 			CurrentFrame.GraphicsCommandBuffer->StopRecording();
 			CurrentFrame.GraphicsCommandBuffer->Submit(

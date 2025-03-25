@@ -30,7 +30,6 @@ export namespace VE
 		auto GetFormat()		const	-> EVulkanFormat			{ return ImageFormat; }
 		auto GetColorSpace()	const	-> EVulkanColorSpace		{ return ImageColorSpace; }
 		auto GetImages()		const	-> const Array<VkImage>&	{ return Images; }
-		auto GetImageViews()	const	-> const Array<VkImageView> { return ImageViews; }
 		auto GetHandle()		const	-> const VkSwapchainKHR		{ return Handle; }
 
 	private:
@@ -42,9 +41,8 @@ export namespace VE
 		void MoveCursor(UInt32 Stride) { Cursor = (Cursor + Stride) % Images.size(); }
 
 		Array<VkImage>			Images;			// Size: Clamp(minImageCount + 1, maxImageCount)
-		Array<VkImageView>		ImageViews;
 		VkExtent2D				ImageExtent;
-		EVulkanFormat			ImageFormat		= EVulkanFormat::U32_Normalized_B8_G8_R8_A8;
+		EVulkanFormat			ImageFormat		= EVulkanFormat::U32_sRGB_B8_G8_R8_A8;
 		EVulkanColorSpace		ImageColorSpace	= EVulkanColorSpace::sRGB_Nonlinear;
 
 		EVulkanFormat			DepthImageFormat= EVulkanFormat::S32_Float_Depth32;
@@ -113,7 +111,6 @@ export namespace VE
 		if (RequiredImageCount)
 		{
 			Images.resize(RequiredImageCount);
-			ImageViews.resize(RequiredImageCount);
 		}
 		else throw SRuntimeError("Failed to create the Swapchain since the Surface Image Count is unsupported!");
 
@@ -182,38 +179,6 @@ export namespace VE
 		//Retrieve Swap Chain Images
 		vkGetSwapchainImagesKHR(GVulkan->Device->GetHandle(), Handle, &RequiredImageCount, Images.data());
 
-		// Create Image Views
-		for (size_t Idx = 0; Idx < ImageViews.size(); ++Idx)
-		{
-			VkImageViewCreateInfo CreateInfo
-			{
-				.sType		= VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-				.image		= Images[Idx],
-				.viewType	= AutoCast(EVulkanImageViewType::Image2D),
-				.format		= AutoCast(ImageFormat),
-				.components{
-							.r = AutoCast(EVulkanSwizzle::Identity),
-							.g = AutoCast(EVulkanSwizzle::Identity),
-							.b = AutoCast(EVulkanSwizzle::Identity),
-							.a = AutoCast(EVulkanSwizzle::Identity)
-							},
-
-				.subresourceRange{
-							.aspectMask		= AutoCast(EVulkanImageAspect::Color),
-							.baseMipLevel	= 0,
-							.levelCount		= 1,
-							.baseArrayLayer = 0,
-							.layerCount		= 1
-							}
-			};
-			if(vkCreateImageView(
-				GVulkan->Device->GetHandle(),
-				&CreateInfo,
-				GVulkan->AllocationCallbacks,
-				&ImageViews[Idx]) != VK_SUCCESS)
-			{ throw SRuntimeError("Failed to create Vulkan Image View at the Swapchain!"); }
-		}
-
 		//Init Frames
 		Cursor = 0;
 	}
@@ -221,11 +186,6 @@ export namespace VE
 	void FVulkanSwapchain::
 	Destroy()
 	{
-		for (auto ImageView : ImageViews)
-		{
-			vkDestroyImageView(GVulkan->Device->GetHandle(), ImageView, GVulkan->AllocationCallbacks);
-		}
-
 		vkDestroySwapchainKHR(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
 		Handle = VK_NULL_HANDLE;
 	}

@@ -26,9 +26,8 @@ export namespace VE
 		auto GetDescriptorSetLayouts()	const -> const Array<VkDescriptorSetLayout>& { return DescriptorSetLayouts; }
 		auto GetHandle() const -> const VkPipelineLayout		{ return Handle; }
 
-		FVulkanPipelineLayout() = delete;
-		FVulkanPipelineLayout(const Array<FPushConstantRange>& _PushConstantRanges,
-							  const Array<SharedPtr<FVulkanDescriptorSetLayout>>& _DescriptorSetLayouts);
+		FVulkanPipelineLayout(const Array<FPushConstantRange>& _PushConstantRanges = {},
+							  const Array<SharedPtr<FVulkanDescriptorSetLayout>>& _DescriptorSetLayouts = {});
 		~FVulkanPipelineLayout();
 	protected:
 		VkPipelineLayout			 Handle { VK_NULL_HANDLE };
@@ -37,8 +36,9 @@ export namespace VE
 	};
 
 	FVulkanPipelineLayout::
-	FVulkanPipelineLayout(const Array<FPushConstantRange>& _PushConstantRanges,
-						  const Array<SharedPtr<FVulkanDescriptorSetLayout>>& _DescriptorSetLayouts)
+	FVulkanPipelineLayout(
+		const Array<FPushConstantRange>& _PushConstantRanges /* = {}*/,
+		const Array<SharedPtr<FVulkanDescriptorSetLayout>>& _DescriptorSetLayouts /* = {}*/)
 	{
 		PushConstantRanges.resize(_PushConstantRanges.size());
 		std::transform(_PushConstantRanges.begin(), _PushConstantRanges.end(),

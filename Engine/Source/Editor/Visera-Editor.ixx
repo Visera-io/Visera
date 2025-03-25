@@ -34,21 +34,10 @@ export namespace VE
 		class FUIRenderPass : public RHI::FRenderPass
 		{
 		public:
-			FUIRenderPass() : RHI::FRenderPass{ ERenderPassType::Customized }
+			FUIRenderPass() : RHI::FRenderPass{ EType::Overlay }
 			{
-				Layout.AddColorAttachment(
-				{
-					.Layout			= RHI::EImageLayout::ColorAttachment,
-					.Format			= RHI::EFormat::U32_Normalized_R8_G8_B8_A8,
-					.SampleRate		= RHI::ESampleRate::X1,
-					.ViewType		= RHI::EImageViewType::Image2D,
-					.LoadOp			= RHI::EAttachmentIO::I_Clear,
-					.StoreOp		= RHI::EAttachmentIO::O_Store,
-					.InitialLayout	= RHI::EImageLayout::ColorAttachment,
-					.FinalLayout	= RHI::EImageLayout::ColorAttachment,
-				});
 				Subpasses.emplace_back(FSubpass
-				{ 
+				{
 					.ColorImageReferences = {0},
 					.SrcStage		= RHI::EGraphicsPipelineStage::ColorAttachmentOutput,
 					.SrcStageAccess = RHI::EAccess::W_ColorAttachment,

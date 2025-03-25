@@ -13,6 +13,16 @@ export namespace VE
 	class FImage
 	{
 	public:
+		enum class EColorType
+		{
+			White	= FIC_MINISWHITE,		//! min value is white
+			Black	= FIC_MINISBLACK,		//! min value is black
+			RGB		= FIC_RGB       ,		//! RGB color model
+			Palette =  FIC_PALETTE	,		//! color map indexed
+			RGBA	= FIC_RGBALPHA  ,		//! RGB color model with alpha channel
+			CMYK	= FIC_CMYK      		//! CMYK color model
+		};
+
 		enum class EFormat
 		{
 			Unkonwn			= FIT_UNKNOWN,	//! unknown type
@@ -54,7 +64,6 @@ export namespace VE
 		void Resize(UInt32 _NewWidth, UInt32 _NewHeight, EFilter _Filter) { Handle.rescale(_NewWidth, _NewHeight, FREE_IMAGE_FILTER(_Filter)); }
 		void FlipVertical()		{ Handle.flipVertical(); }
 		void FlipHorizontal()	{ Handle.flipHorizontal(); }
-		void ToRGBA()			{ Handle.convertToRGBAF(); }
 
 		auto GetPixel(UInt32 _X, UInt32 _Y) const -> Optional<FPixel> { FPixel Pixel; if (!Handle.getPixelColor(_X, _Y, &Pixel.Data)) { return {}; } else { return Pixel; } }
 		Bool SetPixel(UInt32 _X, UInt32 _Y, FPixel _Value) { VE_ASSERT(!IsGrayScale()); return Handle.setPixelColor(_X, _Y, &_Value.Data); }
@@ -63,9 +72,11 @@ export namespace VE
 		auto GetHeight()    const -> UInt32		{ return Handle.getHeight(); }
 		auto GetWidth()     const -> UInt32		{ return Handle.getWidth(); }
 		auto GetFormat()	const -> EFormat	{ return static_cast<EFormat>(Handle.getImageType()); }
+		auto GetColorType() const -> EColorType { return ColorType; }
 
 		Bool IsValid()		const { return Handle.isValid(); }
 		Bool IsGrayScale()	const { return Handle.isGrayscale(); }
+		Bool IsSRGB()		const { return ColorType == EColorType::RGBA || ColorType == EColorType::RGB; }
 		Bool HasAlpha()		const { return FreeImage_GetBPP(Handle) == 32; }
 
 		void Save() const { if (!Handle.save(Path.ToPlatformString().data())) { throw SIOFailure(Text("Failed to save the image({})!", Path.ToPlatformString())); } }
@@ -78,6 +89,7 @@ export namespace VE
 	private:
 		const	FPath		Path;
 		mutable fipImage	Handle;
+		EColorType			ColorType;
 
 		//FreeImagePlus Doc: https://freeimage.sourceforge.io/fip/index.html
 		struct FFreeImage
@@ -102,6 +114,8 @@ export namespace VE
 			if (!Handle.convertTo32Bits())
 			{ throw SRuntimeError(Text("Failed to convert the image({}) to 32Bits!", Path.ToPlatformString())); }
 		}
+
+		ColorType = static_cast<EColorType>(Handle.getColorType());
 	}
 
 } // namespace VE

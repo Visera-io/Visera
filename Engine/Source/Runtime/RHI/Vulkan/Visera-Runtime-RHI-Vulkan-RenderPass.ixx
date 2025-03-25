@@ -21,7 +21,7 @@ export namespace VE
 	class FVulkanRenderPass
 	{
 	public:
-		enum class ERenderPassType { Background, DefaultForward, Overlay, Customized };
+		enum class EType { Background, DefaultForward, Overlay, Customized };
 		struct FSubpass final
 		{
 			SharedPtr<FVulkanRenderPipeline>Pipeline;
@@ -42,6 +42,7 @@ export namespace VE
 			Bool							bExternalSubpass		= False; // Load from external libs (e.g., ImGUI)
 		};
 
+		auto GetType()				  const -> EType { return Type; }
 		auto GetRenderArea()		  const -> const FVulkanRenderArea& { return RenderArea; }
 		auto GetSubpasses()			  const -> const Array<FSubpass>& { return Subpasses; }
 		auto GetRenderPassBeginInfo() const -> const VkRenderPassBeginInfo;
@@ -53,7 +54,7 @@ export namespace VE
 		void Destroy();
 	
 	protected:
-		ERenderPassType					Type;
+		EType							Type;
 		VkRenderPass					Handle{ VK_NULL_HANDLE };
 		FVulkanRenderArea				RenderArea{ 0,0 };
 		FVulkanRenderPassLayout			Layout;
@@ -63,20 +64,20 @@ export namespace VE
 
 	public:
 		FVulkanRenderPass() = delete;
-		FVulkanRenderPass(ERenderPassType _RenderPassType);
+		FVulkanRenderPass(EType _RenderPassType);
 		~FVulkanRenderPass() noexcept { Destroy(); }
 	};
 
 	FVulkanRenderPass::
-	FVulkanRenderPass(ERenderPassType _RenderPassType)
+	FVulkanRenderPass(EType _RenderPassType)
 		:Type{_RenderPassType}
 	{
 		switch (Type)
 		{
-		case ERenderPassType::Background:
+		case EType::Background:
 		{
 			Layout.AddColorAttachment(
-			{
+		{
 				.Layout			= EVulkanImageLayout::ColorAttachment,
 				.Format			= EVulkanFormat::U32_Normalized_R8_G8_B8_A8,
 				.SampleRate		= EVulkanSampleRate::X1,
@@ -86,9 +87,20 @@ export namespace VE
 				.InitialLayout	= EVulkanImageLayout::ColorAttachment,
 				.FinalLayout	= EVulkanImageLayout::ColorAttachment,
 			});
+			Layout.DepthDesc =
+			{
+				.Layout			= EVulkanImageLayout::DepthStencilAttachment,
+				.Format			= EVulkanFormat::S32_Float_Depth32,
+				.SampleRate		= EVulkanSampleRate::X1,
+				.ViewType		= EVulkanImageViewType::Image2D,
+				.LoadOp			= EVulkanAttachmentIO::I_Clear,
+				.StoreOp		= EVulkanAttachmentIO::O_Whatever,
+				.InitialLayout  = EVulkanImageLayout::DepthStencilAttachment,
+				.FinalLayout    = EVulkanImageLayout::DepthStencilAttachment,
+			};
 			break;
 		}
-		case ERenderPassType::DefaultForward:
+		case EType::DefaultForward:
 		{
 			Layout.AddColorAttachment(
 			{
@@ -101,54 +113,49 @@ export namespace VE
 				.InitialLayout	= EVulkanImageLayout::ColorAttachment,
 				.FinalLayout	= EVulkanImageLayout::ColorAttachment,
 			});
+			Layout.DepthDesc =
+			{
+				.Layout			= EVulkanImageLayout::DepthStencilAttachment,
+				.Format			= EVulkanFormat::S32_Float_Depth32,
+				.SampleRate		= EVulkanSampleRate::X1,
+				.ViewType		= EVulkanImageViewType::Image2D,
+				.LoadOp			= EVulkanAttachmentIO::I_Clear,
+				.StoreOp		= EVulkanAttachmentIO::O_Whatever,
+				.InitialLayout  = EVulkanImageLayout::DepthStencilAttachment,
+				.FinalLayout    = EVulkanImageLayout::DepthStencilAttachment,
+			};
 			break;
 		}
-		case ERenderPassType::Overlay:
+		case EType::Overlay:
 		{
 			Layout.AddColorAttachment(
 			{
 				.Layout			= EVulkanImageLayout::ColorAttachment,
-				.Format			= EVulkanFormat::U32_Normalized_R8_G8_B8_A8,
+				.Format			= GVulkan->Swapchain->GetFormat(),
 				.SampleRate		= EVulkanSampleRate::X1,
 				.ViewType		= EVulkanImageViewType::Image2D,
-				.LoadOp			= EVulkanAttachmentIO::I_Keep,
+				.LoadOp			= EVulkanAttachmentIO::I_Clear, // Render all overlay widgets in one renderpass!
 				.StoreOp		= EVulkanAttachmentIO::O_Store,
-				.InitialLayout	= EVulkanImageLayout::ColorAttachment,
-				.FinalLayout	= EVulkanImageLayout::TransferSource,//[FIXME]
+				.InitialLayout	= EVulkanImageLayout::Present,
+				.FinalLayout	= EVulkanImageLayout::Present,
 			});
 			break;
 		}
-		case ERenderPassType::Customized:
+		case EType::Customized:
 		{
 			break;
 		}
 		default: throw SRuntimeError("Unkonwn RenderPassLayout Preset!");
 		}
-
-		//[TODO]: Currently, It has to load a depth image.
-		Layout.DepthDesc =
-		{
-			.Layout			= EVulkanImageLayout::DepthStencilAttachment,
-			.Format			= EVulkanFormat::S32_Float_Depth32,
-			.SampleRate		= EVulkanSampleRate::X1,
-			.ViewType		= EVulkanImageViewType::Image2D,
-			.LoadOp			= EVulkanAttachmentIO::I_Clear,
-			.StoreOp		= EVulkanAttachmentIO::O_Whatever,
-			.InitialLayout  = EVulkanImageLayout::DepthStencilAttachment,
-			.FinalLayout    = EVulkanImageLayout::DepthStencilAttachment,
-		};
 	}
 
 	void FVulkanRenderPass::
 	Create(const FVulkanRenderArea& _RenderArea,
 		   const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets)
 	{
-		VE_ASSERT(_RenderTargets.size() == GVulkan->Swapchain->GetFrameCount());
 		VE_ASSERT(_RenderArea.extent.width > 0 && _RenderArea.extent.height > 0);
 		VE_ASSERT(!Subpasses.empty());
 
-		RenderArea = _RenderArea;
-		
 		// Create RenderPass
 		Array<VkSubpassDescription> SubpassDescriptions(Subpasses.size());
 		Array<VkSubpassDependency>  SubpassDependencies(Subpasses.size());
@@ -204,7 +211,7 @@ export namespace VE
 				.colorAttachmentCount	= UInt32(ColorRefs.size()),
 				.pColorAttachments		= ColorRefs.data(),
 				.pResolveAttachments	= ResolveRefs.empty()? nullptr : ResolveRefs.data(),
-				.pDepthStencilAttachment= &DepthRef,
+				.pDepthStencilAttachment= Layout.HasResolveImage()? &DepthRef : nullptr,
 				.preserveAttachmentCount= 0,
 				.pPreserveAttachments	= nullptr,
 			};
@@ -317,11 +324,76 @@ export namespace VE
 		}
 
 		// Create Framebuffers
-		Framebuffers.resize(_RenderTargets.size());
-		for(UInt8 Idx = 0; Idx < Framebuffers.size(); ++Idx)
+		RenderArea = _RenderArea;
+		FVulkanExtent3D Extent{ RenderArea.extent.width, RenderArea.extent.height, 1 };
+
+		if (!_RenderTargets.empty())
 		{
-			FVulkanExtent3D Extent{ RenderArea.extent.width, RenderArea.extent.height, 1 };
-			Framebuffers[Idx].Create(Handle, Extent, _RenderTargets[Idx]);
+			VE_ASSERT(_RenderTargets.size() == GVulkan->Swapchain->GetFrameCount());
+			Framebuffers.resize(_RenderTargets.size());
+
+			for(UInt8 Idx = 0; Idx < Framebuffers.size(); ++Idx)
+			{
+				Framebuffers[Idx].Create(Handle, Extent, _RenderTargets[Idx]);
+			}
+		}
+		else //[TODO]: Redesign this API
+		{
+			const auto& SwapchainImages = GVulkan->Swapchain->GetImages();
+			const auto SwapchainFormat = AutoCast(GVulkan->Swapchain->GetFormat());
+			// Create Swapchain Image Views
+			Framebuffers.resize(SwapchainImages.size());
+			for(UInt8 Idx = 0; Idx < Framebuffers.size(); ++Idx)
+			{
+				auto& CurrentFramebuffer = Framebuffers[Idx];
+				CurrentFramebuffer.RenderTargetViews.resize(1);
+				VkImageViewCreateInfo ImageViewCreateInfo
+				{
+					.sType		= VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+					.image		= SwapchainImages[Idx],
+					.viewType	= AutoCast(EVulkanImageViewType::Image2D),
+					.format		= SwapchainFormat,
+					.components{
+						.r = AutoCast(EVulkanSwizzle::Identity),
+						.g = AutoCast(EVulkanSwizzle::Identity),
+						.b = AutoCast(EVulkanSwizzle::Identity),
+						.a = AutoCast(EVulkanSwizzle::Identity)
+						},
+					.subresourceRange{
+						.aspectMask		= AutoCast(EVulkanImageAspect::Color),
+						.baseMipLevel	= 0,
+						.levelCount		= 1,
+						.baseArrayLayer = 0,
+						.layerCount		= 1
+						}
+				};
+				if(vkCreateImageView(
+					GVulkan->Device->GetHandle(),
+					&ImageViewCreateInfo,
+					GVulkan->AllocationCallbacks,
+					&CurrentFramebuffer.RenderTargetViews[0]) != VK_SUCCESS)
+				{ throw SRuntimeError("Failed to create Vulkan Image View!"); }
+
+				VkFramebufferCreateInfo FramebufferCreateInfo
+				{
+					.sType			 = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+					.pNext			 = nullptr,
+					.flags			 = 0x0,
+					.renderPass		 = Handle,
+					.attachmentCount = UInt32(CurrentFramebuffer.RenderTargetViews.size()),
+					.pAttachments	 = CurrentFramebuffer.RenderTargetViews.data(),
+					.width  = Extent.width,
+					.height = Extent.height,
+					.layers = Extent.depth,
+				};
+
+				if (vkCreateFramebuffer(
+					GVulkan->Device->GetHandle(),
+					&FramebufferCreateInfo,
+					GVulkan->AllocationCallbacks,
+					&CurrentFramebuffer.Handle) != VK_SUCCESS)
+				{ throw SRuntimeError("Failed to create Vulkan Framebuffer for current Overlay Pass!"); }
+			}
 		}
 	}
 
