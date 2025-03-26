@@ -35,18 +35,18 @@ export namespace VE
 
 		static inline FRWLock RWLock;
 
-		using FKeyboardKeyEventTable = HashMap<FName, Keyboard::FKeyEvent*>;
-		static inline FKeyboardKeyEventTable KeyboardEventTable;
+		using FKeyEventTable = HashMap<FName, FKeyEvent*>;
+		static inline FKeyEventTable KeyboardEventTable;
 
-		using FKeyboardKeyEventMap = Segment<HashMap<EKey, Array<Keyboard::FKeyEvent>>, UInt32(EAction::Max)>;
-		static inline FKeyboardKeyEventMap KeyboardEventMap;
+		using FKeyEventMap = Segment<HashMap<EKey, Array<FKeyEvent>>, UInt32(EAction::Max)>;
+		static inline FKeyEventMap KeyboardEventMap;
 
 		static inline void
-		RegisterKeyEvent(const Keyboard::FKeyEventCreateInfo& _CreateInfo)
+		RegisterKeyEvent(const FKeyEventCreateInfo& _CreateInfo)
 		{
 			RWLock.StartWriting();
 			{
-				if (KeyboardEventTable.count(_CreateInfo.Name) == 0)
+				if (!KeyboardEventTable.contains(_CreateInfo.Name))
 				{
 					Log::Debug("Creating a new keyboard key event({}).", _CreateInfo.Name.GetNameWithNumber());
 
@@ -64,7 +64,7 @@ export namespace VE
 		{
 			RWLock.StartWriting();
 			{
-				if (KeyboardEventTable.count(_Name) != 0)
+				if (KeyboardEventTable.contains(_Name))
 				{
 					Log::Debug("Deleting a keyboard key event({}).", _Name.GetNameWithNumber());
 
@@ -94,7 +94,7 @@ export namespace VE
 		    	case EAction::Press:
             	{
             	    auto& TargetEventMap = KeyboardEventMap[UInt32(Action)];
-            	    if (TargetEventMap.count(Key) != 0)
+            	    if (TargetEventMap.contains(Key))
             	  	{
              	 		for (const auto& Event : TargetEventMap[Key])
 						{ if (Event != nullptr) { Event(); } }

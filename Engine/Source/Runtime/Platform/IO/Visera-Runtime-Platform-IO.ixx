@@ -24,6 +24,8 @@ export namespace VE
 		using EMouseButton = EMouseButton;
 
         using FKeyboardKeyEventCreateInfo = Keyboard::FKeyEventCreateInfo;
+		using FMouseButtonCreateInfo = Mouse::FButtonEventCreateInfo;
+		using FMouseScrollCreateInfo = Mouse::FScrollEventCreateInfo;
 
         static inline void
 		ProcessEvents() { Keyboard::ProcessEvents(); }
@@ -37,6 +39,10 @@ export namespace VE
 		RegisterKeyboardKeyEvent(const FKeyboardKeyEventCreateInfo& _CreateInfo) { Keyboard::RegisterKeyEvent(_CreateInfo); };
 		static inline void
 		DeleteKeyboardKeyEvent(const FName& _Name) { Keyboard::DeleteKeyEvent(_Name); };
+		static inline void
+		RegisterMouseButtonEvent(const FMouseButtonCreateInfo& _CreateInfo) { Mouse::RegisterButtonEvent(_CreateInfo); };
+		static inline void
+		DeleteMouseButtonEvent(const FName& _Name) { Mouse::DeleteButtonEvent(_Name); };
 
 		static inline void
 		Bootstrap();
@@ -53,6 +59,7 @@ export namespace VE
 		glfwSetKeyCallback      (Window::GetHandle(), Keyboard::KeyCallback);
 
 		glfwSetCursorPosCallback(Window::GetHandle(), Mouse::CursorCallback);
+		glfwSetMouseButtonCallback(Window::GetHandle(), Mouse::ButtonCallback);
 		glfwSetScrollCallback   (Window::GetHandle(), Mouse::ScrollCallback);
 	}
 

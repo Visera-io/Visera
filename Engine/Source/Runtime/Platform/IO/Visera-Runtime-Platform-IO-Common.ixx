@@ -12,12 +12,12 @@ export namespace VE
 		Press   = GLFW_PRESS,	// Just Pressed
 		Hold    = GLFW_REPEAT,	// Pressed and Holding
 		Detach  = Hold + 1,		// Just Released  (a special Release action)
-		Max		= Detach + 1,
+		Max		= 4,
 	};
-	static_assert(EAction::Press  != EAction::Hold   &&
-				  EAction::Hold   != EAction::Detach &&
-		          EAction::Detach != EAction::Release&&
-				  UInt32(EAction::Max) == 4);
+	static_assert(EAction::Release< EAction::Max &&
+	              EAction::Press  < EAction::Max &&
+				  EAction::Hold   < EAction::Max &&
+		          EAction::Detach < EAction::Max);
 
 	enum class EKey : Int32
 	{
@@ -55,6 +55,10 @@ export namespace VE
 		Left   = GLFW_MOUSE_BUTTON_LEFT,
 		Middle = GLFW_MOUSE_BUTTON_MIDDLE,
 		Right  = GLFW_MOUSE_BUTTON_RIGHT,
+		Max    = 3,
 	};
+	static_assert(EMouseButton::Left   < EMouseButton::Max &&
+	              EMouseButton::Middle < EMouseButton::Max &&
+	              EMouseButton::Right  < EMouseButton::Max);
 
 } // namespace VE

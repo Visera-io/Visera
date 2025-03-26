@@ -1,11 +1,15 @@
 module;
 #include <Visera.h>
+#include <Eigen/src/Core/util/Constants.h>
 #include <GLFW/glfw3.h>
 export module Visera.Runtime.Platform.IO:Mouse;
 import :Common;
 
 import Visera.Core.Type;
+import Visera.Core.Log;
+import Visera.Core.Signal;
 import Visera.Core.Math.Basic;
+import Visera.Core.OS.Concurrency;
 
 import Visera.Runtime.Platform.Window;
 
@@ -24,6 +28,40 @@ export namespace VE
 			EAction		 Action;
 			FButtonEvent Event;
 		};
+		static inline void
+		RegisterButtonEvent(const FButtonEventCreateInfo& _CreateInfo)
+		{
+			RWLock.StartWriting();
+			{
+				if (!ButtonEventTable.contains(_CreateInfo.Name))
+				{
+					Log::Debug("Creating a new mouse button event({}).", _CreateInfo.Name.GetNameWithNumber());
+
+					ButtonEventTable[_CreateInfo.Name]
+						= &ButtonEventMap[UInt32(_CreateInfo.Button)][_CreateInfo.Action]
+							.emplace_back(_CreateInfo.Event);
+				}
+				else { throw SRuntimeError(Text("Failed to register the mouse button event({}) - duplicated event!", _CreateInfo.Name.GetNameWithNumber())); }
+			}
+			RWLock.StopWriting();
+		}
+		static inline void
+		DeleteButtonEvent(const FName& _Name)
+		{
+			RWLock.StartWriting();
+			{
+				if (ButtonEventTable.contains(_Name))
+				{
+					Log::Debug("Deleting a mouse button event({}).", _Name.GetNameWithNumber());
+
+					auto& Exiler = ButtonEventTable[_Name];
+					*Exiler = nullptr;
+					ButtonEventTable.erase(_Name);
+				}
+				else { throw SRuntimeError(Text("Failed to delete the keyboard key event({}) - duplicated event!", _Name.GetNameWithNumber())); }
+			}
+			RWLock.StopWriting();
+		}
 
 		using FScrollEvent = std::function<void(double _X, double _Y)>;
 		struct FScrollEventCreateInfo
@@ -45,11 +83,29 @@ export namespace VE
 		};
 		static inline FScroll Scroll;
 
+		static inline FRWLock RWLock;
+
+		using FButtonEventTable = HashMap<FName, FButtonEvent*>;
+		static inline FButtonEventTable ButtonEventTable;
+		using FButtonEventMap = Segment<HashMap<EAction, Array<FButtonEvent>>, UInt32(EMouseButton::Max)>;
+		static inline FButtonEventMap ButtonEventMap;
+
 		static inline void
 		ScrollCallback(GLFWwindow* window, double _OffsetX, double _OffsetY)
 		{
 			Scroll.Offset.x() = _OffsetX;
 			Scroll.Offset.y() = _OffsetY;
+		}
+
+		static inline void
+		ButtonCallback(GLFWwindow* window, int button, int action, int mods)
+		{
+			auto& TargetEventMap = ButtonEventMap[button];
+			if (TargetEventMap.contains(EAction(action)))
+			{
+				for (const auto& Event : TargetEventMap[EAction(action)])
+				{ if (Event != nullptr) { Event(); } }
+			}
 		}
 
 		static inline void
