@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 #include <GLFW/glfw3.h>
-export module Visera.Runtime.IO:Common;
+export module Visera.Runtime.Platform.IO:Common;
 
 export namespace VE
 {

@@ -1,8 +1,7 @@
 module;
 #include <Visera.h>
 export module Visera.Runtime;
-export import Visera.Runtime.Window;
-export import Visera.Runtime.IO;
+export import Visera.Runtime.Platform;
 export import Visera.Runtime.RHI;
 export import Visera.Runtime.RTC;
 export import Visera.Runtime.Render;

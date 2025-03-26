@@ -7,7 +7,7 @@ export import Visera.Runtime.RHI.Vulkan.Common;
 
 import Visera.Core.Signal;
 import Visera.Core.Time;
-import Visera.Runtime.Window;
+import Visera.Runtime.Platform.Window;
 
 export namespace VE
 {

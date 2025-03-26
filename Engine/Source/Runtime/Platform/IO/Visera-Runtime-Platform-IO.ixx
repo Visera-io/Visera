@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 #include <GLFW/glfw3.h>
-export module Visera.Runtime.IO;
+export module Visera.Runtime.Platform.IO;
 import :Common;
 import :Keyboard;
 import :Mouse;
@@ -10,7 +10,7 @@ import Visera.Core.Type;
 import Visera.Core.Signal;
 import Visera.Core.Math.Basic;
 
-import Visera.Runtime.Window;
+import Visera.Runtime.Platform.Window;
 
 export namespace VE
 {

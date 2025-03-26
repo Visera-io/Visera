@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 #include <GLFW/glfw3.h>
-export module Visera.Runtime.Window;
+export module Visera.Runtime.Platform.Window;
 
 import Visera.Core.Signal;
 

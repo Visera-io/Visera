@@ -10,7 +10,7 @@ import :Synchronization;
 
 import Visera.Core.Signal;
 import Visera.Core.Log;
-import Visera.Runtime.Window;
+import Visera.Runtime.Platform.Window;
 
 export namespace VE
 {

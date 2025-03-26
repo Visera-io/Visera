@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 #include <GLFW/glfw3.h>
-export module Visera.Runtime.IO:Keyboard;
+export module Visera.Runtime.Platform.IO:Keyboard;
 import :Common;
 
 import Visera.Core.Type;
@@ -9,7 +9,7 @@ import Visera.Core.Log;
 import Visera.Core.Signal;
 import Visera.Core.OS.Concurrency;
 
-import Visera.Runtime.Window;
+import Visera.Runtime.Platform.Window;
 
 export namespace VE
 {

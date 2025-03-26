@@ -1,13 +1,13 @@
 module;
 #include <Visera.h>
 #include <GLFW/glfw3.h>
-export module Visera.Runtime.IO:Mouse;
+export module Visera.Runtime.Platform.IO:Mouse;
 import :Common;
 
 import Visera.Core.Type;
 import Visera.Core.Math.Basic;
 
-import Visera.Runtime.Window;
+import Visera.Runtime.Platform.Window;
 
 export namespace VE
 {
