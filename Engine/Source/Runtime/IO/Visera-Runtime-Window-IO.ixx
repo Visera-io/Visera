@@ -34,9 +34,21 @@ export namespace VE
 		DeleteKeyboardKeyEvent(const FName& _Name) { Keyboard::DeleteKeyEvent(_Name); };
 
 		static inline void
-		Bootstrap() { if (Window::GetHandle() == nullptr) { throw SRuntimeError("Failed to bootstrap IO - you must bootstrap Window first!"); } }
+		Bootstrap();
 		static inline void
 		Terminate() { }
 	};
+
+	void IO::
+	Bootstrap()
+	{ 
+		if (Window::GetHandle() == nullptr)
+		{ throw SRuntimeError("Failed to bootstrap IO - you must bootstrap Window first!"); }
+
+		glfwSetKeyCallback      (Window::GetHandle(), Keyboard::KeyCallback);
+
+		glfwSetCursorPosCallback(Window::GetHandle(), Mouse::CursorCallback);
+		glfwSetScrollCallback   (Window::GetHandle(), Mouse::ScrollCallback);
+	}
 
 } // namespace VE

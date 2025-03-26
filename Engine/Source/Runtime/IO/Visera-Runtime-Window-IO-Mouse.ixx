@@ -32,14 +32,14 @@ export namespace VE
 
 		struct FCursor
 		{
-			Vector2D Position{0, 0};
-			Vector2D Offset  {0, 0};
+			Vector2F Position{0, 0};
+			Vector2F Offset  {0, 0};
 		};
 		static inline FCursor Cursor;
 
 		struct FScroll
 		{
-			Vector2D Offset{0, 0};
+			Vector2F Offset{0, 0};
 		};
 		static inline FScroll Scroll;
 
