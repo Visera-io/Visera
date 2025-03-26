@@ -10,8 +10,38 @@ export namespace VE
 {
     constexpr Float E = 2.71828182845904523536028747135266250;
 
-    template <Number NumT> NumT
+    template <Number NumT, Number ReT = NumT> ReT
     Sqrt(NumT _Num) { return std::sqrt(_Num); }
+    template <Number NumT, Number ReT = NumT> ReT
+    Max(NumT _NumA, NumT _NumB) { return std::max(_NumA, _NumB); }
+    template <Number NumT, Number ReT = NumT> ReT
+    Min(NumT _NumA, NumT _NumB) { return std::min(_NumA, _NumB); }
+
+    Float inline
+    ComputeTriangleArea(const Vector3F& _Pa, const Vector3F& _Pb, const Vector3F& _Pc) 
+    {
+        // A_triangle = 1/2 * Cross(Vab, Vac) = sqrt( ||Vab||^2 * ||Vac||^2 - (Dot(Vab, Vac)^2) )
+        Vector3F Vab = _Pb - _Pa;
+        Vector3F Vac = _Pc - _Pa;
+        float DotVabVac = Vab.dot(Vac);
+        float SqrArea = Vab.norm() * Vac.norm() - (DotVabVac * DotVabVac);
+        return 0.5 * std::sqrt(SqrArea);
+    }
+
+	ResultPackage<Vector3F, Vector3F, Vector3F> inline
+	ComputeOrthogonalCoordinate(const Vector3F& _Normal)
+	{
+		Float Sign = std::copysign(1.0f, _Normal.z());
+		Float Coef_a = -1.0 / (Sign + _Normal.z());
+		Float Coef_b = _Normal.x() * _Normal.y() * Coef_a;
+		Vector3F Va {(1 + Sign * (_Normal.x() * _Normal.x()) * Coef_a),
+					 (Sign * Coef_b),
+					 (-Sign * _Normal.x())};
+		Vector3F Vb {(Coef_b),
+					 (Sign + (_Normal.y() * _Normal.y()) * Coef_a),
+					 (-_Normal.y())};
+		return {_Normal, Va, Vb};
+	}
 
     String inline
     Text(const	Vector2F& Vector)	{ return Text("[{}, {}]", Vector[0], Vector[1]); }

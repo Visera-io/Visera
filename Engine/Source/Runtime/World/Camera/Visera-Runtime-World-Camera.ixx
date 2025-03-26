@@ -4,7 +4,7 @@ export module Visera.Runtime.World.Camera;
 import Visera.Runtime.World.Camera.Lens;
 import Visera.Runtime.World.Camera.Film;
 
-import Visera.Core.Math;
+import Visera.Core.Math.Basic;
 import Visera.Runtime.World.Object;
 import Visera.Runtime.World.Atlas;
 

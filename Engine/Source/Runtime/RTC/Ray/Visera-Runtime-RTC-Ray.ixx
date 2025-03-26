@@ -5,7 +5,7 @@ export module Visera.Runtime.RTC.Ray;
 import :Hit;
 import Visera.Runtime.RTC.Embree;
 import Visera.Runtime.RTC.Scene;
-import Visera.Core.Math;
+import Visera.Core.Math.Basic;
 
 export namespace VE
 {

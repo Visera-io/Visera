@@ -29,7 +29,7 @@ export namespace VE
 		CreateCanvas(SharedPtr<const FImage> _Image) -> WeakPtr<FCanvas>;
 
 	private:
-		static inline FPath LayoutFilePath{VISERA_APP_CACHE_DIR"/Editor.ini"};
+		static inline FPath LayoutFilePath{"ViseraEditor.ini"};
 		static inline HashMap<FName, SharedPtr<IWidget>> Widgets;
 
 		static inline SharedPtr<RHI::FDescriptorSetLayout> ImGuiDescriptorSetLayout;

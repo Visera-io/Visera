@@ -3,8 +3,6 @@ module;
 export module Visera.Runtime.World.Camera.Lens:DiskLens;
 import :Interface;
 
-import Visera.Core.Math;
-
 export namespace VE
 {
 

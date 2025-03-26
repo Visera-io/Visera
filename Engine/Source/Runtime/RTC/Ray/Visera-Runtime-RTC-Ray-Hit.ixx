@@ -3,7 +3,7 @@ module;
 #include <embree4/rtcore.h>
 export module Visera.Runtime.RTC.Ray:Hit;
 import Visera.Runtime.RTC.Embree;
-import Visera.Core.Math;
+import Visera.Core.Math.Basic;
 
 export namespace VE
 {
@@ -11,18 +11,21 @@ export namespace VE
     class FHit
     {
     public:
-        auto IsValid()          const -> Bool       { return HitInfo.geomID != Embree::InvalidGeometryID; }
-        auto GetSurfaceNormal() const -> Vector3F   { return Vector3F{HitInfo.Ng_x, HitInfo.Ng_y, HitInfo.Ng_z }.normalized(); }
-        auto GetHitInfo()       const -> const Embree::FHit& { return HitInfo; }
+        auto IsValid()                  const -> Bool       { return Details.geomID != Embree::InvalidGeometryID; }
+        auto GetSurfaceNormal()         const -> Vector3F   { return Vector3F{Details.Ng_x, Details.Ng_y, Details.Ng_z }.normalized(); }
+        auto GetHitBarycentricCoord()   const -> Vector2F   { return {Details.u, Details.v}; }
+        auto GetHitGeometryID()         const -> UInt32     { return Details.geomID; }
+        auto GetHitPrimitiveID()        const -> UInt32     { return Details.primID; }
+        auto GetDetails()               const -> const Embree::FHit& { return Details; }
 
-        FHit() : HitInfo
+        FHit() : Details
         {
             .geomID =  RTC_INVALID_GEOMETRY_ID,
             .instID = {RTC_INVALID_GEOMETRY_ID}
         } {}
 
     private:
-        Embree::FHit HitInfo;
+        Embree::FHit Details;
     };
 
 }// namespace VE

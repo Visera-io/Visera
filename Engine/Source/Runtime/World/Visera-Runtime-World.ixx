@@ -8,7 +8,7 @@ import Visera.Runtime.World.Stage;
 
 import Visera.Core.Type;
 import Visera.Core.Log;
-import Visera.Core.Math;
+import Visera.Core.Math.Basic;
 import Visera.Core.OS.Concurrency;
 import Visera.Core.OS.FileSystem;
 

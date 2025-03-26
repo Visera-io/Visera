@@ -126,9 +126,6 @@ export namespace VE
 		template<TRenderPass T> static auto
 		CreateRenderPass() -> SharedPtr<T>;
 
-		static inline void
-		FreeDescriptorSet(SharedPtr<FDescriptorSet> _DescriptorSet) { auto DSHandle = _DescriptorSet->GetHandle(); vkFreeDescriptorSets(Vulkan->GetDevice().GetHandle(),_DescriptorSet->GetOwner()->GetHandle(), 1, &DSHandle); }
-
 		static inline auto
 		WaitFrameReady() -> FFrameContext&;
 		static inline auto

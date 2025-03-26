@@ -3,7 +3,7 @@ module;
 export module Visera.Runtime.World.Object.Component:Transform;
 
 import :Interface;
-import Visera.Core.Math;
+import Visera.Core.Math.Basic;
 
 export namespace VE
 {

@@ -31,7 +31,7 @@ export namespace VE
 	private:
 		VkDescriptorPool						Handle{ VK_NULL_HANDLE };
 		UInt32									MaxSets{ 0 };
-		HashMap<EVulkanDescriptorType, Int32>			DescriptorTable;
+		HashMap<EVulkanDescriptorType, Int32>	DescriptorTable;
 		List<SharedPtr<FVulkanDescriptorSet>>	Children;
 
 	public:
@@ -89,6 +89,8 @@ export namespace VE
 		{
 			for (auto& Child : Children)
 			{
+				if (Child->Handle == VK_NULL_HANDLE) { continue; }
+
 				if (CollectionCount >= Trashbin.size())
 				{ Trashbin.resize(Trashbin.size() << 1); }
 
@@ -103,6 +105,8 @@ export namespace VE
 			for (auto It = Children.begin(); It != Children.end(); )
 			{
 				auto& Child = *It;
+				if (Child->Handle == VK_NULL_HANDLE) { continue; }
+
 				if (Child->IsExpired() || Child.use_count() == 1)
 				{
 					if (CollectionCount >= Trashbin.size())

@@ -2,7 +2,7 @@ module;
 #include <Visera.h>
 export module Visera.Runtime.World.Atlas.Chart:Visera;
 
-import Visera.Core.Math;
+import Visera.Core.Math.Basic;
 
 export namespace VE
 {
