@@ -139,13 +139,11 @@ class App final : public VE::ViseraApp
 public:
 	virtual void Tick() override
 	{
-		VE::Editor::CreateWindow();
-		VE::Editor::RenderWidgets();
+		
 	}
 
 	virtual void Bootstrap() override
 	{
-		VE::Editor::CreateWidget<VE::FCanvas>(VE::FName{"main_canvas"});
 	}
 
 	virtual void Terminate() override
