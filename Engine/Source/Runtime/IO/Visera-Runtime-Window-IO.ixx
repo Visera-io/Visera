@@ -23,13 +23,15 @@ export namespace VE
 		using EKey         = EKey;
 		using EMouseButton = EMouseButton;
 
+        using FKeyboardKeyEventCreateInfo = Keyboard::FKeyEventCreateInfo;
+
 		static inline auto
 		GetMouseCursor() -> const Mouse::FCursor& { return Mouse::Cursor; }
 		static inline auto
 		GetMouseScroll() -> const Mouse::FScroll& { return Mouse::Scroll; }
 
 		static inline void
-		RegisterKeyboardKeyEvent(const Keyboard::FKeyEventCreateInfo& _CreateInfo) { Keyboard::RegisterKeyEvent(_CreateInfo); };
+		RegisterKeyboardKeyEvent(const FKeyboardKeyEventCreateInfo& _CreateInfo) { Keyboard::RegisterKeyEvent(_CreateInfo); };
 		static inline void
 		DeleteKeyboardKeyEvent(const FName& _Name) { Keyboard::DeleteKeyEvent(_Name); };
 
