@@ -1,0 +1,42 @@
+module;
+#include <Visera.h>
+#include <GLFW/glfw3.h>
+export module Visera.Runtime.IO;
+import :Common;
+import :Keyboard;
+import :Mouse;
+
+import Visera.Core.Type;
+import Visera.Core.Signal;
+import Visera.Core.Math.Basic;
+
+import Visera.Runtime.Window;
+
+export namespace VE
+{
+	
+	class IO
+	{
+		VE_MODULE_MANAGER_CLASS(IO);
+	public:
+		using EAction      = EAction;
+		using EKey         = EKey;
+		using EMouseButton = EMouseButton;
+
+		static inline auto
+		GetMouseCursor() -> const Mouse::FCursor& { return Mouse::Cursor; }
+		static inline auto
+		GetMouseScroll() -> const Mouse::FScroll& { return Mouse::Scroll; }
+
+		static inline void
+		RegisterKeyboardKeyEvent(const Keyboard::FKeyEventCreateInfo& _CreateInfo) { Keyboard::RegisterKeyEvent(_CreateInfo); };
+		static inline void
+		DeleteKeyboardKeyEvent(const FName& _Name) { Keyboard::DeleteKeyEvent(_Name); };
+
+		static inline void
+		Bootstrap() { if (Window::GetHandle() == nullptr) { throw SRuntimeError("Failed to bootstrap IO - you must bootstrap Window first!"); } }
+		static inline void
+		Terminate() { }
+	};
+
+} // namespace VE

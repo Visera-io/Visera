@@ -4,10 +4,12 @@ module;
 export module Visera.Runtime.RTC.Geometry:Mesh;
 import :Interface;
 
-import Visera.Runtime.RTC.Embree;
 import Visera.Core.Signal;
 import Visera.Core.Math.Basic;
 import Visera.Core.OS.Memory;
+import Visera.Core.Media.Model;
+
+import Visera.Runtime.RTC.Embree;
 
 export namespace VE
 {
@@ -21,7 +23,8 @@ export namespace VE
 		CreatePlane(const Vector3F& _LeftTop, const Vector3F& _RightTop, const Vector3F& _RightBottom, const Vector3F& _LeftBottom, EFaceWinding _FaceWinding = EFaceWinding::Clockwise) -> SharedPtr<FMesh>;
 
 		FMesh() = delete;
-		FMesh(const FCreateInfo& _CreateInfo) : IGeometry{ _CreateInfo } {}
+		FMesh(SharedPtr<const FModel> _Model);
+    	FMesh(const FCreateInfo& _CreateInfo) : IGeometry{_CreateInfo}{}
 
 	private:
 		EFaceWinding FaceWinding;
@@ -60,6 +63,20 @@ export namespace VE
 		Plane->FaceWinding = _FaceWinding;
 
 		return Plane; //[TODO]: Add a new FCreateInfo for FMesh.
+	}
+
+	FMesh::
+	FMesh(SharedPtr<const FModel> _Model)
+		:IGeometry{FCreateInfo
+		{
+			.Topology    = EEmbreeTopology::Triangle,
+			.VertexCount = _Model->GetVertexCount(),
+			.Vertices	 = _Model->GetVertexData(),
+			.IndexCount	 = _Model->GetIndexCount(),
+			.Indices	 = _Model->GetIndexData(),
+		}}
+	{
+
 	}
 
 }// namespace VE

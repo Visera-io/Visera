@@ -8,6 +8,7 @@ import Visera.Runtime.RTC.Geometry;
 import Visera.Runtime.RTC.Scene;
 
 import Visera.Core.Signal;
+import Visera.Core.Media.Model;
 
 export namespace VE
 {
@@ -16,12 +17,18 @@ export namespace VE
 	{
 		VE_MODULE_MANAGER_CLASS(RTC);
 	public:
-		using FRay  = FRay;
-		using FMesh = FMesh;
-		using FScene = FScene;
+		using FRay		= FRay;
+		using FScene	= FScene;
+		using FMesh		= FMesh;
 
 		using EBufferType  = Embree::EBufferType;
 		using ETopology    = Embree::ETopology;
+		using EMeshFaceWinding = FMesh::EFaceWinding;
+
+		static inline auto
+		CreateMesh(SharedPtr<const FModel> _Model) -> SharedPtr<FMesh> { return CreateSharedPtr<FMesh>(_Model); }
+		static inline auto
+		CreateScene(StringView _Name) -> SharedPtr<FScene> { return CreateSharedPtr<FScene>(_Name); }
 
 	//private:
 		static inline auto

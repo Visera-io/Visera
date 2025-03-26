@@ -98,6 +98,7 @@ export namespace VE
 #endif
 			Log::Debug("Bootstrapping ViseraEngine Runtime...");
 			Window::Bootstrap();
+			IO::Bootstrap();
 			RHI::Bootstrap();
 			RTC::Bootstrap();
 			World::Bootstrap();
@@ -126,6 +127,7 @@ export namespace VE
 			World::Terminate();
 			RTC::Terminate();
 			RHI::Terminate();
+			IO::Terminate();
 			Window::Terminate();
 		}
 	};

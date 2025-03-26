@@ -19,7 +19,7 @@ export namespace VE
 		Bool HasMesh()					const { return MeshComponent != nullptr; }
 		auto GetMesh()					const -> SharedPtr<OCMesh> { return MeshComponent; }
 
-		auto GetObjectName()			const -> StringView { return Name.GetFileName(); }
+		auto GetObjectName()			const -> StringView { return Name.GetName(); }
 		auto GetObjectNameWithNumber()	const -> String		{ return Name.GetNameWithNumber(); }
 
 		Bool IsRecollectable()			const { return bRecollectable; }

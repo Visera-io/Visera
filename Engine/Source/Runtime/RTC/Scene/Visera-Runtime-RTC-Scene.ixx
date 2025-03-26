@@ -16,16 +16,17 @@ export namespace VE
 	class FScene
 	{
 	public:
+		using AttachmentID = UInt32;
 		void Update();
-		void Attach(SharedPtr<IGeometry> _Geometry);
+		auto Attach(SharedPtr<IGeometry> _Geometry) -> AttachmentID;
 
 		auto GetHandle() const -> RTCScene		{ return Handle; }
 
 	private:
 		String					Name;
 		RTCScene				Handle = nullptr;
-
-		Array<SharedPtr<IGeometry>> Geometries;
+		
+		HashMap<AttachmentID, SharedPtr<IGeometry>> AttachmentTable;
 
 	public:
 		FScene(StringView _Name);
@@ -33,18 +34,19 @@ export namespace VE
 		~FScene();
 	};
 
-	void FScene::
+	FScene::AttachmentID FScene::
 	Attach(SharedPtr<IGeometry> _Geometry)
 	{
 		//Log::Debug("Attaching a new Geometry({}) to Scene({})", _Geometry->GetHandle(), )
-		rtcAttachGeometry(Handle, _Geometry->GetHandle());
-		Geometries.emplace_back(std::move(_Geometry));
+		AttachmentID ID = rtcAttachGeometry(Handle, _Geometry->GetHandle());
+		AttachmentTable[ID] = std::move(_Geometry);
+		return ID;
 	}
 
 	void FScene::
 	Update()
 	{
-		for (auto& Geometry : Geometries)
+		for (auto& [ID, Geometry]: AttachmentTable)
 		{
 			if (Geometry) Geometry->Update();
 		}

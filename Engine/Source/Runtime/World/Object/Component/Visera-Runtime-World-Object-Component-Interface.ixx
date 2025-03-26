@@ -10,7 +10,7 @@ export namespace VE
 	class IObjectComponent
 	{
 	public:
-		auto GetComponentName()				-> StringView { return Name.GetFileName(); }
+		auto GetComponentName()				-> StringView { return Name.GetName(); }
 		auto GetComponentNameWithNumber()   -> String { return Name.GetNameWithNumber(); }
 
 	protected:
