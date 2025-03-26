@@ -7,6 +7,8 @@ import :Common;
 import Visera.Core.Type;
 import Visera.Core.Math.Basic;
 
+import Visera.Runtime.Window;
+
 export namespace VE
 {
 	
@@ -32,14 +34,14 @@ export namespace VE
 
 		struct FCursor
 		{
-			Vector2F Position{0, 0};
-			Vector2F Offset  {0, 0};
+			Vector2F Position;
+			Vector2F Offset;
 		};
 		static inline FCursor Cursor;
 
 		struct FScroll
 		{
-			Vector2F Offset{0, 0};
+			Vector2F Offset;
 		};
 		static inline FScroll Scroll;
 
@@ -53,6 +55,10 @@ export namespace VE
 		static inline void
 		CursorCallback(GLFWwindow* _Window, double _CurrentX, double _CurrentY)
 		{
+			static const auto ContentScale = Window::GetContentScale();
+			_CurrentX *= ContentScale.X;
+			_CurrentY *= ContentScale.Y;
+
 			Cursor.Offset.x()   = _CurrentX - Cursor.Position.x();
 			Cursor.Offset.y()   = _CurrentY - Cursor.Position.y();
 			Cursor.Position.x() = _CurrentX;

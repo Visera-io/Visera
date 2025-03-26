@@ -133,29 +133,3 @@ export namespace VE
 	};
 
 } // namespace VE
-
-#if (VE_IS_APPLE_SYSTEM)
-// Testing Code
-class App final : public VE::ViseraApp
-{
-public:
-	virtual void Tick() override
-	{
-		
-	}
-
-	virtual void Bootstrap() override
-	{
-	}
-
-	virtual void Terminate() override
-	{
-
-	}
-};
-
-export int main(int argc, char* argv[])
-{
-	return VE::ViseraEngine::Run(new App());
-}
-#endif

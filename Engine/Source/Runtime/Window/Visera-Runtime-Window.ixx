@@ -17,8 +17,8 @@ export namespace VE
 			struct { Int32 X	, Y		; };
 			Bool IsValid() const { return Width >= 0 && Height >= 0; }
 		};
+		struct FContentScale{ Float X, Y; };
 
-	public:
 		static inline Bool
 		ShouldClose() { return glfwWindowShouldClose(Handle); }
 		static inline void
@@ -30,7 +30,11 @@ export namespace VE
 		GetTitle() { return Title; }
 		static inline Extent
 		GetExtent() { return CurrentExtent; }
+		static inline const FContentScale&
+		GetContentScale() { return ContentScale; }
 
+		static inline void
+		QueryContentScale(Float* _ScaleX, Float* _ScaleY) { glfwGetWindowContentScale(Handle, _ScaleX, _ScaleY); }
 		static inline Extent
 		QueryFrameBufferExtent() { Extent FrameBufferExtent; glfwGetFramebufferSize(Handle, &FrameBufferExtent.Width, &FrameBufferExtent.Height); return FrameBufferExtent; }
 		static inline void
@@ -38,16 +42,19 @@ export namespace VE
 	
 	private:
 		static inline void
-		SetPosition(Int32 X, Int32 Y) { glfwSetWindowPos(Handle, X, Y); }
+		SetSize(Int32 _Width, Int32 _Height) { glfwSetWindowSize(Handle, _Width, _Height); }
+		static inline void
+		SetPosition(Int32 _X, Int32 _Y) { glfwSetWindowPos(Handle, _X, _Y); }
 		static inline GLFWmonitor*
 		GetPrimaryMonitor() { return glfwGetPrimaryMonitor(); }
 		static inline const GLFWvidmode*
-		GetVideoMode(GLFWmonitor* Monitor) { return glfwGetVideoMode(Monitor); }
+		GetVideoMode(GLFWmonitor* _Monitor) { return glfwGetVideoMode(_Monitor); }
 
 	private:
 		static inline String	Title				= VISERA_APP_NAME;
 		static inline Extent	CurrentExtent		{{.Width = 1600, .Height = 900}};
 		static inline Bool		bMaximized			= False;
+		static inline FContentScale ContentScale;
 
 		static inline GLFWwindow*  Handle		= nullptr;
 
@@ -61,11 +68,7 @@ export namespace VE
 
 			//Create Window
 			Handle = glfwCreateWindow(
-#if (VE_IS_APPLE_SYSTEM)
-			CurrentExtent.Width >> 1, CurrentExtent.Height >> 1, // Retina Display
-#else
-			CurrentExtent.Width, CurrentExtent.Height,
-#endif
+				CurrentExtent.Width, CurrentExtent.Height,
 				Title.c_str(),
 				NULL,
 				NULL);
@@ -84,9 +87,17 @@ export namespace VE
 				(VidMode->width    -   CurrentExtent.Width ) >> 1,	// Mid
 				(VidMode->height   -   CurrentExtent.Height) >> 1);	// Mid
 #endif
-			
+
+			QueryContentScale(&ContentScale.X, &ContentScale.Y);
+
 			if (bMaximized) { glfwMaximizeWindow(Handle); }
+			else
+			{
+				if (ContentScale.X != 1.0 || ContentScale.Y != 1.0)
+				{ SetSize(CurrentExtent.Width / ContentScale.X, CurrentExtent.Height / ContentScale.Y); }
+			}
 		}
+		
 		VE_API Terminate() -> void
 		{
 			glfwDestroyWindow(Handle);
