@@ -27,6 +27,9 @@ export namespace VE
 			FKeyEvent	Event;
 		};
 
+	    static inline void
+	    ProcessEvents();
+
 		static inline auto
 		GetKeyAction(EKey _Key) -> EAction { return EAction(glfwGetKey(Window::GetHandle(), UInt32(_Key))); }
 
@@ -77,25 +80,57 @@ export namespace VE
 		static inline void
 		KeyCallback(GLFWwindow* window, int _Key, int _Scancode, int _Action, int _Mods)
 		{
+            //[TODO]: Erase expired events when processing, however, we must handle RWLock writing issues (this function was implemented within the List but now using the Array)
 			RWLock.StartReading();
-			{
-				// Keyboard Key Events
-				for (UInt32 ActionID = 0; ActionID < UInt32(EAction::Max); ++ActionID)
-				{
-					for (const auto& [Key, Events] : KeyboardEventMap[ActionID])
-					{
-						if (GetKeyAction(Key) != EAction(ActionID)) { continue; }
-				
-						for (const auto& Event : Events)
-						{
-							if (Event != nullptr) { Event(); } 
-						}
-						//[TODO]: Erase expired events when processing, however, we must handle RWLock writing issues (this function was implemented within the List but now using the Array)
-					}
-				}
-			}
-			RWLock.StopReading();
-		}
+            {
+		    	EAction Action = EAction(_Action);
+            	EKey 	Key	   = EKey(_Key);
+		    	switch (Action)
+		    	{
+		    	case EAction::Release:
+          		{
+            	    Action = EAction::Detach;
+          		}
+		    	case EAction::Press:
+            	{
+            	    auto& TargetEventMap = KeyboardEventMap[UInt32(Action)];
+            	    if (TargetEventMap.count(Key) != 0)
+            	  	{
+             	 		for (const auto& Event : TargetEventMap[Key])
+						{ if (Event != nullptr) { Event(); } }
+            	  	}
+            		break;
+           		}
+		    	}
+            }
+            RWLock.StopReading();
+        }
 	};
+
+	void Keyboard::
+	ProcessEvents()
+    {
+		RWLock.StartReading();
+		{
+			for(const auto& [Key, Events] : KeyboardEventMap[UInt32(EAction::Hold)])
+            {
+            	if(EAction::Press == GetKeyAction(Key))
+                {
+                  for (const auto& Event : Events)
+                  { if (Event != nullptr) { Event(); } }
+                }
+            }
+
+            for(const auto& [Key, Events] : KeyboardEventMap[UInt32(EAction::Release)])
+            {
+            	if(EAction::Release == GetKeyAction(Key))
+                {
+                  for (const auto& Event : Events)
+                  { if (Event != nullptr) { Event(); } }
+                }
+            }
+		}
+		RWLock.StopReading();
+    }
 
 } // namespace VE

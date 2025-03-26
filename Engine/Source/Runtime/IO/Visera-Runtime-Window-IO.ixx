@@ -25,6 +25,9 @@ export namespace VE
 
         using FKeyboardKeyEventCreateInfo = Keyboard::FKeyEventCreateInfo;
 
+        static inline void
+		ProcessEvents() { Keyboard::ProcessEvents(); }
+
 		static inline auto
 		GetMouseCursor() -> const Mouse::FCursor& { return Mouse::Cursor; }
 		static inline auto

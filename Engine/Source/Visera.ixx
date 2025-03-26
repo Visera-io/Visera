@@ -45,6 +45,7 @@ export namespace VE
 					while (!Window::ShouldClose())
 					{
 						Window::PollEvents();
+						IO::ProcessEvents();
 
 						auto& Frame = RHI::WaitFrameReady();
 						Editor::BeginFrame(Frame.GetEditorCommandBuffer());
