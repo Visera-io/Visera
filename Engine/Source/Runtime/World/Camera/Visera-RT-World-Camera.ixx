@@ -46,7 +46,7 @@ export namespace VE
 	Shoot(SharedPtr<const FScene> _Scene)
 	{
 		//[FIXME]: Testing
-		tbb::parallel_for(0, 1000000, [&](Int32 k)
+		tbb::parallel_for(0U, 1000000U, [&](UInt32 k)
 		{
 			float i = (2*(k / 1000) - 1000) * 0.001;
 			float j = (2*(k % 1001) - 1000) * 0.001;
@@ -74,7 +74,6 @@ export namespace VE
 				Film->Develop()->SetPixel(X, Y, Pixel);
 			}
 		});
-
 	}
 
 	VCamera::
