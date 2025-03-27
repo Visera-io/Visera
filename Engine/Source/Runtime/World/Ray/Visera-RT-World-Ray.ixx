@@ -17,7 +17,8 @@ export namespace VE
 		void CastTo(const FScene& _Scene)			{ CastTo(_Scene.GetHandle()); }
 		void CastTo(SharedPtr<const FScene> _Scene) { CastTo(_Scene->GetHandle()); }
 
-		auto HasHit()		const -> Bool		    { return Context.Hit.IsValid(); }
+		Bool HasHit()		const { return Context.Hit.IsValid(); }
+		Bool HasHitSurface()const { return GetDirection().dot(GetHitInfo().GetSurfaceNormal()) < 0.0; }
 		auto GetHitInfo()	const -> const FHit&	{ return Context.Hit; }
 		auto GetHitPoint()	const -> Vector3F		{ return GetOrigin() + Context.Ray.tfar * GetDirection(); }
 

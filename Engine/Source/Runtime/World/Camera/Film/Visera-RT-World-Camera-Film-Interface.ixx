@@ -6,11 +6,11 @@ import Visera.Core.Media.Image;
 
 export namespace VE
 {
-    class FCamera;
+    class VCamera;
 
     class IFilm
     {
-        friend class FCamera;
+        friend class VCamera;
     public:
         virtual auto
         Develop() -> const FImage& { return Negative; }
