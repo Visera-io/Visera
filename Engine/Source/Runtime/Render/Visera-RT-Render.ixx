@@ -4,7 +4,7 @@ export module Visera.Runtime.Render;
 export import Visera.Runtime.Render.Slang;
 export import Visera.Runtime.Render.RHI;
 export import Visera.Runtime.Render.RTC;
-export import Visera.Runtime.Render.Camera;
+export import Visera.Runtime.World.Camera;
 
 import Visera.Core.Log;
 import Visera.Core.Type;

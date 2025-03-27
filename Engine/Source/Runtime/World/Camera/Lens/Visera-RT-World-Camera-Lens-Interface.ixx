@@ -1,6 +1,6 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.Render.Camera.Lens:Interface;
+export module Visera.Runtime.World.Camera.Lens:Interface;
 
 export namespace VE
 {

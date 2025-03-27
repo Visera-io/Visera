@@ -1,6 +1,6 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.Render.Camera.Lens:DiskLens;
+export module Visera.Runtime.World.Camera.Lens:DiskLens;
 import :Interface;
 
 export namespace VE
