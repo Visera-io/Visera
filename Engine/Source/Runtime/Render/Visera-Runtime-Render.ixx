@@ -1,22 +1,22 @@
 module;
 #include <Visera.h>
 export module Visera.Runtime.Render;
-import Visera.Runtime.Render.Slang;
-import Visera.Runtime.Render.Shader;
+export import Visera.Runtime.Render.Slang;
+export import Visera.Runtime.Render.RHI;
 
 import Visera.Core.Log;
 import Visera.Core.Type;
 import Visera.Core.Signal;
-import Visera.Runtime.RHI;
 
 export namespace VE
 {
+	using FShader = FSlangShader;
+
 	class Render //[TODO]: Remove and add funcs to RHI?
 	{
 		VE_MODULE_MANAGER_CLASS(Render);
 	public:
 		enum class ESystemRT { Color, Depth };
-		using FShader = FShader;
 
 		VE_API CreateShader(StringView _ShaderFileName, StringView _EntryPoint, FShader::ECompileType _CompileType = FShader::ECompileType::Default) -> SharedPtr<FShader>;
 

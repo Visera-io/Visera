@@ -7,7 +7,7 @@ export module Visera.Editor;
 import Visera.Editor.Widget;
 
 import Visera.Runtime.Platform.Window;
-import Visera.Runtime.RHI;
+import Visera.Runtime.Render.RHI;
 import Visera.Core.Log;
 import Visera.Core.Type;
 import Visera.Core.Signal;

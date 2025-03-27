@@ -3,9 +3,9 @@ module;
 #include <slang.h>
 #include <slang-com-ptr.h>
 export module Visera.Runtime.Render.Slang;
+export import :Shader;
 
-import Visera.Runtime.Render.Shader;
-import Visera.Runtime.RHI;
+import Visera.Runtime.Render.RHI;
 import Visera.Core.Signal;
 
 export namespace VE
@@ -14,7 +14,7 @@ export namespace VE
 	class FSlang
 	{
 	public:
-		void CompileShader(SharedPtr<FShader> _Shader) const;
+		void CompileShader(SharedPtr<FSlangShader> _Shader) const;
 
 		FSlang();
 		~FSlang() = default;
@@ -60,7 +60,7 @@ export namespace VE
 	}
 
 	void FSlang::
-	CompileShader(SharedPtr<FShader> _Shader) const
+	CompileShader(SharedPtr<FSlangShader> _Shader) const
 	{
 		VE_ASSERT(!_Shader->IsCompiled());
 
@@ -69,7 +69,7 @@ export namespace VE
 		const FSlang::FCompiler* Compiler = nullptr;
 		switch (_Shader->GetType())
 		{
-		case FShader::ECompileType::VulkanSPIRV:
+		case FSlangShader::ECompileType::VulkanSPIRV:
 			Compiler = &VulkanSPIRVCompiler;
 			break;
 		default:

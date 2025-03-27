@@ -1,6 +1,5 @@
 module;
 #include <Visera.h>
-#include <Eigen/src/Core/util/Constants.h>
 #include <GLFW/glfw3.h>
 export module Visera.Runtime.Platform.IO:Mouse;
 import :Common;

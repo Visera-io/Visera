@@ -5,7 +5,7 @@ export module Visera.Editor.Widget:Canvas;
 import :Interface;
 
 import Visera.Core.Media.Image;
-import Visera.Runtime.RHI;
+import Visera.Runtime.Render.RHI;
 
 export namespace VE
 {

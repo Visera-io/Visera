@@ -4,7 +4,6 @@ export module Visera.Runtime.RTC;
 
 import Visera.Runtime.RTC.Embree;
 import Visera.Runtime.RTC.Ray;
-import Visera.Runtime.RTC.Geometry;
 import Visera.Runtime.RTC.Scene;
 
 import Visera.Core.Signal;
@@ -17,18 +16,18 @@ export namespace VE
 	{
 		VE_MODULE_MANAGER_CLASS(RTC);
 	public:
-		using FRay		= FRay;
-		using FScene	= FScene;
-		using FMesh		= FMesh;
+		using FRay				= FRay;
+		using FScene			= FScene;
+		using FSceneAttachment	= FScene::FAttachment;
 
 		using EBufferType  = Embree::EBufferType;
 		using ETopology    = Embree::ETopology;
 		using EMeshFaceWinding = FMesh::EFaceWinding;
 
 		static inline auto
-		CreateMesh(SharedPtr<const FModel> _Model) -> SharedPtr<FMesh> { return CreateSharedPtr<FMesh>(_Model); }
-		static inline auto
 		CreateScene(StringView _Name) -> SharedPtr<FScene> { return CreateSharedPtr<FScene>(_Name); }
+		static inline auto
+		CreateSceneAttachment(SharedPtr<const FModel> _Model) -> SharedPtr<FSceneAttachment> { return CreateSharedPtr<FMesh>(_Model); }
 
 	//private:
 		static inline auto

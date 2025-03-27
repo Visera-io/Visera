@@ -2,13 +2,14 @@ module;
 #include <Visera.h>
 #include <embree4/rtcore.h>
 export module Visera.Runtime.RTC.Scene;
+export import Visera.Runtime.RTC.Scene.Geometry;
 
 import Visera.Runtime.RTC.Embree;
-import Visera.Runtime.RTC.Geometry;
 
 import Visera.Core.Log;
 import Visera.Core.Type;
 import Visera.Core.Signal;
+import Visera.Core.Media.Model;
 
 export namespace VE
 {
@@ -16,9 +17,11 @@ export namespace VE
 	class FScene
 	{
 	public:
+		using FAttachment = IGeometry;
 		using AttachmentID = UInt32;
+
 		void Update();
-		auto Attach(SharedPtr<IGeometry> _Geometry) -> AttachmentID;
+		auto Attach(SharedPtr<FAttachment> _Attachment) -> AttachmentID;
 
 		auto GetHandle() const -> RTCScene		{ return Handle; }
 
@@ -26,7 +29,7 @@ export namespace VE
 		String					Name;
 		RTCScene				Handle = nullptr;
 		
-		HashMap<AttachmentID, SharedPtr<IGeometry>> AttachmentTable;
+		HashMap<AttachmentID, SharedPtr<FAttachment>> AttachmentTable;
 
 	public:
 		FScene(StringView _Name);
@@ -35,20 +38,20 @@ export namespace VE
 	};
 
 	FScene::AttachmentID FScene::
-	Attach(SharedPtr<IGeometry> _Geometry)
+	Attach(SharedPtr<FAttachment> _Attachment)
 	{
 		//Log::Debug("Attaching a new Geometry({}) to Scene({})", _Geometry->GetHandle(), )
-		AttachmentID ID = rtcAttachGeometry(Handle, _Geometry->GetHandle());
-		AttachmentTable[ID] = std::move(_Geometry);
+		AttachmentID ID = rtcAttachGeometry(Handle, _Attachment->GetHandle());
+		AttachmentTable[ID] = std::move(_Attachment);
 		return ID;
 	}
 
 	void FScene::
 	Update()
 	{
-		for (auto& [ID, Geometry]: AttachmentTable)
+		for (auto& [ID, Attachment]: AttachmentTable)
 		{
-			if (Geometry) Geometry->Update();
+			if (Attachment) Attachment->Update();
 		}
 		rtcCommitScene(Handle);
 	}
