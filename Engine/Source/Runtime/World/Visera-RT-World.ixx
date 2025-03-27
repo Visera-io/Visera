@@ -3,6 +3,8 @@ module;
 export module Visera.Runtime.World;
 export import Visera.Runtime.World.Atlas;
 export import Visera.Runtime.World.Object;
+export import Visera.Runtime.World.Actor;
+export import Visera.Runtime.World.Camera;
 export import Visera.Runtime.World.Stage;
 
 import Visera.Core.Type;

@@ -34,16 +34,16 @@ export namespace VE
 
 	protected:
 		FRWLock								RWLock;
+		FName	Name;
+
 		SharedPtr<OCTransform>				TransformComponent;
 		SharedPtr<OCMesh>					MeshComponent;
 		Array<SharedPtr<IObjectComponent>>	CustomizedComponents;
 
-	private:
-		FName	Name;
 		Bool	bRecollectable = False;
 
 	public:
-		VObject() noexcept = default;
+		VObject()  noexcept = default;
 		~VObject() noexcept = default; // Do NOT do anything in deconstructor!
 	};
 

@@ -10,7 +10,7 @@ export namespace VE
     {
     public:
         FRawFilm() = delete;
-        FRawFilm(FResolution _Resolution) : IFilm(_Resolution) {}
+        FRawFilm(UInt32 _Width, UInt32 _Height) : IFilm(_Width, _Height) {}
     };
 
 } // namespace VE
