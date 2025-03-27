@@ -6,32 +6,29 @@ import Visera.Core.Media.Image;
 
 export namespace VE
 {
-    class VCamera;
-
     class IFilm
     {
-        friend class VCamera;
     public:
         virtual auto
-        Develop() -> const FImage& { return Negative; }
+        Develop() -> SharedPtr<FImage> { return Negative; } //[TODO]: New Interface return const FImage
 
-        auto GetSize()      const -> UInt64 { return Negative.GetSize(); }
-        auto GetWidth()     const -> UInt32 { return Negative.GetWidth(); }
-        auto GetHeight()    const -> UInt32 { return Negative.GetHeight(); }
-        auto GetPixelCount()const -> UInt64 { return Negative.GetPixelCount(); }
+        auto GetSize()      const -> UInt64 { return Negative->GetSize(); }
+        auto GetWidth()     const -> UInt32 { return Negative->GetWidth(); }
+        auto GetHeight()    const -> UInt32 { return Negative->GetHeight(); }
+        auto GetPixelCount()const -> UInt64 { return Negative->GetPixelCount(); }
 
         IFilm() = delete;
         IFilm(UInt32 _Width, UInt32 _Height);
         ~IFilm() = default;
 
     protected:
-        FImage Negative;
+        SharedPtr<FImage> Negative;
     };
 
     IFilm::
     IFilm(UInt32 _Width, UInt32 _Height)
         :
-        Negative{_Width, _Height}
+        Negative{CreateSharedPtr<FImage>(_Width, _Height)}
     {
 
     }
