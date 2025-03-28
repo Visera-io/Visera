@@ -11,6 +11,8 @@ export namespace VE
     public:
         virtual auto
         Develop() -> SharedPtr<FImage> { return Negative; } //[TODO]: New Interface return const FImage
+        void
+        Clear() { Negative->Clear(); }
 
         auto GetSize()      const -> UInt64 { return Negative->GetSize(); }
         auto GetWidth()     const -> UInt32 { return Negative->GetWidth(); }

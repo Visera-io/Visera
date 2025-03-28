@@ -5,6 +5,7 @@ export module Visera.Core.Media.Image;
 
 import Visera.Core.Type;
 import Visera.Core.Signal;
+import Visera.Core.OS.Memory;
 
 export namespace VE
 {
@@ -61,6 +62,8 @@ export namespace VE
 		};
 
 		void Resize(UInt32 _NewWidth, UInt32 _NewHeight, EFilter _Filter) { Handle.rescale(_NewWidth, _NewHeight, FREE_IMAGE_FILTER(_Filter)); }
+		void Clear(Int32 _ClearValue = 0) { Memory::Memset(Handle.accessPixels(), _ClearValue, (Handle.getBitsPerPixel() >> 3) * GetPixelCount()); }
+
 		void FlipVertical()		{ Handle.flipVertical(); }
 		void FlipHorizontal()	{ Handle.flipHorizontal(); }
 

@@ -23,11 +23,16 @@ export namespace VE
 		void Shoot(SharedPtr<const FScene> _Scene);
 		auto GetFilm() -> SharedPtr<IFilm> { return Film; }
 
-		auto GetViewingMatrix() const -> const Matrix4x4F& { return ViewingMatrix; }
-		auto GetProjectMatrix() const -> const Matrix4x4F& { return ProjectMatrix; }
+		void SetLens(SharedPtr<ILens> _NewLens) { Lens = std::move(_NewLens); }
+		void SetFilm(SharedPtr<IFilm> _NewFilm) { Film = std::move(_NewFilm); }
 
-		VCamera() = delete;
-		VCamera(SharedPtr<ILens> _Lens, SharedPtr<IFilm> _Film, EMode _Mode = EMode::Default);
+		auto GetPosition() const -> const Vector3F& { return Origin; }
+		void SetPosition(const Vector3F& _NewPosition) { Origin.x() = _NewPosition.x(); Origin.y() = _NewPosition.y(); Origin.z() = _NewPosition.z(); }
+
+		auto GetViewingMatrix() const -> const Matrix4x4F& { VE_WIP; return ViewingMatrix; }
+		auto GetProjectMatrix() const -> const Matrix4x4F& { VE_WIP; return ProjectMatrix; }
+
+		VCamera(EMode _Mode = EMode::Default) : Mode {_Mode} {};
 
 	private:
 		EMode      Mode   = EMode::Default;
@@ -40,21 +45,23 @@ export namespace VE
 
 		SharedPtr<ILens>  Lens;
 		SharedPtr<IFilm>  Film;
+
+		Bool bUpdated = False;
 	};
 
 	void VCamera::
 	Shoot(SharedPtr<const FScene> _Scene)
 	{
 		//[FIXME]: Testing
-		tbb::parallel_for(0U, 1000000U, [&](UInt32 k)
+		tbb::parallel_for(0, 1000000, [&](Int32 k)
 		{
 			float i = (2*(k / 1000) - 1000) * 0.001;
 			float j = (2*(k % 1001) - 1000) * 0.001;
 
 			//auto FocusPoint = Lens->Sample();
-			// FRay Ray{{Origin.x() + FocusPoint.x(), Origin.y() + FocusPoint.y(), Origin.z() },
-			// 		 {i, j, 1}};
-			FRay Ray{{0, 0 , 2}, {i, j , -1}};
+			FRay Ray{{Origin.x() + i, Origin.y() + j, Origin.z() },
+			 		 {i, j, -1}};
+			//FRay Ray{{0, 0 , 2}, {i, j , -1}};
 
 			Ray.CastTo(_Scene);
 			if (Ray.HasHit())
@@ -74,18 +81,6 @@ export namespace VE
 				Film->Develop()->SetPixel(X, Y, Pixel);
 			}
 		});
-	}
-
-	VCamera::
-	VCamera(SharedPtr<ILens> _Lens,
-			SharedPtr<IFilm> _Film,
-			EMode _Mode/* = EMode::Default */)
-			:
-			Lens{ std::move(_Lens) },
-			Film{std::move(_Film)  },
-			Mode {_Mode}
-	{
-		VE_ASSERT(Lens != nullptr && Film != nullptr);
 	}
 
 } // namespace VE

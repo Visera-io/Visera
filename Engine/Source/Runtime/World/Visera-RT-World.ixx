@@ -70,18 +70,17 @@ export namespace VE
 	CreateObject(FName _Name)
 	{ 
 		static_assert(VObjectType<T>, "T must satisfy the VObjectType concept!");
-		SharedPtr<T> Result = nullptr;
+		SharedPtr<T> NewObject = nullptr;
 
 		RWLock.StartWriting();
 		{
 			auto& ObjectSlot = ObjectTable[_Name];
 			if (ObjectSlot == nullptr)
 			{
-				auto NewObject = CreateSharedPtr<T>();
-				NewObject->Name = _Name;
+				NewObject = CreateSharedPtr<T>();
 				NewObject->Create();
-				ObjectSlot = NewObject;
-				Result = NewObject;
+				NewObject->Name = _Name;
+				ObjectSlot      = NewObject;
 			}
 			else
 			{
@@ -92,7 +91,7 @@ export namespace VE
 		}
 		RWLock.StopWriting();
 
-		return Result;
+		return NewObject;
 	}
 
 	SharedPtr<VObject> 
