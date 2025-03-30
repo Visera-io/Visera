@@ -3,52 +3,69 @@ module;
 #include <slang.h>
 #include <slang-com-ptr.h>
 export module Visera.Runtime.Render.Shader;
+import Visera.Runtime.Render.Shader.Compiler;
 
 import Visera.Core.Type;
-import Visera.Runtime.Render.RHI;
+import Visera.Core.Signal;
 
-template<class T>
-using COMPtr = Slang::ComPtr<T>;
+import Visera.Runtime.Render.RHI;
 
 export namespace VE
 {
 
-	// class FSlangShader
-	// {
-	// public:
-	// 	enum class ECompileType	{ VulkanSPIRV, Default = VulkanSPIRV };
+	class FShader
+	{
+	public:
+		enum class ELanguage { Slang };
+
+		static inline auto
+		Create(StringView _ShaderFileName, StringView _EntryPoint) { return CreateSharedPtr<FShader>(_ShaderFileName, _EntryPoint); }
 		
-	// 	Bool IsCompiled()  const { return Handle != nullptr; }
+		void Compile();
+		Bool IsCompiled()  const { return Handle != nullptr; }
 
-	// 	auto GetType()			const -> ECompileType { return Type; }
-	// 	auto GetFileName()		const -> StringView { return FileName; }
-	// 	auto GetEntryPoint()	const -> StringView { return EntryPoint; }
-	// 	auto GetShaderStage()	const -> RHI::EShaderStage { VE_ASSERT(IsCompiled()); return Handle->GetStage(); }
-	// 	auto GetRHIShader()		const -> SharedPtr<const RHI::FShader> { return Handle; }
-	// 	auto GetCompatiblePipelineLayout() const -> SharedPtr<const RHI::FPipelineLayout> { return CompatiblePipelineLayout; }
+		auto GetLanguage()		const -> ELanguage  { return Language; }
+		auto GetFileName()		const -> StringView { return FileName; }
+		auto GetEntryPoint()	const -> StringView { return EntryPoint; }
+		auto GetShaderStage()	const -> RHI::EShaderStage { VE_ASSERT(IsCompiled()); return Handle->GetStage(); }
+		auto GetRHIShader()		const -> SharedPtr<const RHI::FShader> { return Handle; }
+		auto GetCompatiblePipelineLayout() const -> SharedPtr<const RHI::FPipelineLayout> { return CompatiblePipelineLayout; }
 
-	// 	void Create(SharedPtr<RHI::FShader> _Handle) { Handle = std::move(_Handle); }
+		FShader() = delete;
+		FShader(StringView _ShaderFileName, StringView _EntryPoint);
+		~FShader() = default;
 
-	// 	FSlangShader(StringView _ShaderFileName, StringView _EntryPoint, ECompileType _CompileType = ECompileType::Default);
-	// 	~FSlangShader() = default;
+	private:
+		SharedPtr<RHI::FShader>		Handle;
+		String						FileName;   // Only Filename, Do not use FPath.
+		String						EntryPoint;
+		ELanguage				    Language = ELanguage::Slang;
 
-	// private:
-	// 	SharedPtr<RHI::FShader>		Handle;
-	// 	String						FileName;
-	// 	String						EntryPoint;
-	// 	ECompileType				Type;
-	// 	SharedPtr<RHI::FPipelineLayout> CompatiblePipelineLayout;
-	// };
+		SharedPtr<RHI::FPipelineLayout> CompatiblePipelineLayout;
+	};
 
-	// FSlangShader::
-	// FSlangShader(StringView _ShaderFileName,
-	// 			 StringView _EntryPoint,
-	// 			 ECompileType _CompileType/* = ECompileType::Default*/)
-	// 	: FileName{_ShaderFileName},
-	// 	  EntryPoint{_EntryPoint},
-	// 	  Type{_CompileType}
-	// {
-		
-	// }
+	FShader::
+	FShader(StringView   _ShaderFileName,
+		    StringView   _EntryPoint)
+		: FileName{_ShaderFileName},
+		  EntryPoint{_EntryPoint}
+	{
+		Compile();
+	}
+
+	void FShader::
+	Compile()
+	{
+		switch (Language)
+		{
+		case ELanguage::Slang:
+		{
+			static FSlangCompiler SlangCompiler{};
+			Handle = SlangCompiler.CompileShader(FileName, EntryPoint);
+			break;
+		}
+		default:throw SRuntimeError("Failed to compile the FShader - Unkowon Language!");
+		}
+	}
 
 } // namespace VE

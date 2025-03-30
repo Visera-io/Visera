@@ -13,6 +13,7 @@ export namespace VE { namespace Internal
     enum class EName : UInt32
 	{
 		None = 0, //MUST be registered at first for assuring FNameEntryID == 0 && Number == 0
+        Main,     // For Shaders' entry point
 
 		MaxReservedName,
 	};
@@ -28,7 +29,8 @@ export namespace VE { namespace Internal
         static inline auto
         GetInstance() -> FNamePool& { static FNamePool Instance{}; return Instance; }
 
-        auto Register(String _Name) -> ResultPackage<UInt32, UInt32>; //[Handle_, Number_]
+        auto Register(String _CopiedName)   -> ResultPackage<UInt32, UInt32>; //[Handle_, Number_]
+        auto Register(EName _PreservedName) -> ResultPackage<UInt32, UInt32> { return { PreservedNameTable[_PreservedName], 0 }; }
         auto FetchNameString(UInt32 _NameHandle /*NameEntryHandle*/) const->StringView;
         auto FetchNameString(EName _PreservedName) const -> StringView;
 
@@ -39,6 +41,7 @@ export namespace VE { namespace Internal
     private:
         FNameEntryTable NameEntryTable;
         FNameTokenTable NameTokenTable{ &NameEntryTable };
+        HashMap<EName, UInt32> PreservedNameTable;
 
         //[Number(<0 means invalid), NameLength]
         auto ParseName(const char* _Name, UInt32 _Length) const -> ResultPackage<Int32, UInt32>;
@@ -48,16 +51,17 @@ export namespace VE { namespace Internal
     FNamePool()
     {
         // Pre-Register ENames (Do NOT use String Literal here -- Read-Only Segment Fault!)
-        /*None*/ auto [Handle_, Number_] = Register("none"); VE_ASSERT(Handle_ == 0);
+        /*None*/ { auto [Handle_, _] = Register("none"); PreservedNameTable[EName::None] = Handle_; VE_ASSERT(Handle_ == 0); }
+        /*Main*/ { auto [Handle_, _] = Register("main"); PreservedNameTable[EName::Main] = Handle_; }
     }
 
     ResultPackage<UInt32, UInt32> FNamePool::
-    Register(String _Name)
+    Register(String _CopiedName)
     {
-        auto [Number, NameLength] = ParseName(_Name.data(), _Name.size());
+        auto [Number, NameLength] = ParseName(_CopiedName.data(), _CopiedName.size());
         if (Number < 0) { throw SRuntimeError("Bad Name! -- Naming Convention:([#Name][_#Number]?)."); }
 
-        StringView PureName{ _Name.data(), NameLength};
+        StringView PureName{ _CopiedName.data(), NameLength};
         FNameHash  NameHash{ PureName };
         
         FNameEntryHandle NameEntryHandle = NameTokenTable.Insert(PureName, NameHash);
@@ -117,6 +121,8 @@ export namespace VE { namespace Internal
         {
         case EName::None:
             return "none";
+        case EName::Main:
+            return "main";
         default:
             throw SRuntimeError("Unexpected EName!");
         }

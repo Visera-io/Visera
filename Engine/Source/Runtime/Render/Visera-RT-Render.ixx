@@ -17,23 +17,11 @@ export namespace VE
 	{
 		VE_MODULE_MANAGER_CLASS(Render);
 	public:
-		//VE_API CreateShader(StringView _ShaderFileName, StringView _EntryPoint, FShader::ECompileType _CompileType = FShader::ECompileType::Default) -> SharedPtr<FShader>;
-
+	
 		static void inline Bootstrap();
 		static void inline Terminate();
 	};
-	
-	// SharedPtr<FShader> Render::
-	// CreateShader(StringView _ShaderFileName,
-	// 			 StringView _EntryPoint,
-	// 			 FShader::ECompileType _CompileType/*Default*/)
-	// { 
-	// 	static FSlang Slang{}; // Lazy Load
-	// 	auto Shader = CreateSharedPtr<FShader>(_ShaderFileName, _EntryPoint);
-	// 	Slang.CompileShader(Shader);
 
-	// 	return Shader;
-	// }
 
 	void Render::
 	Bootstrap()

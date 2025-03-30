@@ -43,11 +43,11 @@ export namespace VE
 			.codeSize	= _CodeSize,
 			.pCode		= reinterpret_cast<const uint32_t*>(_SPIRVCode)
 		};
-		if(VK_SUCCESS != vkCreateShaderModule(
+		if(vkCreateShaderModule(
 			GVulkan->Device->GetHandle(),
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
-			&Handle))
+			&Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan Shader Module!"); }
 	}
 

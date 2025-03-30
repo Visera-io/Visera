@@ -12,8 +12,8 @@ export namespace VE
 	/* Case-Ignored String */
 	class FName
 	{
-		VE_API FetchNameString(EName _Name) -> StringView	{ return FNamePool::GetInstance().FetchNameString(_Name); }
-		VE_API FetchNameString(FName _Name) -> StringView	{ return FNamePool::GetInstance().FetchNameString(_Name.Handle); }
+		VE_API FetchNameString(EName _Name) 		-> StringView { return FNamePool::GetInstance().FetchNameString(_Name); }
+		VE_API FetchNameString(const FName& _Name)  -> StringView { return FNamePool::GetInstance().FetchNameString(_Name.Handle); }
 	public:
 		auto GetName()			 const -> StringView	{ return FNamePool::GetInstance().FetchNameString(Handle); }
 		auto GetNameWithNumber() const -> String	 { return Text("{}_{}", GetName(), Number); }
@@ -25,6 +25,7 @@ export namespace VE
 	
 		FName() = default;
 		FName(StringView _Name)					{ auto [Handle_, Number_] = FNamePool::GetInstance().Register(String(_Name)); Handle = Handle_; Number = Number_; }
+		FName(EName _PreservedName)				{ auto [Handle_, Number_] = FNamePool::GetInstance().Register(_PreservedName); Handle = Handle_; Number = Number_; }
 		FName(const FName& _Another)			= default;
 		FName(FName&& _Another)					= default;
 		FName& operator=(StringView _Name)		{ auto [Handle_, Number_] = FNamePool::GetInstance().Register(String(_Name)); Handle = Handle_; Number = Number_;  return *this; }

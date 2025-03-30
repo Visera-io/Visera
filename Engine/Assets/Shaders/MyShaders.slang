@@ -5,7 +5,7 @@ void Basr()
 
 }
 
-[shader("compute")]
+[shader("fragment")]
 void myComputeMain()
 {
     float a = 2.0;
