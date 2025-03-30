@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 #include <embree4/rtcore.h>
-export module Visera.Runtime.World.Ray:Hit;
+export module Visera.Runtime.Render.RTC.Ray:Hit;
 import Visera.Runtime.Render.RTC.Embree;
 import Visera.Core.Math.Basic;
 

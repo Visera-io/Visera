@@ -1,8 +1,6 @@
 module;
 #include <Visera.h>
 export module Visera.Runtime.World.Stage;
-export import Visera.Runtime.World.Stage.Light;
-export import Visera.Runtime.World.Stage.Scene;
 
 import Visera.Core.OS;
 import Visera.Core.Log;
@@ -30,7 +28,7 @@ export namespace VE
 	// private:
 	// 	mutable FRWLock RWLock;
 	// 	FName   Name;
-	// 	SharedPtr<VCamera>				  Camera;
+	// 	SharedPtr<FCamera>				  Camera;
 	// 	HashMap<FName, SharedPtr<FScene>> Scenes;
 	// };
 	//

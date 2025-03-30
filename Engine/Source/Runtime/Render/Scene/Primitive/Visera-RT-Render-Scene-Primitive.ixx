@@ -1,6 +1,6 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.World.Stage.Scene.Geometry;
+export module Visera.Runtime.Render.Scene.Primitive;
 export import :Interface;
 export import :Mesh;
 

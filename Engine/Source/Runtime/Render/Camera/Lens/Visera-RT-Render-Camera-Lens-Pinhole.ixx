@@ -1,6 +1,6 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.World.Camera.Lens:Pinhole;
+export module Visera.Runtime.Render.Camera.Lens:Pinhole;
 import :Interface;
 
 export namespace VE

@@ -1,16 +1,18 @@
 module;
 #include <Visera.h>
 #include <embree4/rtcore.h>
-export module Visera.Runtime.World.Stage.Scene.Geometry:Interface;
-
+export module Visera.Runtime.Render.RTC.AS:Node;
 import Visera.Runtime.Render.RTC.Embree;
+
 import Visera.Core.Signal;
+import Visera.Core.Math.Basic;
 import Visera.Core.OS.Memory;
+import Visera.Core.Media.Model;
 
 export namespace VE
 {
 
-    class IGeometry
+    class FASNode
 	{
 	public:
 		void Update()	    const { rtcCommitGeometry(Handle); }
@@ -21,9 +23,6 @@ export namespace VE
 		auto GetTopology()	const -> Embree::ETopology { return Topology; }
 		auto GetHandle()	const -> const Embree::FGeometry { return Handle; }
 
-		void SetVertices(const Float* _Vertices, UInt32 _VertexCount = 0, UInt32 _Offset = 0) { Memory::Memcpy((Vertices + _Offset), _Vertices, (_VertexCount ? _VertexCount : VertexCount) * VertexByteSize); }
-		void SetIndices(const UInt32* _Indices, UInt32 _IndexCount = 0, UInt32 _Offset = 0)   { Memory::Memcpy((Indices + _Offset), _Indices, (_IndexCount ? _IndexCount : IndexCount) * IndexByteSize); }
-
 		struct FCreateInfo
 		{
 			Embree::ETopology Topology	 = Embree::ETopology::None;
@@ -31,11 +30,11 @@ export namespace VE
 			const Float*	  Vertices	 = nullptr;
 			const UInt64	  IndexCount = 0;
 			const UInt32*	  Indices	 = nullptr;
-
 		};
-		IGeometry() = delete;
-		IGeometry(const FCreateInfo& _CreateInfo);
-		~IGeometry();
+		
+		FASNode() = delete;
+		FASNode(const FCreateInfo& _CreateInfo);
+		~FASNode();
 
 	protected:
 		Embree::FGeometry  	Handle	 = nullptr;
@@ -52,14 +51,14 @@ export namespace VE
 		UInt32		  		IndexByteSize  = 0;
 	};
 
-	IGeometry::
-	IGeometry(const FCreateInfo& _CreateInfo):
+	FASNode::
+	FASNode(const FCreateInfo& _CreateInfo):
 		Topology{_CreateInfo.Topology},
 		VertexCount{_CreateInfo.VertexCount},
 		IndexCount{_CreateInfo.IndexCount}
 	{
 		Handle = rtcNewGeometry(Embree::GetDevice()->GetHandle(), AutoCast(Topology));
-		if (!Handle) { throw SRuntimeError("Failed to create the IGeometry!"); }
+		if (!Handle) { throw SRuntimeError("Failed to create the FASNode!"); }
 
 		switch (Topology)
 		{
@@ -90,7 +89,7 @@ export namespace VE
 		}
 		case Embree::ETopology::None:
 		{
-			throw SRuntimeError("You MUST assign the topology when creating a IGeometry!");
+			throw SRuntimeError("You MUST assign the topology when creating a FASNode!");
 			break;
 		}
 		default:
@@ -119,7 +118,7 @@ export namespace VE
 			IndexCount);
 	}
 
-	IGeometry::~IGeometry()
+	FASNode::~FASNode()
 	{
 		if (Handle)
 		{

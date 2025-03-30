@@ -29,7 +29,7 @@ export namespace VE
 		CreateCanvas(SharedPtr<const FImage> _Image) -> WeakPtr<FCanvas>;
 
 	private:
-		static inline FPath LayoutFilePath{"ViseraEditor.ini"};
+		static inline String LayoutFilePath{FPath{"ViseraEditor.ini"}.ToPlatformString()};
 		static inline HashMap<FName, SharedPtr<IWidget>> Widgets;
 
 		static inline SharedPtr<RHI::FDescriptorSetLayout> ImGuiDescriptorSetLayout;
@@ -90,8 +90,8 @@ export namespace VE
 			auto& IO = ImGui::GetIO();
 
 			// Configuration
-			FileSystem::CreateFileIfNotExists(LayoutFilePath);
-			IO.IniFilename =  LayoutFilePath.ToPlatformString().c_str();
+			FileSystem::CreateFileIfNotExists(FPath{LayoutFilePath.c_str()});
+			IO.IniFilename =  LayoutFilePath.c_str();
 			IO.ConfigFlags |= Configurations;
 
 			ImFont* EditorFont = IO.Fonts->AddFontFromFileTTF(VISERA_ENGINE_FONTS_DIR"/HelveticaNeueMedium.ttf", 14);
@@ -155,7 +155,7 @@ export namespace VE
 			DefaultImageSampler.reset();
 			ImGuiDescriptorSetLayout.reset();
 
-			ImGui::SaveIniSettingsToDisk(LayoutFilePath.ToPlatformString().c_str());
+			ImGui::SaveIniSettingsToDisk(LayoutFilePath.c_str());
 			ImGui_ImplVulkan_Shutdown();
 			ImGui_ImplGlfw_Shutdown();
 		}

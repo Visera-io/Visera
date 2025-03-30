@@ -1,6 +1,6 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.World.Camera.Film:RawFilm;
+export module Visera.Runtime.Render.Camera.Film:RawFilm;
 import :Interface;
 
 export namespace VE

@@ -1,26 +1,27 @@
 module;
 #include <Visera.h>
 #include <tbb/tbb.h>
-export module Visera.Runtime.World.Camera;
-export import Visera.Runtime.World.Camera.Lens;
-export import Visera.Runtime.World.Camera.Film;
+export module Visera.Runtime.Render.Camera;
+export import Visera.Runtime.Render.Camera.Lens;
+export import Visera.Runtime.Render.Camera.Film;
 
 import Visera.Core.Math.Basic;
 import Visera.Core.Media.Image;
+
 import Visera.Runtime.World.Atlas;
-import Visera.Runtime.World.Ray;
-import Visera.Runtime.World.Stage;
+import Visera.Runtime.Render.Scene;
+import Visera.Runtime.Render.RTC;
 
 export namespace VE
 {
 	
-	class VCamera
+	class FCamera
 	{
 	public:
 		enum class EMode
 		{ Orthographic, Perspective , Default = Perspective };
 
-		void Shoot(SharedPtr<const FScene> _Scene);
+		void Shoot(SharedPtr<const FScene> _Scene) const;
 		auto GetFilm() -> SharedPtr<IFilm> { return Film; }
 
 		void SetLens(SharedPtr<ILens> _NewLens) { Lens = std::move(_NewLens); }
@@ -32,7 +33,7 @@ export namespace VE
 		auto GetViewingMatrix() const -> const Matrix4x4F& { VE_WIP; return ViewingMatrix; }
 		auto GetProjectMatrix() const -> const Matrix4x4F& { VE_WIP; return ProjectMatrix; }
 
-		VCamera(EMode _Mode = EMode::Default) : Mode {_Mode} {};
+		FCamera(EMode _Mode = EMode::Default) : Mode {_Mode} {};
 
 	private:
 		EMode      Mode   = EMode::Default;
@@ -49,8 +50,8 @@ export namespace VE
 		Bool bUpdated = False;
 	};
 
-	void VCamera::
-	Shoot(SharedPtr<const FScene> _Scene)
+	void FCamera::
+	Shoot(SharedPtr<const FScene> _Scene) const
 	{
 		//[FIXME]: Testing
 		tbb::parallel_for(0, 1000000, [&](Int32 k)
@@ -59,11 +60,11 @@ export namespace VE
 			float j = (2*(k % 1001) - 1000) * 0.001;
 
 			//auto FocusPoint = Lens->Sample();
-			FRay Ray{{Origin.x() + i, Origin.y() + j, Origin.z() },
+			RTC::FRay Ray{{Origin.x() + i, Origin.y() + j, Origin.z() },
 			 		 {i, j, -1}};
 			//FRay Ray{{0, 0 , 2}, {i, j , -1}};
 
-			Ray.CastTo(_Scene);
+			_Scene->Accept(&Ray);
 			if (Ray.HasHit())
 			{
 				auto Normal = Ray.GetHitInfo().GetSurfaceNormal();

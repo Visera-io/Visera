@@ -1,6 +1,8 @@
 module;
 #include <Visera.h>
 export module Visera.Runtime.World.Actor;
+export import Visera.Runtime.World.Actor.Component;
+
 import Visera.Runtime.World.Object;
 
 export namespace VE

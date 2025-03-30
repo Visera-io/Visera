@@ -1,10 +1,11 @@
 module;
 #include <Visera.h>
 #include <embree4/rtcore.h>
-export module Visera.Runtime.World.Ray;
-import :Hit;
+export module Visera.Runtime.Render.RTC.Ray;
+export import :Hit;
+
 import Visera.Runtime.Render.RTC.Embree;
-import Visera.Runtime.World.Stage.Scene;
+import Visera.Runtime.Render.RTC.AS;
 import Visera.Core.Math.Basic;
 
 export namespace VE
@@ -13,9 +14,9 @@ export namespace VE
 	{
 		//[TODO]: BatchCast (rtcIntersectN)
 	public:
-		void CastTo(const Embree::FScene _Scene)	{ VE_ASSERT(_Scene); rtcIntersect1(_Scene, reinterpret_cast<Embree::FRayHit*>(&Context)); }
-		void CastTo(const FScene& _Scene)			{ CastTo(_Scene.GetHandle()); }
-		void CastTo(SharedPtr<const FScene> _Scene) { CastTo(_Scene->GetHandle()); }
+		void CastTo(const Embree::FScene _RTCScene)				 { rtcIntersect1(_RTCScene, reinterpret_cast<Embree::FRayHit*>(&Context)); }
+		void CastTo(const FAccelerationStructure& _AS)			 { CastTo(_AS.GetHandle()); }
+		void CastTo(SharedPtr<const FAccelerationStructure> _AS) { CastTo(_AS->GetHandle()); }
 
 		Bool HasHit()		const { return Context.Hit.IsValid(); }
 		Bool HasHitSurface()const { return GetDirection().dot(GetHitInfo().GetSurfaceNormal()) < 0.0; }

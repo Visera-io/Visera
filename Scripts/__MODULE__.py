@@ -10,6 +10,7 @@ VISERA_ROOT_PATH    =   path.dirname((path.dirname(path.abspath(__file__))))
 VISERA_APP_PATH     =   path.join(VISERA_ROOT_PATH, "Apps")
 VISERA_PYTHON_PATH  =   path.join(VISERA_ROOT_PATH, "Python")
 VISERA_ENGINE_PATH  =   path.join(VISERA_ROOT_PATH, "Engine")
+VISERA_PACKAGES_PATH  =   path.join(VISERA_ROOT_PATH, "Packages")
 
 VISERA_OS_TYPE      =   system()
 VISERA_ON_WINDOWS   =   VISERA_OS_TYPE == "Windows"
@@ -17,7 +18,7 @@ VISERA_ON_MACOS     =   VISERA_OS_TYPE == "Darwin"
 
 VISERA_ENV_PATH     =   {
                            # "Vulkan" : [path.join(environ["VULKAN_SDK"], "bin")], #vulkanCapsViewer, vkconfig, vkcube [TODO]:Alias
-                            "Vcpkg"  : [path.join(VISERA_ENGINE_PATH, "Packages", "Vcpkg")]
+                            "Vcpkg"  : [path.join(VISERA_PACKAGES_PATH, "Vcpkg")]
                         }
 #if VISERA_ON_MACOS: VISERA_ENV_PATH["Vulkan"].append(path.join(environ["VULKAN_SDK_DIR"], "Applications"))
 
