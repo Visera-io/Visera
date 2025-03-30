@@ -357,143 +357,34 @@ export namespace VE
 	RenderAndPresentCurrentFrame()
 	{
 		auto& CurrentFrame = GetCurrentFrame();
+
+		CurrentFrame.GraphicsCommandBuffer->StopRecording();
+		CurrentFrame.GraphicsCommandBuffer->Submit(
+			FCommandSubmitInfo
+			{
+				.WaitSemaphoreCount		= 1,
+				.pWaitSemaphores		= &CurrentFrame.SwapchainReadySemaphore,//[FIXME]: Temp!
+				.WaitStages				= {EGraphicsPipelineStage::PipelineTop},
+				.SignalSemaphoreCount	= 1,
+				.pSignalSemaphores		= &CurrentFrame.GraphicsCommandsFinishedSemaphore,
+				.SignalFence			= nullptr,
+			});
+
+		CurrentFrame.EditorCommandBuffer->StopRecording();
+		CurrentFrame.EditorCommandBuffer->Submit(
+			FCommandSubmitInfo
+			{
+				.WaitSemaphoreCount		= 1,
+				.pWaitSemaphores		= &CurrentFrame.GraphicsCommandsFinishedSemaphore,
+				.WaitStages				= {EGraphicsPipelineStage::FragmentShader},
+				.SignalSemaphoreCount	= 1,
+				.pSignalSemaphores		= &CurrentFrame.EditorCommandsFinishedSemaphore,
+				.SignalFence			= &CurrentFrame.InFlightFence,
+			});
+
 		try
 		{
-			CurrentFrame.EditorCommandBuffer->StopRecording();
-			CurrentFrame.EditorCommandBuffer->Submit(
-				FCommandSubmitInfo
-				{
-					.WaitSemaphoreCount		= 1,
-					.pWaitSemaphores		= &CurrentFrame.SwapchainReadySemaphore,
-					.WaitStages				= {EGraphicsPipelineStage::FragmentShader},
-					.SignalSemaphoreCount	= 1,
-					.pSignalSemaphores		= &CurrentFrame.EditorCommandsFinishedSemaphore,
-					.SignalFence			= nullptr,
-				});
-			//
-			// //[FIXME]: Testing
-			// VkImageMemoryBarrier SwapchainTransferBarrier
-			// {
-			// 	.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-			// 	.srcAccessMask = AutoCast(EAccess::R_Memory),
-			// 	.dstAccessMask = AutoCast(EAccess::W_Transfer),
-			// 	.oldLayout = AutoCast(EImageLayout::Present),
-			// 	.newLayout = AutoCast(EImageLayout::TransferDestination),
-			// 	.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-			// 	.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-			// 	.image = Vulkan->GetSwapchain().GetCurrentImage(),
-			// 	.subresourceRange
-			// 	{
-			// 		.aspectMask		= AutoCast(EImageAspect::Color),
-			// 		.baseMipLevel	= 0,
-			// 		.levelCount		= 1,
-			// 		.baseArrayLayer = 0,
-			// 		.layerCount		= 1
-			// 	}
-			// };
-			// vkCmdPipelineBarrier(
-			// 	CurrentFrame.GraphicsCommandBuffer->GetHandle(),
-			// 	AutoCast(EGraphicsPipelineStage::PipelineTop),
-			// 	AutoCast(EGraphicsPipelineStage::Transfer),
-			// 	0x0,		// Dependency Flags
-			// 	0, nullptr,	// Memory Barrier
-			// 	0, nullptr,	// Buffer Memory Barrier
-			// 	1,
-			// 	&SwapchainTransferBarrier);
-			//
-			// VkImageBlit BlitInfo
-			// {
-			// 	.srcSubresource
-			// 	{
-			// 		.aspectMask		= AutoCast(CurrentFrame.RenderTarget->GetColorImage(0)->GetAspects()),
-			// 		.mipLevel		= 0,
-			// 		.baseArrayLayer = 0,
-			// 		.layerCount = CurrentFrame.RenderTarget->GetColorImage(0)->GetArrayLayers(),
-			// 	},
-			// 	.srcOffsets
-			// 	{
-			// 		{0, 0, 0},
-			// 		{Int32(CurrentFrame.RenderTarget->GetColorImage(0)->GetExtent().width),
-			// 		 Int32(CurrentFrame.RenderTarget->GetColorImage(0)->GetExtent().height),
-			// 		 Int32(CurrentFrame.RenderTarget->GetColorImage(0)->GetExtent().depth)},
-			// 	},
-			// 	.dstSubresource
-			// 	{
-			// 		.aspectMask = AutoCast(EImageAspect::Color),
-			// 		.mipLevel		= 0,
-			// 		.baseArrayLayer = 0,
-			// 		.layerCount		= 1,
-			// 	},
-			// 	.dstOffsets
-			// 	{
-			// 		{0, 0, 0},
-			// 		{Int32(Vulkan->GetSwapchain().GetExtent().width),
-			// 		 Int32(Vulkan->GetSwapchain().GetExtent().height),
-			// 		 1},
-			// 	}
-			// };
-			//
-			// //[FIXME]: RenderPass FinalLayout Invalid???
-			// CurrentFrame.GraphicsCommandBuffer->ConvertImageLayout(CurrentFrame.RenderTarget->GetColorImage(0), EImageLayout::TransferSource);
-			//
-			// vkCmdBlitImage(
-			// 	CurrentFrame.GraphicsCommandBuffer->GetHandle(),
-			// 	CurrentFrame.RenderTarget->GetColorImage(0)->GetHandle(),
-			// 	AutoCast(CurrentFrame.RenderTarget->GetColorImage(0)->GetLayout()),
-			// 	Vulkan->GetSwapchain().GetCurrentImage(),
-			// 	AutoCast(EImageLayout::TransferDestination),
-			// 	1,
-			// 	&BlitInfo,
-			// 	AutoCast(EFilter::Linear));
-			//
-			// //[FIXME]: RenderPass FinalLayout Invalid???
-			// CurrentFrame.GraphicsCommandBuffer->ConvertImageLayout(CurrentFrame.RenderTarget->GetColorImage(0), EImageLayout::ColorAttachment);
-
-			// [FIXME]: Currently clear in the EditorPass
-			// CurrentFrame.GraphicsCommandBuffer->ClearColorImage(CurrentFrame.RenderTarget->GetColorImage(0));
-
-			// VkImageMemoryBarrier SwapchainPresentBarrier
-			// {
-			// 	.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-			// 	.srcAccessMask = AutoCast(EAccess::None),
-			// 	.dstAccessMask = AutoCast(EAccess::R_Memory),
-			// 	.oldLayout = AutoCast(EImageLayout::TransferDestination),
-			// 	.newLayout = AutoCast(EImageLayout::Present),
-			// 	.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-			// 	.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-			// 	.image = Vulkan->GetSwapchain().GetCurrentImage(),
-			// 	.subresourceRange
-			// 	{
-			// 		.aspectMask		= AutoCast(EImageAspect::Color),
-			// 		.baseMipLevel	= 0,
-			// 		.levelCount		= 1,
-			// 		.baseArrayLayer = 0,
-			// 		.layerCount		= 1,
-			// 	}
-			// };
-			// vkCmdPipelineBarrier(
-			// 	CurrentFrame.GraphicsCommandBuffer->GetHandle(),
-			// 	AutoCast(EGraphicsPipelineStage::Transfer),
-			// 	AutoCast(EGraphicsPipelineStage::PipelineBottom),
-			// 	0x0,		// Dependency Flags
-			// 	0, nullptr,	// Memory Barrier
-			// 	0, nullptr,	// Buffer Memory Barrier
-			// 	1,
-			// 	&SwapchainPresentBarrier);
-
-			CurrentFrame.GraphicsCommandBuffer->StopRecording();
-			CurrentFrame.GraphicsCommandBuffer->Submit(
-				FCommandSubmitInfo
-				{
-					.WaitSemaphoreCount		= 1,
-					.pWaitSemaphores		= &CurrentFrame.EditorCommandsFinishedSemaphore,//[FIXME]: Temp!
-					.WaitStages				= {EGraphicsPipelineStage::PipelineTop},
-					.SignalSemaphoreCount	= 1,
-					.pSignalSemaphores		= &CurrentFrame.GraphicsCommandsFinishedSemaphore,
-					.SignalFence			= &CurrentFrame.InFlightFence,
-				});
-
-			Vulkan->GetSwapchain().Present(&CurrentFrame.GraphicsCommandsFinishedSemaphore, 1);
+			Vulkan->GetSwapchain().Present(&CurrentFrame.EditorCommandsFinishedSemaphore, 1);
 		}
 		catch (const SSwapchainRecreation& Signal)
 		{
