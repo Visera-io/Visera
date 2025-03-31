@@ -62,7 +62,7 @@ export namespace VE
 						}
 						World::Update();
 
-						Editor::RenderWidgets();
+						Editor::Display();
 						Editor::EndFrame(Frame.GetEditorCommandBuffer());
 						RHI::RenderAndPresentCurrentFrame();
 					}

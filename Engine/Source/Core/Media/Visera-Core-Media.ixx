@@ -1,8 +1,8 @@
 module;
 #include <Visera.h>
 export module Visera.Core.Media;
-import Visera.Core.Media.Image;
-import Visera.Core.Media.Model;
+export import Visera.Core.Media.Image;
+export import Visera.Core.Media.Model;
 
 import Visera.Core.Type;
 import Visera.Core.OS.FileSystem;
@@ -16,9 +16,6 @@ export namespace VE
 	{
 		VE_MODULE_MANAGER_CLASS(Media);
 	public:
-		using FImage = FImage;
-		using FModel = FModel;
-
 		VE_API CreateImage(FName _Name, const FPath& _Path)->SharedPtr<FImage>;
 		VE_API CreateImage(FName _Name, UInt32 _Width, UInt32 _Height, UInt32 _BPP = 4*8)->SharedPtr<FImage>;
 

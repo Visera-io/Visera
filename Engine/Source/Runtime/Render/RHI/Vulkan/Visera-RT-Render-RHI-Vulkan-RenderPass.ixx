@@ -48,6 +48,9 @@ export namespace VE
 		auto GetRenderPassBeginInfo() const -> const VkRenderPassBeginInfo;
 		auto GetHandle()			  const	-> const VkRenderPass { return Handle; }
 
+		auto AddSubpass(SharedPtr<FVulkanRenderPipeline> _Pipeline,
+			            SharedPtr<const FVulkanShader>   _VertexShader,
+			            SharedPtr<const FVulkanShader>   _FragmentShader) -> FSubpass*; //Change configs by this pointer
 		Bool HasSubpass(SharedPtr<const FVulkanRenderPipeline> _SubpassPipeline) const;
 
 		void Create(const FVulkanRenderArea& _RenderArea, const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets);
@@ -76,15 +79,17 @@ export namespace VE
 		{
 		case EType::Background:
 		{
-			Layout.AddColorAttachment(
-		{
+			static Bool bCreated = False;
+			if (bCreated) { throw SRuntimeError("You can only create one Background Pass!"); }
+			Layout.AddColorAttachmentDesc(
+			{
 				.Layout			= EVulkanImageLayout::ColorAttachment,
 				.Format			= EVulkanFormat::U32_Normalized_R8_G8_B8_A8,
 				.SampleRate		= EVulkanSampleRate::X1,
 				.ViewType		= EVulkanImageViewType::Image2D,
 				.LoadOp			= EVulkanAttachmentIO::I_Clear,
 				.StoreOp		= EVulkanAttachmentIO::O_Store,
-				.InitialLayout	= EVulkanImageLayout::ColorAttachment,
+				.InitialLayout	= EVulkanImageLayout::ShaderReadOnly, //At the start of each frame, the ColorImage is sampled by the Editor.
 				.FinalLayout	= EVulkanImageLayout::ColorAttachment,
 			});
 			Layout.DepthDesc =
@@ -98,11 +103,12 @@ export namespace VE
 				.InitialLayout  = EVulkanImageLayout::DepthStencilAttachment,
 				.FinalLayout    = EVulkanImageLayout::DepthStencilAttachment,
 			};
+			bCreated = True;
 			break;
 		}
 		case EType::DefaultForward:
 		{
-			Layout.AddColorAttachment(
+			Layout.AddColorAttachmentDesc(
 			{
 				.Layout			= EVulkanImageLayout::ColorAttachment,
 				.Format			= EVulkanFormat::U32_Normalized_R8_G8_B8_A8,
@@ -128,7 +134,7 @@ export namespace VE
 		}
 		case EType::Overlay:
 		{
-			Layout.AddColorAttachment(
+			Layout.AddColorAttachmentDesc(
 			{
 				.Layout			= EVulkanImageLayout::ColorAttachment,
 				.Format			= GVulkan->Swapchain->GetFormat(),
@@ -426,6 +432,30 @@ export namespace VE
 			.clearValueCount= UInt32(ClearValues.size()),
 			.pClearValues	= ClearValues.data()
 		};
+	}
+
+	FVulkanRenderPass::FSubpass* FVulkanRenderPass::
+	AddSubpass(SharedPtr<FVulkanRenderPipeline> _Pipeline,
+			   SharedPtr<const FVulkanShader>   _VertexShader,
+			   SharedPtr<const FVulkanShader>   _FragmentShader)
+	{
+		FSubpass SubpassInfo
+		{
+			.Pipeline       = std::move(_Pipeline),
+			.VertexShader   = _VertexShader,
+			.FragmentShader = _FragmentShader,
+		};
+
+		if(!SubpassInfo.Pipeline && !SubpassInfo.bEnableDepthTest)
+		{ throw SRuntimeError("Cannot create a subpass without a pipeline!"); }
+		
+		if(SubpassInfo.VertexShader.expired())
+		{ throw SRuntimeError("Cannot create a subpass without a vertex shader!"); }
+
+		if(SubpassInfo.ColorImageReferences.empty())
+		{ throw SRuntimeError("Cannot create a subpass without any color reference!"); }
+
+		return &Subpasses.emplace_back(std::move(SubpassInfo));
 	}
 
 	Bool FVulkanRenderPass::

@@ -44,6 +44,8 @@ export namespace VE
 		using FPipelineLayout		= FVulkanPipelineLayout;
 		using FRenderPipelineSetting= FVulkanRenderPipelineSetting;
 		using FPushConstantRange	= FVulkanPipelineLayout::FPushConstantRange;
+		using FCommandPool          = FVulkanCommandPool;
+		using FCommandBuffer        = FVulkanCommandBuffer;
 		using FCommandSubmitInfo	= FVulkanCommandSubmitInfo;
 		using FRenderArea			= FVulkanRenderArea;
 		using FSampler				= FVulkanSampler;
@@ -77,19 +79,21 @@ export namespace VE
 
 		using SSwapchainRecreation = FVulkanSwapchain::SRecreation;
 
-		enum class ESystemRenderTarget{ Color, Depth };
+		enum ESystemRenderTarget : UInt8 { SV_Color, SV_Depth };
 		class FFrameContext
 		{
 			friend class RHI;
 		public:
-			auto GetGraphicsCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer> { return GraphicsCommandBuffer; }
-			auto GetEditorCommandBuffer()   -> SharedPtr<FGraphicsCommandBuffer> { return EditorCommandBuffer;   }
+			auto GetGraphicsCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer>    { return GraphicsCommandBuffer; }
+			auto GetEditorCommandBuffer()   -> SharedPtr<FGraphicsCommandBuffer>    { return EditorCommandBuffer;   }
+			auto GetColorImageShaderReadView() const -> SharedPtr<const FImageView> { return ColorImageShaderReadView; }
 
 			Bool IsReady() const { return !InFlightFence.IsBlocking(); }
 
 		private:
 			static inline FRenderArea RenderArea{ {0,0},{UInt32(Window::GetExtent().Width), UInt32(Window::GetExtent().Height) } }; //[FIXME]: Read from Config
 			SharedPtr<FRenderTarget> RenderTarget = CreateSharedPtr<FRenderTarget>();
+			SharedPtr<FImageView>    ColorImageShaderReadView;
 
 			SharedPtr<FGraphicsCommandBuffer> GraphicsCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
 			SharedPtr<FGraphicsCommandBuffer> EditorCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
@@ -125,9 +129,17 @@ export namespace VE
 		CreateShader(EShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize) -> SharedPtr<FShader> { return CreateSharedPtr<FShader>(_ShaderStage, _SPIRVCode, _CodeSize); }
 		template<TRenderPass T> static auto
 		CreateRenderPass() -> SharedPtr<T>;
+		static inline auto
+		CreatePipelineLayout(const Array<FPushConstantRange>& _PushConstantRanges = {},
+						     const Array<SharedPtr<FVulkanDescriptorSetLayout>>& _DescriptorSetLayouts = {})
+		                    { return CreateSharedPtr<FPipelineLayout>(_PushConstantRanges, _DescriptorSetLayouts); }
+		static inline auto
+		CreateRenderPipelineSetting() { return CreateSharedPtr<FRenderPipelineSetting>(); }
 
 		static inline auto
 		WaitFrameReady() -> FFrameContext&;
+		static inline auto
+		GetFrames() -> const Array<FFrameContext>& { return Frames;  }
 		static inline auto
 		GetCurrentFrame() -> FFrameContext&;
 		static inline auto
@@ -167,11 +179,11 @@ export namespace VE
 			GlobalDescriptorPool = CreateSharedPtr<FDescriptorPool>();
 			GlobalDescriptorPool->Create(
 				{
-					{EDescriptorType::UniformBuffer,			1000},
-					{EDescriptorType::StorageBuffer,			1000},
-					{EDescriptorType::DynamicStorageBuffer,  1000},
-					{EDescriptorType::DynamicUniformBuffer,  1000},
-					{EDescriptorType::CombinedImageSampler,  1000},
+					{EDescriptorType::UniformBuffer,        1000},
+					{EDescriptorType::StorageBuffer,        1000},
+					{EDescriptorType::DynamicStorageBuffer, 1000},
+					{EDescriptorType::DynamicUniformBuffer, 1000},
+					{EDescriptorType::CombinedImageSampler, 1000},
 					{EDescriptorType::InputAttachment,		1000},
 					{EDescriptorType::SampledImage,			1000},
 					{EDescriptorType::StorageImage,			1000},
@@ -194,12 +206,13 @@ export namespace VE
 					{ FFrameContext::RenderArea.extent.width, FFrameContext::RenderArea.extent.height, 1 },
 					EFormat::U32_Normalized_R8_G8_B8_A8,
 					EImageAspect::Color,
-					EImageUsage::ColorAttachment | EImageUsage::TransferSource,
+					EImageUsage::ColorAttachment | EImageUsage::Sampled | EImageUsage::TransferSource,
 					EImageTiling::Optimal,
 					ESampleRate::X1
 				);
-				ImmeCmds->ConvertImageLayout(ColorImage, EVulkanImageLayout::ColorAttachment);
+				ImmeCmds->ConvertImageLayout(ColorImage, EVulkanImageLayout::ShaderReadOnly);
 				Frame.RenderTarget->AddColorImage(ColorImage);
+				Frame.ColorImageShaderReadView = ColorImage->CreateImageView();
 
 				auto DepthImage = CreateImage(
 					EImageType::Image2D,
@@ -335,15 +348,15 @@ export namespace VE
 		try
 		{
 			Vulkan->GetSwapchain().WaitForNextImage(CurrentFrame.SwapchainReadySemaphore);
-
 			CurrentFrame.InFlightFence.Block();
-			CurrentFrame.GraphicsCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
-			CurrentFrame.GraphicsCommandBuffer->Reset();
-			CurrentFrame.GraphicsCommandBuffer->StartRecording();
 
 			CurrentFrame.EditorCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
 			CurrentFrame.EditorCommandBuffer->Reset();
-			CurrentFrame.EditorCommandBuffer->StartRecording();
+			//Start Recording at Editor
+
+			CurrentFrame.GraphicsCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
+			CurrentFrame.GraphicsCommandBuffer->Reset();
+			CurrentFrame.GraphicsCommandBuffer->StartRecording();	
 		}
 		catch (const SSwapchainRecreation& Signal)
 		{
@@ -370,7 +383,7 @@ export namespace VE
 				.SignalFence			= nullptr,
 			});
 
-		CurrentFrame.EditorCommandBuffer->StopRecording();
+		VE_ASSERT(FCommandBuffer::EStatus::ReadyToSubmit == CurrentFrame.EditorCommandBuffer->GetStatus()) //Stop Recording at Editor	
 		CurrentFrame.EditorCommandBuffer->Submit(
 			FCommandSubmitInfo
 			{

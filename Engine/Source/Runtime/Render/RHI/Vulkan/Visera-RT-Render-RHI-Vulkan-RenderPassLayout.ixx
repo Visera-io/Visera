@@ -38,7 +38,7 @@ export namespace VE
 			EVulkanImageLayout	FinalLayout;
 		};
 
-		auto AddColorAttachment(FAttachmentDescription _ColorDesc) -> FVulkanRenderPassLayout&;
+		auto AddColorAttachmentDesc(FAttachmentDescription _ColorDesc) -> FVulkanRenderPassLayout&;
 
 		auto GetColorAttachmentCount() const -> UInt8 { return ColorDescs.size(); }
 		auto GetTotalAttachmentCount() const -> UInt8 { return ColorDescs.size() + ResolveDescs.size() + (DepthDesc.has_value()? 1 : 0); }
@@ -72,7 +72,7 @@ export namespace VE
 	}
 
 	FVulkanRenderPassLayout& FVulkanRenderPassLayout::
-	AddColorAttachment(FAttachmentDescription _ColorDesc)
+	AddColorAttachmentDesc(FAttachmentDescription _ColorDesc)
 	{
 		ColorDescs.emplace_back(std::move(_ColorDesc));
 		if (ColorDescs.back().SampleRate > EVulkanSampleRate::X1)

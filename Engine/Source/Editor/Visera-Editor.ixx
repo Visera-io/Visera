@@ -11,7 +11,7 @@ import Visera.Runtime.Render.RHI;
 import Visera.Core.Log;
 import Visera.Core.Type;
 import Visera.Core.Signal;
-import Visera.Core.Media.Image;
+import Visera.Core.Media;
 import Visera.Core.OS.FileSystem;
 
 export namespace VE
@@ -24,14 +24,21 @@ export namespace VE
 		using FCanvas = FCanvas;
 
 		static inline void
-		RenderWidgets() { for (const auto& [Name, Widget] : Widgets) {Widget->Render(); } }
+		Display();
 		static inline auto
-		CreateCanvas(SharedPtr<const FImage> _Image) -> WeakPtr<FCanvas>;
+		CreateCanvas(SharedPtr<const FImage> _Image) -> WeakPtr<FCanvas>; //[TODO]: Return FName instead of WeakPtr
 
 	private:
+		struct FFrame
+		{
+			SharedPtr<RHI::FDescriptorSet> MainWindowDS;
+		};
+		static inline Array<FFrame> Frames;
+
 		static inline String LayoutFilePath{FPath{"ViseraEditor.ini"}.ToPlatformString()};
 		static inline HashMap<FName, SharedPtr<IWidget>> Widgets;
-
+		
+		static inline SharedPtr<FImage>                    EditorLogo;
 		static inline SharedPtr<RHI::FDescriptorSetLayout> ImGuiDescriptorSetLayout;
 		static inline SharedPtr<RHI::FSampler>			   DefaultImageSampler;
 
@@ -56,7 +63,9 @@ export namespace VE
 		static void
 		BeginFrame(SharedPtr<RHI::FGraphicsCommandBuffer> _EditorCommandBuffer)
 		{
-			VE_ASSERT(_EditorCommandBuffer->IsRecording());
+			VE_ASSERT(!_EditorCommandBuffer->IsRecording());
+	
+			_EditorCommandBuffer->StartRecording();
 
 			ImGui_ImplVulkan_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
@@ -68,10 +77,13 @@ export namespace VE
 		static void
 		EndFrame(SharedPtr<RHI::FGraphicsCommandBuffer> _EditorCommandBuffer)
 		{
+			VE_ASSERT(_EditorCommandBuffer->IsRecording());
 			ImGui::Render();
 			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), _EditorCommandBuffer->GetHandle());
 
 			_EditorCommandBuffer->LeaveRenderPass(EditorRenderPass);
+
+			_EditorCommandBuffer->StopRecording();
 
 			////At the end of your render loop, generally after rendering your main viewport but before presenting/swapping it:
 			//if (Configurations & ImGuiConfigFlags_ViewportsEnable)
@@ -145,19 +157,30 @@ export namespace VE
 					.ShaderStages = RHI::EShaderStage::Fragment,
 				}
 			});
+
+			EditorLogo = Media::CreateImage(FName{ "editor::logo" }, FPath{ VISERA_ENGINE_IMAGES_DIR"/Logo.png" });
+
+			Frames.resize(RHI::GetSwapchainFrameCount());
+			for (UInt8 Idx = 0; Idx < Frames.size(); ++Idx)
+			{
+				Frames[Idx].MainWindowDS = RHI::CreateDescriptorSet(ImGuiDescriptorSetLayout);
+				Frames[Idx].MainWindowDS->WriteImage(0, RHI::GetFrames()[Idx].GetColorImageShaderReadView(), DefaultImageSampler);
+			}
 		}
 
 		static void Terminate()
 		{
+			ImGui::SaveIniSettingsToDisk(LayoutFilePath.c_str());
+			ImGui_ImplVulkan_Shutdown();
+			ImGui_ImplGlfw_Shutdown();
+
 			Widgets.clear();
 
 			EditorRenderPass.reset();
 			DefaultImageSampler.reset();
 			ImGuiDescriptorSetLayout.reset();
-
-			ImGui::SaveIniSettingsToDisk(LayoutFilePath.c_str());
-			ImGui_ImplVulkan_Shutdown();
-			ImGui_ImplGlfw_Shutdown();
+			
+			EditorLogo.reset();
 		}
 
 	private:
@@ -169,8 +192,20 @@ export namespace VE
 	WeakPtr<FCanvas> Editor::
 	CreateCanvas(SharedPtr<const FImage> _Image)
 	{
-		auto NewCanvas = CreateSharedPtr<FCanvas>(_Image, DefaultImageSampler, ImGuiDescriptorSetLayout);
+		auto NewCanvas = FCanvas::Create(RHI::CreateDescriptorSet(ImGuiDescriptorSetLayout), DefaultImageSampler);
 		Widgets[NewCanvas->GetName()] = NewCanvas;
+		NewCanvas->Write(_Image);
 		return NewCanvas;
+	}
+
+	void Editor::
+	Display()
+	{
+		auto& Frame = Frames[RHI::GetSwapchainCursor()];
+		ImGui::Begin("Main Window");
+		ImGui::Image(ImTextureID(Frame.MainWindowDS->GetHandle()), { 800, 800 });
+		ImGui::End();
+
+		for (const auto& [Name, Widget] : Widgets) { Widget->Render(); }
 	}
 }
