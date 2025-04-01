@@ -30,7 +30,7 @@ export namespace VE
 
 			Array<UInt8>					ColorImageReferences;
 			//Optional<VkAttachmentReference> StencilImageReference;
-			EVulkanGraphicsPipelineStage	SrcStage				{ EVulkanGraphicsPipelineStage::PipelineTop };
+			EVulkanGraphicsPipelineStage	SrcStage				{ EVulkanGraphicsPipelineStage::None };
 			EVulkanAccess					SrcStageAccess			{ EVulkanAccess::None };
 			EVulkanGraphicsPipelineStage	DstStage				{ EVulkanGraphicsPipelineStage::None };
 			EVulkanAccess					DstStageAccess			{ EVulkanAccess::None };
@@ -48,9 +48,7 @@ export namespace VE
 		auto GetRenderPassBeginInfo() const -> const VkRenderPassBeginInfo;
 		auto GetHandle()			  const	-> const VkRenderPass { return Handle; }
 
-		auto AddSubpass(SharedPtr<FVulkanRenderPipeline> _Pipeline,
-			            SharedPtr<const FVulkanShader>   _VertexShader,
-			            SharedPtr<const FVulkanShader>   _FragmentShader) -> FSubpass*; //Change configs by this pointer
+		void AddSubpass(const FSubpass& _SubpassInfo);
 		Bool HasSubpass(SharedPtr<const FVulkanRenderPipeline> _SubpassPipeline) const;
 
 		void Create(const FVulkanRenderArea& _RenderArea, const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets);
@@ -90,7 +88,7 @@ export namespace VE
 				.LoadOp			= EVulkanAttachmentIO::I_Clear,
 				.StoreOp		= EVulkanAttachmentIO::O_Store,
 				.InitialLayout	= EVulkanImageLayout::ShaderReadOnly, //At the start of each frame, the ColorImage is sampled by the Editor.
-				.FinalLayout	= EVulkanImageLayout::ColorAttachment,
+				.FinalLayout	= EVulkanImageLayout::ShaderReadOnly,
 			});
 			Layout.DepthDesc =
 			{
@@ -116,8 +114,8 @@ export namespace VE
 				.ViewType		= EVulkanImageViewType::Image2D,
 				.LoadOp			= EVulkanAttachmentIO::I_Keep,
 				.StoreOp		= EVulkanAttachmentIO::O_Store,
-				.InitialLayout	= EVulkanImageLayout::ColorAttachment,
-				.FinalLayout	= EVulkanImageLayout::ColorAttachment,
+				.InitialLayout	= EVulkanImageLayout::ShaderReadOnly,
+				.FinalLayout	= EVulkanImageLayout::ShaderReadOnly,
 			});
 			Layout.DepthDesc =
 			{
@@ -434,28 +432,23 @@ export namespace VE
 		};
 	}
 
-	FVulkanRenderPass::FSubpass* FVulkanRenderPass::
-	AddSubpass(SharedPtr<FVulkanRenderPipeline> _Pipeline,
-			   SharedPtr<const FVulkanShader>   _VertexShader,
-			   SharedPtr<const FVulkanShader>   _FragmentShader)
+	void FVulkanRenderPass::
+	AddSubpass(const FSubpass& _SubpassInfo)
 	{
-		FSubpass SubpassInfo
-		{
-			.Pipeline       = std::move(_Pipeline),
-			.VertexShader   = _VertexShader,
-			.FragmentShader = _FragmentShader,
-		};
-
-		if(!SubpassInfo.Pipeline && !SubpassInfo.bEnableDepthTest)
+		if(!_SubpassInfo.Pipeline && !_SubpassInfo.bEnableDepthTest)
 		{ throw SRuntimeError("Cannot create a subpass without a pipeline!"); }
 		
-		if(SubpassInfo.VertexShader.expired())
+		if(_SubpassInfo.VertexShader.expired())
 		{ throw SRuntimeError("Cannot create a subpass without a vertex shader!"); }
 
-		if(SubpassInfo.ColorImageReferences.empty())
+		if(_SubpassInfo.ColorImageReferences.empty())
 		{ throw SRuntimeError("Cannot create a subpass without any color reference!"); }
 
-		return &Subpasses.emplace_back(std::move(SubpassInfo));
+		if(_SubpassInfo.SrcStage == EVulkanGraphicsPipelineStage::None ||
+		   _SubpassInfo.DstStage == EVulkanGraphicsPipelineStage::None)
+		{ throw SRuntimeError("Cannot create a subpass without assigning src/dst stages!"); }
+
+		Subpasses.emplace_back(std::move(_SubpassInfo));
 	}
 
 	Bool FVulkanRenderPass::

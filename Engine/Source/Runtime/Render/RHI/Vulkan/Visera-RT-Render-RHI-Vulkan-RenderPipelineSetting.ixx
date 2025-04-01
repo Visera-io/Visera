@@ -70,9 +70,9 @@ export namespace VE
 		ViewportState{ VkPipelineViewportStateCreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-			.viewportCount	= 0,		// Dynamic Viewport (Setted by the CommandBuffer)
+			.viewportCount	= 0,		// Dynamic Viewport (Setted by the CommandBuffer) [TODO]: Static? and load by commandbuffer
 			.pViewports		= nullptr,
-			.scissorCount	= 0,		// Dynamic Scissor  (Setted by the CommandBuffer)
+			.scissorCount	= 0,		// Dynamic Scissor  (Setted by the CommandBuffer) [TODO]: Static? and load by commandbuffer
 			.pScissors		= nullptr,
 		} },
 		RasterizationState{ VkPipelineRasterizationStateCreateInfo
@@ -82,7 +82,7 @@ export namespace VE
 			.rasterizerDiscardEnable= VK_FALSE, // if VK_TRUE, then geometry never passes through the rasterizer stage
 			.polygonMode			= VK_POLYGON_MODE_FILL,
 			.cullMode				= VK_CULL_MODE_BACK_BIT,
-			.frontFace				= VK_FRONT_FACE_CLOCKWISE, // Consistent with Unity Engine. (Note Y-Flip) [TODO]:Align with Unreal Engine
+			.frontFace				= VK_FRONT_FACE_COUNTER_CLOCKWISE, // Align with Unreal Engine. (Note Y-Flip)
 			.depthBiasEnable		= VK_TRUE,
 			.depthBiasConstantFactor= 0.0f, 
 			.depthBiasClamp			= 0.0f,

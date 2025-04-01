@@ -327,6 +327,8 @@ export namespace VE
 		CurrentViewports[0].y = RenderArea.offset.y;
 		CurrentViewports[0].width  = RenderArea.extent.width;
 		CurrentViewports[0].height = RenderArea.extent.height;
+		CurrentScissors[0].extent.width  = RenderArea.extent.width;
+		CurrentScissors[0].extent.height = RenderArea.extent.height;
 	}
 
 	void FVulkanGraphicsCommandBuffer::

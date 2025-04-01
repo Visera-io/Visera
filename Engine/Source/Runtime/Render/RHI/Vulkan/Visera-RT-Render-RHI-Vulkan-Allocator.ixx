@@ -85,6 +85,7 @@ export namespace VE
 		void Write(void* _Data, UInt64 _Size);
 
 		auto GetSize()		const	-> VkDeviceSize { return Allocation->GetSize(); }
+		auto GetUsages()    const   -> EVulkanBufferUsage { return Usages; }
 		auto GetDetails()	const	-> VmaAllocationInfo { VmaAllocationInfo Info; vmaGetAllocationInfo(GVulkan->Allocator->GetHandle(), Allocation, &Info); return Info; }
 		auto GetHandle()	const	-> const VkBuffer { return Handle; }
 		Bool IsReleased()	const { return Handle == VK_NULL_HANDLE && Allocation == VK_NULL_HANDLE; }
