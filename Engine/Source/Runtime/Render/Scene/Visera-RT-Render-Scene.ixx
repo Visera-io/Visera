@@ -5,8 +5,11 @@ import Visera.Runtime.Render.Scene.Light;
 import Visera.Runtime.Render.Scene.Primitive;
 
 import Visera.Runtime.Render.RTC;
+import Visera.Runtime.Render.RHI;
 
-import Visera.Core.Media.Model;
+import Visera.Core.Signal;
+import Visera.Core.Media;
+import Visera.Core.Type;
 
 export namespace VE
 {
@@ -18,40 +21,53 @@ export namespace VE
 		Create() { return CreateSharedPtr<FScene>(); }
 
 		using FPrimID = UInt32;
+		struct FAttachment
+		{
+			FName                   Name;
+			FPrimID                 ID;
+			SharedPtr<IPrimitive>   Primitive;
+		};
 
-		auto AttachPrimitive(SharedPtr<const FModel> _Model) -> FPrimID;
+		void Attach(const FName& _Name, SharedPtr<const FModel> _Model);
 		void Commit();
 
 		void Accept(RTC::FRay* _Ray) const { _Ray->CastTo(AccelerationStructure); }
 
 	private:
-		//CPU Raytracing
 		SharedPtr<RTC::FAccelerationStructure> AccelerationStructure;
-		//GPU Rasterization
-		//WIP
-			
+		
+		HashMap<FName, FAttachment> AttachmentTable;
+		
 	public:
 		FScene()  = default;
 		~FScene() = default;
 	};
 
-	FScene::FPrimID FScene::
-	AttachPrimitive(SharedPtr<const FModel> _Model)
+	void FScene::
+	Attach(const FName& _Name, SharedPtr<const FModel> _Model)
 	{
 		if (!AccelerationStructure)
 		{ AccelerationStructure = RTC::FAccelerationStructure::Create(); }
 
-		RTC::FAccelerationStructure::FNode::FCreateInfo CreateInfo
-		{
-			.Topology    = RTC::ETopology::Triangle,
-			.VertexCount = _Model->GetVertexCount(),
-			.Vertices	 = _Model->GetVertexData(),
-			.IndexCount	 = _Model->GetIndexCount(),
-			.Indices	 = _Model->GetIndexData(),
-		};
-		auto NewNode = CreateSharedPtr<RTC::FAccelerationStructure::FNode>(CreateInfo);
+		if (_Model->IsExpired())
+		{ throw SRuntimeError(Text("Failed to add the Attachment({})! -- model was expired!", _Name.GetNameWithNumber())); }
 
-		return AccelerationStructure->Attach(NewNode);
+		if (AttachmentTable.contains(_Name))
+		{ throw SRuntimeError(Text("Failed to add the Attachment({})! -- Already exists!", _Name.GetNameWithNumber())); }
+
+		auto& NewAttachment = AttachmentTable[_Name];
+		NewAttachment.Name = _Name;
+		NewAttachment.Primitive = FMeshPrimitive::Create(_Model);
+
+		//Add a new node to the AS
+		RTC::FAccelerationStructure::FNode::FCreateInfo ASNodeCreateInfo
+		{
+			.VerticeData	 = NewAttachment.Primitive->GetVerticesData(),
+			.VerticeDataSize = NewAttachment.Primitive->GetCPUVertexBufferSize(),
+			.IndicesData	 = NewAttachment.Primitive->GetIndicesData(),
+			.IndicesDataSize = NewAttachment.Primitive->GetCPUIndexBufferSize()
+		};
+		NewAttachment.ID = AccelerationStructure->Attach(RTC::FSceneNode::Create(ASNodeCreateInfo));
 	}
 
 	void FScene::

@@ -16,6 +16,7 @@ export namespace VE
 	public:
 		using FRay = FRay;
 		using FAccelerationStructure = FAccelerationStructure;
+		using FSceneNode = FAccelerationStructure::FNode;
 
 		using EBufferType  = Embree::EBufferType;
 		using ETopology    = Embree::ETopology;

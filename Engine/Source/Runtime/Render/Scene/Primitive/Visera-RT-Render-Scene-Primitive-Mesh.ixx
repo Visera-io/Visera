@@ -4,74 +4,82 @@ module;
 export module Visera.Runtime.Render.Scene.Primitive:Mesh;
 import :Interface;
 
-import Visera.Runtime.Render.RTC.Embree;
+import Visera.Core.Math.Basic;
+import Visera.Core.Media.Model;
+import Visera.Core.OS.Memory;
+import Visera.Runtime.Render.RHI;
 
 export namespace VE
 {
 
-    // class FMesh : public IPrimitive
-	// {
-	// public:
-	// 	enum class EFaceWinding{ Clockwise, CounterClockwise };
+    class FMeshPrimitive : public IPrimitive
+    {
+    public:
+        using FVertex = Vector3F;
+        using FNormal = Vector3F;
+        using FUVCoord = Vector2F;
 
-	// 	static inline auto
-	// 	CreatePlane(const Vector3F& _LeftTop, const Vector3F& _RightTop, const Vector3F& _RightBottom, const Vector3F& _LeftBottom, EFaceWinding _FaceWinding = EFaceWinding::Clockwise) -> SharedPtr<FMesh>;
+        static inline auto
+        Create(SharedPtr<const FModel> _Model) { return CreateSharedPtr<FMeshPrimitive>(_Model); }
 
-	// 	FMesh() = delete;
-	// 	FMesh(SharedPtr<const FModel> _Model);
-    // 	FMesh(const FCreateInfo& _CreateInfo) : IPrimitive{_CreateInfo}{}
+        virtual auto inline
+        GetVertexCount()     -> UInt64        override { return Vertices.size(); }
+        virtual auto inline
+        GetVertexByteSize()  -> UInt64        override { return sizeof(FVertex); }
+        virtual auto inline
+        GetVerticesData()    -> const Float*  override { return Vertices.data()->data(); }
+        virtual auto inline
+        GetIndexCount()      -> UInt64        override { return Indices.size(); }
+        virtual auto inline
+        GetIndexByteSize()  -> UInt64         override { return sizeof(FIndex); }
+        virtual auto inline
+        GetIndicesData()     -> const FIndex* override { return Indices.data(); }
 
-	// private:
-	// 	EFaceWinding FaceWinding;
-	// };
+        FMeshPrimitive(SharedPtr<const FModel> _Model);
 
-	// SharedPtr<FMesh> FMesh::
-	// CreatePlane(const Vector3F& _LeftTop,
-	// 			const Vector3F& _RightTop,
-	// 	        const Vector3F& _RightBottom,
-	// 			const Vector3F& _LeftBottom,
-	// 	        EFaceWinding    _FaceWinding/* = EFaceWinding::Clockwise*/)
-	// {
-	// 	Segment<Vector3F,4> Vertices
-	// 	{
-	// 		_LeftTop,
-	// 		_RightTop,
-	// 		_RightBottom,
-	// 		_LeftBottom,
-	// 	};
-	// 	Segment<UInt32, 6> Indices{0,1,2,0,2,3};
+    private:
+        Array<FVertex>  Vertices;
+        Array<FNormal>  Normals;
+        Array<FIndex>   Indices;
+        Array<FUVCoord> UVs;
+    };
 
-	// 	if (EFaceWinding::CounterClockwise == _FaceWinding)
-	// 	{
-	// 		std::swap(Indices[0], Indices[2]);
-	// 		std::swap(Indices[3], Indices[5]);
-	// 	}
+    FMeshPrimitive::
+    FMeshPrimitive(SharedPtr<const FModel> _Model) //[TODO]: pass FModel::FMesh?
+        : IPrimitive{ _Model, 
+            RHI::CreateVertexBuffer(_Model->GetMeshes()[0]->mNumVertices * sizeof(FVertex) ),
+            RHI::CreateIndexBuffer(_Model->GetMeshes()[0]->mNumFaces * (3 * sizeof(FIndex))) }
+    {
+        auto Meshes = _Model->GetMeshes();
+        //for (UInt32 Idx = 0; Idx < _Model->GetMeshCount(); ++Idx)
+        auto Mesh = Meshes[0];
+        
+        Vertices.resize(Mesh->mNumVertices);
+        Memory::Memcpy(Vertices.data(), Mesh->mVertices, GetCPUVertexBufferSize());
 
-	// 	auto Plane = CreateSharedPtr<FMesh>(FCreateInfo
-	// 	{
-	// 		.Topology	 = Embree::ETopology::Triangle,
-	// 		.VertexCount = 4,
-	// 		.Vertices	 = Vertices.data()->data(),
-	// 		.IndexCount  = 6,
-	// 		.Indices	 = Indices.data(),
-	// 	});
-	// 	Plane->FaceWinding = _FaceWinding;
+        Indices.resize(3 * Mesh->mNumFaces);
+        for (UInt32 Idx = 0; Idx < Mesh->mNumFaces; Idx++)
+        {
+            aiFace Face = Mesh->mFaces[Idx];
+            VE_ASSERT(Face.mNumIndices == 3);
+            Memory::Memcpy(Indices.data() + 3 * Idx, Face.mIndices, Face.mNumIndices * sizeof(FIndex));
+        }
 
-	// 	return Plane; //[TODO]: Add a new FCreateInfo for FMesh.
-	// }
+        if (Mesh->HasNormals())
+        {
+            Normals.resize(Vertices.size());
+            Memory::Memcpy(Normals.data(), Mesh->mNormals, Normals.size() * sizeof(FNormal));
+        }
 
-	// FMesh::
-	// FMesh(SharedPtr<const FModel> _Model)
-	// 	:IPrimitive{FCreateInfo
-	// 	{
-	// 		.Topology    = EEmbreeTopology::Triangle,
-	// 		.VertexCount = _Model->GetVertexCount(),
-	// 		.Vertices	 = _Model->GetVertexData(),
-	// 		.IndexCount	 = _Model->GetIndexCount(),
-	// 		.Indices	 = _Model->GetIndexData(),
-	// 	}}
-	// {
+        if (Mesh->HasTextureCoords(0))
+        {
+            UVs.resize(Vertices.size());
+            Memory::Memcpy(UVs.data()->data(), Mesh->mTextureCoords[0], UVs.size() * sizeof(FUVCoord));
+        }
 
-	// }
+        //Load to GPU
+        //VBO->Write(Vertices.data(), GetCPUVertexBufferSize());
+        //IBO->Write(Indices.data(),  GetCPUIndexBufferSize());
+    }
 
 }// namespace VE

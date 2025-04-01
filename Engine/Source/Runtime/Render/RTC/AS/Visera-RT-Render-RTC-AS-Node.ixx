@@ -15,23 +15,27 @@ export namespace VE
     class FASNode
 	{
 	public:
-		void Update()	    const { rtcCommitGeometry(Handle); }
-		void Hide()		    const { rtcDisableGeometry(Handle); bVisible = False; }
-		void Reveal()		const { rtcEnableGeometry(Handle);  bVisible = True; }
-		Bool IsVisible()    const { return bVisible; }
-
-		auto GetTopology()	const -> Embree::ETopology { return Topology; }
-		auto GetHandle()	const -> const Embree::FGeometry { return Handle; }
-
 		struct FCreateInfo
 		{
 			Embree::ETopology Topology	 = Embree::ETopology::None;
-			const UInt64	  VertexCount= 0;
-			const Float*	  Vertices	 = nullptr;
-			const UInt64	  IndexCount = 0;
-			const UInt32*	  Indices	 = nullptr;
+			const Float*	  VerticeData	 = nullptr;
+			const UInt64	  VerticeDataSize= 0;
+			const UInt32*	  IndicesData	 = nullptr;
+			const UInt64	  IndicesDataSize= 0;
 		};
-		
+		static inline auto
+		Create(const FCreateInfo& _CreateInfo) { return CreateSharedPtr<FASNode>(_CreateInfo); }
+
+		void Update()	     const { rtcCommitGeometry(Handle); }
+		void Hide()		     const { rtcDisableGeometry(Handle); bVisible = False; }
+		void Reveal()		 const { rtcEnableGeometry(Handle);  bVisible = True; }
+		Bool IsVisible()     const { return bVisible; }
+
+		auto GetVertexData() const -> const Float*  { return Vertices; }
+		auto GetIndexData()  const -> const UInt32* { return Indices;  }
+		auto GetTopology()	 const -> Embree::ETopology { return Topology; }
+		auto GetHandle()	 const -> const Embree::FGeometry { return Handle; }
+
 		FASNode() = delete;
 		FASNode(const FCreateInfo& _CreateInfo);
 		~FASNode();
@@ -43,19 +47,13 @@ export namespace VE
 
 		Float*		  		Vertices       = nullptr;
 		Embree::EFormat 	VertexFormat;
-		UInt64		  		VertexCount    = 0;
-		UInt32		  		VertexByteSize = 0;
 		UInt32*		  		Indices        = nullptr;
 		Embree::EFormat 	IndexFormat;
-		UInt64		  		IndexCount	   = 0;
-		UInt32		  		IndexByteSize  = 0;
 	};
 
 	FASNode::
 	FASNode(const FCreateInfo& _CreateInfo):
-		Topology{_CreateInfo.Topology},
-		VertexCount{_CreateInfo.VertexCount},
-		IndexCount{_CreateInfo.IndexCount}
+		Topology{_CreateInfo.Topology}
 	{
 		Handle = rtcNewGeometry(Embree::GetDevice()->GetHandle(), AutoCast(Topology));
 		if (!Handle) { throw SRuntimeError("Failed to create the FASNode!"); }
@@ -65,25 +63,22 @@ export namespace VE
 		case Embree::ETopology::Triangle:
 		{
 			VertexFormat	= Embree::EFormat::Vector3F;
-			VertexByteSize = sizeof(float) * 3;
 			IndexFormat		= Embree::EFormat::TriangleIndices;
-			IndexByteSize  = sizeof(UInt32) * 3;
 
 			//Vertices = _CreateInfo.Vertices;
 			//Indices = _CreateInfo.Indices;
 
-			Vertices = (Float*)Memory::MallocNow(VertexCount * VertexByteSize, 0);
+			Vertices = (Float*)Memory::MallocNow(_CreateInfo.VerticeDataSize, 0);
 			if (!Vertices) { throw SRuntimeError("Failed to allocate Geometry Vertex Buffer!"); }
-			if (_CreateInfo.Vertices) { Memory::Memcpy(Vertices, _CreateInfo.Vertices, VertexCount * VertexByteSize); }
+			if (_CreateInfo.VerticeData) { Memory::Memcpy(Vertices, _CreateInfo.VerticeData, _CreateInfo.VerticeDataSize); }
 
-			Indices = (UInt32*)Memory::MallocNow(IndexCount * IndexByteSize, 0);
+			Indices = (UInt32*)Memory::MallocNow(_CreateInfo.IndicesDataSize, 0);
 			if (!Indices) { throw SRuntimeError("Failed to allocate Geometry Index Buffer!"); }
-			if (_CreateInfo.Indices)  { Memory::Memcpy(Indices, _CreateInfo.Indices, IndexCount * IndexByteSize); }
+			if (_CreateInfo.IndicesData)  { Memory::Memcpy(Indices, _CreateInfo.IndicesData, _CreateInfo.IndicesDataSize); }
 			break;
 		}
 		case Embree::ETopology::Quad:
 		{
-			VE_ASSERT(VertexCount % 4 == 0);
 			VE_WIP;
 			break;
 		}
@@ -96,6 +91,8 @@ export namespace VE
 			throw SRuntimeError("Unsupported Mesh Topology({})!", UInt32(Topology));
 		}
 
+		//[FIXME]: HardCoded for now!!!!!!!
+
         // Set Vertex Buffer
 		rtcSetSharedGeometryBuffer(
 			Handle,
@@ -104,8 +101,8 @@ export namespace VE
 			AutoCast(VertexFormat),
 			Vertices,
 			0,
-			VertexByteSize,
-			VertexCount);
+			3 * sizeof(float),
+			_CreateInfo.VerticeDataSize / (3 * sizeof(float)));
         // Set Index Buffer
 		rtcSetSharedGeometryBuffer(
 			Handle,
@@ -114,16 +111,14 @@ export namespace VE
 			AutoCast(IndexFormat),
 			Indices,
 			0,
-			IndexByteSize,
-			IndexCount);
+			3 * sizeof(UInt32),
+			_CreateInfo.IndicesDataSize / (3 *sizeof(UInt32)));
 	}
 
 	FASNode::~FASNode()
 	{
 		if (Handle)
-		{
-			rtcReleaseGeometry(Handle);
-		}
+		{ rtcReleaseGeometry(Handle); }
 	}
 
 }// namespace VE
