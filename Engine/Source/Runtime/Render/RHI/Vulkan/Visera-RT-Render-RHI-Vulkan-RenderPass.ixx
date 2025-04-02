@@ -25,8 +25,6 @@ export namespace VE
 		struct FSubpass final
 		{
 			SharedPtr<FVulkanRenderPipeline>Pipeline;
-			WeakPtr<const FVulkanShader>	VertexShader;
-			WeakPtr<const FVulkanShader>	FragmentShader;
 
 			Array<UInt8>					ColorImageReferences;
 			//Optional<VkAttachmentReference> StencilImageReference;
@@ -311,14 +309,7 @@ export namespace VE
 
 			if (CurrentSubpass.Pipeline)
 			{			
-				if (CurrentSubpass.VertexShader.expired())
-				{ throw SRuntimeError("WIP: Cannot reload the vertex shader!"); }
-				if (CurrentSubpass.FragmentShader.expired())
-				{ throw SRuntimeError("WIP: Cannot reload the fragment shader!"); }
-
-				CurrentSubpass.Pipeline->Create(Handle, Idx,
-											CurrentSubpass.VertexShader.lock(),
-											CurrentSubpass.FragmentShader.lock());
+				CurrentSubpass.Pipeline->Create(Handle, Idx);
 			}
 			else if (CurrentSubpass.bExternalSubpass)
 			{
@@ -438,9 +429,6 @@ export namespace VE
 		if(!_SubpassInfo.Pipeline && !_SubpassInfo.bEnableDepthTest)
 		{ throw SRuntimeError("Cannot create a subpass without a pipeline!"); }
 		
-		if(_SubpassInfo.VertexShader.expired())
-		{ throw SRuntimeError("Cannot create a subpass without a vertex shader!"); }
-
 		if(_SubpassInfo.ColorImageReferences.empty())
 		{ throw SRuntimeError("Cannot create a subpass without any color reference!"); }
 

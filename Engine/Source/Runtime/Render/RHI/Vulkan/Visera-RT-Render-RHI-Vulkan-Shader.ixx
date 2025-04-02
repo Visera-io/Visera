@@ -16,6 +16,9 @@ export namespace VE
 		auto GetEntryPoint()	const -> StringView				{ return "main"; }
 		auto GetStage()			const -> EVulkanShaderStage		{ return Stage; }
 
+		Bool IsExpired() const { return Handle == VK_NULL_HANDLE; }
+		void Release() { VE_ASSERT(!IsExpired()); vkDestroyShaderModule(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks); Handle = VK_NULL_HANDLE; }
+
 		auto GetHandle()			const { return Handle; }
 		operator VkShaderModule()	const { return Handle; }
 
@@ -54,8 +57,7 @@ export namespace VE
 	FVulkanShader::
 	~FVulkanShader() noexcept
 	{
-		vkDestroyShaderModule(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
-		Handle = VK_NULL_HANDLE;
+		if (!IsExpired()) { Release(); }
 	}
 
 } // namespace VE

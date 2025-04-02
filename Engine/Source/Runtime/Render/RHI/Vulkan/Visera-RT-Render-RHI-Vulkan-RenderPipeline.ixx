@@ -11,6 +11,7 @@ import :Device;
 import :Shader;
 
 import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -20,55 +21,71 @@ export namespace VE
 	{
 		friend class FVulkanRenderPass;
 	public:
-		enum EShaderSlot { Vertex, Fragment, MaxShaderSlot };
 		auto GetSetting() const -> SharedPtr<const FVulkanRenderPipelineSetting>{ return Setting; }
 
 	protected:
 		SharedPtr<const FVulkanRenderPipelineSetting> Setting;
+		SharedPtr<const FVulkanShader> VertexShader;
+		SharedPtr<const FVulkanShader> FragmentShader;
 
 	public:
 		FVulkanRenderPipeline() = delete;
-		FVulkanRenderPipeline(SharedPtr<const FVulkanPipelineLayout> _Layout, SharedPtr<const FVulkanRenderPipelineSetting> _Setting) 
+		FVulkanRenderPipeline(SharedPtr<const FVulkanPipelineLayout> _Layout,
+			                  SharedPtr<const FVulkanRenderPipelineSetting> _Setting,
+			                  SharedPtr<const FVulkanShader> _VertexShader,
+			                  SharedPtr<const FVulkanShader> _FragmentShader)
 			: FVulkanPipeline{EVulkanPipelineBindPoint::Graphics, _Layout},
-			  Setting{ std::move(_Setting) } { VE_ASSERT(Layout != nullptr && Setting != nullptr); }
+			  Setting{ std::move(_Setting) },
+			  VertexShader{ std::move(_VertexShader) },
+			  FragmentShader{ std::move(_FragmentShader) }
+		{ VE_ASSERT(Layout != nullptr && Setting != nullptr && VertexShader != nullptr); }
 		~FVulkanRenderPipeline() noexcept { Destroy();}
 
 	private:
-		void Create(const VkRenderPass _Owner, UInt32 _SubpassIndex, SharedPtr<const FVulkanShader> _VertexShader, SharedPtr<const FVulkanShader> _FragmentShader);
+		void Create(const VkRenderPass _Owner, UInt32 _SubpassIndex);
 		void Destroy();
 	};
 
 	void FVulkanRenderPipeline::
-	Create(const VkRenderPass _Owner, UInt32 _SubpassIndex,
-		   SharedPtr<const FVulkanShader> _VertexShader,
-		   SharedPtr<const FVulkanShader> _FragmentShader)
+	Create(const VkRenderPass _Owner, UInt32 _SubpassIndex)
 	{
-		VE_ASSERT(_Owner != VK_NULL_HANDLE);
-		/*VE_ASSERT(_VertexShader != nullptr   && _VertexShader->GetStage()   == EVulkanShaderStage::Vertex &&
-				  _FragmentShader != nullptr && _FragmentShader->GetStage() == EVulkanShaderStage::Fragment)*/
+		if(_Owner == VK_NULL_HANDLE)
+		{ throw SRuntimeError("Failed to create the Render Pipeline! -- The Render Pass is NULL!"); }
 
-		auto ShaderStageCreateInfos = Segment<VkPipelineShaderStageCreateInfo, MaxShaderSlot>{};
-		ShaderStageCreateInfos[Vertex] = VkPipelineShaderStageCreateInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-			.pNext = nullptr,
-			.flags = 0x0,
-			.stage = AutoCast(AutoCast(EVulkanShaderStage::Vertex)),
-			.module= _VertexShader->GetHandle(),
-			.pName = _VertexShader->GetEntryPoint().data(),
-			.pSpecializationInfo = nullptr
-		};
+		Array<VkPipelineShaderStageCreateInfo> ShaderStageCreateInfos;
 
-		ShaderStageCreateInfos[Fragment] = VkPipelineShaderStageCreateInfo
+		if (VertexShader && !VertexShader->IsExpired())
 		{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-			.pNext = nullptr,
-			.flags = 0x0,
-			.stage = AutoCast(AutoCast(EVulkanShaderStage::Fragment)),
-			.module= _FragmentShader->GetHandle(),
-			.pName = _FragmentShader->GetEntryPoint().data(),
-			.pSpecializationInfo = nullptr
-		};
+			ShaderStageCreateInfos.emplace_back(VkPipelineShaderStageCreateInfo
+			{
+				.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+				.pNext = nullptr,
+				.flags = 0x0,
+				.stage = AutoCast(AutoCast(EVulkanShaderStage::Vertex)),
+				.module= VertexShader->GetHandle(),
+				.pName = VertexShader->GetEntryPoint().data(),
+				.pSpecializationInfo = nullptr
+			});
+		}
+		else { throw SRuntimeError("Failed to create the Render Pipeline! -- The vertex shader is required!"); }
+		
+		if (FragmentShader)
+		{ 
+			if (FragmentShader->IsExpired())
+			{ throw SRuntimeError("Failed to create the Render Pipeline! -- The fragment shader is expired!"); }
+
+			ShaderStageCreateInfos.emplace_back(VkPipelineShaderStageCreateInfo
+			{
+				.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+				.pNext = nullptr,
+				.flags = 0x0,
+				.stage = AutoCast(AutoCast(EVulkanShaderStage::Fragment)),
+				.module= FragmentShader->GetHandle(),
+				.pName = FragmentShader->GetEntryPoint().data(),
+				.pSpecializationInfo = nullptr
+			});
+		}
+		else { Log::Warn("Creating a Render Pipeline without a Fragment Shader!"); }
         
 		VkGraphicsPipelineCreateInfo CreateInfo =
 		{
