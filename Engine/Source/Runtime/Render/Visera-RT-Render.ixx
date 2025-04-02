@@ -5,6 +5,7 @@ export import Visera.Runtime.Render.RHI;
 export import Visera.Runtime.Render.RTC;
 export import Visera.Runtime.Render.Scene;
 export import Visera.Runtime.Render.Shader;
+export import Visera.Runtime.Render.URP;
 
 import Visera.Core.Log;
 import Visera.Core.Type;
@@ -17,7 +18,6 @@ export namespace VE
 	{
 		VE_MODULE_MANAGER_CLASS(Render);
 	public:
-	
 		static void inline Bootstrap();
 		static void inline Terminate();
 	};
@@ -26,7 +26,7 @@ export namespace VE
 	void Render::
 	Bootstrap()
 	{
-
+		//Log::Debug("Compiling Shaders")
 	}
 
 	void Render::
