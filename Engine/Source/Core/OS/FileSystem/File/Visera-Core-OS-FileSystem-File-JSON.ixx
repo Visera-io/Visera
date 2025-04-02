@@ -9,21 +9,21 @@ export namespace VE
 {
 	using namespace rapidjson;
 
-	class FJSON
+	class FJSONFile
 	{
 	public:
 		using FNode = rapidjson::Value;
 		FNode& operator[](StringView _Key) { return Root[_Key.data()]; };
 
-		FJSON() = default;
-		FJSON(const FPath& _JsonPath);
+		FJSONFile() = default;
+		FJSONFile(const FPath& _JsonPath);
 
 	private:
 		Document Root;
 	};
 
-	FJSON::
-	FJSON(const FPath& _JsonPath)
+	FJSONFile::
+	FJSONFile(const FPath& _JsonPath)
 	{
 		//auto JsonFile = FileSystem::CreateFile(_JsonPath);
 		//JsonFile->Load();

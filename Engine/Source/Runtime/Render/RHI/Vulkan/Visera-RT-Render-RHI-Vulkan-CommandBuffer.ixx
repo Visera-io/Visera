@@ -50,6 +50,9 @@ export namespace VE
 		Bool IsResettable()			const { return bIsResettable;   }
 		Bool IsPrimary()			const { return bIsPrimary;		}
 
+		void WriteBuffer(SharedPtr<FVulkanBuffer> _Destination, UInt64 _DestOffset, SharedPtr<const FVulkanBuffer> _Source, UInt64 _SrcOffset, UInt64 _Size);
+		void WriteBuffer(SharedPtr<FVulkanBuffer> _Destination, SharedPtr<const FVulkanBuffer> _Source, UInt64 _Size = 0);
+
 		auto GetStatus()			const -> EStatus				{ return Status; }
 		auto GetLevel()				const -> EVulkanCommandLevel	{ return IsPrimary()? EVulkanCommandLevel::Primary : EVulkanCommandLevel::Secondary; }
 		auto GetHandle()			const -> const VkCommandBuffer	{ return Handle; }
@@ -100,9 +103,12 @@ export namespace VE
 		void SetScissor() const;
 		void SetViewport() const;
 		//void SetDepthBias() const;
-		void ClearColorImage(SharedPtr<FVulkanImage> _Image, FClearColor _ClearColor = { 0,0,0,1 });
+		void ClearColorImage(SharedPtr<FVulkanImage> _Image, FClearColor _ClearColor = { 0,0,0,1 }) const;
 		//void ClearAttachment() const;
-		void Draw(UInt32 _VertexCount, UInt32 _InstanceCount = 1, UInt32 _FirstVertex = 0, UInt32 _FirstInstance = 0) const { vkCmdDraw(Handle, _VertexCount, _InstanceCount, _FirstVertex, _FirstInstance); };
+		void inline
+		Draw(UInt32 _VertexCount, UInt32 _InstanceCount = 1, UInt32 _FirstVertex = 0, UInt32 _FirstInstance = 0) const;
+		void inline
+		DrawIndexed(UInt32 _IndexCount, UInt32 _InstanceCount = 1, UInt32 _FirstIndex = 0, UInt32 _VertexOffset = 0, UInt32 _FirstInstance = 0) const;
 		void LeaveRenderPass(SharedPtr<const FVulkanRenderPass> _RenderPass);
 
 		void ConvertImageLayout(SharedPtr<FVulkanImage> _Image, EVulkanImageLayout _NewLayout) const;
@@ -122,7 +128,7 @@ export namespace VE
 	};
 
 	void FVulkanGraphicsCommandBuffer::
-	ClearColorImage(SharedPtr<FVulkanImage> _Image, FClearColor _ClearColor/* = { 0,0,0,1 }*/)
+	ClearColorImage(SharedPtr<FVulkanImage> _Image, FClearColor _ClearColor/* = { 0,0,0,1 }*/) const
 	{
 		auto ResourceRange = _Image->GetResourceRange();
 		vkCmdClearColorImage(
@@ -338,6 +344,7 @@ export namespace VE
 		VE_ASSERT(_RenderPass == CurrentRenderPass);
 
 		vkCmdEndRenderPass(Handle);
+		CurrentPipeline.reset();
 		CurrentRenderPass.reset();
 	}
 
@@ -396,6 +403,33 @@ export namespace VE
 		Status = EStatus::ReadyToSubmit;
 	}
 
+	void FVulkanCommandBuffer::
+	WriteBuffer(SharedPtr<FVulkanBuffer>       _Destination,
+		        UInt64                         _DestOffset,
+		        SharedPtr<const FVulkanBuffer> _Source,
+		        UInt64                         _SrcOffset,
+		        UInt64                         _Size)
+	{
+		VE_ASSERT(IsRecording() && _Destination && _Source && _Size);
+		VE_ASSERT(_Destination->GetSize() >= _Source->GetSize());
+		VE_ASSERT(Bool(_Source->GetUsages() & EVulkanBufferUsage::TransferSource));
+		VE_ASSERT(Bool(_Destination->GetUsages() & EVulkanBufferUsage::TransferDestination));
+
+		VkBufferCopy CopyInfo
+		{
+			.srcOffset = _SrcOffset,
+			.dstOffset = 0,
+			.size = _Source->GetSize(),
+		};
+		vkCmdCopyBuffer(Handle, _Source->GetHandle(), _Destination->GetHandle(), 1, &CopyInfo);
+	}
+
+	void FVulkanCommandBuffer::
+	WriteBuffer(SharedPtr<FVulkanBuffer> _Destination, SharedPtr<const FVulkanBuffer> _Source, UInt64 _Size/* = 0*/)
+	{
+		WriteBuffer(_Destination, 0, _Source, 0, _Size? _Size : _Source->GetSize());
+	}
+
 	void FVulkanGraphicsCommandBuffer::
 	BindRenderPipeline(SharedPtr<const FVulkanRenderPipeline> _RenderPipeline)
 	{ 
@@ -438,5 +472,27 @@ export namespace VE
 			&WriteInfo);
 	}
 
+	void FVulkanGraphicsCommandBuffer::
+	Draw(UInt32 _VertexCount,
+		 UInt32 _InstanceCount/* = 1*/,
+		 UInt32 _FirstVertex  /* = 0*/,
+		 UInt32 _FirstInstance/* = 0*/) const
+	{ 
+		VE_ASSERT(IsRecording());
+		VE_ASSERT(CurrentPipeline != nullptr && "Call BindPipeline()");
+		vkCmdDraw(Handle, _VertexCount, _InstanceCount, _FirstVertex, _FirstInstance);
+	}
+
+	void FVulkanGraphicsCommandBuffer::
+	DrawIndexed(UInt32 _IndexCount,
+		        UInt32 _InstanceCount/* = 1*/,
+		        UInt32 _FirstIndex   /* = 0*/,
+		        UInt32 _VertexOffset /* = 0*/,
+		        UInt32 _FirstInstance/* = 0*/) const
+	{ 
+		VE_ASSERT(IsRecording());
+		VE_ASSERT(CurrentPipeline != nullptr && "Call BindPipeline()");
+		vkCmdDrawIndexed(Handle, _IndexCount, _InstanceCount, _FirstIndex, _VertexOffset, _FirstInstance);
+	}
 	
 } // namespace VE

@@ -429,6 +429,7 @@ export namespace VE
 	void FVulkanBuffer::
 	Write(void* _Data, UInt64 _Size)
 	{
+		VE_ASSERT(Allocation->IsMappingAllowed());
 		void* SwapArea;
 		vmaMapMemory(GVulkan->Allocator->GetHandle(), Allocation, &SwapArea);
 		Memory::Memcpy(SwapArea, _Data, _Size);

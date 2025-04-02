@@ -124,7 +124,7 @@ export namespace VE
 		static inline auto
 		CreateIndexBuffer(UInt64 _Size)  { return CreateBuffer(_Size, EBufferUsage::Index | EBufferUsage::TransferDestination);  }
 		static inline auto
-		CreateStagingBuffer(UInt64 _Size, EBufferUsage _Usages = EBufferUsage::TransferSource, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive, EMemoryUsage _Location = EMemoryUsage::Auto) -> SharedPtr<FBuffer> { return Vulkan->GetAllocator().CreateBuffer(_Size, _Usages, _SharingMode, _Location, VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT); }
+		CreateStagingBuffer(UInt64 _Size, EBufferUsage _Usages = EBufferUsage::TransferSource, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive, EMemoryUsage _Location = EMemoryUsage::Auto) -> SharedPtr<FBuffer>;
 		static inline auto
 		CreateFence(FFence::EStatus _Status = FFence::EStatus::Blocking)			-> FFence		 { return FFence{_Status};	}
 		static inline auto
@@ -407,6 +407,18 @@ export namespace VE
 		{
 			throw SRuntimeError("WIP: Swapchain Recreation!");
 		}
+	}
+
+	SharedPtr<RHI::FBuffer> RHI::
+	CreateStagingBuffer(UInt64 _Size,
+		EBufferUsage _Usages     /* = EBufferUsage::TransferSource*/,
+		ESharingMode _SharingMode/* = EVulkanSharingMode::Exclusive*/,
+		EMemoryUsage _Location   /* = EMemoryUsage::Auto*/)
+	{ 
+		return Vulkan->GetAllocator().CreateBuffer(
+			_Size, _Usages, _SharingMode, _Location, 
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 	}
 
 } // namespace VE

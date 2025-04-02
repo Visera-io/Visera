@@ -17,9 +17,6 @@ export namespace VE
 	class FScene
 	{
 	public:
-		static inline auto
-		Create() { return CreateSharedPtr<FScene>(); }
-
 		using FPrimID = UInt32;
 		struct FAttachment
 		{
@@ -28,10 +25,16 @@ export namespace VE
 			SharedPtr<IPrimitive>   Primitive;
 		};
 
-		void Attach(const FName& _Name, SharedPtr<const FModel> _Model);
-		void Commit();
+		static inline auto
+		Create() { return CreateSharedPtr<FScene>(); }
 
-		void Accept(RTC::FRay* _Ray) const { _Ray->CastTo(AccelerationStructure); }
+		auto inline
+		Attach(const FName& _Name, SharedPtr<const FModel> _Model) -> const FAttachment&;
+		void inline
+		Commit();
+
+		void inline
+		Accept(RTC::FRay* _Ray) const { _Ray->CastTo(AccelerationStructure); }
 
 	private:
 		SharedPtr<RTC::FAccelerationStructure> AccelerationStructure;
@@ -43,7 +46,7 @@ export namespace VE
 		~FScene() = default;
 	};
 
-	void FScene::
+	const FScene::FAttachment& FScene::
 	Attach(const FName& _Name, SharedPtr<const FModel> _Model)
 	{
 		if (!AccelerationStructure)
@@ -69,6 +72,8 @@ export namespace VE
 			.IndicesDataSize = NewAttachment.Primitive->GetCPUIndexBufferSize()
 		};
 		NewAttachment.ID = AccelerationStructure->Attach(RTC::FSceneNode::Create(ASNodeCreateInfo));
+
+		return NewAttachment;
 	}
 
 	void FScene::

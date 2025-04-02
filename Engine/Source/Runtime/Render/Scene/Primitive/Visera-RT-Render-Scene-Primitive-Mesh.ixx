@@ -77,9 +77,26 @@ export namespace VE
             Memory::Memcpy(UVs.data()->data(), Mesh->mTextureCoords[0], UVs.size() * sizeof(FUVCoord));
         }
 
-        //Load to GPU
-        //VBO->Write(Vertices.data(), GetCPUVertexBufferSize());
-        //IBO->Write(Indices.data(),  GetCPUIndexBufferSize());
+        //Load to GPU [TODO]: Batch upload at RHI level (Add a transfer cmdbuffer in each Frame)
+        auto VertexStagingBuffer = RHI::CreateStagingBuffer(GetCPUVertexBufferSize());
+        VertexStagingBuffer->Write(Vertices.data(), GetCPUVertexBufferSize());
+        auto IndexStagingBuffer  = RHI::CreateStagingBuffer(GetCPUIndexBufferSize());
+        VertexStagingBuffer->Write(Indices.data(), GetCPUIndexBufferSize());
+
+        auto Fence = RHI::CreateFence();
+        auto ImmeCmd = RHI::CreateImmediateCommandBuffer(); //[TODO]: Transfer Buffer
+        ImmeCmd->StartRecording();
+        {
+            ImmeCmd->WriteBuffer(VBO, VertexStagingBuffer);
+            ImmeCmd->WriteBuffer(IBO, IndexStagingBuffer);
+        }
+        ImmeCmd->StopRecording();
+        ImmeCmd->Submit(RHI::FCommandSubmitInfo
+            {
+                .WaitStages = RHI::EGraphicsPipelineStage::PipelineTop,
+                .SignalFence = &Fence
+            });
+        Fence.Wait();
     }
 
 }// namespace VE
