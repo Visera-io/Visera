@@ -99,6 +99,7 @@ export namespace VE
 
 		void ReachRenderPass(SharedPtr<const FVulkanRenderPass> _RenderPass);
 		void BindVertexBuffer(SharedPtr<const FVulkanBuffer> _VertexBuffer) const;
+		void BindIndexBuffer(SharedPtr<const FVulkanBuffer> _IndexBuffer) const;
 		void BindRenderPipeline(SharedPtr<const FVulkanRenderPipeline> _RenderPipeline);
 		void SetScissor() const;
 		void SetViewport() const;
@@ -281,8 +282,24 @@ export namespace VE
 	void FVulkanGraphicsCommandBuffer::
 	BindVertexBuffer(SharedPtr<const FVulkanBuffer> _VertexBuffer) const
 	{
+		VE_ASSERT(IsRecording());
+		VE_ASSERT(CurrentPipeline != nullptr);
+		VE_ASSERT(Bool(_VertexBuffer->GetUsages() & EVulkanBufferUsage::Vertex));
+
 		auto VertexBufferHanedle = _VertexBuffer->GetHandle();
-		vkCmdBindVertexBuffers(Handle, 0, 1, &VertexBufferHanedle, nullptr);
+		VkDeviceSize Offset = 0;
+		vkCmdBindVertexBuffers(Handle, 0, 1, &VertexBufferHanedle, &Offset);
+	}
+
+	void FVulkanGraphicsCommandBuffer::
+	BindIndexBuffer(SharedPtr<const FVulkanBuffer> _IndexBuffer) const
+	{
+		VE_ASSERT(IsRecording());
+		VE_ASSERT(CurrentPipeline != nullptr);
+		VE_ASSERT(Bool(_IndexBuffer->GetUsages() & EVulkanBufferUsage::Index));
+
+		auto IndexBufferHanedle = _IndexBuffer->GetHandle();
+		vkCmdBindIndexBuffer(Handle, IndexBufferHanedle, 0, VK_INDEX_TYPE_UINT32);
 	}
 
 	void FVulkanCommandBuffer::

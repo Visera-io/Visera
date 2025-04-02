@@ -40,9 +40,9 @@ export namespace VE
         GetGPUIndexBufferSize() -> UInt64 { return IBO->GetSize(); }
 
         auto inline
-        GetVertexBufferView() const -> WeakPtr<const RHI::FBuffer> { return VBO; }
+        GetGPUVertexBuffer() const -> SharedPtr<const RHI::FBuffer> { return VBO; }
         auto inline
-        GetIndexBufferView()  const -> WeakPtr<const RHI::FBuffer> { return IBO; }
+        GetGPUIndexBuffer()  const -> SharedPtr<const RHI::FBuffer> { return IBO; }
     
         IPrimitive() = delete;
         IPrimitive(SharedPtr<const FModel> _Model, SharedPtr<RHI::FBuffer> _VBO, SharedPtr<RHI::FBuffer> _IBO);

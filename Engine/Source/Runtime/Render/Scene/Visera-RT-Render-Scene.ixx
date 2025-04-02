@@ -18,8 +18,15 @@ export namespace VE
 	{
 	public:
 		using FPrimID = UInt32;
-		struct FAttachment
+		class FAttachment
 		{
+			friend class FScene;
+		public:
+			auto GetName()      const -> const FName& { return Name; }
+			auto GetID()        const -> FPrimID      { return ID; }
+			auto GetPrimitive() const -> SharedPtr<const IPrimitive> { return Primitive; }
+
+		private:
 			FName                   Name;
 			FPrimID                 ID;
 			SharedPtr<IPrimitive>   Primitive;
