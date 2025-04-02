@@ -62,8 +62,9 @@ export namespace VE
 		//Add a new node to the AS
 		RTC::FAccelerationStructure::FNode::FCreateInfo ASNodeCreateInfo
 		{
-			.VerticeData	 = NewAttachment.Primitive->GetVerticesData(),
-			.VerticeDataSize = NewAttachment.Primitive->GetCPUVertexBufferSize(),
+			.Topology        = RTC::ETopology::Triangle,
+			.VerticesData	 = NewAttachment.Primitive->GetVerticesData(),
+			.VerticesDataSize= NewAttachment.Primitive->GetCPUVertexBufferSize(),
 			.IndicesData	 = NewAttachment.Primitive->GetIndicesData(),
 			.IndicesDataSize = NewAttachment.Primitive->GetCPUIndexBufferSize()
 		};

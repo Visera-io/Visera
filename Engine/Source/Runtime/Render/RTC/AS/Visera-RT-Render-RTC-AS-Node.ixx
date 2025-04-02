@@ -6,7 +6,6 @@ import Visera.Runtime.Render.RTC.Embree;
 
 import Visera.Core.Signal;
 import Visera.Core.Math.Basic;
-import Visera.Core.OS.Memory;
 import Visera.Core.Media.Model;
 
 export namespace VE
@@ -15,11 +14,13 @@ export namespace VE
     class FASNode
 	{
 	public:
+		using ETopology = Embree::ETopology;
+
 		struct FCreateInfo
 		{
-			Embree::ETopology Topology	 = Embree::ETopology::None;
-			const Float*	  VerticeData	 = nullptr;
-			const UInt64	  VerticeDataSize= 0;
+			ETopology         Topology	     = ETopology::None;
+			const Float*	  VerticesData	 = nullptr;
+			const UInt64	  VerticesDataSize= 0;
 			const UInt32*	  IndicesData	 = nullptr;
 			const UInt64	  IndicesDataSize= 0;
 		};
@@ -31,8 +32,8 @@ export namespace VE
 		void Reveal()		 const { rtcEnableGeometry(Handle);  bVisible = True; }
 		Bool IsVisible()     const { return bVisible; }
 
-		auto GetVertexData() const -> const Float*  { return Vertices; }
-		auto GetIndexData()  const -> const UInt32* { return Indices;  }
+		auto GetVertexData() const -> const Float*  { return SharedVertices; }
+		auto GetIndexData()  const -> const UInt32* { return SharedIndices;  }
 		auto GetTopology()	 const -> Embree::ETopology { return Topology; }
 		auto GetHandle()	 const -> const Embree::FGeometry { return Handle; }
 
@@ -45,18 +46,32 @@ export namespace VE
 		mutable Bool 		bVisible = True;
 		Embree::ETopology	Topology = Embree::ETopology::None;
 
-		Float*		  		Vertices       = nullptr;
 		Embree::EFormat 	VertexFormat;
-		UInt32*		  		Indices        = nullptr;
+		const Float*		SharedVertices       = nullptr; //Lifecycle is managed by external system
+		UInt64              VerticesDataSize      = 0;
+		
 		Embree::EFormat 	IndexFormat;
+		const UInt32*		SharedIndices        = nullptr; //Lifecycle is managed by external system
+		UInt64              IndicesDataSize      = 0;
 	};
 
 	FASNode::
-	FASNode(const FCreateInfo& _CreateInfo):
-		Topology{_CreateInfo.Topology}
+	FASNode(const FCreateInfo& _CreateInfo)
+		:
+		Topology      {_CreateInfo.Topology   },
+		SharedVertices{_CreateInfo.VerticesData},
+		SharedIndices {_CreateInfo.IndicesData},
+		VerticesDataSize{_CreateInfo.VerticesDataSize},
+		IndicesDataSize{_CreateInfo.IndicesDataSize}
 	{
+		VE_ASSERT(Topology != ETopology::None);
+		VE_ASSERT(SharedVertices && SharedIndices);
+
 		Handle = rtcNewGeometry(Embree::GetDevice()->GetHandle(), AutoCast(Topology));
 		if (!Handle) { throw SRuntimeError("Failed to create the FASNode!"); }
+
+		UInt64 VertexByteStride = 0;
+		UInt64 IndexByteStride  = 0;
 
 		switch (Topology)
 		{
@@ -65,16 +80,8 @@ export namespace VE
 			VertexFormat	= Embree::EFormat::Vector3F;
 			IndexFormat		= Embree::EFormat::TriangleIndices;
 
-			//Vertices = _CreateInfo.Vertices;
-			//Indices = _CreateInfo.Indices;
-
-			Vertices = (Float*)Memory::MallocNow(_CreateInfo.VerticeDataSize, 0);
-			if (!Vertices) { throw SRuntimeError("Failed to allocate Geometry Vertex Buffer!"); }
-			if (_CreateInfo.VerticeData) { Memory::Memcpy(Vertices, _CreateInfo.VerticeData, _CreateInfo.VerticeDataSize); }
-
-			Indices = (UInt32*)Memory::MallocNow(_CreateInfo.IndicesDataSize, 0);
-			if (!Indices) { throw SRuntimeError("Failed to allocate Geometry Index Buffer!"); }
-			if (_CreateInfo.IndicesData)  { Memory::Memcpy(Indices, _CreateInfo.IndicesData, _CreateInfo.IndicesDataSize); }
+			VertexByteStride = 3 * sizeof(Float);
+			IndexByteStride  = 3 * sizeof(UInt32);
 			break;
 		}
 		case Embree::ETopology::Quad:
@@ -91,28 +98,26 @@ export namespace VE
 			throw SRuntimeError("Unsupported Mesh Topology({})!", UInt32(Topology));
 		}
 
-		//[FIXME]: HardCoded for now!!!!!!!
-
         // Set Vertex Buffer
 		rtcSetSharedGeometryBuffer(
 			Handle,
 			AutoCast(Embree::EBufferType::Vertex),
 			0,
 			AutoCast(VertexFormat),
-			Vertices,
+			SharedVertices,
 			0,
-			3 * sizeof(float),
-			_CreateInfo.VerticeDataSize / (3 * sizeof(float)));
+			VertexByteStride,
+			VerticesDataSize / VertexByteStride);
         // Set Index Buffer
 		rtcSetSharedGeometryBuffer(
 			Handle,
 			AutoCast(Embree::EBufferType::Index),
 			0,
 			AutoCast(IndexFormat),
-			Indices,
+			SharedIndices,
 			0,
-			3 * sizeof(UInt32),
-			_CreateInfo.IndicesDataSize / (3 *sizeof(UInt32)));
+			IndexByteStride,
+			IndicesDataSize / IndexByteStride);
 	}
 
 	FASNode::~FASNode()
