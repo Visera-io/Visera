@@ -17,17 +17,17 @@ export namespace VE
     public:
         using FIndex  = UInt32;
 
-        virtual auto inline
+        virtual auto
         GetVertexCount()     -> UInt64        = 0;
-        virtual auto inline
+        virtual auto
         GetVertexByteSize()  -> UInt64        = 0;
-        virtual auto inline
+        virtual auto
         GetVerticesData()    -> const Float*  = 0;
-        virtual auto inline
+        virtual auto
         GetIndexCount()      -> UInt64        = 0;
-        virtual auto inline
+        virtual auto
         GetIndexByteSize()  -> UInt64         = 0;
-        virtual auto inline
+        virtual auto
         GetIndicesData()     -> const FIndex* = 0;
 
         auto inline

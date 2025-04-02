@@ -60,7 +60,7 @@ export namespace VE
         Indices.resize(3 * Mesh->mNumFaces);
         for (UInt32 Idx = 0; Idx < Mesh->mNumFaces; Idx++)
         {
-            aiFace Face = Mesh->mFaces[Idx];
+            auto Face = Mesh->mFaces[Idx];
             VE_ASSERT(Face.mNumIndices == 3);
             Memory::Memcpy(Indices.data() + 3 * Idx, Face.mIndices, Face.mNumIndices * sizeof(FIndex));
         }
