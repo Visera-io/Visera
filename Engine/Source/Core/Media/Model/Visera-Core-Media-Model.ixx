@@ -27,6 +27,8 @@ export namespace VE
         Bool inline
         HasMesh()   const   { return Data->HasMeshes(); }
         auto inline
+        GetMesh(UInt32 _MeshID) const -> aiMesh* const { return Data->mMeshes[_MeshID]; }
+        auto inline
         GetMeshes() const -> aiMesh** const { return Data->mMeshes; }
         auto inline
         GetMeshCount() const -> UInt32 { return Data->mNumMeshes; }

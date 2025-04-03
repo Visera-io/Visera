@@ -138,7 +138,7 @@ export namespace VE
 						     const Array<SharedPtr<FVulkanDescriptorSetLayout>>& _DescriptorSetLayouts = {})
 		                    { return CreateSharedPtr<FPipelineLayout>(_PushConstantRanges, _DescriptorSetLayouts); }
 		static inline auto
-		CreateRenderPipelineSetting() { return CreateSharedPtr<FRenderPipelineSetting>(); }
+		CreateRenderPipelineSetting() -> SharedPtr<FRenderPipelineSetting> { return CreateSharedPtr<FRenderPipelineSetting>(); }
 
 		static inline auto
 		WaitFrameReady() -> FFrameContext&;

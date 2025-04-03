@@ -326,7 +326,7 @@ export namespace VE
 			1,
 			&SubmitInfo,
 			_SubmitInfo.SignalFence? _SubmitInfo.SignalFence->GetHandle() : VK_NULL_HANDLE) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to submit the Vulkan Graphics CommandBuffer(QueueIndex:{})", _SubmitInfo.QueueIndex); }
+		{ throw SRuntimeError(Text("Failed to submit the Vulkan Graphics CommandBuffer(QueueIndex:{})", _SubmitInfo.QueueIndex)); }
 
 		Status = EStatus::Submitted;
 	}

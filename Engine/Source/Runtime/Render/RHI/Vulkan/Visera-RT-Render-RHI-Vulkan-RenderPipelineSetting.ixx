@@ -12,24 +12,34 @@ import Visera.Core.Signal;
 
 export namespace VE
 {
+
 	class FVulkanRenderPipeline;
 
 	class FVulkanRenderPipelineSetting
 	{
 		friend class FVulkanRenderPipeline;
 	public:
-		auto GetVertexInputState()	const -> const VkPipelineVertexInputStateCreateInfo&   { return VertexInputState; }
-		auto GetTessellationState()	const -> const VkPipelineTessellationStateCreateInfo&  { return TessellationState; }
-		auto GetInputAssemblyState()const -> const VkPipelineInputAssemblyStateCreateInfo& { return InputAssemblyState; }
-		auto GetViewportState()		const -> const VkPipelineViewportStateCreateInfo&	   { return ViewportState; }
-		auto GetRasterizationState()const -> const VkPipelineRasterizationStateCreateInfo& { return RasterizationState; }
-		auto GetMultisampleState()	const -> const VkPipelineMultisampleStateCreateInfo&   { return MultisampleState; }
-		auto GetDepthStencilState() const -> const VkPipelineDepthStencilStateCreateInfo&  { return DepthStencilState; };
-		
-		auto GetColorBlendState()	const -> const VkPipelineColorBlendStateCreateInfo&;
-		auto GetDynamicStates()		const -> const VkPipelineDynamicStateCreateInfo&;
+		struct FVertexInputDescription
+		{
+			UInt32 Binding   = 0;
+			UInt32 Size      = 0;
 
-	protected:
+			struct FAttribute
+			{
+				UInt32        Location;
+				EVulkanFormat Format;
+				UInt32        Offset;
+			};
+			Array<FAttribute> Attributes;
+
+			Bool   bInstance = False;
+		};
+		void SetVertexInputState(const FVertexInputDescription& _Description);
+		
+		FVulkanRenderPipelineSetting();
+		~FVulkanRenderPipelineSetting() noexcept = default;
+
+	private:
 		/*1*/VkPipelineVertexInputStateCreateInfo	VertexInputState;
 		/*2*/VkPipelineTessellationStateCreateInfo	TessellationState;
 		/*3*/VkPipelineInputAssemblyStateCreateInfo	InputAssemblyState;
@@ -37,14 +47,49 @@ export namespace VE
 		/*5*/VkPipelineRasterizationStateCreateInfo	RasterizationState;
 		/*6*/VkPipelineMultisampleStateCreateInfo	MultisampleState;
 		/*7*/VkPipelineDepthStencilStateCreateInfo	DepthStencilState;
-		/*8*/Array<VkPipelineColorBlendAttachmentState> ColorBlendAttachments; //Default(1)
-		/*9*/Array<VkDynamicState>					DynamicStates
-		{VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT, VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT};
-		
-	public:
-		FVulkanRenderPipelineSetting();
-		~FVulkanRenderPipelineSetting() noexcept = default;
+		/*8*/VkPipelineColorBlendStateCreateInfo    ColorBlendState;
+		/*9*/VkPipelineDynamicStateCreateInfo       DynamicState;
+
+		Array<VkViewport>                           Viewports;
+		Array<VkRect2D>                             Scissors;
+		Segment<VkVertexInputBindingDescription, 1> VertexInputBindingDescriptions;   //Default(1)
+		Array<VkVertexInputAttributeDescription>    VertexInputAttributeDescriptions;
+		Array<VkPipelineColorBlendAttachmentState>  ColorBlendAttachments; //Default(1)
+		Array<VkDynamicState>					    DynamicStates;
 	};
+
+	void FVulkanRenderPipelineSetting::
+	SetVertexInputState(const FVertexInputDescription& _Description)
+	{
+		VertexInputBindingDescriptions[0] = VkVertexInputBindingDescription
+		{
+			.binding   = _Description.Binding,
+			.stride    = _Description.Size,
+			.inputRate = _Description.bInstance? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX,
+		};
+
+		VertexInputAttributeDescriptions.resize(_Description.Attributes.size());
+		for (UInt32 Idx = 0; Idx < VertexInputAttributeDescriptions.size(); ++Idx)
+		{
+			auto& Attribute = _Description.Attributes[Idx];
+			VertexInputAttributeDescriptions[Idx] = VkVertexInputAttributeDescription
+			{
+				.location = Attribute.Location,
+				.binding  = _Description.Binding,
+				.format   = AutoCast(Attribute.Format),
+				.offset   = Attribute.Offset
+			};
+		}
+
+		VertexInputState = VkPipelineVertexInputStateCreateInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+			.vertexBindingDescriptionCount	= UInt32(VertexInputBindingDescriptions.size()),
+			.pVertexBindingDescriptions		= VertexInputBindingDescriptions.data(),
+			.vertexAttributeDescriptionCount= UInt32(VertexInputAttributeDescriptions.size()),
+			.pVertexAttributeDescriptions	= VertexInputAttributeDescriptions.data(),
+		};
+	}
 	
 	FVulkanRenderPipelineSetting::
 	FVulkanRenderPipelineSetting():
@@ -126,36 +171,29 @@ export namespace VE
 									  VK_COLOR_COMPONENT_G_BIT | 
 									  VK_COLOR_COMPONENT_B_BIT | 
 									  VK_COLOR_COMPONENT_A_BIT,
+		} },
+		DynamicStates{
+	    {
+			VK_DYNAMIC_STATE_VIEWPORT_WITH_COUNT,
+			VK_DYNAMIC_STATE_SCISSOR_WITH_COUNT
 		} }
 	{
-		
-	}
-
-	const VkPipelineColorBlendStateCreateInfo& FVulkanRenderPipelineSetting::
-	GetColorBlendState() const
-	{
-		static VkPipelineColorBlendStateCreateInfo ColorBlendState
-		{ 
+		ColorBlendState = VkPipelineColorBlendStateCreateInfo
+		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-			.logicOpEnable = VK_FALSE, // VK_FALSE: Mix Mode | VK_TRUE: Combine Mode
-			.logicOp = VK_LOGIC_OP_COPY,
+			.logicOpEnable  = VK_FALSE, // VK_FALSE: Mix Mode | VK_TRUE: Combine Mode
+			.logicOp        = VK_LOGIC_OP_COPY,
+			.attachmentCount= UInt32(ColorBlendAttachments.size()),
+			.pAttachments	= ColorBlendAttachments.data(),
 			.blendConstants	= { 0.0f, 0.0f, 0.0f, 0.0f },
 		};
-		ColorBlendState.attachmentCount = UInt32(ColorBlendAttachments.size());
-		ColorBlendState.pAttachments	= ColorBlendAttachments.data();
 
-		return ColorBlendState;
-	}
-
-	const VkPipelineDynamicStateCreateInfo& FVulkanRenderPipelineSetting::
-	GetDynamicStates() const
-	{
-		static VkPipelineDynamicStateCreateInfo DyncmicStateCreateInfo{ .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
-
-		DyncmicStateCreateInfo.dynamicStateCount = UInt32(DynamicStates.size());
-		DyncmicStateCreateInfo.pDynamicStates    = DynamicStates.data();
-
-		return DyncmicStateCreateInfo;
+		DynamicState = VkPipelineDynamicStateCreateInfo
+		{
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+			.dynamicStateCount = UInt32(DynamicStates.size()),
+		    .pDynamicStates    = DynamicStates.data(),
+		};
 	}
 
 } // namespace VE
