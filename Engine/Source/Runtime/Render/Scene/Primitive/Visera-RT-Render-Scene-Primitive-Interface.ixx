@@ -15,29 +15,27 @@ export namespace VE
     class IPrimitive
     {
     public:
-        using FIndex  = UInt32;
-
         virtual auto
-        GetVertexCount()     -> UInt64        = 0;
+        GetVertexData()      const -> const void*   = 0;
         virtual auto
-        GetVertexByteSize()  -> UInt64        = 0;
+        GetVertexCount()     const -> UInt64        = 0;
         virtual auto
-        GetVerticesData()    -> const Float*  = 0;
+        GetVertexByteSize()  const -> UInt64        = 0;
         virtual auto
-        GetIndexCount()      -> UInt64        = 0;
+        GetIndexData()       const ->  const void*   = 0;
         virtual auto
-        GetIndexByteSize()  -> UInt64         = 0;
+        GetIndexCount()      const -> UInt64        = 0;
         virtual auto
-        GetIndicesData()     -> const FIndex* = 0;
+        GetIndexByteSize()   const -> UInt64        = 0;
 
         auto inline
-        GetCPUVertexBufferSize()-> UInt64 { return GetVertexCount() * GetVertexByteSize(); }
+        GetCPUVertexBufferSize() const -> UInt64 { return GetVertexCount() * GetVertexByteSize(); }
         auto inline
-        GetCPUIndexBufferSize() -> UInt64 { return GetIndexCount() * GetIndexByteSize(); }
+        GetCPUIndexBufferSize()  const -> UInt64 { return GetIndexCount() * GetIndexByteSize(); }
         auto inline
-        GetGPUVertexBufferSize()-> UInt64 { return VBO->GetSize(); }
+        GetGPUVertexBufferSize() const -> UInt64 { return VBO->GetSize(); }
         auto inline
-        GetGPUIndexBufferSize() -> UInt64 { return IBO->GetSize(); }
+        GetGPUIndexBufferSize()  const -> UInt64 { return IBO->GetSize(); }
 
         auto inline
         GetGPUVertexBuffer() const -> SharedPtr<const RHI::FBuffer> { return VBO; }
@@ -45,7 +43,7 @@ export namespace VE
         GetGPUIndexBuffer()  const -> SharedPtr<const RHI::FBuffer> { return IBO; }
     
         IPrimitive() = delete;
-        IPrimitive(SharedPtr<const FModel> _Model, SharedPtr<RHI::FBuffer> _VBO, SharedPtr<RHI::FBuffer> _IBO);
+        IPrimitive(SharedPtr<const FModel> _Model, UInt64 _VBOSize, UInt64 _IBOSize);
         virtual ~IPrimitive() = default;
 
     protected:
@@ -56,23 +54,21 @@ export namespace VE
     };
 
     IPrimitive::
-    IPrimitive(SharedPtr<const FModel> _Model,
-               SharedPtr<RHI::FBuffer> _VBO,
-               SharedPtr<RHI::FBuffer> _IBO)
+    IPrimitive(SharedPtr<const FModel> _Model, UInt64 _VBOSize, UInt64 _IBOSize)
         :
         ModelReference{ _Model },
-        VBO{ std::move(_VBO) },
-        IBO{ std::move(_IBO) }
+        VBO{ RHI::CreateVertexBuffer(_VBOSize) },
+        IBO{ RHI::CreateIndexBuffer(_IBOSize)  }
     {
         if (!VBO || !VBO->GetSize() ||
             !Bool(VBO->GetUsages() & RHI::EBufferUsage::Vertex) ||
             !Bool(VBO->GetUsages() & RHI::EBufferUsage::TransferDestination))
-        { throw SRuntimeError("Failed to create Primitive! -- Create a correct VBO at the derived class!"); }
+        { throw SRuntimeError("Failed to create Primitive! -- Created an incorrect VBO!"); }
 
         if (IBO && (!IBO->GetSize() ||
             !Bool(IBO->GetUsages() & RHI::EBufferUsage::Index)  ||
             !Bool(IBO->GetUsages() & RHI::EBufferUsage::TransferDestination)))
-        { throw SRuntimeError("Failed to create Primitive! -- Create a correct IBO at the derived class!"); }
+        { throw SRuntimeError("Failed to create Primitive! -- Created an incorrect IBO!"); }
     }
 
 }// namespace VE

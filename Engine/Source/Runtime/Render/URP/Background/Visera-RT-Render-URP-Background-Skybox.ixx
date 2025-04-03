@@ -1,6 +1,6 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.Render.URP.Forward.Background:Skybox;
+export module Visera.Runtime.Render.URP.Background:Skybox;
 
 import Visera.Runtime.Render.RHI;
 

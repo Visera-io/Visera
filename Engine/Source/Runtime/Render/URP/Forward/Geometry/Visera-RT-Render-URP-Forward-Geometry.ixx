@@ -12,6 +12,10 @@ export namespace VE
     class FURPGeometryPass : public RHI::FRenderPass
     {
     public:
+        struct FVertex
+        {
+            alignas(16) Float Position[3];
+        };
         FURPGeometryPass();
 
         auto GetOpaquePipeline() const -> SharedPtr<const FURPOpaquePipeline> { return OpaquePipeline; }
@@ -27,11 +31,25 @@ export namespace VE
     FURPGeometryPass() : RHI::FRenderPass{ EType::DefaultForward }
     {
         PipelineLayout  = RHI::CreatePipelineLayout();
+        
         PipelineSetting = RHI::CreateRenderPipelineSetting();
+        PipelineSetting->SetVertexInputState(RHI::FRenderPipelineSetting::FVertexInputDescription
+            {
+                .Binding = 0,
+                .Size    = sizeof(FVertex),
+                .Attributes =
+                {
+                    {
+                        .Location = 0,
+                        .Format   = RHI::EFormat::Vertex3F,
+                        .Offset   = 0,
+                    }
+                }
+            });
 
-        auto VertSPIRV = FileSystem::CreateBinaryFile(FPath{ VISERA_APP_SHADERS_DIR"/test.vert.spv" });
+        auto VertSPIRV = FileSystem::CreateBinaryFile(FPath{ VISERA_APP_SHADERS_DIR"/opaque.vert.spv" });
 		VertSPIRV->Load();
-		auto FragSPIRV = FileSystem::CreateBinaryFile(FPath{ VISERA_APP_SHADERS_DIR"/test.frag.spv" });
+		auto FragSPIRV = FileSystem::CreateBinaryFile(FPath{ VISERA_APP_SHADERS_DIR"/opaque.frag.spv" });
 		FragSPIRV->Load();
 
         OpaquePipeline = CreateSharedPtr<FURPOpaquePipeline>(PipelineLayout, PipelineSetting,

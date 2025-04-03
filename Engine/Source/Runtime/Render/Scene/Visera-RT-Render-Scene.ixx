@@ -65,18 +65,25 @@ export namespace VE
 		if (AttachmentTable.contains(_Name))
 		{ throw SRuntimeError(Text("Failed to add the Attachment({})! -- Already exists!", _Name.GetNameWithNumber())); }
 
+		auto MeshPrimitive = FMeshPrimitive::Create(_Model);
 		auto& NewAttachment = AttachmentTable[_Name];
 		NewAttachment.Name = _Name;
-		NewAttachment.Primitive = FMeshPrimitive::Create(_Model);
+		NewAttachment.Primitive = MeshPrimitive;
 
+		auto Mesh = _Model->GetMesh(0);
+		
 		//Add a new node to the AS
 		RTC::FAccelerationStructure::FNode::FCreateInfo ASNodeCreateInfo
 		{
 			.Topology        = RTC::ETopology::Triangle,
-			.VerticesData	 = NewAttachment.Primitive->GetVerticesData(),
-			.VerticesDataSize= NewAttachment.Primitive->GetCPUVertexBufferSize(),
-			.IndicesData	 = NewAttachment.Primitive->GetIndicesData(),
-			.IndicesDataSize = NewAttachment.Primitive->GetCPUIndexBufferSize()
+			.Vertices        = MeshPrimitive->GetVertexData(),
+			.VertexCount     = MeshPrimitive->GetVertexCount(),
+		    .VertexStride    = MeshPrimitive->GetVertexByteSize(),
+			.VertexOffset    = 0,
+			.Indices         = MeshPrimitive->GetIndexData(),
+			.IndexCount      = MeshPrimitive->GetIndexCount(),
+			.IndexStride     = MeshPrimitive->GetIndexByteSize(),
+			.IndexOffset     = 0,
 		};
 		NewAttachment.ID = AccelerationStructure->Attach(RTC::FSceneNode::Create(ASNodeCreateInfo));
 
