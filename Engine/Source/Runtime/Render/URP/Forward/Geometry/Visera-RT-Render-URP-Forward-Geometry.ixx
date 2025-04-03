@@ -39,12 +39,12 @@ export namespace VE
                     {
                         .Location = 0,
                         .Format   = RHI::EFormat::Vertex3F,
-                        .Offset   = offsetof(FMeshPrimitive::FVertex, FMeshPrimitive::FVertex::Position),
+                        .Offset   = offsetof(FMeshPrimitive::FVertex, Position),
                     },
                     {
                         .Location = 1,
                         .Format   = RHI::EFormat::Vertex3F,
-                        .Offset   = offsetof(FMeshPrimitive::FVertex, FMeshPrimitive::FVertex::Normal),
+                        .Offset   = offsetof(FMeshPrimitive::FVertex, Normal),
                     }
                 }
             });
