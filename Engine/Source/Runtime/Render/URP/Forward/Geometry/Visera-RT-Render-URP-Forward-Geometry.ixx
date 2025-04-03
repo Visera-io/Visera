@@ -5,6 +5,7 @@ import :Opaque;
 
 import Visera.Core.OS.FileSystem;
 import Visera.Runtime.Render.RHI;
+import Visera.Runtime.Render.Scene.Primitive;
 
 export namespace VE
 {
@@ -12,10 +13,6 @@ export namespace VE
     class FURPGeometryPass : public RHI::FRenderPass
     {
     public:
-        struct FVertex
-        {
-            alignas(16) Float Position[3];
-        };
         FURPGeometryPass();
 
         auto GetOpaquePipeline() const -> SharedPtr<const FURPOpaquePipeline> { return OpaquePipeline; }
@@ -36,13 +33,18 @@ export namespace VE
         PipelineSetting->SetVertexInputState(RHI::FRenderPipelineSetting::FVertexInputDescription
             {
                 .Binding = 0,
-                .Size    = sizeof(FVertex),
+                .Size    = sizeof(FMeshPrimitive::FVertex),
                 .Attributes =
                 {
                     {
                         .Location = 0,
                         .Format   = RHI::EFormat::Vertex3F,
-                        .Offset   = 0,
+                        .Offset   = offsetof(FMeshPrimitive::FVertex, FMeshPrimitive::FVertex::Position),
+                    },
+                    {
+                        .Location = 1,
+                        .Format   = RHI::EFormat::Vertex3F,
+                        .Offset   = offsetof(FMeshPrimitive::FVertex, FMeshPrimitive::FVertex::Normal),
                     }
                 }
             });

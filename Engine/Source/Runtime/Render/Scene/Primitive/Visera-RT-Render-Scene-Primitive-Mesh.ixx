@@ -15,14 +15,15 @@ export namespace VE
     class FMeshPrimitive : public IPrimitive
     {
     public:
-        using FIndex   = UInt32;
-        using FNormal  = Vector3F;
-        using FUVCoord = Vector2F;
+        using FIndex    = UInt32;
+        using FPosition = Vector3F;
+        using FNormal   = Vector3F;
+        using FUVCoord  = Vector2F;
 
         struct FVertex
         {
-            alignas(16) Vector3F Position;
-            //Array<FNormal>  Normals;
+            alignas(16) FPosition Position;
+            alignas(16) FNormal   Normal;
             // Array<FUVCoord> UVs;
         };
 
@@ -50,7 +51,7 @@ export namespace VE
     };
 
     FMeshPrimitive::
-    FMeshPrimitive(SharedPtr<const FModel> _Model) //[TODO]: pass FModel::FMesh?
+    FMeshPrimitive(SharedPtr<const FModel> _Model) //[TODO]: pass FModel::FMeshModel?
         : IPrimitive{ _Model,
         _Model->GetMeshes()[0]->mNumVertices * sizeof(FVertex),
         _Model->GetMeshes()[0]->mNumFaces * (3 * sizeof(FIndex)) }
@@ -62,13 +63,12 @@ export namespace VE
         Vertices.resize(Mesh->mNumVertices);
         for (UInt64 Idx = 0; Idx < Vertices.size(); ++Idx)
         {
-            Memory::Memcpy(&Vertices[Idx], &(Mesh->mVertices[Idx]), sizeof(FVertex::Position));
+            auto& Position = Vertices[Idx].Position;
+            Memory::Memcpy(&Position, &(Mesh->mVertices[Idx]), sizeof(FPosition));
 
+            auto& Normal = Vertices[Idx].Normal;
             if (Mesh->HasNormals())
-            {
-                //Normals.resize(Vertices.size());
-                //Memory::Memcpy(Normals.data(), Mesh->mNormals, Normals.size() * sizeof(FNormal));
-            }
+            {  Memory::Memcpy(&Normal, &(Mesh->mNormals[Idx]), sizeof(FNormal)); }
 
             if (Mesh->HasTextureCoords(0))
             {
@@ -91,7 +91,7 @@ export namespace VE
         auto VertexStagingBuffer = RHI::CreateStagingBuffer(GetCPUVertexBufferSize());
         VertexStagingBuffer->Write(Vertices.data(), GetCPUVertexBufferSize());
         auto IndexStagingBuffer  = RHI::CreateStagingBuffer(GetCPUIndexBufferSize());
-        VertexStagingBuffer->Write(Indices.data(), GetCPUIndexBufferSize());
+        IndexStagingBuffer->Write(Indices.data(), GetCPUIndexBufferSize());
 
         auto Fence = RHI::CreateFence();
         auto ImmeCmd = RHI::CreateImmediateCommandBuffer(); //[TODO]: Transfer Buffer

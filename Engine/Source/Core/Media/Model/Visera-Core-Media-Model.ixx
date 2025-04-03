@@ -65,6 +65,7 @@ export namespace VE
         Data = Importer.ReadFile(Path.ToPlatformString().data(),
                 aiProcess_Triangulate	        |
                 aiProcess_ConvertToLeftHanded   |
+                aiProcess_GenNormals            |
                 aiProcess_FixInfacingNormals);
 
         if (!Data            ||
