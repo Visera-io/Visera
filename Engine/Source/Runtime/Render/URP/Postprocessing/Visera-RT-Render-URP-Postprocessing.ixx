@@ -29,7 +29,8 @@ export namespace VE
     FURPPostprocessingPass() : RHI::FRenderPass{ EType::Background }
     {
         DescriptorSetLayout = RHI::CreateDescriptorSetLayout()
-          ->Build();
+            ->AddBinding(0, RHI::EDescriptorType::CombinedImageSampler, 1, RHI::EShaderStage::Fragment)
+            ->Build();
 
         PipelineLayout  = RHI::CreatePipelineLayout()
             ->Build();

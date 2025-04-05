@@ -34,7 +34,7 @@ export namespace VE
         //DescriptorSetLayout = RHI::CreateDescriptorSetLayout();
 
         PipelineLayout = RHI::CreatePipelineLayout()
-            ->AddPushConstantRange(0, 1, RHI::EShaderStage::Vertex | RHI::EShaderStage::Fragment)
+            ->AddPushConstantRange(0, sizeof(UInt32), RHI::EShaderStage::Vertex | RHI::EShaderStage::Fragment)
             ->Build();
         
         PipelineSetting = RHI::CreateRenderPipelineSetting()
