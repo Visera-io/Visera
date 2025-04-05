@@ -13,7 +13,7 @@ export namespace VE
 	class FSlangCompiler
 	{
 	public:
-		auto CompileShader(StringView _FileName, StringView _EntryPoint) const -> SharedPtr<RHI::FShader>;
+		auto CompileShader(StringView _FileName, StringView _EntryPoint) const -> SharedPtr<RHI::FSPIRVShader>;
 
 		FSlangCompiler();
 		~FSlangCompiler() = default;
@@ -58,18 +58,18 @@ export namespace VE
 		{ throw SRuntimeError("Failed to create the Slang Vulkan Compiler Session!"); }
 	}
 
-	 SharedPtr<RHI::FShader> FSlangCompiler::
+	 SharedPtr<RHI::FSPIRVShader> FSlangCompiler::
 	 CompileShader(StringView _FileName, StringView _EntryPoint) const
 	 {
 	 	Slang::ComPtr<slang::IBlob>  Diagnostics;
 	 	// Select Compiler
 	 	const FSlangCompiler::FCompiler* Compiler = &VulkanSPIRVCompiler;
 
-
 	 	// Create Shader Module
 	 	Slang::ComPtr<slang::IModule> ShaderModule{ Compiler->Session->loadModule(_FileName.data(), Diagnostics.writeRef())};
-	 	if (Diagnostics) { throw SRuntimeError(Text("Failed to create Slang Shader Module:\n{}", RawString(Diagnostics->getBufferPointer()))); }
-		
+	 	if (Diagnostics)
+		{ throw SRuntimeError(Text("Failed to create Slang Shader Module:\n{}", RawString(Diagnostics->getBufferPointer()))); }
+
 	 	// Create Shader Program
 	 	Slang::ComPtr<slang::IEntryPoint> ShaderEntryPoint;
 	 	if (ShaderModule->findEntryPointByName(
@@ -101,7 +101,9 @@ export namespace VE
 	
 	 	// Reflect Shader
 	 	slang::ProgramLayout* ShaderLayout = ShaderProgram->getLayout(0, Diagnostics.writeRef());
-	 	if (Diagnostics) { throw SRuntimeError(Text("Failed to get reflection info from Shader({})! -- {}", _FileName.data(), RawString(Diagnostics->getBufferPointer()))); }
+	 	if (Diagnostics)
+		{ throw SRuntimeError(Text("Failed to get reflection info from Shader({})! -- {}",
+		  _FileName.data(), RawString(Diagnostics->getBufferPointer()))); }
 		
 	 	auto* EntryPointRef = ShaderLayout->findEntryPointByName(_EntryPoint.data());
 
@@ -113,12 +115,9 @@ export namespace VE
 	 	default: throw SRuntimeError("Unsupported Shader PoolType!");
 	 	}
 
-	 	std::cerr << Text("Warn: Func(ReflectShader) is WIP but is still being used for testing!\n");
-		
-	 	auto RHIShader = RHI::CreateShader(
-	 					ShaderStage,
-	 					CompiledCode->getBufferPointer(),
-	 					CompiledCode->getBufferSize());
+	 	auto RHIShader = RHI::CreateShader(ShaderStage,
+	 					                   CompiledCode->getBufferPointer(),
+	 					                   CompiledCode->getBufferSize());
 
 	 	ShaderProgram->release();
 

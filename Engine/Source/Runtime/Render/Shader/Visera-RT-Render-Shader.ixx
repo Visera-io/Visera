@@ -13,22 +13,23 @@ import Visera.Runtime.Render.RHI;
 export namespace VE
 {
 
-	class FShader
+	class FShader : public std::enable_shared_from_this<FShader>
 	{
 	public:
 		enum class ELanguage { Slang };
 
 		static inline auto
 		Create(StringView _ShaderFileName, StringView _EntryPoint) { return CreateSharedPtr<FShader>(_ShaderFileName, _EntryPoint); }
-		
-		void Compile();
+		auto inline
+		Compile() -> SharedPtr<FShader>;
+
 		Bool IsCompiled()  const { return Handle != nullptr; }
 
 		auto GetLanguage()		const -> ELanguage  { return Language; }
 		auto GetFileName()		const -> StringView { return FileName; }
 		auto GetEntryPoint()	const -> StringView { return EntryPoint; }
 		auto GetShaderStage()	const -> RHI::EShaderStage { VE_ASSERT(IsCompiled()); return Handle->GetStage(); }
-		auto GetRHIShader()		const -> SharedPtr<const RHI::FShader> { return Handle; }
+		auto GetRHIShader()		const -> SharedPtr<const RHI::FSPIRVShader> { if (!IsCompiled()) { throw SRuntimeError("Failed to get RHIShader! -- This shader is not compiled!"); } return Handle; }
 		auto GetCompatiblePipelineLayout() const -> SharedPtr<const RHI::FPipelineLayout> { return CompatiblePipelineLayout; }
 
 		FShader() = delete;
@@ -36,7 +37,7 @@ export namespace VE
 		~FShader() = default;
 
 	private:
-		SharedPtr<RHI::FShader>		Handle;
+		SharedPtr<RHI::FSPIRVShader>		Handle;
 		String						FileName;   // Only Filename, Do not use FPath.
 		String						EntryPoint;
 		ELanguage				    Language = ELanguage::Slang;
@@ -50,12 +51,14 @@ export namespace VE
 		: FileName{_ShaderFileName},
 		  EntryPoint{_EntryPoint}
 	{
-		Compile();
+
 	}
 
-	void FShader::
+	SharedPtr<FShader> FShader::
 	Compile()
 	{
+		if (IsCompiled()) { return shared_from_this(); }
+
 		switch (Language)
 		{
 		case ELanguage::Slang:
@@ -66,6 +69,8 @@ export namespace VE
 		}
 		default:throw SRuntimeError("Failed to compile the FShader - Unkowon Language!");
 		}
+
+		return shared_from_this();
 	}
 
 } // namespace VE

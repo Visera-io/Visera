@@ -10,7 +10,7 @@ import :Device;
 export namespace VE
 {
 		
-	class FVulkanShader
+	class FVulkanSPIRVShader
 	{
 	public:
 		auto GetEntryPoint()	const -> StringView				{ return "main"; }
@@ -23,9 +23,9 @@ export namespace VE
 		operator VkShaderModule()	const { return Handle; }
 
 	public:
-		FVulkanShader() noexcept = delete;
-		FVulkanShader(EVulkanShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize);
-		~FVulkanShader() noexcept;
+		FVulkanSPIRVShader() noexcept = delete;
+		FVulkanSPIRVShader(EVulkanShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize);
+		~FVulkanSPIRVShader() noexcept;
 		
 	private:
 		VkShaderModule			Handle{ VK_NULL_HANDLE };
@@ -33,8 +33,8 @@ export namespace VE
 		EVulkanShaderStage		Stage;
 	};
 
-	FVulkanShader::
-	FVulkanShader(EVulkanShaderStage _ShaderStage,
+	FVulkanSPIRVShader::
+	FVulkanSPIRVShader(EVulkanShaderStage _ShaderStage,
 				  const void* _SPIRVCode,
 				  UInt64 _CodeSize)
 		:Stage{_ShaderStage}
@@ -54,8 +54,8 @@ export namespace VE
 		{ throw SRuntimeError("Failed to create Vulkan Shader Module!"); }
 	}
 
-	FVulkanShader::
-	~FVulkanShader() noexcept
+	FVulkanSPIRVShader::
+	~FVulkanSPIRVShader() noexcept
 	{
 		if (!IsExpired()) { Release(); }
 	}

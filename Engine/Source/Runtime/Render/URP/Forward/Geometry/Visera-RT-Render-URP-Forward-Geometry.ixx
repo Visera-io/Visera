@@ -4,7 +4,9 @@ export module Visera.Runtime.Render.URP.Forward.Geometry;
 import :Opaque;
 
 import Visera.Core.OS.FileSystem;
+
 import Visera.Runtime.Render.RHI;
+import Visera.Runtime.Render.Shader;
 import Visera.Runtime.Render.Scene.Primitive;
 
 export namespace VE
@@ -14,8 +16,7 @@ export namespace VE
     {
     public:
         FURPGeometryPass();
-
-        auto GetOpaquePipeline() const -> SharedPtr<const FURPOpaquePipeline> { return OpaquePipeline; }
+        auto GetOpaquePipeline() const -> SharedPtr<const RHI::FRenderPipeline> { return OpaquePipeline; }
 
     private:
         //Resources
@@ -24,7 +25,7 @@ export namespace VE
         SharedPtr<RHI::FPipelineLayout>        PipelineLayout;
         SharedPtr<RHI::FRenderPipelineSetting> PipelineSetting;
         //Pipelines
-        SharedPtr<FURPOpaquePipeline>          OpaquePipeline;
+        SharedPtr<RHI::FRenderPipeline>        OpaquePipeline;
     };
 
     FURPGeometryPass::
@@ -32,13 +33,9 @@ export namespace VE
     {
         //DescriptorSetLayout = RHI::CreateDescriptorSetLayout();
 
-        PipelineLayout  = RHI::CreatePipelineLayout();
-        PipelineLayout->AddPushConstantRange(RHI::FPushConstantRange
-            {
-                .ShaderStages = RHI::EShaderStage::Vertex | RHI::EShaderStage::Fragment,
-                .Offset = 0,
-                .Size   = 1,
-            });
+        PipelineLayout = RHI::CreatePipelineLayout()
+            ->AddPushConstantRange(0, 1, RHI::EShaderStage::Vertex | RHI::EShaderStage::Fragment)
+            ->Build();
         
         PipelineSetting = RHI::CreateRenderPipelineSetting();
         PipelineSetting->SetVertexInputState(RHI::FRenderPipelineSetting::FVertexInputDescription
@@ -59,15 +56,13 @@ export namespace VE
                     }
                 }
             });
-         
-        auto VertSPIRV = FileSystem::CreateBinaryFile(FPath{ VISERA_APP_SHADERS_DIR"/opaque.vert.spv" });
-		VertSPIRV->Load();
-		auto FragSPIRV = FileSystem::CreateBinaryFile(FPath{ VISERA_APP_SHADERS_DIR"/opaque.frag.spv" });
-		FragSPIRV->Load();
+        
+        auto VertShader = FShader::Create("URPForwardGeometry.slang", "VertexMain")->Compile();
+        auto FragShader = FShader::Create("URPForwardGeometry.slang", "FragmentMain")->Compile();
 
-        OpaquePipeline = CreateSharedPtr<FURPOpaquePipeline>(PipelineLayout, PipelineSetting,
-            RHI::CreateShader(RHI::EShaderStage::Vertex,   VertSPIRV->GetRawData(), VertSPIRV->GetSize()),
-            RHI::CreateShader(RHI::EShaderStage::Fragment, FragSPIRV->GetRawData(), FragSPIRV->GetSize()));
+        OpaquePipeline = RHI::FRenderPipeline::Create(PipelineLayout, PipelineSetting,
+            VertShader->GetRHIShader(),
+            FragShader->GetRHIShader());
 
         AddSubpass(FSubpass{
 				.Pipeline = OpaquePipeline,

@@ -21,19 +21,26 @@ export namespace VE
 	{
 		friend class FVulkanRenderPass;
 	public:
+		static inline auto
+		Create(SharedPtr<const FVulkanPipelineLayout>        _Layout,
+			   SharedPtr<const FVulkanRenderPipelineSetting> _Setting,
+			   SharedPtr<const FVulkanSPIRVShader>                _VertexShader,
+			   SharedPtr<const FVulkanSPIRVShader>                _FragmentShader)
+		{ return CreateSharedPtr<FVulkanRenderPipeline>(_Layout, _Setting, _VertexShader, _FragmentShader); }
+
 		auto GetSetting() const -> SharedPtr<const FVulkanRenderPipelineSetting>{ return Setting; }
 
 	protected:
 		SharedPtr<const FVulkanRenderPipelineSetting> Setting;
-		SharedPtr<const FVulkanShader> VertexShader;
-		SharedPtr<const FVulkanShader> FragmentShader;
+		SharedPtr<const FVulkanSPIRVShader> VertexShader;
+		SharedPtr<const FVulkanSPIRVShader> FragmentShader;
 
 	public:
 		FVulkanRenderPipeline() = delete;
 		FVulkanRenderPipeline(SharedPtr<const FVulkanPipelineLayout>        _Layout,
 			                  SharedPtr<const FVulkanRenderPipelineSetting> _Setting,
-			                  SharedPtr<const FVulkanShader>                _VertexShader,
-			                  SharedPtr<const FVulkanShader>                _FragmentShader)
+			                  SharedPtr<const FVulkanSPIRVShader>                _VertexShader,
+			                  SharedPtr<const FVulkanSPIRVShader>                _FragmentShader)
 			: FVulkanPipeline{EVulkanPipelineBindPoint::Graphics, _Layout},
 			  Setting{ std::move(_Setting) },
 			  VertexShader{ std::move(_VertexShader) },
@@ -42,12 +49,12 @@ export namespace VE
 		~FVulkanRenderPipeline() noexcept { Destroy();}
 
 	private:
-		void Create(const VkRenderPass _Owner, UInt32 _SubpassIndex);
+		void Build(const VkRenderPass _Owner, UInt32 _SubpassIndex);
 		void Destroy();
 	};
 
 	void FVulkanRenderPipeline::
-	Create(const VkRenderPass _Owner, UInt32 _SubpassIndex)
+	Build(const VkRenderPass _Owner, UInt32 _SubpassIndex)
 	{
 		if(_Owner == VK_NULL_HANDLE)
 		{ throw SRuntimeError("Failed to build the Render Pipeline! -- The Render Pass is NULL!"); }

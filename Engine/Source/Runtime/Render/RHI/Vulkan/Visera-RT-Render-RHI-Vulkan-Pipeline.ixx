@@ -23,7 +23,7 @@ export namespace VE
 		FVulkanPipeline() = delete;
 		FVulkanPipeline(EVulkanPipelineBindPoint _BindPoint, SharedPtr<const FVulkanPipelineLayout> _Layout) 
 			:BindPoint{_BindPoint}, Layout{ std::move(_Layout) }
-		{ if(!Layout->HasBuilt()) { std::const_pointer_cast<FVulkanPipelineLayout>(Layout)->Build(); } }
+		{ if(!Layout->HasBuilt()) { throw SRuntimeError("For logic safty, you MUST built PipelineLayout in advance!"); } }
 		
 	protected:
 		VkPipeline                             Handle{ VK_NULL_HANDLE };

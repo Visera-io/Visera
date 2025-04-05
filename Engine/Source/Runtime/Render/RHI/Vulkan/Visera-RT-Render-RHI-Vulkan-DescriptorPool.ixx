@@ -28,8 +28,8 @@ export namespace VE
 		};
 		auto inline
 		AddEntry(EVulkanDescriptorType _Type, UInt32 _Count) -> FVulkanDescriptorPool* { DescriptorTable[_Type] += _Count; return this; }
-		void inline
-		Build(UInt32 _MaxSets);
+		auto inline
+		Build(UInt32 _MaxSets) -> SharedPtr<FVulkanDescriptorPool>;
 		void inline
 		Destroy();
 
@@ -51,7 +51,7 @@ export namespace VE
 		void CollectGarbages(Bool _bDestroyMode = False);
 	};
 
-	void FVulkanDescriptorPool::
+	SharedPtr<FVulkanDescriptorPool> FVulkanDescriptorPool::
 	Build(UInt32 _MaxSets)
 	{
 		MaxSets = _MaxSets; VE_ASSERT(MaxSets > 0);
@@ -80,6 +80,8 @@ export namespace VE
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create the Vulkan Descriptor Pool!"); }
+
+		return shared_from_this();
 	}
 
 	void FVulkanDescriptorPool::

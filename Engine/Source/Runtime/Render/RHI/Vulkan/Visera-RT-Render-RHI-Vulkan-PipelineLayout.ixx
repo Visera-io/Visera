@@ -12,25 +12,21 @@ export namespace VE
 {
 	class FVulkanPipeline;
 
-	class FVulkanPipelineLayout
+	class FVulkanPipelineLayout : public std::enable_shared_from_this<FVulkanPipelineLayout>
 	{
 		friend class FVulkanPipeline;
 	public:
 		// PushConstantRange is device-specified (usually 256B limit), check the limit via @vulkanCapsViewer.
-		struct FPushConstantRange
-		{
-			EVulkanShaderStage ShaderStages;
-			UInt16       Offset = 0;
-			UInt16       Size   = 0;
-			operator VkPushConstantRange() const { return VkPushConstantRange{ .stageFlags = AutoCast(ShaderStages), .offset = Offset, .size = Size }; }
-		};
 		static inline auto
 		Create() -> SharedPtr<FVulkanPipelineLayout> { return CreateSharedPtr<FVulkanPipelineLayout>(); }
-
 		auto inline
-		AddPushConstantRange(const FPushConstantRange& _PushConstantRange) -> FVulkanPipelineLayout*;
+		AddPushConstantRange(UInt16 _Offset, UInt16 _Size, EVulkanShaderStage _ShaderStages) -> FVulkanPipelineLayout*;
 		auto inline
 		AddDescriptorSetLayout(SharedPtr<const FVulkanDescriptorSetLayout> _DescriptorSetLayout) -> FVulkanPipelineLayout*;
+		auto inline
+		Build() -> SharedPtr<FVulkanPipelineLayout>;
+		void inline
+		Destory();
 
 		auto inline
 		GetHandle() const -> const VkPipelineLayout		{ return Handle; }
@@ -45,20 +41,22 @@ export namespace VE
 		FVulkanPipelineLayout();
 		~FVulkanPipelineLayout();
 
-	private:
-		void inline Build();
-		void inline Destory();
 
 	protected:
 		VkPipelineLayout			                       Handle { VK_NULL_HANDLE };
-		Array<FPushConstantRange>	                       PushConstantRanges;
+		Array<VkPushConstantRange>	                       PushConstantRanges;
 		Array<SharedPtr<const FVulkanDescriptorSetLayout>> DescriptorSetLayouts;
 	};
 
 	FVulkanPipelineLayout* FVulkanPipelineLayout::
-	AddPushConstantRange(const FPushConstantRange& _PushConstantRange)
+	AddPushConstantRange(UInt16 _Offset, UInt16 _Size, EVulkanShaderStage _ShaderStages)
 	{
-		PushConstantRanges.emplace_back(_PushConstantRange);
+		PushConstantRanges.emplace_back(VkPushConstantRange
+			{
+				.stageFlags = AutoCast(_ShaderStages),
+				.offset = _Offset,
+				.size   = _Size,
+			});
 		return this;
 	}
 
@@ -69,16 +67,9 @@ export namespace VE
 		return this;
 	}
 
-	void FVulkanPipelineLayout::
+	SharedPtr<FVulkanPipelineLayout> FVulkanPipelineLayout::
 	Build()
 	{
-		Array<VkPushConstantRange> PushConstantRangeInfos(PushConstantRanges.size());
-		std::transform(PushConstantRanges.begin(), PushConstantRanges.end(),
-					   PushConstantRangeInfos.begin(),
-					   [](const auto& _PCRange)
-					   -> VkPushConstantRange
-					   {return VkPushConstantRange(_PCRange);});
-
 		Array<VkDescriptorSetLayout> DescriptorSetLayoutInfos(DescriptorSetLayouts.size());
 		std::transform(DescriptorSetLayouts.begin(), DescriptorSetLayouts.end(),
 					   DescriptorSetLayoutInfos.begin(),
@@ -93,8 +84,8 @@ export namespace VE
 			.flags = 0x0,
 			.setLayoutCount			= UInt32(DescriptorSetLayoutInfos.size()),
 			.pSetLayouts			= DescriptorSetLayoutInfos.empty()? nullptr : DescriptorSetLayoutInfos.data(),
-			.pushConstantRangeCount = UInt32(PushConstantRangeInfos.size()),
-			.pPushConstantRanges	= PushConstantRangeInfos.empty()? nullptr : PushConstantRangeInfos.data(),
+			.pushConstantRangeCount = UInt32(PushConstantRanges.size()),
+			.pPushConstantRanges	= PushConstantRanges.empty()? nullptr : PushConstantRanges.data(),
 		};
 
 		if(vkCreatePipelineLayout(
@@ -103,6 +94,8 @@ export namespace VE
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create Vulkan Pipeline Layout!"); }
+
+		return shared_from_this();
 	}
 
 	void FVulkanPipelineLayout::

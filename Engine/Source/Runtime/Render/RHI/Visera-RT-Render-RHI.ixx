@@ -27,7 +27,7 @@ export namespace VE
 		using FDescriptorSetLayout  = FVulkanDescriptorSetLayout;
 		using FDescriptorBinding	= FVulkanDescriptorSetLayout::FBinding;
 		using FFence				= FVulkanFence;
-		using FShader				= FVulkanShader;
+		using FSPIRVShader			= FVulkanSPIRVShader;
 		using FBuffer				= FVulkanBuffer;
 		using FImage				= FVulkanImage;
 		using FImageView			= FVulkanImageView;
@@ -43,7 +43,6 @@ export namespace VE
 		using FRenderPipeline		= FVulkanRenderPipeline;
 		using FPipelineLayout		= FVulkanPipelineLayout;
 		using FRenderPipelineSetting= FVulkanRenderPipelineSetting;
-		using FPushConstantRange	= FVulkanPipelineLayout::FPushConstantRange;
 		using FCommandPool          = FVulkanCommandPool;
 		using FCommandBuffer        = FVulkanCommandBuffer;
 		using FCommandSubmitInfo	= FVulkanCommandSubmitInfo;
@@ -130,7 +129,7 @@ export namespace VE
 		static inline auto
 		CreateSemaphore()															-> FSemaphore	 { return FSemaphore();	}
 		static inline auto
-		CreateShader(EShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize) -> SharedPtr<FShader> { return CreateSharedPtr<FShader>(_ShaderStage, _SPIRVCode, _CodeSize); }
+		CreateShader(EShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize) -> SharedPtr<FSPIRVShader> { return CreateSharedPtr<FSPIRVShader>(_ShaderStage, _SPIRVCode, _CodeSize); }
 		template<TRenderPass T> static auto
 		CreateRenderPass() -> SharedPtr<T>;
 		static inline auto
@@ -178,8 +177,7 @@ export namespace VE
 		Bootstrap()
 		{
 			Vulkan = new FVulkan();
-			GlobalDescriptorPool = FDescriptorPool::Create();
-			GlobalDescriptorPool
+			GlobalDescriptorPool = FDescriptorPool::Create()
 				->AddEntry(EDescriptorType::UniformBuffer,        1000)
 				->AddEntry(EDescriptorType::StorageBuffer,        1000)
 				->AddEntry(EDescriptorType::DynamicStorageBuffer, 1000)
@@ -190,7 +188,7 @@ export namespace VE
 				->AddEntry(EDescriptorType::StorageImage,         1000)
 				->AddEntry(EDescriptorType::StorageTexelBuffer,   1000)
 				->AddEntry(EDescriptorType::UniformTexelBuffer,   1000)
-				->AddEntry(EDescriptorType::Sampler, 1000)
+				->AddEntry(EDescriptorType::Sampler,              1000)
 				->Build(10000);
 			ResetableGraphicsCommandPool = FGraphicsCommandPool::Create(ECommandPoolType::Resetable);
 			TransientGraphicsCommandPool = FGraphicsCommandPool::Create(ECommandPoolType::Transient);

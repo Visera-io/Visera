@@ -13,15 +13,15 @@ export namespace VE
         FURPSkyboxPipeline() = delete;
         FURPSkyboxPipeline(SharedPtr<const RHI::FPipelineLayout> _Layout,
                            SharedPtr<const RHI::FRenderPipelineSetting> _Settings,
-                           SharedPtr<const RHI::FShader> _VertexShader,
-                           SharedPtr<const RHI::FShader> _FragmentShader);
+                           SharedPtr<const RHI::FSPIRVShader> _VertexShader,
+                           SharedPtr<const RHI::FSPIRVShader> _FragmentShader);
     };
 
     FURPSkyboxPipeline::
     FURPSkyboxPipeline(SharedPtr<const RHI::FPipelineLayout> _Layout,
                        SharedPtr<const RHI::FRenderPipelineSetting> _Settings,
-                       SharedPtr<const RHI::FShader> _VertexShader,
-                       SharedPtr<const RHI::FShader> _FragmentShader)
+                       SharedPtr<const RHI::FSPIRVShader> _VertexShader,
+                       SharedPtr<const RHI::FSPIRVShader> _FragmentShader)
         : RHI::FRenderPipeline{_Layout, _Settings, _VertexShader, _FragmentShader}
     {
 

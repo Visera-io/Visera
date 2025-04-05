@@ -309,7 +309,7 @@ export namespace VE
 
 			if (CurrentSubpass.Pipeline)
 			{			
-				CurrentSubpass.Pipeline->Create(Handle, Idx);
+				CurrentSubpass.Pipeline->Build(Handle, Idx);
 			}
 			else if (CurrentSubpass.bExternalSubpass)
 			{

@@ -26,7 +26,8 @@ export namespace VE
     FURPBackgroundPass::
     FURPBackgroundPass() : RHI::FRenderPass{ EType::Background }
     {
-        PipelineLayout  = RHI::CreatePipelineLayout();
+        PipelineLayout  = RHI::CreatePipelineLayout()
+            ->Build();
         PipelineSetting = RHI::CreateRenderPipelineSetting();
 
         auto VertSPIRV = FileSystem::CreateBinaryFile(FPath{ VISERA_APP_SHADERS_DIR"/test.vert.spv" });
