@@ -37,7 +37,9 @@ export namespace VE
             ->AddPushConstantRange(0, 1, RHI::EShaderStage::Vertex | RHI::EShaderStage::Fragment)
             ->Build();
         
-        PipelineSetting = RHI::CreateRenderPipelineSetting();
+        PipelineSetting = RHI::CreateRenderPipelineSetting()
+            ->Confirm();
+
         PipelineSetting->SetVertexInputState(RHI::FRenderPipelineSetting::FVertexInputDescription
             {
                 .Binding = 0,
@@ -56,13 +58,10 @@ export namespace VE
                     }
                 }
             });
-        
-        auto VertShader = FShader::Create("URPForwardGeometry.slang", "VertexMain")->Compile();
-        auto FragShader = FShader::Create("URPForwardGeometry.slang", "FragmentMain")->Compile();
 
         OpaquePipeline = RHI::FRenderPipeline::Create(PipelineLayout, PipelineSetting,
-            VertShader->GetRHIShader(),
-            FragShader->GetRHIShader());
+            FShader::Create("URPForwardGeometry.slang", "VertexMain")->Compile()->GetRHIShader(),
+            FShader::Create("URPForwardGeometry.slang", "FragmentMain")->Compile()->GetRHIShader());
 
         AddSubpass(FSubpass{
 				.Pipeline = OpaquePipeline,

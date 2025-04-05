@@ -75,6 +75,7 @@ export namespace VE
 		using EBorderColor			= EVulkanBorderColor;
 		using ESamplerMipmapMode	= EVulkanSamplerMipmapMode;
 		using ESamplerAddressMode	= EVulkanSamplerAddressMode;
+		using ECullMode             = EVulkanCullMode;
 
 		using SSwapchainRecreation = FVulkanSwapchain::SRecreation;
 

@@ -61,6 +61,9 @@ export namespace VE
 
 		if(!Layout->HasBuilt())
 		{ throw SRuntimeError("Failed to build RenderPipeline! -- The Layout is not built!"); }
+
+		if(!Setting->HasConfirmed())
+		{ throw SRuntimeError("Failed to build RenderPipeline! -- The Setting is not confirmed!"); }
 		
 		Array<VkPipelineShaderStageCreateInfo> ShaderStageCreateInfos;
 

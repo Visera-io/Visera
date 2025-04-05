@@ -15,12 +15,18 @@ export namespace VE
 
 	class FVulkanRenderPipeline;
 
-	class FVulkanRenderPipelineSetting
+	class FVulkanRenderPipelineSetting : public std::enable_shared_from_this<FVulkanRenderPipelineSetting>
 	{
 		friend class FVulkanRenderPipeline;
 	public:
 		static inline auto
 		Create() { return CreateSharedPtr<FVulkanRenderPipelineSetting>(); }
+		inline FVulkanRenderPipelineSetting*
+		SetCullMode(EVulkanCullMode _Mode)  { RasterizationState.cullMode = AutoCast(_Mode); return this; }
+		auto inline
+		Confirm() -> SharedPtr<FVulkanRenderPipelineSetting> { bConfirmed = True; return shared_from_this(); }
+		Bool inline
+		HasConfirmed() const { return bConfirmed; }
 
 		struct FVertexInputDescription
 		{
@@ -59,6 +65,8 @@ export namespace VE
 		Array<VkVertexInputAttributeDescription>    VertexInputAttributeDescriptions;
 		Array<VkPipelineColorBlendAttachmentState>  ColorBlendAttachments; //Default(1)
 		Array<VkDynamicState>					    DynamicStates;
+
+		Bool bConfirmed = False;
 	};
 
 	void FVulkanRenderPipelineSetting::
@@ -129,7 +137,7 @@ export namespace VE
 			.depthClampEnable		= VK_FALSE, // Fragments that are beyond the near and far planes are clamped to them as opposed to discarding them
 			.rasterizerDiscardEnable= VK_FALSE, // if VK_TRUE, then geometry never passes through the rasterizer stage
 			.polygonMode			= VK_POLYGON_MODE_FILL,
-			.cullMode				= VK_CULL_MODE_BACK_BIT,
+			.cullMode				= AutoCast(EVulkanCullMode::Back),
 			.frontFace				= VK_FRONT_FACE_COUNTER_CLOCKWISE, // Align with Unreal Engine. (Note Y-Flip)
 			.depthBiasEnable		= VK_TRUE,
 			.depthBiasConstantFactor= 0.0f, 

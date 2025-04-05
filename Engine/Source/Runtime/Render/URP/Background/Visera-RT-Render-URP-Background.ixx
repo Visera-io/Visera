@@ -4,7 +4,9 @@ export module Visera.Runtime.Render.URP.Background;
 import :Skybox;
 
 import Visera.Core.OS.FileSystem;
+
 import Visera.Runtime.Render.RHI;
+import Visera.Runtime.Render.Shader;
 
 export namespace VE
 {
@@ -14,13 +16,13 @@ export namespace VE
     public:
         FURPBackgroundPass();
 
-        auto GetSkyboxPipeline() const -> SharedPtr<const FURPSkyboxPipeline> { return SkyboxPipeline; }
+        auto GetSkyboxPipeline() const -> SharedPtr<const RHI::FRenderPipeline> { return SkyboxPipeline; }
 
     private:
         SharedPtr<RHI::FPipelineLayout>        PipelineLayout;
         SharedPtr<RHI::FRenderPipelineSetting> PipelineSetting;
 
-        SharedPtr<FURPSkyboxPipeline>          SkyboxPipeline;
+        SharedPtr<RHI::FRenderPipeline>        SkyboxPipeline;
     };
 
     FURPBackgroundPass::
@@ -28,16 +30,13 @@ export namespace VE
     {
         PipelineLayout  = RHI::CreatePipelineLayout()
             ->Build();
-        PipelineSetting = RHI::CreateRenderPipelineSetting();
+        PipelineSetting = RHI::CreateRenderPipelineSetting()
+            ->SetCullMode(RHI::ECullMode::Disable)
+            ->Confirm();
 
-        auto VertSPIRV = FileSystem::CreateBinaryFile(FPath{ VISERA_APP_SHADERS_DIR"/test.vert.spv" });
-		VertSPIRV->Load();
-		auto FragSPIRV = FileSystem::CreateBinaryFile(FPath{ VISERA_APP_SHADERS_DIR"/test.frag.spv" });
-		FragSPIRV->Load();
-
-        SkyboxPipeline = CreateSharedPtr<FURPSkyboxPipeline>(PipelineLayout, PipelineSetting,
-            RHI::CreateShader(RHI::EShaderStage::Vertex,   VertSPIRV->GetRawData(), VertSPIRV->GetSize()),
-            RHI::CreateShader(RHI::EShaderStage::Fragment, FragSPIRV->GetRawData(), FragSPIRV->GetSize()));
+        SkyboxPipeline = RHI::FRenderPipeline::Create(PipelineLayout, PipelineSetting,
+            FShader::Create("URPBackgroundSkybox.slang", "VertexMain")->Compile()->GetRHIShader(),
+            FShader::Create("URPBackgroundSkybox.slang", "FragmentMain")->Compile()->GetRHIShader());
 
         AddSubpass(FSubpass{
 				.Pipeline = SkyboxPipeline,

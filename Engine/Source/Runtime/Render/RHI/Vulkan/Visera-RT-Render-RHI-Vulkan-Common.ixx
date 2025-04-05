@@ -4,6 +4,7 @@ export module Visera.Runtime.Render.RHI.Vulkan.Common;
 
 export namespace VE
 {
+	// VE_ENUM_CLASS(EVulkanCullMode,               VkCullModeFlagBits)
 	// VE_ENUM_CLASS(EVulkanColorSpace,				VkColorSpaceKHR)
 	// VE_ENUM_CLASS(EVulkanBorderColor,			VkBorderColor)
 	// VE_ENUM_CLASS(EVulkanSamplerMimapMode,		VkSamplerMipmapMode)
@@ -42,6 +43,14 @@ export namespace VE
 	
 	using FClearValue = VkClearValue;
 	using FClearColor = VkClearColorValue;
+
+	VE_ENUM_CLASS(EVulkanCullMode, VkCullModeFlagBits)
+	{
+		Disable = VK_CULL_MODE_NONE,
+		Front   = VK_CULL_MODE_FRONT_BIT,
+		Back    = VK_CULL_MODE_BACK_BIT,
+		TwoSides= VK_CULL_MODE_FRONT_AND_BACK,
+	};
 
 	VE_ENUM_CLASS(EVulkanColorSpace, VkColorSpaceKHR)
 	{
