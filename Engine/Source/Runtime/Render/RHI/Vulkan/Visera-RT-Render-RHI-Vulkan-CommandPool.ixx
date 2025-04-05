@@ -38,6 +38,8 @@ export namespace VE
 	class FVulkanGraphicsCommandPool : public FVulkanCommandPool
 	{
 	public:
+		static inline auto
+		Create(EVulkanCommandPoolType _PoolType) { return CreateSharedPtr<FVulkanGraphicsCommandPool>(_PoolType); }
 		auto CreateGraphicsCommandBuffer(EVulkanCommandLevel _CommandLevel) -> SharedPtr<FVulkanGraphicsCommandBuffer>;
 
 	public:

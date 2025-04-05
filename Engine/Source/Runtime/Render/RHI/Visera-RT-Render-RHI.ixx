@@ -114,7 +114,7 @@ export namespace VE
 		static inline auto
 		CreateGraphicsCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return ResetableGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
 		static inline auto
-		CreateImmediateCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return TransientGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
+		CreateOneTimeGraphicsCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return TransientGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
 		static inline auto
 		CreateImage(EImageType _Type, FExtent3D _Extent, EFormat _Format, EImageAspect _Aspects, EImageUsage _Usages, EImageTiling _Tiling = EImageTiling::Optimal,ESampleRate _SampleRate = ESampleRate::X1, UInt8 _MipmapLevels = 1,UInt8 _ArrayLayers = 1, ESharingMode	_SharingMode = ESharingMode::Exclusive,EMemoryUsage	_Location = EMemoryUsage::Auto)->SharedPtr<FImage> { return Vulkan->GetAllocator().CreateImage(_Type, _Extent, _Format, _Aspects, _Usages, _Tiling, _SampleRate, _MipmapLevels, _ArrayLayers, _SharingMode, _Location); }
 		static inline auto
@@ -178,27 +178,26 @@ export namespace VE
 		Bootstrap()
 		{
 			Vulkan = new FVulkan();
-			GlobalDescriptorPool = CreateSharedPtr<FDescriptorPool>();
-			GlobalDescriptorPool->Create(
-				{
-					{EDescriptorType::UniformBuffer,        1000},
-					{EDescriptorType::StorageBuffer,        1000},
-					{EDescriptorType::DynamicStorageBuffer, 1000},
-					{EDescriptorType::DynamicUniformBuffer, 1000},
-					{EDescriptorType::CombinedImageSampler, 1000},
-					{EDescriptorType::InputAttachment,		1000},
-					{EDescriptorType::SampledImage,			1000},
-					{EDescriptorType::StorageImage,			1000},
-					{EDescriptorType::StorageTexelBuffer,	1000},
-					{EDescriptorType::UniformTexelBuffer,	1000},
-					{EDescriptorType::Sampler,				1000},
-				}, 10000);
-			ResetableGraphicsCommandPool = CreateSharedPtr<FGraphicsCommandPool>(ECommandPoolType::Resetable);
-			TransientGraphicsCommandPool = CreateSharedPtr<FGraphicsCommandPool>(ECommandPoolType::Transient);
+			GlobalDescriptorPool = FDescriptorPool::Create();
+			GlobalDescriptorPool
+				->AddEntry(EDescriptorType::UniformBuffer,        1000)
+				->AddEntry(EDescriptorType::StorageBuffer,        1000)
+				->AddEntry(EDescriptorType::DynamicStorageBuffer, 1000)
+				->AddEntry(EDescriptorType::DynamicUniformBuffer, 1000)
+				->AddEntry(EDescriptorType::CombinedImageSampler, 1000)
+				->AddEntry(EDescriptorType::InputAttachment,      1000)
+				->AddEntry(EDescriptorType::SampledImage,         1000)
+				->AddEntry(EDescriptorType::StorageImage,         1000)
+				->AddEntry(EDescriptorType::StorageTexelBuffer,   1000)
+				->AddEntry(EDescriptorType::UniformTexelBuffer,   1000)
+				->AddEntry(EDescriptorType::Sampler, 1000)
+				->Build(10000);
+			ResetableGraphicsCommandPool = FGraphicsCommandPool::Create(ECommandPoolType::Resetable);
+			TransientGraphicsCommandPool = FGraphicsCommandPool::Create(ECommandPoolType::Transient);
 
 			Frames.resize(GetSwapchainFrameCount());
 
-			auto ImmeCmds = CreateImmediateCommandBuffer();
+			auto ImmeCmds = CreateOneTimeGraphicsCommandBuffer();
 			ImmeCmds->StartRecording();
 
 			for (auto& Frame : Frames)

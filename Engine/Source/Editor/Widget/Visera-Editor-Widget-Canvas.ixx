@@ -73,7 +73,7 @@ export namespace VE
         StagingBuffer->Write(_NewImage->GetData(), _NewImage->GetSize());
 
         auto Fence = RHI::CreateFence();
-        auto ImmeCmd = RHI::CreateImmediateCommandBuffer();
+        auto ImmeCmd = RHI::CreateOneTimeGraphicsCommandBuffer();
         ImmeCmd->StartRecording();
         {
             ImmeCmd->ConvertImageLayout(NewRHIImage, RHI::EImageLayout::TransferDestination);

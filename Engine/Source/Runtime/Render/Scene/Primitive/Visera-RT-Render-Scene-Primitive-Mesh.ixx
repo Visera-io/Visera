@@ -94,7 +94,7 @@ export namespace VE
         IndexStagingBuffer->Write(Indices.data(), GetCPUIndexBufferSize());
 
         auto Fence = RHI::CreateFence();
-        auto ImmeCmd = RHI::CreateImmediateCommandBuffer(); //[TODO]: Transfer Buffer
+        auto ImmeCmd = RHI::CreateOneTimeGraphicsCommandBuffer(); //[TODO]: Transfer Buffer
         ImmeCmd->StartRecording();
         {
             ImmeCmd->WriteBuffer(VBO, VertexStagingBuffer);

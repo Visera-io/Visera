@@ -15,6 +15,9 @@ export namespace VE
 	class FVulkanDescriptorPool : public std::enable_shared_from_this<FVulkanDescriptorPool>
 	{
 	public:
+		static inline auto
+		Create() { return CreateSharedPtr<FVulkanDescriptorPool>(); }
+
 		// Return nullptr when exceeded MaxSets Limit.
 		auto CreateDescriptorSet(SharedPtr<const FVulkanDescriptorSetLayout> _Layout) -> SharedPtr<FVulkanDescriptorSet>;
 
@@ -23,35 +26,43 @@ export namespace VE
 			EVulkanDescriptorType Type;
 			UInt32			Count = 0;
 		};
+		auto inline
+		AddEntry(EVulkanDescriptorType _Type, UInt32 _Count) -> FVulkanDescriptorPool* { DescriptorTable[_Type] += _Count; return this; }
+		void inline
+		Build(UInt32 _MaxSets);
+		void inline
+		Destroy();
 
-		auto GetHandle() const -> const VkDescriptorPool {return Handle; }
+		auto inline
+		GetHandle() const -> const VkDescriptorPool {return Handle; }
+
+		Bool inline
+		HasBuilt() const { return Handle != VK_NULL_HANDLE; }
 
 		FVulkanDescriptorPool() noexcept = default;
 		~FVulkanDescriptorPool() = default;
 	private:
 		VkDescriptorPool						Handle{ VK_NULL_HANDLE };
 		UInt32									MaxSets{ 0 };
-		HashMap<EVulkanDescriptorType, Int32>	DescriptorTable;
+		HashMap<EVulkanDescriptorType, UInt32>	DescriptorTable;
 		List<SharedPtr<FVulkanDescriptorSet>>	Children;
 
 	public:
-		void Create(const Array<FDescriptorEntry>& _DescriptorEntries, UInt32 _MaxSets);
-		void Destroy();
 		void CollectGarbages(Bool _bDestroyMode = False);
 	};
 
 	void FVulkanDescriptorPool::
-	Create(const Array<FDescriptorEntry>&_DescriptorEntries, UInt32 _MaxSets)
+	Build(UInt32 _MaxSets)
 	{
-		static_assert(sizeof(FDescriptorEntry)  == sizeof(VkDescriptorPoolSize)  &&
-			          alignof(FDescriptorEntry) == alignof(VkDescriptorPoolSize) &&
-			          sizeof(FDescriptorEntry::Type) == sizeof(VkDescriptorPoolSize::type));
-
 		MaxSets = _MaxSets; VE_ASSERT(MaxSets > 0);
 
-		for (auto& Entry : _DescriptorEntries)
+		Array<VkDescriptorPoolSize> Entries(DescriptorTable.size());
+		UInt32 EntryCount = 0;
+		for (const auto& [ItemType, ItemCount] : DescriptorTable)
 		{
-			DescriptorTable[Entry.Type] += Entry.Count;
+			UInt32 Idx = EntryCount++;
+			Entries[Idx].type            = AutoCast(ItemType);
+			Entries[Idx].descriptorCount = ItemCount;
 		}
 
 		VkDescriptorPoolCreateInfo CreateInfo
@@ -59,8 +70,8 @@ export namespace VE
 			.sType			= VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
 			.flags			= VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
 			.maxSets		= _MaxSets,
-			.poolSizeCount  = UInt32(_DescriptorEntries.size()),
-			.pPoolSizes		= reinterpret_cast<const VkDescriptorPoolSize*>(_DescriptorEntries.data())
+			.poolSizeCount  = EntryCount,
+			.pPoolSizes		= Entries.data()
 		};
 
 		if (vkCreateDescriptorPool(

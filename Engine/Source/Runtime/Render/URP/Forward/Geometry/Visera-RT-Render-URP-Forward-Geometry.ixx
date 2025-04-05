@@ -30,7 +30,7 @@ export namespace VE
     FURPGeometryPass::
     FURPGeometryPass() : RHI::FRenderPass{ EType::DefaultForward }
     {
-        DescriptorSetLayout = RHI::CreateDescriptorSetLayout();
+        //DescriptorSetLayout = RHI::CreateDescriptorSetLayout();
 
         PipelineLayout  = RHI::CreatePipelineLayout();
         PipelineLayout->AddPushConstantRange(RHI::FPushConstantRange

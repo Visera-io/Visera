@@ -315,7 +315,7 @@ export namespace VE
 			{
 				
 			}
-			else { throw SRuntimeError("Cannot Create a Subpass without any Pipeline!"); }
+			else { throw SRuntimeError("Cannot Build a Subpass without any Pipeline!"); }
 		}
 
 		// Create Framebuffers
