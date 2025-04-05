@@ -147,16 +147,9 @@ export namespace VE
 			ImGui_ImplVulkan_Init(&CreateInfo);
 
 			DefaultImageSampler = RHI::CreateSampler(RHI::EFilter::Nearest);
-			ImGuiDescriptorSetLayout = RHI::CreateDescriptorSetLayout(
-			{
-				RHI::FDescriptorBinding
-				{
-					.BindPoint = 0,
-					.DescriptorType = RHI::EDescriptorType::CombinedImageSampler,
-					.DescriptorCount = 1,
-					.ShaderStages = RHI::EShaderStage::Fragment,
-				}
-			});
+			ImGuiDescriptorSetLayout = RHI::CreateDescriptorSetLayout()
+				->AddBinding(0, RHI::EDescriptorType::CombinedImageSampler, 1, RHI::EShaderStage::Fragment)
+				->Build();
 
 			EditorLogo = Media::CreateImage(FName{ "editor::logo" }, FPath{ VISERA_ENGINE_IMAGES_DIR"/Logo.png" });
 

@@ -35,8 +35,8 @@ export namespace VE
             ->Confirm();
 
         SkyboxPipeline = RHI::FRenderPipeline::Create(PipelineLayout, PipelineSetting,
-            FShader::Create("URPBackgroundSkybox.slang", "VertexMain")->Compile()->GetRHIShader(),
-            FShader::Create("URPBackgroundSkybox.slang", "FragmentMain")->Compile()->GetRHIShader());
+            FShader::Create("URP-Background-Skybox.slang", "VertexMain")->Compile()->GetCompiledShader(),
+            FShader::Create("URP-Background-Skybox.slang", "FragmentMain")->Compile()->GetCompiledShader());
 
         AddSubpass(FSubpass{
 				.Pipeline = SkyboxPipeline,

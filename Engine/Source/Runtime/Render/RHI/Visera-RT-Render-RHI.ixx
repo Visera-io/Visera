@@ -25,7 +25,6 @@ export namespace VE
 		using FDescriptorPool		= FVulkanDescriptorPool;
 		using FDescriptorSet		= FVulkanDescriptorSet;
 		using FDescriptorSetLayout  = FVulkanDescriptorSetLayout;
-		using FDescriptorBinding	= FVulkanDescriptorSetLayout::FBinding;
 		using FFence				= FVulkanFence;
 		using FSPIRVShader			= FVulkanSPIRVShader;
 		using FBuffer				= FVulkanBuffer;
@@ -106,7 +105,7 @@ export namespace VE
 
 	public:
 		static inline auto
-		CreateDescriptorSetLayout(const Array<FDescriptorBinding> _Bindings)		-> SharedPtr<FDescriptorSetLayout>	{ return CreateSharedPtr<FDescriptorSetLayout>(_Bindings); }
+		CreateDescriptorSetLayout()	-> SharedPtr<FDescriptorSetLayout>	{ return FDescriptorSetLayout::Create(); }
 		static inline auto
 		CreateDescriptorSet(SharedPtr<const FDescriptorSetLayout> _SetLayout)		-> SharedPtr<FDescriptorSet>		{ return GlobalDescriptorPool->CreateDescriptorSet(_SetLayout);		}
 		static inline auto

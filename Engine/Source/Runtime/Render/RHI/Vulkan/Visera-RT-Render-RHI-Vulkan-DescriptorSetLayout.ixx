@@ -12,51 +12,54 @@ export namespace VE
 {
 	class FVulkanDescriptorPool;
 
-	class FVulkanDescriptorSetLayout //[TODO]: DesciptorSetLayout Hashing
-	{
+	class FVulkanDescriptorSetLayout : public std::enable_shared_from_this<FVulkanDescriptorSetLayout>
+	{//[TODO]: DesciptorSetLayout Hashing
 		friend class FVulkanDescriptorPool;
 	public:
-		struct FBinding
-		{
-			Int8				  BindPoint{-1};
-			EVulkanDescriptorType DescriptorType;
-			UInt16				  DescriptorCount;
-			EVulkanShaderStage    ShaderStages;
-			Array<VkSampler>      ImmutableSamplers;
-		};
+		static inline auto
+		Create()  { return CreateSharedPtr<FVulkanDescriptorSetLayout>(); }
+		inline FVulkanDescriptorSetLayout*
+		AddBinding(UInt8 _BindPoint, EVulkanDescriptorType _Type, UInt16 _Count, EVulkanShaderStage _ShaderStages); //[TODO]: ImmutableSamplers
+		inline auto
+		Build() -> SharedPtr<FVulkanDescriptorSetLayout>;
+		inline void
+		Destroy();
+
+		Bool inline
+		IsBuilt() const { return Handle != VK_NULL_HANDLE; }
+		Bool inline
+		HasBinding(UInt8 _BindPoint) const { return _BindPoint < GetBindingCount(); }
 
 		auto GetHandle() const -> const VkDescriptorSetLayout { return Handle; }
-		auto GetBindingCount() const -> size_t { return BindingSlots.size(); }
-		auto GetBinding(UInt32 _Position) const -> const FBinding& { VE_ASSERT(_Position < GetBindingCount()); return BindingSlots[_Position]; }
+		auto GetBindingCount() const -> UInt32 { return Bindings.size(); }
+		auto GetBinding(UInt8 _BindPoint) const -> const VkDescriptorSetLayoutBinding& { VE_ASSERT(HasBinding(_BindPoint)); return Bindings[_BindPoint]; }
 
-		FVulkanDescriptorSetLayout() = delete;
-		FVulkanDescriptorSetLayout(const Array<FBinding>& _Bindings);
-		~FVulkanDescriptorSetLayout();
+		FVulkanDescriptorSetLayout() = default;
+		~FVulkanDescriptorSetLayout() { Destroy(); };
 	private:
 		VkDescriptorSetLayout  Handle{ VK_NULL_HANDLE };
-		Array<FBinding>	       BindingSlots;
+		Array<VkDescriptorSetLayoutBinding> Bindings;
 	};
 
-	FVulkanDescriptorSetLayout::
-	FVulkanDescriptorSetLayout(const Array<FBinding>& _Bindings)
-		: BindingSlots { _Bindings }
+	FVulkanDescriptorSetLayout* FVulkanDescriptorSetLayout::
+	AddBinding(UInt8 _BindPoint, EVulkanDescriptorType _Type, UInt16 _Count, EVulkanShaderStage _ShaderStages)
 	{
-		Array<VkDescriptorSetLayoutBinding> Bindings(BindingSlots.size());
-		std::transform(BindingSlots.begin(), BindingSlots.end(),
-					   Bindings.begin(),
-					   [](const FBinding& _BindingSlot)->VkDescriptorSetLayoutBinding
-						{
-							VE_ASSERT(_BindingSlot.BindPoint >= 0);
-			
-							return VkDescriptorSetLayoutBinding
-							{
-								.binding		 = UInt32(_BindingSlot.BindPoint),
-								.descriptorType  = AutoCast(_BindingSlot.DescriptorType),
-								.descriptorCount = _BindingSlot.DescriptorCount,
-								.stageFlags		 = AutoCast(_BindingSlot.ShaderStages),
-								.pImmutableSamplers = _BindingSlot.ImmutableSamplers.empty()? nullptr : _BindingSlot.ImmutableSamplers.data(),
-							};
-						});
+		Bindings.emplace_back(VkDescriptorSetLayoutBinding
+			{
+				.binding			= _BindPoint,
+				.descriptorType		= AutoCast(_Type),
+				.descriptorCount	= _Count,
+				.stageFlags			= AutoCast(_ShaderStages),
+				.pImmutableSamplers = nullptr,
+			});
+
+		return this;
+	}
+
+	SharedPtr<FVulkanDescriptorSetLayout> FVulkanDescriptorSetLayout::
+	Build()
+	{
+		VE_ASSERT(!IsBuilt());
 
 		VkDescriptorSetLayoutCreateInfo CreateInfo
 		{
@@ -71,13 +74,18 @@ export namespace VE
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
 		{ throw SRuntimeError("Failed to create the FVulkanDescriptorSetLayout!"); }
+
+		return shared_from_this();
 	}
 
-	FVulkanDescriptorSetLayout::
-	~FVulkanDescriptorSetLayout()
+	void FVulkanDescriptorSetLayout::
+	Destroy()
 	{
-		vkDestroyDescriptorSetLayout(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
-		Handle = VK_NULL_HANDLE;
+		if (IsBuilt())
+		{
+			vkDestroyDescriptorSetLayout(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
+			Handle = VK_NULL_HANDLE;
+		}
 	}
 	
 } // namespace VE

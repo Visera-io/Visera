@@ -60,8 +60,8 @@ export namespace VE
             });
 
         OpaquePipeline = RHI::FRenderPipeline::Create(PipelineLayout, PipelineSetting,
-            FShader::Create("URPForwardGeometry.slang", "VertexMain")->Compile()->GetRHIShader(),
-            FShader::Create("URPForwardGeometry.slang", "FragmentMain")->Compile()->GetRHIShader());
+            FShader::Create("URP-Forward-Geometry.slang", "VertexMain")->Compile()->GetCompiledShader(),
+            FShader::Create("URP-Forward-Geometry.slang", "FragmentMain")->Compile()->GetCompiledShader());
 
         AddSubpass(FSubpass{
 				.Pipeline = OpaquePipeline,

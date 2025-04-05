@@ -37,7 +37,7 @@ export namespace VE
 		GetHandle() const -> const VkDescriptorPool {return Handle; }
 
 		Bool inline
-		HasBuilt() const { return Handle != VK_NULL_HANDLE; }
+		IsBuilt() const { return Handle != VK_NULL_HANDLE; }
 
 		FVulkanDescriptorPool() noexcept = default;
 		~FVulkanDescriptorPool() = default;
@@ -142,15 +142,18 @@ export namespace VE
 	SharedPtr<FVulkanDescriptorSet> FVulkanDescriptorPool::
 	CreateDescriptorSet(SharedPtr<const FVulkanDescriptorSetLayout> _Layout)
 	{
+		if(!_Layout->IsBuilt())
+		{ throw SRuntimeError("Failed to create the Descriptor Set! -- The Layout is not built!"); }
+
 		if (Children.size() >= MaxSets)
 		{ throw SRuntimeError(Text("Cannot create more DescriptorSet from this DescriptorPool! -- (MaxSets:{})", MaxSets)); }
 
-		for (auto& Binding : _Layout->BindingSlots)
+		for (auto& Binding : _Layout->Bindings)
 		{
-			auto& Resource = DescriptorTable[Binding.DescriptorType];
-			Resource -= Binding.DescriptorCount;
+			auto& Resource = DescriptorTable[EVulkanDescriptorType(Binding.descriptorType)];
+			Resource -= Binding.descriptorCount;
 			if (Resource < 0)
-			{ throw SRuntimeError(Text("Failed to allocate Descriptor({}) from current DescriptorPool!", UInt32(Binding.DescriptorType))); }
+			{ throw SRuntimeError(Text("Failed to allocate Descriptor({}) from current DescriptorPool!", UInt32(Binding.descriptorType))); }
 		}
 
 		auto DescriptorSet = CreateSharedPtr<FVulkanDescriptorSet>(shared_from_this(), _Layout);

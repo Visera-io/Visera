@@ -29,7 +29,7 @@ export namespace VE
 		auto GetFileName()		const -> StringView { return FileName; }
 		auto GetEntryPoint()	const -> StringView { return EntryPoint; }
 		auto GetShaderStage()	const -> RHI::EShaderStage { VE_ASSERT(IsCompiled()); return Handle->GetStage(); }
-		auto GetRHIShader()		const -> SharedPtr<const RHI::FSPIRVShader> { if (!IsCompiled()) { throw SRuntimeError("Failed to get RHIShader! -- This shader is not compiled!"); } return Handle; }
+		auto GetCompiledShader()const -> SharedPtr<const RHI::FSPIRVShader> { VE_ASSERT(IsCompiled()); return Handle; }
 		auto GetCompatiblePipelineLayout() const -> SharedPtr<const RHI::FPipelineLayout> { return CompatiblePipelineLayout; }
 
 		FShader() = delete;
@@ -37,7 +37,7 @@ export namespace VE
 		~FShader() = default;
 
 	private:
-		SharedPtr<RHI::FSPIRVShader>		Handle;
+		SharedPtr<RHI::FSPIRVShader>Handle;
 		String						FileName;   // Only Filename, Do not use FPath.
 		String						EntryPoint;
 		ELanguage				    Language = ELanguage::Slang;

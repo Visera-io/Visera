@@ -26,7 +26,7 @@ export namespace VE
 		auto inline
 		Confirm() -> SharedPtr<FVulkanRenderPipelineSetting> { bConfirmed = True; return shared_from_this(); }
 		Bool inline
-		HasConfirmed() const { return bConfirmed; }
+		IsConfirmed() const { return bConfirmed; }
 
 		struct FVertexInputDescription
 		{

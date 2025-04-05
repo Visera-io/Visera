@@ -24,8 +24,8 @@ export namespace VE
 		static inline auto
 		Create(SharedPtr<const FVulkanPipelineLayout>        _Layout,
 			   SharedPtr<const FVulkanRenderPipelineSetting> _Setting,
-			   SharedPtr<const FVulkanSPIRVShader>                _VertexShader,
-			   SharedPtr<const FVulkanSPIRVShader>                _FragmentShader)
+			   SharedPtr<const FVulkanSPIRVShader>           _VertexShader,
+			   SharedPtr<const FVulkanSPIRVShader>           _FragmentShader)
 		{ return CreateSharedPtr<FVulkanRenderPipeline>(_Layout, _Setting, _VertexShader, _FragmentShader); }
 
 		auto GetSetting() const -> SharedPtr<const FVulkanRenderPipelineSetting>{ return Setting; }
@@ -39,8 +39,8 @@ export namespace VE
 		FVulkanRenderPipeline() = delete;
 		FVulkanRenderPipeline(SharedPtr<const FVulkanPipelineLayout>        _Layout,
 			                  SharedPtr<const FVulkanRenderPipelineSetting> _Setting,
-			                  SharedPtr<const FVulkanSPIRVShader>                _VertexShader,
-			                  SharedPtr<const FVulkanSPIRVShader>                _FragmentShader)
+			                  SharedPtr<const FVulkanSPIRVShader>           _VertexShader,
+			                  SharedPtr<const FVulkanSPIRVShader>           _FragmentShader)
 			: FVulkanPipeline{EVulkanPipelineBindPoint::Graphics, _Layout},
 			  Setting{ std::move(_Setting) },
 			  VertexShader{ std::move(_VertexShader) },
@@ -59,10 +59,10 @@ export namespace VE
 		if(_Owner == VK_NULL_HANDLE)
 		{ throw SRuntimeError("Failed to build the Render Pipeline! -- The Render Pass is NULL!"); }
 
-		if(!Layout->HasBuilt())
+		if(!Layout->IsBuilt())
 		{ throw SRuntimeError("Failed to build RenderPipeline! -- The Layout is not built!"); }
 
-		if(!Setting->HasConfirmed())
+		if(!Setting->IsConfirmed())
 		{ throw SRuntimeError("Failed to build RenderPipeline! -- The Setting is not confirmed!"); }
 		
 		Array<VkPipelineShaderStageCreateInfo> ShaderStageCreateInfos;

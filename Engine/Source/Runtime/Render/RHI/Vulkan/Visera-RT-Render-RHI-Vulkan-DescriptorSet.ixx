@@ -48,6 +48,9 @@ export namespace VE
 	void FVulkanDescriptorSet::
 	WriteImage(UInt32 _BindPoint, SharedPtr<const FVulkanImageView> _ImageView, SharedPtr<const FVulkanSampler> _Sampler/* = nullptr */)
 	{
+		if (!Layout->HasBinding(_BindPoint))
+		{ throw SRuntimeError("Failed to write the image! -- Invaild BindPoint!"); }
+
 		if (_ImageView->IsExpired())
 		{ throw SRuntimeError("Failed to write an expired VulkanImage to the descriptor set!"); }
 
@@ -66,7 +69,7 @@ export namespace VE
 			.dstBinding		= _BindPoint,
 			.dstArrayElement= 0,
 			.descriptorCount= 1,
-			.descriptorType	= AutoCast(TargetBinding.DescriptorType),
+			.descriptorType	= TargetBinding.descriptorType,
 			.pImageInfo		= &ImageInfo,
 			.pBufferInfo	= nullptr,
 			.pTexelBufferView = nullptr,

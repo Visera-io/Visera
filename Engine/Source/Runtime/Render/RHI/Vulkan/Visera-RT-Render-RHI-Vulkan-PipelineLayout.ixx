@@ -32,7 +32,7 @@ export namespace VE
 		GetHandle() const -> const VkPipelineLayout		{ return Handle; }
 
 		Bool inline
-		HasBuilt() const { return Handle != VK_NULL_HANDLE; }
+		IsBuilt() const { return Handle != VK_NULL_HANDLE; }
 		Bool inline
 		HasPushConstant() const { return !PushConstantRanges.empty(); }
 		Bool inline
@@ -63,6 +63,9 @@ export namespace VE
 	FVulkanPipelineLayout* FVulkanPipelineLayout::
 	AddDescriptorSetLayout(SharedPtr<const FVulkanDescriptorSetLayout> _DescriptorSetLayout)
 	{
+		if(!_DescriptorSetLayout->IsBuilt())
+		{ throw SRuntimeError("Failed to add the Descriptor Set! -- The Layout is not built!"); }
+
 		DescriptorSetLayouts.emplace_back(std::move(_DescriptorSetLayout));
 		return this;
 	}
@@ -70,6 +73,8 @@ export namespace VE
 	SharedPtr<FVulkanPipelineLayout> FVulkanPipelineLayout::
 	Build()
 	{
+		VE_ASSERT(!IsBuilt());
+
 		Array<VkDescriptorSetLayout> DescriptorSetLayoutInfos(DescriptorSetLayouts.size());
 		std::transform(DescriptorSetLayouts.begin(), DescriptorSetLayouts.end(),
 					   DescriptorSetLayoutInfos.begin(),
