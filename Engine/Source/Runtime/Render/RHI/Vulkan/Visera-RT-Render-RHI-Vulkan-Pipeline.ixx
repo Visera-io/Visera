@@ -17,15 +17,18 @@ export namespace VE
 		auto GetLayout()	const -> SharedPtr<const FVulkanPipelineLayout>		{ return Layout; }
 		auto GetBindPoint() const -> EVulkanPipelineBindPoint					{ return BindPoint;}
 		auto GetHandle()	const -> const VkPipeline							{ return Handle; }
+
+		Bool HasPushConstant() const { return Layout->HasPushConstant(); }
 		
 		FVulkanPipeline() = delete;
 		FVulkanPipeline(EVulkanPipelineBindPoint _BindPoint, SharedPtr<const FVulkanPipelineLayout> _Layout) 
-			:BindPoint{_BindPoint}, Layout{ std::move(_Layout) } {}
+			:BindPoint{_BindPoint}, Layout{ std::move(_Layout) }
+		{ if(!Layout->HasBuilt()) { std::const_pointer_cast<FVulkanPipelineLayout>(Layout)->Build(); } }
 		
 	protected:
-		VkPipeline								Handle{ VK_NULL_HANDLE };
-		EVulkanPipelineBindPoint				BindPoint;
-		SharedPtr<const FVulkanPipelineLayout>	Layout;
+		VkPipeline                             Handle{ VK_NULL_HANDLE };
+		EVulkanPipelineBindPoint               BindPoint;
+		SharedPtr<const FVulkanPipelineLayout> Layout;
 	};
 
 } // namespace VE

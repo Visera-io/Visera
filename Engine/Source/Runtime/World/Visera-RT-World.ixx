@@ -25,9 +25,9 @@ export namespace VE
 		GetCoordinate() -> const FViseraChart& { return Atlas::Visera; }
 
 		template<VObjectType T> static auto
-		CreateObject(FName _Name) -> SharedPtr<T> ;
+		CreateObject(FName _Name) -> SharedPtr<T>;
 		static inline auto
-		SearchObject(FName _Name)->SharedPtr<VObject>;
+		SearchObject(FName _Name) -> SharedPtr<VObject>;
 		// static inline auto
 		// CreateStage(FName _StageName, const String& _StageFile) -> SharedPtr<FStage> { return CreateSharedPtr<FStage>(_StageName, _StageFile); }
 

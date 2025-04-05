@@ -30,10 +30,10 @@ export namespace VE
 
 	public:
 		FVulkanRenderPipeline() = delete;
-		FVulkanRenderPipeline(SharedPtr<const FVulkanPipelineLayout> _Layout,
+		FVulkanRenderPipeline(SharedPtr<const FVulkanPipelineLayout>        _Layout,
 			                  SharedPtr<const FVulkanRenderPipelineSetting> _Setting,
-			                  SharedPtr<const FVulkanShader> _VertexShader,
-			                  SharedPtr<const FVulkanShader> _FragmentShader)
+			                  SharedPtr<const FVulkanShader>                _VertexShader,
+			                  SharedPtr<const FVulkanShader>                _FragmentShader)
 			: FVulkanPipeline{EVulkanPipelineBindPoint::Graphics, _Layout},
 			  Setting{ std::move(_Setting) },
 			  VertexShader{ std::move(_VertexShader) },
@@ -50,8 +50,11 @@ export namespace VE
 	Create(const VkRenderPass _Owner, UInt32 _SubpassIndex)
 	{
 		if(_Owner == VK_NULL_HANDLE)
-		{ throw SRuntimeError("Failed to create the Render Pipeline! -- The Render Pass is NULL!"); }
+		{ throw SRuntimeError("Failed to build the Render Pipeline! -- The Render Pass is NULL!"); }
 
+		if(!Layout->HasBuilt())
+		{ throw SRuntimeError("Failed to build RenderPipeline! -- The Layout is not built!"); }
+		
 		Array<VkPipelineShaderStageCreateInfo> ShaderStageCreateInfos;
 
 		if (VertexShader && !VertexShader->IsExpired())

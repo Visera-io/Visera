@@ -18,16 +18,27 @@ export namespace VE
         auto GetOpaquePipeline() const -> SharedPtr<const FURPOpaquePipeline> { return OpaquePipeline; }
 
     private:
+        //Resources
+        SharedPtr<RHI::FDescriptorSetLayout>   DescriptorSetLayout;
+        //Layouts
         SharedPtr<RHI::FPipelineLayout>        PipelineLayout;
         SharedPtr<RHI::FRenderPipelineSetting> PipelineSetting;
-
+        //Pipelines
         SharedPtr<FURPOpaquePipeline>          OpaquePipeline;
     };
 
     FURPGeometryPass::
     FURPGeometryPass() : RHI::FRenderPass{ EType::DefaultForward }
     {
+        DescriptorSetLayout = RHI::CreateDescriptorSetLayout();
+
         PipelineLayout  = RHI::CreatePipelineLayout();
+        PipelineLayout->AddPushConstantRange(RHI::FPushConstantRange
+            {
+                .ShaderStages = RHI::EShaderStage::Vertex | RHI::EShaderStage::Fragment,
+                .Offset = 0,
+                .Size   = 1,
+            });
         
         PipelineSetting = RHI::CreateRenderPipelineSetting();
         PipelineSetting->SetVertexInputState(RHI::FRenderPipelineSetting::FVertexInputDescription
@@ -48,7 +59,7 @@ export namespace VE
                     }
                 }
             });
-
+         
         auto VertSPIRV = FileSystem::CreateBinaryFile(FPath{ VISERA_APP_SHADERS_DIR"/opaque.vert.spv" });
 		VertSPIRV->Load();
 		auto FragSPIRV = FileSystem::CreateBinaryFile(FPath{ VISERA_APP_SHADERS_DIR"/opaque.frag.spv" });

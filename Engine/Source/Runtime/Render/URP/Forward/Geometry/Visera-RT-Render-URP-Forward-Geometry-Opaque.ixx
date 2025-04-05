@@ -11,17 +11,17 @@ export namespace VE
     {
     public:
         FURPOpaquePipeline() = delete;
-        FURPOpaquePipeline(SharedPtr<const RHI::FPipelineLayout> _Layout,
+        FURPOpaquePipeline(SharedPtr<const RHI::FPipelineLayout>        _Layout,
                            SharedPtr<const RHI::FRenderPipelineSetting> _Settings,
-                           SharedPtr<const RHI::FShader> _VertexShader,
-                           SharedPtr<const RHI::FShader> _FragmentShader);
+                           SharedPtr<const RHI::FShader>                _VertexShader,
+                           SharedPtr<const RHI::FShader>                _FragmentShader);
     };
 
     FURPOpaquePipeline::
-    FURPOpaquePipeline(SharedPtr<const RHI::FPipelineLayout> _Layout,
+    FURPOpaquePipeline(SharedPtr<const RHI::FPipelineLayout>        _Layout,
                        SharedPtr<const RHI::FRenderPipelineSetting> _Settings,
-                       SharedPtr<const RHI::FShader> _VertexShader,
-                       SharedPtr<const RHI::FShader> _FragmentShader)
+                       SharedPtr<const RHI::FShader>                _VertexShader,
+                       SharedPtr<const RHI::FShader>                _FragmentShader)
         : RHI::FRenderPipeline{_Layout, _Settings, _VertexShader, _FragmentShader}
     {
 

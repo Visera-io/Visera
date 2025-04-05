@@ -134,11 +134,9 @@ export namespace VE
 		template<TRenderPass T> static auto
 		CreateRenderPass() -> SharedPtr<T>;
 		static inline auto
-		CreatePipelineLayout(const Array<FPushConstantRange>& _PushConstantRanges = {},
-						     const Array<SharedPtr<FVulkanDescriptorSetLayout>>& _DescriptorSetLayouts = {})
-		                    { return CreateSharedPtr<FPipelineLayout>(_PushConstantRanges, _DescriptorSetLayouts); }
+		CreatePipelineLayout() { return FPipelineLayout::Create(); }
 		static inline auto
-		CreateRenderPipelineSetting() -> SharedPtr<FRenderPipelineSetting> { return CreateSharedPtr<FRenderPipelineSetting>(); }
+		CreateRenderPipelineSetting() { return FRenderPipelineSetting::Create(); }
 
 		static inline auto
 		WaitFrameReady() -> FFrameContext&;

@@ -9,8 +9,8 @@ export namespace VE
 	class Atlas
 	{
 		VE_MODULE_MANAGER_CLASS(Atlas);
-	
-		VE_API const Visera = FViseraChart();
+	public:
+	    const static inline auto Visera = FViseraChart();
 	};
 	
 } // namespace VE

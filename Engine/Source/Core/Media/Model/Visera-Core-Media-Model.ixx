@@ -64,7 +64,7 @@ export namespace VE
 
         Data = Importer.ReadFile(Path.ToPlatformString().data(),
                 aiProcess_Triangulate	        |
-                aiProcess_ConvertToLeftHanded   |
+                aiProcess_ConvertToLeftHanded   | //Tips: World::Atlas::Visera
                 aiProcess_GenNormals            |
                 aiProcess_FixInfacingNormals);
 

@@ -236,7 +236,7 @@ export namespace VE
 	{
 		if (CurrentPipeline != nullptr)
 		{
-			VE_ASSERT(!CurrentPipeline->GetLayout()->GetPushConstantRanges().empty());
+			VE_ASSERT(!CurrentPipeline->HasPushConstant());
 			vkCmdPushConstants(
 				Handle,
 				CurrentPipeline->GetLayout()->GetHandle(),

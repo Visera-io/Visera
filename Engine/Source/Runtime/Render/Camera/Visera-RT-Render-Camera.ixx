@@ -60,8 +60,8 @@ export namespace VE
 			float j = (2*(k % 1001) - 1000) * 0.001;
 
 			//auto FocusPoint = Lens->Sample();
-			RTC::FRay Ray{{Origin.x() + i, Origin.y() + j, Origin.z() },
-			 		 {i, j, -1}};
+			RTC::FRay Ray{{Origin.x() + i, Origin.y() - j, Origin.z() },
+			 		 {i, -j, -1}};
 			//FRay Ray{{0, 0 , 2}, {i, j , -1}};
 
 			_Scene->Accept(&Ray);
