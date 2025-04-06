@@ -21,7 +21,7 @@ export namespace VE
 	class FVulkanRenderPass
 	{
 	public:
-		enum class EType { Background, DefaultForward, Overlay, Customized };
+		enum class EType { Background, DefaultForward, Postprocessing, Overlay, Customized };
 		struct FSubpass final
 		{
 			SharedPtr<FVulkanRenderPipeline>Pipeline;
@@ -126,6 +126,21 @@ export namespace VE
 				.InitialLayout  = EVulkanImageLayout::DepthStencilAttachment,
 				.FinalLayout    = EVulkanImageLayout::DepthStencilAttachment,
 			};
+			break;
+		}
+		case EType::Postprocessing:
+		{
+			Layout.AddColorAttachmentDesc(
+			{
+				.Layout			= EVulkanImageLayout::ColorAttachment,
+				.Format			= EVulkanFormat::U32_Normalized_R8_G8_B8_A8,
+				.SampleRate		= EVulkanSampleRate::X1,
+				.ViewType		= EVulkanImageViewType::Image2D,
+				.LoadOp			= EVulkanAttachmentIO::I_Keep,
+				.StoreOp		= EVulkanAttachmentIO::O_Store,
+				.InitialLayout	= EVulkanImageLayout::ShaderReadOnly,
+				.FinalLayout	= EVulkanImageLayout::ShaderReadOnly,
+			});
 			break;
 		}
 		case EType::Overlay:
@@ -322,17 +337,28 @@ export namespace VE
 		RenderArea = _RenderArea;
 		FVulkanExtent3D Extent{ RenderArea.extent.width, RenderArea.extent.height, 1 };
 
-		if (Type != EType::Overlay)
+		//[TODO]: Redesign this API
+		if (Type == EType::Postprocessing)
 		{
 			VE_ASSERT(_RenderTargets.size() == GVulkan->Swapchain->GetFrameCount());
 			Framebuffers.resize(_RenderTargets.size());
 
 			for(UInt8 Idx = 0; Idx < Framebuffers.size(); ++Idx)
 			{
-				Framebuffers[Idx].Create(Handle, Extent, _RenderTargets[Idx]);
+				Framebuffers[Idx].Build(Handle, Extent, _RenderTargets[Idx], True);
 			}
 		}
-		else //[TODO]: Redesign this API
+		else if (Type != EType::Overlay)
+		{
+			VE_ASSERT(_RenderTargets.size() == GVulkan->Swapchain->GetFrameCount());
+			Framebuffers.resize(_RenderTargets.size());
+
+			for(UInt8 Idx = 0; Idx < Framebuffers.size(); ++Idx)
+			{
+				Framebuffers[Idx].Build(Handle, Extent, _RenderTargets[Idx]);
+			}
+		}
+		else
 		{
 			ClearValues[0] = FClearValue{ .color{0.0f, 0.0f, 0.0f, 1.0f} };
 			const auto& SwapchainImages = GVulkan->Swapchain->GetImages();

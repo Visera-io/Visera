@@ -26,13 +26,14 @@ export namespace VE
     };
 
     FURPPostprocessingPass::
-    FURPPostprocessingPass() : RHI::FRenderPass{ EType::Background }
+    FURPPostprocessingPass() : RHI::FRenderPass{ EType::Postprocessing }
     {
         DescriptorSetLayout = RHI::CreateDescriptorSetLayout()
             ->AddBinding(0, RHI::EDescriptorType::CombinedImageSampler, 1, RHI::EShaderStage::Fragment)
             ->Build();
 
         PipelineLayout  = RHI::CreatePipelineLayout()
+            ->AddDescriptorSetLayout(DescriptorSetLayout)
             ->Build();
 
         PipelineSetting = RHI::CreateRenderPipelineSetting()
@@ -40,8 +41,8 @@ export namespace VE
             ->Confirm();
 
         GammaCorrectionPipeline = RHI::FRenderPipeline::Create(PipelineLayout, PipelineSetting,
-            FShader::Create("URP-Background-Skybox.slang", "VertexMain")->Compile()->GetCompiledShader(),
-            FShader::Create("URP-Background-Skybox.slang", "FragmentMain")->Compile()->GetCompiledShader());
+            FShader::Create("URP-Postprocessing-GammaCorrection.slang", "VertexMain")->Compile()->GetCompiledShader(),
+            FShader::Create("URP-Postprocessing-GammaCorrection.slang", "FragmentMain")->Compile()->GetCompiledShader());
 
         AddSubpass(FSubpass{
 				.Pipeline = GammaCorrectionPipeline,

@@ -86,6 +86,7 @@ export namespace VE
 			auto GetGraphicsCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer>    { return GraphicsCommandBuffer; }
 			auto GetEditorCommandBuffer()   -> SharedPtr<FGraphicsCommandBuffer>    { return EditorCommandBuffer;   }
 			auto GetColorImageShaderReadView() const -> SharedPtr<const FImageView> { return ColorImageShaderReadView; }
+			auto GetSVColorTexture() const -> SharedPtr<const FDescriptorSet>		{ return SVColorTexture; }
 
 			Bool IsReady() const { return !InFlightFence.IsBlocking(); }
 
@@ -93,6 +94,8 @@ export namespace VE
 			static inline FRenderArea RenderArea{ {0,0},{UInt32(Window::GetExtent().Width), UInt32(Window::GetExtent().Height) } }; //[FIXME]: Read from Config
 			SharedPtr<FRenderTarget> RenderTarget = CreateSharedPtr<FRenderTarget>();
 			SharedPtr<FImageView>    ColorImageShaderReadView;
+
+			SharedPtr<FDescriptorSet> SVColorTexture;
 
 			SharedPtr<FGraphicsCommandBuffer> GraphicsCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
 			SharedPtr<FGraphicsCommandBuffer> EditorCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
@@ -198,6 +201,12 @@ export namespace VE
 			auto ImmeCmds = CreateOneTimeGraphicsCommandBuffer();
 			ImmeCmds->StartRecording();
 
+			auto SVColorTextureDSLayout = RHI::CreateDescriptorSetLayout()
+				->AddBinding(0, EDescriptorType::CombinedImageSampler, 1, EShaderStage::Fragment)
+				->Build();
+
+			auto SVColorTextureSampler = RHI::CreateSampler(EFilter::Linear);
+
 			for (auto& Frame : Frames)
 			{
 				auto ColorImage = CreateImage(
@@ -273,6 +282,12 @@ export namespace VE
 				});
 
 			Fence.Wait();
+
+			for (auto& Frame : Frames)
+			{
+				Frame.SVColorTexture = RHI::CreateDescriptorSet(SVColorTextureDSLayout);
+				Frame.SVColorTexture->WriteImage(0, Frame.ColorImageShaderReadView, SVColorTextureSampler);
+			}
 		}
 
 		static void inline
@@ -304,6 +319,7 @@ export namespace VE
 		{
 		case FRenderPass::EType::Background:
 		case FRenderPass::EType::Customized:
+		case FRenderPass::EType::Postprocessing:
 		case FRenderPass::EType::DefaultForward:
 		{
 			RenderTargets.resize(Frames.size());
