@@ -1,6 +1,7 @@
 # Visera
 
-## Setup
-- Visera
+## Installation
+
+### Windows
+
 ### MacOS
-- brew install molten-vk
