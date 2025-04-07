@@ -11,14 +11,27 @@ import :GPU;
 export namespace VE
 {
 
-    class FVulkanSampler
+    class FVulkanSampler : public std::enable_shared_from_this<FVulkanSampler>
     {
     public:
+        static inline auto
+        Create(EVulkanFilter _Filter, EVulkanSamplerAddressMode _AddressMode = EVulkanSamplerAddressMode::ClampToEdge)
+        { return CreateSharedPtr<FVulkanSampler>(_Filter, _AddressMode); }
+        auto inline
+        SetFilters(EVulkanFilter _ZoomIn, EVulkanFilter _ZoomOut) { Filters.ZoomIn = _ZoomIn; Filters.ZoomOut = _ZoomOut; return this; }
+        auto inline
+        Build() -> SharedPtr<FVulkanSampler>;
+        void inline
+        Destroy();
+
+        Bool inline
+        IsBuilt() const { return Handle != VK_NULL_HANDLE; }
+
         auto GetHandle() const -> const VkSampler { return Handle; }
 
-        FVulkanSampler(EVulkanFilter _Filter = EVulkanFilter::Linear,
+        FVulkanSampler(EVulkanFilter _Filter,
                        EVulkanSamplerAddressMode _AddressMode = EVulkanSamplerAddressMode::ClampToEdge);
-        ~FVulkanSampler();
+        ~FVulkanSampler() { Destroy(); }
 
     private:
         VkSampler Handle {VK_NULL_HANDLE};
@@ -49,13 +62,8 @@ export namespace VE
         Bool                        bAnisotropy = True;
     };
 
-    FVulkanSampler::
-    FVulkanSampler(
-        EVulkanFilter             _Filter      /* = EVulkanFilter::Linear*/,
-        EVulkanSamplerAddressMode _AddressMode /* = EVulkanSamplerAddressMode::ClampToEdge*/)
-        :
-        Filters{ .ZoomIn{_Filter}, .ZoomOut{_Filter} },
-        AddressModes{ .U{_AddressMode}, .V{_AddressMode}, .W{_AddressMode} }
+    SharedPtr<FVulkanSampler> FVulkanSampler::
+    Build()
     {
         VkSamplerCreateInfo CreateInfo
         {
@@ -91,13 +99,29 @@ export namespace VE
             GVulkan->AllocationCallbacks,
             &Handle) != VK_SUCCESS)
         { throw SRuntimeError("Failed to create the Vulkan Sampler!"); }
+
+        return shared_from_this();
     }
 
     FVulkanSampler::
-    ~FVulkanSampler()
+    FVulkanSampler(
+        EVulkanFilter             _Filter      /* = EVulkanFilter::Linear*/,
+        EVulkanSamplerAddressMode _AddressMode /* = EVulkanSamplerAddressMode::ClampToEdge*/)
+        :
+        Filters{ .ZoomIn{_Filter}, .ZoomOut{_Filter} },
+        AddressModes{ .U{_AddressMode}, .V{_AddressMode}, .W{_AddressMode} }
     {
-        vkDestroySampler(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
-        Handle = VK_NULL_HANDLE;
+
+    }
+
+    void FVulkanSampler::
+    Destroy()
+    {
+        if (Handle != VK_NULL_HANDLE)
+        {
+            vkDestroySampler(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
+            Handle = VK_NULL_HANDLE;
+        }
     }
 
 } // namespace VE

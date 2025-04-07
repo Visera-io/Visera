@@ -1,6 +1,6 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.Render.URP.Postprocessing:GammaCorrection;
+export module Visera.Runtime.Render.URP.Postprocess:GammaCorrection;
 
 import Visera.Runtime.Render.RHI;
 

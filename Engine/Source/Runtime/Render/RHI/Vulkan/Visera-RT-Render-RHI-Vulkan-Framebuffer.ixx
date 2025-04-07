@@ -43,6 +43,7 @@ export namespace VE
 		SharedPtr<FVulkanRenderTarget> _RenderTargets,
 		Bool _bIgnoreDepthImage /* = False*/)
 	{
+		VE_ASSERT(_RenderTargets->IsConfirmed());
 		Extent = _Extent;
 		RenderTarget = _RenderTargets;
 		

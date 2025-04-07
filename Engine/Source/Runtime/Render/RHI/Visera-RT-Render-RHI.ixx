@@ -85,17 +85,26 @@ export namespace VE
 		public:
 			auto GetGraphicsCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer>    { return GraphicsCommandBuffer; }
 			auto GetEditorCommandBuffer()   -> SharedPtr<FGraphicsCommandBuffer>    { return EditorCommandBuffer;   }
-			auto GetColorImageShaderReadView() const -> SharedPtr<const FImageView> { return ColorImageShaderReadView; }
-			auto GetSVColorTexture() const -> SharedPtr<const FDescriptorSet>		{ return SVColorTexture; }
+			auto GetColorImageShaderReadView() const -> SharedPtr<const FImageView> { return SVColorView; }
+			auto GetSVColorTexture()    const -> SharedPtr<const FDescriptorSet>	{ return SVColorTexture; }
+			auto GetFinalColorTexture() const -> SharedPtr<const FDescriptorSet>    { return PostprocessOutputTexture; }
 
 			Bool IsReady() const { return !InFlightFence.IsBlocking(); }
 
 		private:
 			static inline FRenderArea RenderArea{ {0,0},{UInt32(Window::GetExtent().Width), UInt32(Window::GetExtent().Height) } }; //[FIXME]: Read from Config
-			SharedPtr<FRenderTarget> RenderTarget = CreateSharedPtr<FRenderTarget>();
-			SharedPtr<FImageView>    ColorImageShaderReadView;
+			static inline SharedPtr<FDescriptorSetLayout> SVColorTextureDSLayout;
+			static inline SharedPtr<FSampler>			  SVColorTextureSampler;
 
+			SharedPtr<FRenderTarget> ForwardRTs;
+			SharedPtr<FRenderTarget> PostprocessingRTs;
+
+			SharedPtr<FImageView>     SVColorView;
 			SharedPtr<FDescriptorSet> SVColorTexture;
+			SharedPtr<FImageView>     PostprocessInputView;
+			SharedPtr<FDescriptorSet> PostprocessInputTexture;
+			SharedPtr<FImageView>     PostprocessOutputView;
+			SharedPtr<FDescriptorSet> PostprocessOutputTexture;
 
 			SharedPtr<FGraphicsCommandBuffer> GraphicsCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
 			SharedPtr<FGraphicsCommandBuffer> EditorCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
@@ -112,7 +121,7 @@ export namespace VE
 		static inline auto
 		CreateDescriptorSet(SharedPtr<const FDescriptorSetLayout> _SetLayout)		-> SharedPtr<FDescriptorSet>		{ return GlobalDescriptorPool->CreateDescriptorSet(_SetLayout);		}
 		static inline auto
-		CreateSampler(EFilter _Filter, ESamplerAddressMode _AddressMode = ESamplerAddressMode::ClampToEdge)																-> SharedPtr<FSampler>				{ return CreateSharedPtr<FSampler>(_Filter, _AddressMode); }
+		CreateSampler(EFilter _Filter, ESamplerAddressMode _AddressMode = ESamplerAddressMode::ClampToEdge)	-> SharedPtr<FSampler> { return FSampler::Create(_Filter, _AddressMode); }
 		static inline auto
 		CreateGraphicsCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return ResetableGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
 		static inline auto
@@ -128,9 +137,9 @@ export namespace VE
 		static inline auto
 		CreateStagingBuffer(UInt64 _Size, EBufferUsage _Usages = EBufferUsage::TransferSource, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive, EMemoryUsage _Location = EMemoryUsage::Auto) -> SharedPtr<FBuffer>;
 		static inline auto
-		CreateFence(FFence::EStatus _Status = FFence::EStatus::Blocking)			-> FFence		 { return FFence{_Status};	}
+		CreateFence(FFence::EStatus _Status = FFence::EStatus::Blocking) -> FFence     { return FFence{_Status}; }
 		static inline auto
-		CreateSemaphore()															-> FSemaphore	 { return FSemaphore();	}
+		CreateSemaphore()                                                -> FSemaphore { return FSemaphore();    }
 		static inline auto
 		CreateShader(EShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize) -> SharedPtr<FSPIRVShader> { return CreateSharedPtr<FSPIRVShader>(_ShaderStage, _SPIRVCode, _CodeSize); }
 		template<TRenderPass T> static auto
@@ -201,11 +210,12 @@ export namespace VE
 			auto ImmeCmds = CreateOneTimeGraphicsCommandBuffer();
 			ImmeCmds->StartRecording();
 
-			auto SVColorTextureDSLayout = RHI::CreateDescriptorSetLayout()
+			FFrameContext::SVColorTextureDSLayout = RHI::CreateDescriptorSetLayout()
 				->AddBinding(0, EDescriptorType::CombinedImageSampler, 1, EShaderStage::Fragment)
 				->Build();
 
-			auto SVColorTextureSampler = RHI::CreateSampler(EFilter::Linear);
+			FFrameContext::SVColorTextureSampler = RHI::CreateSampler(EFilter::Linear)
+				->Build();
 
 			for (auto& Frame : Frames)
 			{
@@ -218,9 +228,27 @@ export namespace VE
 					EImageTiling::Optimal,
 					ESampleRate::X1
 				);
+				auto PostprocessImage = CreateImage(
+					EImageType::Image2D,
+					{ FFrameContext::RenderArea.extent.width, FFrameContext::RenderArea.extent.height, 1 },
+					EFormat::U32_Normalized_R8_G8_B8_A8,
+					EImageAspect::Color,
+					EImageUsage::ColorAttachment | EImageUsage::Sampled | EImageUsage::TransferSource,
+					EImageTiling::Optimal,
+					ESampleRate::X1
+				);
 				ImmeCmds->ConvertImageLayout(ColorImage, EVulkanImageLayout::ShaderReadOnly);
-				Frame.RenderTarget->AddColorImage(ColorImage);
-				Frame.ColorImageShaderReadView = ColorImage->CreateImageView();
+				ImmeCmds->ConvertImageLayout(PostprocessImage, EVulkanImageLayout::ShaderReadOnly);
+
+				Frame.SVColorView = ColorImage->CreateImageView();
+				Frame.SVColorTexture = RHI::CreateDescriptorSet(FFrameContext::SVColorTextureDSLayout);
+				Frame.SVColorTexture->WriteImage(0, Frame.SVColorView, FFrameContext::SVColorTextureSampler);
+
+				Frame.PostprocessInputView     = Frame.SVColorView;
+				Frame.PostprocessInputTexture  = Frame.SVColorTexture;
+				Frame.PostprocessOutputView    = PostprocessImage->CreateImageView();
+				Frame.PostprocessOutputTexture = RHI::CreateDescriptorSet(FFrameContext::SVColorTextureDSLayout);
+				Frame.PostprocessOutputTexture->WriteImage(0, Frame.PostprocessOutputView, FFrameContext::SVColorTextureSampler);
 
 				auto DepthImage = CreateImage(
 					EImageType::Image2D,
@@ -232,7 +260,14 @@ export namespace VE
 					ESampleRate::X1
 				);
 				ImmeCmds->ConvertImageLayout(DepthImage, EVulkanImageLayout::DepthStencilAttachment);
-				Frame.RenderTarget->AddDepthImage(DepthImage);
+				Frame.ForwardRTs = FRenderTarget::Create()
+					->AddColorImage(ColorImage)
+					->AddDepthImage(DepthImage)
+				    ->Confirm();
+
+				Frame.PostprocessingRTs = FRenderTarget::Create()
+					->AddColorImage(PostprocessImage)
+				    ->Confirm();
 			}
 
 			//[TODO]: Move to VulkanSwapchain Class?
@@ -282,12 +317,6 @@ export namespace VE
 				});
 
 			Fence.Wait();
-
-			for (auto& Frame : Frames)
-			{
-				Frame.SVColorTexture = RHI::CreateDescriptorSet(SVColorTextureDSLayout);
-				Frame.SVColorTexture->WriteImage(0, Frame.ColorImageShaderReadView, SVColorTextureSampler);
-			}
 		}
 
 		static void inline
@@ -295,6 +324,9 @@ export namespace VE
 		{
 			WaitDeviceIdle();
 			Frames.clear();
+			FFrameContext::SVColorTextureDSLayout->Destroy();
+			FFrameContext::SVColorTextureSampler->Destroy();
+
 			TransientGraphicsCommandPool.reset();
 			ResetableGraphicsCommandPool.reset();
 			GlobalDescriptorPool->Destroy();
@@ -319,14 +351,22 @@ export namespace VE
 		{
 		case FRenderPass::EType::Background:
 		case FRenderPass::EType::Customized:
-		case FRenderPass::EType::Postprocessing:
 		case FRenderPass::EType::DefaultForward:
 		{
 			RenderTargets.resize(Frames.size());
 			for (UInt8 Idx = 0; Idx < RenderTargets.size(); ++Idx)
-			{ RenderTargets[Idx] = Frames[Idx].RenderTarget; }
+			{ RenderTargets[Idx] = Frames[Idx].ForwardRTs; }
 
-			NewRenderPass->Create(FFrameContext::RenderArea, RenderTargets);
+			NewRenderPass->Build(FFrameContext::RenderArea, RenderTargets);
+			break;
+		}
+		case FRenderPass::EType::Postprocessing:
+		{
+			RenderTargets.resize(Frames.size());
+			for (UInt8 Idx = 0; Idx < RenderTargets.size(); ++Idx)
+			{ RenderTargets[Idx] = Frames[Idx].PostprocessingRTs; }
+
+			NewRenderPass->Build(FFrameContext::RenderArea, RenderTargets);
 			break;
 		}
 		case FRenderPass::EType::Overlay:
@@ -337,7 +377,7 @@ export namespace VE
 				.offset = {0,0},
 				.extent = {SwapchainExtent.width, SwapchainExtent.height},
 			};
-			NewRenderPass->Create(SwapchainArea, {/*Handle inside the Renderpass*/});
+			NewRenderPass->Build(SwapchainArea, {/*Handle inside the Renderpass*/});
 			break;
 		}
 		default:

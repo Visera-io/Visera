@@ -3,7 +3,7 @@ module;
 export module Visera.Runtime.Render.URP;
 export import Visera.Runtime.Render.URP.Background;
 export import Visera.Runtime.Render.URP.Forward;
-export import Visera.Runtime.Render.URP.Postprocessing;
+export import Visera.Runtime.Render.URP.Postprocess;
 
 export namespace VE
 {

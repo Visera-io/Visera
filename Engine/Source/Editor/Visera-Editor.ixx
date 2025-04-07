@@ -29,12 +29,6 @@ export namespace VE
 		CreateCanvas(SharedPtr<const FImage> _Image) -> WeakPtr<FCanvas>; //[TODO]: Return FName instead of WeakPtr
 
 	private:
-		struct FFrame
-		{
-			SharedPtr<RHI::FDescriptorSet> MainWindowDS;
-		};
-		static inline Array<FFrame> Frames;
-
 		static inline String LayoutFilePath{FPath{"ViseraEditor.ini"}.ToPlatformString()};
 		static inline HashMap<FName, SharedPtr<IWidget>> Widgets;
 		
@@ -146,19 +140,13 @@ export namespace VE
 			auto VulkanInstanceHandle = API->GetInstance().GetHandle();
 			ImGui_ImplVulkan_Init(&CreateInfo);
 
-			DefaultImageSampler = RHI::CreateSampler(RHI::EFilter::Nearest);
+			DefaultImageSampler = RHI::CreateSampler(RHI::EFilter::Nearest)
+				->Build();
 			ImGuiDescriptorSetLayout = RHI::CreateDescriptorSetLayout()
 				->AddBinding(0, RHI::EDescriptorType::CombinedImageSampler, 1, RHI::EShaderStage::Fragment)
 				->Build();
 
 			EditorLogo = Media::CreateImage(FName{ "editor::logo" }, FPath{ VISERA_ENGINE_IMAGES_DIR"/Logo.png" });
-
-			Frames.resize(RHI::GetSwapchainFrameCount());
-			for (UInt8 Idx = 0; Idx < Frames.size(); ++Idx)
-			{
-				Frames[Idx].MainWindowDS = RHI::CreateDescriptorSet(ImGuiDescriptorSetLayout);
-				Frames[Idx].MainWindowDS->WriteImage(0, RHI::GetFrames()[Idx].GetColorImageShaderReadView(), DefaultImageSampler);
-			}
 		}
 
 		static void Terminate()
@@ -194,9 +182,9 @@ export namespace VE
 	void Editor::
 	Display()
 	{
-		auto& Frame = Frames[RHI::GetSwapchainCursor()];
+		auto& Frame = RHI::GetCurrentFrame();
 		ImGui::Begin("Main Window");
-		ImGui::Image(ImTextureID(Frame.MainWindowDS->GetHandle()), { 800, 800 });
+		ImGui::Image(ImTextureID(Frame.GetFinalColorTexture()->GetHandle()), { 800, 800 });
 		ImGui::End();
 
 		for (const auto& [Name, Widget] : Widgets) { Widget->Render(); }

@@ -49,7 +49,7 @@ export namespace VE
 		void AddSubpass(const FSubpass& _SubpassInfo);
 		Bool HasSubpass(SharedPtr<const FVulkanRenderPipeline> _SubpassPipeline) const;
 
-		void Create(const FVulkanRenderArea& _RenderArea, const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets);
+		void Build(const FVulkanRenderArea& _RenderArea, const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets);
 		void Destroy();
 	
 	protected:
@@ -167,8 +167,8 @@ export namespace VE
 	}
 
 	void FVulkanRenderPass::
-	Create(const FVulkanRenderArea& _RenderArea,
-		   const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets)
+	Build(const FVulkanRenderArea& _RenderArea,
+	      const Array<SharedPtr<FVulkanRenderTarget>>& _RenderTargets)
 	{
 		VE_ASSERT(_RenderArea.extent.width > 0 && _RenderArea.extent.height > 0);
 		VE_ASSERT(!Subpasses.empty());

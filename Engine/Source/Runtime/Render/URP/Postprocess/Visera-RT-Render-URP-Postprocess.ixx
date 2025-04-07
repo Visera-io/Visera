@@ -1,6 +1,6 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.Render.URP.Postprocessing;
+export module Visera.Runtime.Render.URP.Postprocess;
 import :GammaCorrection;
 
 import Visera.Runtime.Render.RHI;
@@ -9,10 +9,10 @@ import Visera.Runtime.Render.Shader;
 export namespace VE
 {
 
-    class FURPPostprocessingPass : public RHI::FRenderPass
+    class FURPPostprocessPass : public RHI::FRenderPass
     {
     public:
-        FURPPostprocessingPass();
+        FURPPostprocessPass();
 
         auto GetGammaCorrectionPipeline() const -> SharedPtr<const RHI::FRenderPipeline> { return GammaCorrectionPipeline; }
 
@@ -25,8 +25,8 @@ export namespace VE
         SharedPtr<RHI::FRenderPipeline>        GammaCorrectionPipeline;
     };
 
-    FURPPostprocessingPass::
-    FURPPostprocessingPass() : RHI::FRenderPass{ EType::Postprocessing }
+    FURPPostprocessPass::
+    FURPPostprocessPass() : RHI::FRenderPass{ EType::Postprocessing }
     {
         DescriptorSetLayout = RHI::CreateDescriptorSetLayout()
             ->AddBinding(0, RHI::EDescriptorType::CombinedImageSampler, 1, RHI::EShaderStage::Fragment)
@@ -41,8 +41,8 @@ export namespace VE
             ->Confirm();
 
         GammaCorrectionPipeline = RHI::FRenderPipeline::Create(PipelineLayout, PipelineSetting,
-            FShader::Create("URP-Postprocessing-GammaCorrection.slang", "VertexMain")->Compile()->GetCompiledShader(),
-            FShader::Create("URP-Postprocessing-GammaCorrection.slang", "FragmentMain")->Compile()->GetCompiledShader());
+            FShader::Create("URP-Postprocess-GammaCorrection.slang", "VertexMain")->Compile()->GetCompiledShader(),
+            FShader::Create("URP-Postprocess-GammaCorrection.slang", "FragmentMain")->Compile()->GetCompiledShader());
 
         AddSubpass(FSubpass{
 				.Pipeline = GammaCorrectionPipeline,
