@@ -15,5 +15,5 @@ float4 VertexMain(uint _VertexID : SV_VertexID) : SV_Position
 [shader("fragment")]
 float4 FragmentMain() : SV_Target
 {
-    return float4(1.0, 0.5, 0.0, 1.0);
+    return float4(0.5, 0.0, 0.0, 1.0);
 }

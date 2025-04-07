@@ -29,7 +29,7 @@ export namespace VE
 	
 	private:
 		// Created in RenderPass
-		void Create(const VkRenderPass& _Owner, const FVulkanExtent3D& _Extent, SharedPtr<FVulkanRenderTarget> _RenderTargets);
+		void Build(const VkRenderPass& _Owner, const FVulkanExtent3D& _Extent, SharedPtr<FVulkanRenderTarget> _RenderTargets, Bool _bIgnoreDepthImage = False);
 		void Destroy();
 
 	public:
@@ -38,10 +38,12 @@ export namespace VE
 	};
 
 	void FVulkanFramebuffer::
-	Create(const VkRenderPass& _Owner,
+	Build(const VkRenderPass& _Owner,
 		const FVulkanExtent3D& _Extent,
-		SharedPtr<FVulkanRenderTarget> _RenderTargets)
+		SharedPtr<FVulkanRenderTarget> _RenderTargets,
+		Bool _bIgnoreDepthImage /* = False*/)
 	{
+		VE_ASSERT(_RenderTargets->IsConfirmed());
 		Extent = _Extent;
 		RenderTarget = _RenderTargets;
 		
@@ -54,7 +56,7 @@ export namespace VE
 		{
 			RenderTargetViews.push_back(ResolveImage->CreateImageView()->Release());
 		}
-		if (HasDepthImage())
+		if (HasDepthImage() && !_bIgnoreDepthImage)
 		{ RenderTargetViews.push_back(_RenderTargets->DepthImage->CreateImageView()->Release()); }
 	
 		VkFramebufferCreateInfo CreateInfo

@@ -20,7 +20,7 @@ export namespace VE
 	public:
 		enum class EStatus { Expired, Idle, Updating };
 
-		void WriteImage(UInt32 _BindPoint, SharedPtr<const FVulkanImageView> _ImageView, SharedPtr<const FVulkanSampler> _Sampler = nullptr);
+		void WriteImage(UInt32 _BindPoint, SharedPtr<const FVulkanImageView> _ImageView, SharedPtr<const FVulkanSampler> _Sampler);
 
 		Bool IsExpired() const { return Status == EStatus::Expired; }
 
@@ -46,7 +46,7 @@ export namespace VE
 	}
 
 	void FVulkanDescriptorSet::
-	WriteImage(UInt32 _BindPoint, SharedPtr<const FVulkanImageView> _ImageView, SharedPtr<const FVulkanSampler> _Sampler/* = nullptr */)
+	WriteImage(UInt32 _BindPoint, SharedPtr<const FVulkanImageView> _ImageView, SharedPtr<const FVulkanSampler> _Sampler)
 	{
 		if (!Layout->HasBinding(_BindPoint))
 		{ throw SRuntimeError("Failed to write the image! -- Invaild BindPoint!"); }

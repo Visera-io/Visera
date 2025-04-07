@@ -12,14 +12,22 @@ export namespace VE
 	class FVulkanRenderPass;
 	class FVulkanFramebuffer;
 
-	class FVulkanRenderTarget
+	class FVulkanRenderTarget : public std::enable_shared_from_this<FVulkanRenderTarget>
 	{
 		VE_NOT_COPYABLE(FVulkanRenderTarget);
 		friend class FVulkanRenderPass;
 		friend class FVulkanFramebuffer;
 	public:
-		void AddColorImage(SharedPtr<FVulkanImage> _ColorImage);
-		void AddDepthImage(SharedPtr<FVulkanImage> _DepthImage);
+		static inline auto
+		Create() { return CreateSharedPtr<FVulkanRenderTarget>(); }
+		auto inline
+		AddColorImage(SharedPtr<FVulkanImage> _ColorImage) -> FVulkanRenderTarget*;
+		auto inline
+		AddDepthImage(SharedPtr<FVulkanImage> _DepthImage) -> FVulkanRenderTarget*;
+		auto inline
+		Confirm() { VE_ASSERT(!IsConfirmed()); bConfirmed = True; return shared_from_this();}
+		Bool inline
+		IsConfirmed() const { return bConfirmed; }
 
 		auto GetColorImage(UInt8 _Index)	-> SharedPtr<FVulkanImage> { VE_ASSERT(_Index < ColorImages.size()); return ColorImages[_Index]; };
 		auto GetTotalImageCount()	const	-> UInt8 { return GetColorImageCount() + GetResolveImageCount() + (HasDepthImage()? 1 : 0); }
@@ -31,7 +39,6 @@ export namespace VE
 		auto Clone() const -> SharedPtr<FVulkanRenderTarget>;
 
 		FVulkanRenderTarget() = default;
-		FVulkanRenderTarget(const Array<SharedPtr<FVulkanImage>>& _ColorImages, SharedPtr<FVulkanImage> _DepthImage);
 		FVulkanRenderTarget(FVulkanRenderTarget&& _Another) = default;
 		FVulkanRenderTarget& operator=(FVulkanRenderTarget&& _Another) = default;
 
@@ -39,11 +46,13 @@ export namespace VE
 		Array<SharedPtr<FVulkanImage>>		ColorImages;
 		Array<SharedPtr<FVulkanImage>>		ResolveImages;
 		SharedPtr<FVulkanImage>				DepthImage;
+		Bool bConfirmed = False;
 	};
 
-	void FVulkanRenderTarget::
+	FVulkanRenderTarget* FVulkanRenderTarget::
 	AddColorImage(SharedPtr<FVulkanImage> _ColorImage)
 	{
+		VE_ASSERT(!IsConfirmed());
 		VE_ASSERT(AutoCast(EVulkanImageAspect::Color & _ColorImage->GetAspects()) != False);
 		auto& NewColorImage = ColorImages.emplace_back(std::move(_ColorImage));
 		if (NewColorImage->EnabledMSAA())
@@ -59,45 +68,22 @@ export namespace VE
 					EVulkanSampleRate::X1)
 			));
 		}
+
+		return this;
 	}
 
-	void FVulkanRenderTarget::
+	FVulkanRenderTarget* FVulkanRenderTarget::
 	AddDepthImage(SharedPtr<FVulkanImage> _DepthImage)
 	{
+		VE_ASSERT(!IsConfirmed());
 		VE_ASSERT(AutoCast(EVulkanImageAspect::Depth & _DepthImage->GetAspects()) != False);
 		if (!HasDepthImage())
 		{  
 			DepthImage = std::move(_DepthImage);
 		} 
 		else { throw SRuntimeError("Cannnot add more than one depth image!"); }
-	}
 
-	FVulkanRenderTarget::
-	FVulkanRenderTarget(const Array<SharedPtr<FVulkanImage>>&	_ColorImages,
-						 SharedPtr<FVulkanImage>				_DepthImage)
-		:ColorImages {_ColorImages},
-		 DepthImage  {std::move(_DepthImage)}
-	{
-		if (ColorImages.empty())
-		{ throw SRuntimeError("Failed to create Vulkan Render Targets! -- No Color Images."); }
-
-		// Create Resolve Images for each Color Image
-		if (ColorImages.front()->EnabledMSAA())
-		{
-			//[FIXME]: Some images may not need to MSAA
-			ResolveImages.resize(ColorImages.size());
-			for (UInt8 Idx = 0; Idx < ColorImages.size(); ++Idx)
-			{
-				ResolveImages[Idx] = GVulkan->Allocator->CreateImage(
-					ColorImages[Idx]->GetType(),
-					ColorImages[Idx]->GetExtent(),
-					ColorImages[Idx]->GetFormat(),
-					EVulkanImageAspect::Color,
-					EVulkanImageUsage::ColorAttachment | EVulkanImageUsage::InputAttachment,
-					EVulkanImageTiling::Optimal,
-					EVulkanSampleRate::X1);
-			}
-		}
+		return this;
 	}
 
 	SharedPtr<FVulkanRenderTarget> FVulkanRenderTarget::
