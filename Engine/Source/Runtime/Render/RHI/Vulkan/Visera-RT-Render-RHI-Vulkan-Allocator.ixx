@@ -82,7 +82,7 @@ export namespace VE
 		VE_NOT_COPYABLE(FVulkanBuffer);
 		friend class FVulkanAllocator;
 	public:
-		void Write(void* _Data, UInt64 _Size);
+		void Write(const void* _Data, UInt64 _Size, UInt64 _DstOffset = 0);
 
 		auto GetSize()		const	-> VkDeviceSize { return Allocation->GetSize(); }
 		auto GetUsages()    const   -> EVulkanBufferUsage { return Usages; }
@@ -348,7 +348,7 @@ export namespace VE
 	}
 
 	SharedPtr<FVulkanBuffer> FVulkanAllocator::
-	CreateBuffer(VkDeviceSize _Size,
+	CreateBuffer(VkDeviceSize       _Size,
 				 EVulkanBufferUsage _Usages,
 				 EVulkanSharingMode _SharingMode/* = ESharingMode::Exclusive*/,
 				 EVulkanMemoryUsage _Location/* = EMemoryUsage::Auto*/,
@@ -427,13 +427,22 @@ export namespace VE
 	}
 
 	void FVulkanBuffer::
-	Write(void* _Data, UInt64 _Size)
+	Write(const void* _Data, UInt64 _Size, UInt64 _DstOffset/* = 0*/)
 	{
 		VE_ASSERT(Allocation->IsMappingAllowed());
-		void* SwapArea;
-		vmaMapMemory(GVulkan->Allocator->GetHandle(), Allocation, &SwapArea);
-		Memory::Memcpy(SwapArea, _Data, _Size);
-		vmaUnmapMemory(GVulkan->Allocator->GetHandle(), Allocation);
+		VE_ASSERT(_DstOffset + _Size <= GetSize());
+		void* MappedData = nullptr;
+		if (Allocation->IsPersistentMap())
+		{
+			MappedData = Allocation->GetMappedData();
+			Memory::Memcpy(static_cast<Byte*>(MappedData) + _DstOffset, _Data, _Size);
+		}
+		else
+		{
+			vmaMapMemory(GVulkan->Allocator->GetHandle(), Allocation, &MappedData);
+			Memory::Memcpy(static_cast<Byte*>(MappedData) + _DstOffset, _Data, _Size);
+			vmaUnmapMemory(GVulkan->Allocator->GetHandle(), Allocation);
+		}
 	}
 
 } // namespace VE

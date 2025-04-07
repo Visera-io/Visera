@@ -7,6 +7,7 @@ export import Visera.Runtime.Render.RHI.Vulkan.Common;
 
 import Visera.Core.Signal;
 import Visera.Core.Time;
+import Visera.Core.Math.Basic;
 import Visera.Runtime.Platform.Window;
 
 export namespace VE
@@ -79,15 +80,29 @@ export namespace VE
 		using SSwapchainRecreation = FVulkanSwapchain::SRecreation;
 
 		enum ESystemRenderTarget : UInt8 { SV_Color, SV_Depth };
+		struct FMatrixUBOLayout
+		{
+			Matrix4x4F Projection = Matrix4x4F::Identity();
+			Matrix4x4F Viewing	  = Matrix4x4F::Identity();
+			Matrix4x4F Model      = Matrix4x4F::Identity();
+		};
+
 		class FFrameContext
 		{
 			friend class RHI;
 		public:
 			auto GetGraphicsCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer>    { return GraphicsCommandBuffer; }
 			auto GetEditorCommandBuffer()   -> SharedPtr<FGraphicsCommandBuffer>    { return EditorCommandBuffer;   }
+
 			auto GetColorImageShaderReadView() const -> SharedPtr<const FImageView> { return SVColorView; }
 			auto GetSVColorTexture()    const -> SharedPtr<const FDescriptorSet>	{ return SVColorTexture; }
 			auto GetFinalColorTexture() const -> SharedPtr<const FDescriptorSet>    { return PostprocessOutputTexture; }
+
+			auto GetMatrixUBO() const -> SharedPtr<const FDescriptorSet> { return MatrixUBO; }
+
+			void SetModelMatrix(const Matrix4x4F& _ModelMatrix)			  { MatrixData->Write(_ModelMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Model)); }
+			void SetViewingMatrix(const Matrix4x4F& _ViewingMatrix)		  { MatrixData->Write(_ViewingMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Viewing)); }
+			void SetProjectionMatrix(const Matrix4x4F& _ProjectionMatrix) { MatrixData->Write(_ProjectionMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Projection)); }
 
 			Bool IsReady() const { return !InFlightFence.IsBlocking(); }
 
@@ -95,6 +110,7 @@ export namespace VE
 			static inline FRenderArea RenderArea{ {0,0},{UInt32(Window::GetExtent().Width), UInt32(Window::GetExtent().Height) } }; //[FIXME]: Read from Config
 			static inline SharedPtr<FDescriptorSetLayout> SVColorTextureDSLayout;
 			static inline SharedPtr<FSampler>			  SVColorTextureSampler;
+			static inline SharedPtr<FDescriptorSetLayout> MatrixDSLayout;
 
 			SharedPtr<FRenderTarget> ForwardRTs;
 			SharedPtr<FRenderTarget> PostprocessingRTs;
@@ -105,6 +121,9 @@ export namespace VE
 			SharedPtr<FDescriptorSet> PostprocessInputTexture;
 			SharedPtr<FImageView>     PostprocessOutputView;
 			SharedPtr<FDescriptorSet> PostprocessOutputTexture;
+
+			SharedPtr<FBuffer>        MatrixData;
+			SharedPtr<FDescriptorSet> MatrixUBO;
 
 			SharedPtr<FGraphicsCommandBuffer> GraphicsCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
 			SharedPtr<FGraphicsCommandBuffer> EditorCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
@@ -136,6 +155,8 @@ export namespace VE
 		CreateIndexBuffer(UInt64 _Size)  { return CreateBuffer(_Size, EBufferUsage::Index | EBufferUsage::TransferDestination);  }
 		static inline auto
 		CreateStagingBuffer(UInt64 _Size, EBufferUsage _Usages = EBufferUsage::TransferSource, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive, EMemoryUsage _Location = EMemoryUsage::Auto) -> SharedPtr<FBuffer>;
+		static inline auto
+		CreateMappedBuffer(UInt64 _Size, EBufferUsage _Usages, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive) { return Vulkan->GetAllocator().CreateBuffer(_Size, _Usages, _SharingMode, EMemoryUsage::CPU, VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT); }
 		static inline auto
 		CreateFence(FFence::EStatus _Status = FFence::EStatus::Blocking) -> FFence     { return FFence{_Status}; }
 		static inline auto
@@ -217,8 +238,16 @@ export namespace VE
 			FFrameContext::SVColorTextureSampler = RHI::CreateSampler(EFilter::Linear)
 				->Build();
 
+			FFrameContext::MatrixDSLayout = RHI::CreateDescriptorSetLayout()
+				->AddBinding(0, EDescriptorType::UniformBuffer, 1, EShaderStage::Vertex)
+				->Build();
+
 			for (auto& Frame : Frames)
 			{
+				Frame.MatrixData = CreateMappedBuffer(sizeof(FMatrixUBOLayout), EBufferUsage::Uniform);
+				Frame.MatrixUBO = RHI::CreateDescriptorSet(FFrameContext::MatrixDSLayout);
+				Frame.MatrixUBO->WriteBuffer(0, Frame.MatrixData, 0, Frame.MatrixData->GetSize());
+
 				auto ColorImage = CreateImage(
 					EImageType::Image2D,
 					{ FFrameContext::RenderArea.extent.width, FFrameContext::RenderArea.extent.height, 1 },
@@ -326,6 +355,7 @@ export namespace VE
 			Frames.clear();
 			FFrameContext::SVColorTextureDSLayout->Destroy();
 			FFrameContext::SVColorTextureSampler->Destroy();
+			FFrameContext::MatrixDSLayout->Destroy();
 
 			TransientGraphicsCommandPool.reset();
 			ResetableGraphicsCommandPool.reset();

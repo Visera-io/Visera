@@ -2,23 +2,34 @@
 
 struct VertexInput
 {
-    float3 position : POSITION;  // layout(location = 0)
-    float3 normal   : NORMAL;    // layout(location = 1)
+    float3 Position : POSITION;  // layout(location = 0)
+    float3 Normal   : NORMAL;    // layout(location = 1)
 };
 
 struct VertexOutput
 {
-    float4 position : SV_POSITION;
-    float3 normal   : TEXCOORD0; // layout(location = 0) out
+    float4 Position : SV_POSITION;
+    float3 Normal   : TEXCOORD0; // layout(location = 0) out
 };
 
-[shader("vertex")]
-VertexOutput VertexMain(VertexInput input)
+cbuffer FMatrixUBO : register(b0)
 {
-    VertexOutput output;
-    output.position = float4(input.position, 1.0);
-    output.normal = input.normal;
-    return output;
+    float4x4 Projection;
+    float4x4 Viewing;
+    float4x4 Model;
+}MatrixUBO;
+
+[shader("vertex")]
+VertexOutput VertexMain(VertexInput _Input)
+{
+    float4 WorldPos   = mul(float4(_Input.Position, 1.0), MatrixUBO.Model);
+    float4 ViewingPos = mul(WorldPos, MatrixUBO.Viewing);
+    float4 ClippedPos = mul(ViewingPos, MatrixUBO.Projection);
+
+    VertexOutput Output;
+    Output.Position = ClippedPos;
+    Output.Normal   = _Input.Normal;
+    return Output;
 }
 
 // ==================== Fragment Shader ====================
