@@ -23,6 +23,8 @@ export namespace VE
 		Create() { return CreateSharedPtr<FVulkanRenderPipelineSetting>(); }
 		inline FVulkanRenderPipelineSetting*
 		SetCullMode(EVulkanCullMode _Mode)  { RasterizationState.cullMode = AutoCast(_Mode); return this; }
+		inline FVulkanRenderPipelineSetting*
+		EnableDepthTest();
 		auto inline
 		Confirm() -> SharedPtr<FVulkanRenderPipelineSetting> { bConfirmed = True; return shared_from_this(); }
 		Bool inline
@@ -68,6 +70,14 @@ export namespace VE
 
 		Bool bConfirmed = False;
 	};
+
+	FVulkanRenderPipelineSetting* FVulkanRenderPipelineSetting::
+	EnableDepthTest()
+	{
+		DepthStencilState.depthTestEnable = VK_TRUE;
+		DepthStencilState.depthWriteEnable = VK_TRUE;
+		return this;
+	}
 
 	void FVulkanRenderPipelineSetting::
 	SetVertexInputState(const FVertexInputDescription& _Description)

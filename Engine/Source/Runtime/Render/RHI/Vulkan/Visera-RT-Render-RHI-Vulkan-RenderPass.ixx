@@ -36,7 +36,6 @@ export namespace VE
 			Array<UInt8>					InputImageReferences;    // Input Image References from Previous Subpasses.
 			Array<UInt8>					PreserveImageReferences; // Const Image References Used in Subpasses.
 
-			Bool							bEnableDepthTest		= True;
 			Bool							bExternalSubpass		= False; // Load from external libs (e.g., ImGUI)
 		};
 
@@ -88,17 +87,6 @@ export namespace VE
 				.InitialLayout	= EVulkanImageLayout::ShaderReadOnly, //At the start of each frame, the ColorImage is sampled by the Editor.
 				.FinalLayout	= EVulkanImageLayout::ShaderReadOnly,
 			});
-			Layout.DepthDesc =
-			{
-				.Layout			= EVulkanImageLayout::DepthStencilAttachment,
-				.Format			= EVulkanFormat::S32_Float_Depth32,
-				.SampleRate		= EVulkanSampleRate::X1,
-				.ViewType		= EVulkanImageViewType::Image2D,
-				.LoadOp			= EVulkanAttachmentIO::I_Clear,
-				.StoreOp		= EVulkanAttachmentIO::O_Whatever,
-				.InitialLayout  = EVulkanImageLayout::DepthStencilAttachment,
-				.FinalLayout    = EVulkanImageLayout::DepthStencilAttachment,
-			};
 			bCreated = True;
 			break;
 		}
@@ -136,7 +124,7 @@ export namespace VE
 				.Format			= EVulkanFormat::U32_Normalized_R8_G8_B8_A8,
 				.SampleRate		= EVulkanSampleRate::X1,
 				.ViewType		= EVulkanImageViewType::Image2D,
-				.LoadOp			= EVulkanAttachmentIO::I_Keep,
+				.LoadOp			= EVulkanAttachmentIO::I_Clear,
 				.StoreOp		= EVulkanAttachmentIO::O_Store,
 				.InitialLayout	= EVulkanImageLayout::ShaderReadOnly,
 				.FinalLayout	= EVulkanImageLayout::ShaderReadOnly,
@@ -345,7 +333,7 @@ export namespace VE
 
 			for(UInt8 Idx = 0; Idx < Framebuffers.size(); ++Idx)
 			{
-				Framebuffers[Idx].Build(Handle, Extent, _RenderTargets[Idx], True);
+				Framebuffers[Idx].Build(Handle, Extent, _RenderTargets[Idx]);
 			}
 		}
 		else if (Type != EType::Overlay)
@@ -452,7 +440,7 @@ export namespace VE
 	void FVulkanRenderPass::
 	AddSubpass(const FSubpass& _SubpassInfo)
 	{
-		if(!_SubpassInfo.Pipeline && !_SubpassInfo.bEnableDepthTest)
+		if(!_SubpassInfo.Pipeline)
 		{ throw SRuntimeError("Cannot create a subpass without a pipeline!"); }
 		
 		if(_SubpassInfo.ColorImageReferences.empty())

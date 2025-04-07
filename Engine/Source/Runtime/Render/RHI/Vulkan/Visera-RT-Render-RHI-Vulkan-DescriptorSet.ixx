@@ -21,6 +21,7 @@ export namespace VE
 		enum class EStatus { Expired, Idle, Updating };
 
 		void WriteImage(UInt32 _BindPoint, SharedPtr<const FVulkanImageView> _ImageView, SharedPtr<const FVulkanSampler> _Sampler);
+		void WriteBuffer(UInt32 _BindPoint, SharedPtr<const FVulkanBuffer> _Buffer, UInt64 _Offset, UInt64 _Size);
 
 		Bool IsExpired() const { return Status == EStatus::Expired; }
 
@@ -43,6 +44,37 @@ export namespace VE
 		  Layout { std::move(_Layout) }
 	{
 		VE_ASSERT(Layout->GetHandle() != VK_NULL_HANDLE);
+	}
+
+	void FVulkanDescriptorSet::
+	WriteBuffer(UInt32 _BindPoint, SharedPtr<const FVulkanBuffer> _Buffer, UInt64 _Offset, UInt64 _Size)
+	{
+		if (!Layout->HasBinding(_BindPoint))
+		{ throw SRuntimeError("Failed to write the buffer! -- Invaild BindPoint!"); }
+
+		auto& TargetBinding = Layout->GetBinding(_BindPoint);
+
+		VkDescriptorBufferInfo BufferInfo
+		{
+			.buffer = _Buffer->GetHandle(),
+			.offset = _Offset,
+			.range  = _Size,
+		};
+		
+		VkWriteDescriptorSet WriteInfo
+		{
+			.sType			= VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.dstSet			= Handle,
+			.dstBinding		= _BindPoint,
+			.dstArrayElement= 0,
+			.descriptorCount= 1,
+			.descriptorType	= TargetBinding.descriptorType,
+			.pImageInfo		= nullptr,
+			.pBufferInfo	= &BufferInfo,
+			.pTexelBufferView = nullptr,
+		};
+
+		vkUpdateDescriptorSets(GVulkan->Device->GetHandle(), 1, &WriteInfo, 0, nullptr);
 	}
 
 	void FVulkanDescriptorSet::

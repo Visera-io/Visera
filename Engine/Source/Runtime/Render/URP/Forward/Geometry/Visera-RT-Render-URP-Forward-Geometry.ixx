@@ -31,13 +31,17 @@ export namespace VE
     FURPGeometryPass::
     FURPGeometryPass() : RHI::FRenderPass{ EType::DefaultForward }
     {
-        //DescriptorSetLayout = RHI::CreateDescriptorSetLayout();
+        DescriptorSetLayout = RHI::CreateDescriptorSetLayout()
+            ->AddBinding(0, RHI::EDescriptorType::UniformBuffer, 1, RHI::EShaderStage::Vertex)
+            ->Build();
 
         PipelineLayout = RHI::CreatePipelineLayout()
             ->AddPushConstantRange(0, sizeof(UInt32), RHI::EShaderStage::Vertex | RHI::EShaderStage::Fragment)
+            ->AddDescriptorSetLayout(DescriptorSetLayout)
             ->Build();
         
         PipelineSetting = RHI::CreateRenderPipelineSetting()
+            ->EnableDepthTest()
             ->Confirm();
 
         PipelineSetting->SetVertexInputState(RHI::FRenderPipelineSetting::FVertexInputDescription
@@ -72,7 +76,6 @@ export namespace VE
 				.SrcStageAccess = RHI::EAccess::None,
 				.DstStage = RHI::EGraphicsPipelineStage::ColorAttachmentOutput,
 				.DstStageAccess = RHI::EAccess::W_ColorAttachment,});
-
     }
 
 } // namespace VE
