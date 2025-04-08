@@ -28,7 +28,7 @@ VertexOutput VertexMain(VertexInput _Input)
 
     VertexOutput Output;
     Output.Position = ClippedPos;
-    Output.Normal   = _Input.Normal;
+    Output.Normal = _Input.Normal;
     return Output;
 }
 
@@ -36,11 +36,12 @@ VertexOutput VertexMain(VertexInput _Input)
 
 struct FragmentInput
 {
-    float3 normal : TEXCOORD0; // Matches vertex output
+    float3 Normal : TEXCOORD0; // Matches vertex output
+    float4 Position : SV_POSITION;
 };
 
 [shader("fragment")]
-float4 FragmentMain(FragmentInput input) : SV_TARGET
+float4 FragmentMain(FragmentInput _Input) : SV_TARGET
 {
-    return float4(input.normal, 1.0); // Use interpolated normal as color
+    return float4(_Input.Normal, 1.0); // Use interpolated normal as color
 }
