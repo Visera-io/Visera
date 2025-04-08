@@ -19,6 +19,7 @@ export namespace VE
 	{
 		VE_MODULE_MANAGER_CLASS(World);
 	public:
+		enum class EUnit{ CM, Default = CM };
 		using VObject = VObject;
 
 		static inline auto

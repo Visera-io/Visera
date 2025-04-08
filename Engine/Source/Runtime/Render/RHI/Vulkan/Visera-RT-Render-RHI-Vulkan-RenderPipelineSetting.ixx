@@ -171,7 +171,7 @@ export namespace VE
 			// Depth Test
 			.depthTestEnable	= VK_FALSE,
 			.depthWriteEnable	= VK_FALSE,
-			.depthCompareOp		= VK_COMPARE_OP_LESS, // Keep fragments, which has lower depth
+			.depthCompareOp		= VK_COMPARE_OP_GREATER, // Reversed-Z
 			.depthBoundsTestEnable= VK_FALSE,  // Only keep fragments that fall within the specified depth range.
 			// Stencil Test
 			.stencilTestEnable	= VK_FALSE,

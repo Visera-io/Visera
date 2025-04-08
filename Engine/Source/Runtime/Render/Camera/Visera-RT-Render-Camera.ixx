@@ -27,11 +27,20 @@ export namespace VE
 		void SetLens(SharedPtr<ILens> _NewLens) { Lens = std::move(_NewLens); }
 		void SetFilm(SharedPtr<IFilm> _NewFilm) { Film = std::move(_NewFilm); }
 
+		auto GetNear() const -> Float { return Near; }
+		void SetNear(Float _NewNear)  { Near = _NewNear; }
+		auto GetFar()  const -> Float { return Far; }
+		void SetFar(Float _NewFar)    { Far  = _NewFar; }
+		auto GetFOV() const -> Degree { return FOV; }
+		void SetFOV(Degree _NewFOV)   { FOV = _NewFOV; }
+		auto GetAspectRatio() const -> Float { return AspectRatio; }
+		void SetAspectRatio(Float _NewAspectRatio) { AspectRatio = _NewAspectRatio; }
+
 		auto GetPosition() const -> const Vector3F& { return Origin; }
 		void SetPosition(const Vector3F& _NewPosition) { Origin.x() = _NewPosition.x(); Origin.y() = _NewPosition.y(); Origin.z() = _NewPosition.z(); }
 
-		auto GetViewingMatrix() const -> const Matrix4x4F& { VE_WIP; return ViewingMatrix; }
-		auto GetProjectMatrix() const -> const Matrix4x4F& { VE_WIP; return ProjectMatrix; }
+		auto GetViewingMatrix() const -> const Matrix4x4F&;
+		auto GetProjectMatrix() const -> const Matrix4x4F&;
 
 		FCamera(EMode _Mode = EMode::Default) : Mode {_Mode} {};
 
@@ -40,15 +49,45 @@ export namespace VE
 		Vector3F   Origin = Atlas::Visera.Origin;
 		Vector3F   Upward = Atlas::Visera.Upward;
 		Vector3F   Forward= Atlas::Visera.Forward;
+		Float      Near   = 0.01;
+		Float      Far    = 100.0;
+		Degree     FOV    = 90.0;
+		Float      AspectRatio = 16.0 / 9.0;
 
-		Matrix4x4F ViewingMatrix;
-		Matrix4x4F ProjectMatrix;
+		mutable Matrix4x4F ViewingMatrix;
+		mutable Matrix4x4F ProjectMatrix;
 
 		SharedPtr<ILens>  Lens;
 		SharedPtr<IFilm>  Film;
 
-		Bool bUpdated = False;
+		Bool bUpdated   = False;
 	};
+
+	const Matrix4x4F& FCamera::
+	GetViewingMatrix() const
+	{
+		ViewingMatrix = Matrix4x4F::Identity();
+		return ViewingMatrix;
+	}
+
+	const Matrix4x4F& FCamera::
+	GetProjectMatrix() const
+	{
+		//Reversed Z
+		ProjectMatrix = Matrix4x4F::Zero();
+		// ProjectMatrix(0,0) = 1/(AspectRatio * Tan(FOV/2.0));
+		// ProjectMatrix(1,1) = -1.0/Tan(FOV/2.0);
+		// ProjectMatrix(2,2) = (Far + Near)/(Far - Near);
+		// ProjectMatrix(2,3) = 2 * Far * Near / (Far - Near);
+		// ProjectMatrix(3,2) = -1.0;
+		ProjectMatrix(0,0) = 1/(AspectRatio * std::tan(Radian(FOV)/2.0));
+		ProjectMatrix(1,1) = -1.0/std::tan(Radian(FOV)/2.0);
+		ProjectMatrix(2,2) = Near/(Far - Near);
+		ProjectMatrix(2,3) = Far * Near / (Far - Near);
+		ProjectMatrix(3,2) = 1.0;
+
+		return ProjectMatrix;
+	}
 
 	void FCamera::
 	Shoot(SharedPtr<const FScene> _Scene) const

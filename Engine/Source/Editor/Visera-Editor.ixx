@@ -184,7 +184,7 @@ export namespace VE
 	{
 		auto& Frame = RHI::GetCurrentFrame();
 		ImGui::Begin("Main Window");
-		ImGui::Image(ImTextureID(Frame.GetFinalColorTexture()->GetHandle()), { 800, 800 });
+		ImGui::Image(ImTextureID(Frame.GetFinalColorTexture()->GetHandle()), { 1280, 720 });
 		ImGui::End();
 
 		for (const auto& [Name, Widget] : Widgets) { Widget->Render(); }

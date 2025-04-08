@@ -112,6 +112,7 @@ export namespace VE
 			static inline SharedPtr<FSampler>			  SVColorTextureSampler;
 			static inline SharedPtr<FDescriptorSetLayout> MatrixDSLayout;
 
+			SharedPtr<FRenderTarget> BackgroundRTs;
 			SharedPtr<FRenderTarget> ForwardRTs;
 			SharedPtr<FRenderTarget> PostprocessingRTs;
 
@@ -289,6 +290,11 @@ export namespace VE
 					ESampleRate::X1
 				);
 				ImmeCmds->ConvertImageLayout(DepthImage, EVulkanImageLayout::DepthStencilAttachment);
+
+				Frame.BackgroundRTs = FRenderTarget::Create()
+					->AddColorImage(ColorImage)
+				    ->Confirm();
+
 				Frame.ForwardRTs = FRenderTarget::Create()
 					->AddColorImage(ColorImage)
 					->AddDepthImage(DepthImage)
@@ -380,7 +386,14 @@ export namespace VE
 		switch (FRenderPass::EType(NewRenderPass->GetType()))
 		{
 		case FRenderPass::EType::Background:
-		case FRenderPass::EType::Customized:
+		{
+			RenderTargets.resize(Frames.size());
+			for (UInt8 Idx = 0; Idx < RenderTargets.size(); ++Idx)
+			{ RenderTargets[Idx] = Frames[Idx].BackgroundRTs; }
+
+			NewRenderPass->Build(FFrameContext::RenderArea, RenderTargets);
+			break;
+		}
 		case FRenderPass::EType::DefaultForward:
 		{
 			RenderTargets.resize(Frames.size());
@@ -410,6 +423,8 @@ export namespace VE
 			NewRenderPass->Build(SwapchainArea, {/*Handle inside the Renderpass*/});
 			break;
 		}
+		case FRenderPass::EType::Customized:
+			throw SRuntimeError("Customized Render Pass WIP...");
 		default:
 			throw SRuntimeError("Failed to create the renderpass -- Unknown RenderPass Type!");
 		}
