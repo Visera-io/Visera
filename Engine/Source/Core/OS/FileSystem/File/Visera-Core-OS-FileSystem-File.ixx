@@ -3,6 +3,7 @@ module;
 export module Visera.Core.OS.FileSystem.File;
 export import :Interface;
 export import :BinaryFile;
+export import :JSONFile;
 
 export namespace VE
 {

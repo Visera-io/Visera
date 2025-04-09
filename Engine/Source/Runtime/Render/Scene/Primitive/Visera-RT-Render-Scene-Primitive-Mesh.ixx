@@ -65,6 +65,8 @@ export namespace VE
         {
             auto& Position = Vertices[Idx].Position;
             Memory::Memcpy(&Position, &(Mesh->mVertices[Idx]), sizeof(FPosition));
+            BoundingBox.MaxPosition = GetComponentWiseMax(BoundingBox.MaxPosition, Position);
+            BoundingBox.MinPosition = GetComponentWiseMin(BoundingBox.MinPosition, Position);
 
             auto& Normal = Vertices[Idx].Normal;
             if (Mesh->HasNormals())
@@ -76,6 +78,7 @@ export namespace VE
                 //Memory::Memcpy(UVs.data()->data(), Mesh->mTextureCoords[0], UVs.size() * sizeof(FUVCoord));
             }
         }
+        BoundingBox.Center = (BoundingBox.MaxPosition + BoundingBox.MinPosition) / 2.0;
        
         Indices.resize(3 * Mesh->mNumFaces);
         for (UInt32 Idx = 0; Idx < Mesh->mNumFaces; Idx++)

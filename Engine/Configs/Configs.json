@@ -7,12 +7,17 @@
             "Window":
             {
                 "Title":  "${AppName}",
-                "Extent": [1280, 960]
+                "Extent": [1600, 900]
             }
         },
-        "Path":
+        "Assets":
         {
-            
+            "Models": 
+            {
+                "test": "spot.obj",
+                "spot": "spot.obj",
+                "cube": "Cube.obj"
+            }
         },
         "PlugIns":
         {
