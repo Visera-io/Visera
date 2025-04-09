@@ -82,9 +82,13 @@ export namespace VE
 		enum ESystemRenderTarget : UInt8 { SV_Color, SV_Depth };
 		struct FMatrixUBOLayout
 		{
-			Matrix4x4F Projection = Matrix4x4F::Identity();
-			Matrix4x4F Viewing	  = Matrix4x4F::Identity();
-			Matrix4x4F Model      = Matrix4x4F::Identity();
+			Matrix4x4F Projection     = Matrix4x4F::Identity();
+			Matrix4x4F Viewing	      = Matrix4x4F::Identity();
+			Matrix4x4F Model          = Matrix4x4F::Identity();
+
+			Matrix4x4F InverseProjection = Matrix4x4F::Identity();
+			Matrix4x4F InverseViewing = Matrix4x4F::Identity();
+			Matrix4x4F CofactorModel  = Matrix4x4F::Identity();
 		};
 
 		class FFrameContext
@@ -103,6 +107,10 @@ export namespace VE
 			void SetModelMatrix(const Matrix4x4F& _ModelMatrix)			  { MatrixData->Write(_ModelMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Model)); }
 			void SetViewingMatrix(const Matrix4x4F& _ViewingMatrix)		  { MatrixData->Write(_ViewingMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Viewing)); }
 			void SetProjectionMatrix(const Matrix4x4F& _ProjectionMatrix) { MatrixData->Write(_ProjectionMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Projection)); }
+
+			void SetInverseProjectionMatrix(const Matrix4x4F& _InverseProjectionMatrix) { MatrixData->Write(_InverseProjectionMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, InverseProjection)); }
+			void SetInverseViewingMatrix(const Matrix4x4F& _InverseViewingMatrix)       { MatrixData->Write(_InverseViewingMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, InverseViewing)); }
+			void SetCofactorModelMatrix(const Matrix4x4F& _CofactorModelMatrix)         { MatrixData->Write(_CofactorModelMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, CofactorModel)); }
 
 			Bool IsReady() const { return !InFlightFence.IsBlocking(); }
 

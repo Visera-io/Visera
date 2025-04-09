@@ -1,6 +1,7 @@
 module;
 #include <Visera.h>
 #include <Eigen/Core>
+#include <Eigen/Dense>
 export module Visera.Core.Math.Basic:Vector;
 
 import :Operation;
@@ -28,24 +29,34 @@ export namespace VE
 							std::is_class_v<Vector3D> ||
 							std::is_class_v<Vector4D>;
 
-	template<VectorType T> inline
+	template<VectorType T>
 	T
 	Unit(const T& Vector) { return Vector.normalized(); }
 
-	template<VectorType T> inline
+	template<VectorType T>
 	void
 	Normalize(T& Vector) { Vector = Unit(Vector); }
 
-	template<VectorType T> inline
+	template<VectorType T>
 	Bool
 	IsUnit(const T& Vector) { return Equal(1.0f, Vector.norm()); }
 
-	template<VectorType T> inline
+	template<VectorType T>
 	Bool
 	IsZero(const T& Vector) { return Vector.isZero(); }
 
-	template<VectorType T> inline
+	template<VectorType T>
 	Bool
 	IsIdentity(const T& Vector) { return Vector.isIdentity(); }
+
+	//Even though this looks like it returns a new vector, Eigen is smart: if a is on both sides, Eigen avoids allocating a temporary and does it in-place behind the scenes (thanks to expression templates and lazy evaluation).
+	template<VectorType T>
+	T
+	GetComponentWiseMax(const T& _A, const T& _B) { return _A.cwiseMax(_B); }
+
+	//Even though this looks like it returns a new vector, Eigen is smart: if a is on both sides, Eigen avoids allocating a temporary and does it in-place behind the scenes (thanks to expression templates and lazy evaluation).
+	template<VectorType T>
+	T
+	GetComponentWiseMin(const T& _A, const T& _B) { return _A.cwiseMin(_B); }
 
 } // namespace VE

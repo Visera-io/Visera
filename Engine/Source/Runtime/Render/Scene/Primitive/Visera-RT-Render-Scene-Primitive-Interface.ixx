@@ -6,6 +6,7 @@ export module Visera.Runtime.Render.Scene.Primitive:Interface;
 import Visera.Core.Type;
 import Visera.Core.Signal;
 import Visera.Core.Media.Model;
+import Visera.Core.Math.Basic;
 
 import Visera.Runtime.Render.RHI;
 
@@ -22,11 +23,20 @@ export namespace VE
         virtual auto
         GetVertexByteSize()  const -> UInt64        = 0;
         virtual auto
-        GetIndexData()       const ->  const void*   = 0;
+        GetIndexData()       const ->  const void*  = 0;
         virtual auto
         GetIndexCount()      const -> UInt64        = 0;
         virtual auto
         GetIndexByteSize()   const -> UInt64        = 0;
+
+        Bool inline
+        HasVertex() const { return GetVertexCount() != 0; }
+        Bool inline
+        HasIndex()  const  { return GetIndexCount() != 0; }
+
+        struct FBoundingBox { Vector3F MaxPosition = Vector3F::Constant(LowerBound<Float>()), MinPosition = Vector3F::Constant(UpperBound<Float>()), Center = Vector3F::Constant(0); };
+        auto inline
+        GetBoundingBox() const -> const FBoundingBox& { return BoundingBox; }
 
         auto inline
         GetCPUVertexBufferSize() const -> UInt64 { return GetVertexCount() * GetVertexByteSize(); }
@@ -51,6 +61,8 @@ export namespace VE
 
         SharedPtr<RHI::FBuffer> VBO;
 		SharedPtr<RHI::FBuffer> IBO;
+
+        FBoundingBox BoundingBox;
     };
 
     IPrimitive::

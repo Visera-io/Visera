@@ -81,10 +81,15 @@ export namespace VE
 		// ProjectMatrix(2,3) = 2 * Far * Near / (Far - Near);
 		// ProjectMatrix(3,2) = -1.0;
 		ProjectMatrix(0,0) = 1/(AspectRatio * std::tan(Radian(FOV)/2.0));
-		ProjectMatrix(1,1) = -1.0/std::tan(Radian(FOV)/2.0);
-		ProjectMatrix(2,2) = Near/(Far - Near);
-		ProjectMatrix(2,3) = Far * Near / (Far - Near);
+		ProjectMatrix(1,1) = 1.0/std::tan(Radian(FOV)/2.0);
+		ProjectMatrix(2,2) = Far/(Far - Near);
+		ProjectMatrix(2,3) = Far * Near / (-Far + Near);
 		ProjectMatrix(3,2) = 1.0;
+		// ProjectMatrix(0,0) = 1/(AspectRatio * std::tan(Radian(FOV)/2.0));
+		// ProjectMatrix(1,1) = -1.0/std::tan(Radian(FOV)/2.0);
+		// ProjectMatrix(2,2) = Near/(Near - Far);
+		// ProjectMatrix(2,3) = -Far * Near / (-Far + Near);
+		// ProjectMatrix(3,2) = 1.0;
 
 		return ProjectMatrix;
 	}
