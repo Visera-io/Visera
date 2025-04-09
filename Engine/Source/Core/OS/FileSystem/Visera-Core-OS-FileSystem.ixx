@@ -17,6 +17,7 @@ export namespace VE
 		VE_API CreateFileIfNotExists(const FPath& _Path)	-> void;
 		VE_API CreateFile(const FPath& _FilePath)			-> SharedPtr<FFile>			{ return CreateSharedPtr<FFile>(_FilePath); };
 		VE_API CreateBinaryFile(const FPath& _FilePath)		-> SharedPtr<FBinaryFile>	{ return CreateSharedPtr<FBinaryFile>(_FilePath); };
+		VE_API CreateJSONFile(const FPath& _FilePath)		-> SharedPtr<FJSONFile>     { return CreateSharedPtr<FJSONFile>(_FilePath); }
 	};
 
 	void FileSystem::

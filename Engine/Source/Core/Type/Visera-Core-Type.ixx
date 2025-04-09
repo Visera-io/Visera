@@ -6,6 +6,7 @@ export import :Text;
 export import :Char;
 export import :Path;
 export import :Loop;
+export import :JSON;
 
 export namespace VE
 {
