@@ -204,7 +204,7 @@ export namespace VE
 					.attachment = Layout.GetDepthAttachmentLocation(),
 					.layout		= AutoCast(Layout.DepthDesc.value().Layout),
 				};
-				ClearValues.emplace_back(FClearValue{ .depthStencil{.depth = 1.0f, .stencil = 0} });
+				ClearValues.emplace_back(FClearValue{ .depthStencil{.depth = 0.0f, .stencil = 0} }); //Reversed-Z
 			};
 			
 			SubpassDescriptions[Idx] =
@@ -216,7 +216,7 @@ export namespace VE
 				.colorAttachmentCount	= UInt32(ColorRefs.size()),
 				.pColorAttachments		= ColorRefs.data(),
 				.pResolveAttachments	= ResolveRefs.empty()? nullptr : ResolveRefs.data(),
-				.pDepthStencilAttachment= Layout.HasResolveImage()? &DepthRef : nullptr,
+				.pDepthStencilAttachment= Layout.HasDepthImage()? &DepthRef : nullptr,
 				.preserveAttachmentCount= 0,
 				.pPreserveAttachments	= nullptr,
 			};
