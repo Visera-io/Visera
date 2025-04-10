@@ -13,15 +13,15 @@ export namespace VE
         FURPOpaquePipeline() = delete;
         FURPOpaquePipeline(SharedPtr<const RHI::FPipelineLayout>        _Layout,
                            SharedPtr<const RHI::FRenderPipelineSetting> _Settings,
-                           SharedPtr<const RHI::FSPIRVShader>                _VertexShader,
-                           SharedPtr<const RHI::FSPIRVShader>                _FragmentShader);
+                           SharedPtr<const RHI::FSPIRVShader>           _VertexShader,
+                           SharedPtr<const RHI::FSPIRVShader>           _FragmentShader);
     };
 
     FURPOpaquePipeline::
     FURPOpaquePipeline(SharedPtr<const RHI::FPipelineLayout>        _Layout,
                        SharedPtr<const RHI::FRenderPipelineSetting> _Settings,
-                       SharedPtr<const RHI::FSPIRVShader>                _VertexShader,
-                       SharedPtr<const RHI::FSPIRVShader>                _FragmentShader)
+                       SharedPtr<const RHI::FSPIRVShader>           _VertexShader,
+                       SharedPtr<const RHI::FSPIRVShader>           _FragmentShader)
         : RHI::FRenderPipeline{_Layout, _Settings, _VertexShader, _FragmentShader}
     {
 

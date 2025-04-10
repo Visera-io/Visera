@@ -72,7 +72,10 @@ export namespace VE
                 { Memory::Memcpy(&CurrentVertex.Normal, &(Mesh->mNormals[Idx]), sizeof(FNormal)); }
 
                 if (Mesh->HasTextureCoords(0))
-                { Memory::Memcpy(&CurrentVertex.TextureCoord, &(Mesh->mTextureCoords[0]), sizeof(FUVCoord));}
+                {
+                    const auto& TextureCoord = Mesh->mTextureCoords[0][Idx];
+                    Memory::Memcpy(&CurrentVertex.TextureCoord, &TextureCoord, sizeof(FUVCoord));
+                }
             }
 
             const UInt64 OldIndexCount = Indices.size();
@@ -81,7 +84,7 @@ export namespace VE
             {
                 const auto Face = Mesh->mFaces[Idx];
                 VE_ASSERT(Face.mNumIndices == 3);
-                UInt64 Offset = OldIndexCount + Idx * 3;
+                const UInt64 Offset = OldIndexCount + Idx * 3;
                 Indices[Offset + 0] = Face.mIndices[0] + OldVertexCount;
                 Indices[Offset + 1] = Face.mIndices[1] + OldVertexCount;
                 Indices[Offset + 2] = Face.mIndices[2] + OldVertexCount;

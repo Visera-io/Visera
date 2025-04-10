@@ -14,7 +14,7 @@
         {
             "Models": 
             {
-                "test": "Marry/Marry.obj",
+                "test": "Cube.obj",
                 "spot": "spot.obj",
                 "cube": "Cube.obj",
                 "marry": "Marry/Marry.obj"
