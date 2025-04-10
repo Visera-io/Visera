@@ -28,16 +28,16 @@ export namespace VE
 		void SetFilm(SharedPtr<IFilm> _NewFilm) { Film = std::move(_NewFilm); }
 
 		auto GetNear() const -> Float { return Near; }
-		void SetNear(Float _NewNear)  { Near = _NewNear; }
+		void SetNear(Float _NewNear)  { bUpdateProject = True; Clamp(&_NewNear, 0.01, Far); Near = _NewNear; }
 		auto GetFar()  const -> Float { return Far; }
-		void SetFar(Float _NewFar)    { Far  = _NewFar; }
+		void SetFar(Float _NewFar)    { bUpdateProject = True; Clamp(&_NewFar, Near, 10000); Far = _NewFar;  } //Max: 100 Meters
 		auto GetFOV() const -> Degree { return FOV; }
-		void SetFOV(Degree _NewFOV)   { FOV = _NewFOV; }
+		void SetFOV(Degree _NewFOV)   { bUpdateProject = True; Clamp(reinterpret_cast<Float*>(&_NewFOV), 10.0, 90.0); FOV = _NewFOV; }
 		auto GetAspectRatio() const -> Float { return AspectRatio; }
-		void SetAspectRatio(Float _NewAspectRatio) { AspectRatio = _NewAspectRatio; }
+		void SetAspectRatio(Float _NewAspectRatio) { bUpdateProject = True; AspectRatio = _NewAspectRatio; }
 
 		auto GetPosition() const -> const Vector3F& { return Origin; }
-		void SetPosition(const Vector3F& _NewPosition) { Origin.x() = _NewPosition.x(); Origin.y() = _NewPosition.y(); Origin.z() = _NewPosition.z(); }
+		void SetPosition(const Vector3F& _NewPosition) { bUpdateViewing = True; Origin.x() = _NewPosition.x(); Origin.y() = _NewPosition.y(); Origin.z() = _NewPosition.z(); }
 
 		auto GetViewingMatrix() const -> const Matrix4x4F&;
 		auto GetProjectMatrix() const -> const Matrix4x4F&;
@@ -54,19 +54,25 @@ export namespace VE
 		Degree     FOV    = 90.0;
 		Float      AspectRatio = 16.0 / 9.0;
 
-		mutable Matrix4x4F ViewingMatrix;
-		mutable Matrix4x4F ProjectMatrix;
+		mutable Matrix4x4F ViewingMatrix = Matrix4x4F::Identity();
+		mutable Matrix4x4F ProjectMatrix = Matrix4x4F::Identity();
 
 		SharedPtr<ILens>  Lens;
 		SharedPtr<IFilm>  Film;
 
-		Bool bUpdated   = False;
+		mutable Bool bUpdateViewing = True;
+		mutable Bool bUpdateProject = True;
 	};
 
 	const Matrix4x4F& FCamera::
 	GetViewingMatrix() const
 	{
-		ViewingMatrix = Matrix4x4F::Identity();
+		if (bUpdateViewing)
+		{
+			ViewingMatrix = Matrix4x4F::Identity();
+			bUpdateViewing = False;
+		}
+
 		return ViewingMatrix;
 	}
 
@@ -74,22 +80,17 @@ export namespace VE
 	GetProjectMatrix() const
 	{
 		//Reversed Z
-		ProjectMatrix = Matrix4x4F::Zero();
-		// ProjectMatrix(0,0) = 1/(AspectRatio * Tan(FOV/2.0));
-		// ProjectMatrix(1,1) = -1.0/Tan(FOV/2.0);
-		// ProjectMatrix(2,2) = (Far + Near)/(Far - Near);
-		// ProjectMatrix(2,3) = 2 * Far * Near / (Far - Near);
-		// ProjectMatrix(3,2) = -1.0;
-		ProjectMatrix(0,0) = 1/(AspectRatio * std::tan(Radian(FOV)/2.0));
-		ProjectMatrix(1,1) = 1.0/std::tan(Radian(FOV)/2.0);
-		ProjectMatrix(2,2) = Far/(Far - Near);
-		ProjectMatrix(2,3) = Far * Near / (-Far + Near);
-		ProjectMatrix(3,2) = 1.0;
-		// ProjectMatrix(0,0) = 1/(AspectRatio * std::tan(Radian(FOV)/2.0));
-		// ProjectMatrix(1,1) = -1.0/std::tan(Radian(FOV)/2.0);
-		// ProjectMatrix(2,2) = Near/(Near - Far);
-		// ProjectMatrix(2,3) = -Far * Near / (-Far + Near);
-		// ProjectMatrix(3,2) = 1.0;
+		if (bUpdateProject)
+		{
+			ProjectMatrix = Matrix4x4F::Zero();
+			ProjectMatrix(0,0) = 1/(AspectRatio * Tan(FOV/2.0));
+			ProjectMatrix(1,1) = 1.0 / Tan(FOV/2.0);
+			ProjectMatrix(2,2) = Far/(Far - Near);
+			ProjectMatrix(2,3) = Far * Near / (Near - Far);
+			ProjectMatrix(3,2) = 1.0;
+
+			bUpdateProject = False;
+		}
 
 		return ProjectMatrix;
 	}

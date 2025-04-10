@@ -38,6 +38,11 @@ export namespace VE
         auto inline
         GetBoundingBox() const -> const FBoundingBox& { return BoundingBox; }
 
+        Bool inline
+        IsUploadedToGPU() const { return VBO != nullptr; }
+        void
+        UploadToGPU();
+
         auto inline
         GetCPUVertexBufferSize() const -> UInt64 { return GetVertexCount() * GetVertexByteSize(); }
         auto inline
@@ -51,9 +56,9 @@ export namespace VE
         GetGPUVertexBuffer() const -> SharedPtr<const RHI::FBuffer> { return VBO; }
         auto inline
         GetGPUIndexBuffer()  const -> SharedPtr<const RHI::FBuffer> { return IBO; }
-    
+
         IPrimitive() = delete;
-        IPrimitive(SharedPtr<const FModel> _Model, UInt64 _VBOSize, UInt64 _IBOSize);
+        IPrimitive(SharedPtr<const FModel> _Model);
         virtual ~IPrimitive() = default;
 
     protected:
@@ -66,21 +71,43 @@ export namespace VE
     };
 
     IPrimitive::
-    IPrimitive(SharedPtr<const FModel> _Model, UInt64 _VBOSize, UInt64 _IBOSize)
+    IPrimitive(SharedPtr<const FModel> _Model)
         :
-        ModelReference{ _Model },
-        VBO{ RHI::CreateVertexBuffer(_VBOSize) },
-        IBO{ RHI::CreateIndexBuffer(_IBOSize)  }
+        ModelReference{ _Model }
     {
-        if (!VBO || !VBO->GetSize() ||
-            !Bool(VBO->GetUsages() & RHI::EBufferUsage::Vertex) ||
-            !Bool(VBO->GetUsages() & RHI::EBufferUsage::TransferDestination))
-        { throw SRuntimeError("Failed to create Primitive! -- Created an incorrect VBO!"); }
 
-        if (IBO && (!IBO->GetSize() ||
-            !Bool(IBO->GetUsages() & RHI::EBufferUsage::Index)  ||
-            !Bool(IBO->GetUsages() & RHI::EBufferUsage::TransferDestination)))
-        { throw SRuntimeError("Failed to create Primitive! -- Created an incorrect IBO!"); }
+    }
+
+    void IPrimitive::
+    UploadToGPU()
+    {
+        if (!HasVertex())
+        { throw SRuntimeError("Failed to create Primitive! -- Created an incorrect VBO!"); }
+        VBO = RHI::CreateVertexBuffer(GetCPUVertexBufferSize());
+
+        if (HasIndex())
+        { IBO = RHI::CreateIndexBuffer(GetCPUIndexBufferSize()); }
+
+        //Load to GPU [TODO]: Batch upload at RHI level (Add a transfer cmdbuffer in each Frame)
+        auto VertexStagingBuffer = RHI::CreateStagingBuffer(GetCPUVertexBufferSize());
+        VertexStagingBuffer->Write(GetVertexData(), GetCPUVertexBufferSize());
+        auto IndexStagingBuffer  = RHI::CreateStagingBuffer(GetCPUIndexBufferSize());
+        IndexStagingBuffer->Write(GetIndexData(), GetCPUIndexBufferSize());
+
+        auto Fence = RHI::CreateFence();
+        auto ImmeCmd = RHI::CreateOneTimeGraphicsCommandBuffer(); //[TODO]: Transfer Buffer
+        ImmeCmd->StartRecording();
+        {
+        ImmeCmd->WriteBuffer(VBO, VertexStagingBuffer);
+        ImmeCmd->WriteBuffer(IBO, IndexStagingBuffer);
+        }
+        ImmeCmd->StopRecording();
+        ImmeCmd->Submit(RHI::FCommandSubmitInfo
+            {
+                .WaitStages = RHI::EGraphicsPipelineStage::PipelineTop,
+                .SignalFence = &Fence
+            });
+        Fence.Wait();
     }
 
 }// namespace VE

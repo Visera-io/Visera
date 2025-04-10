@@ -48,7 +48,7 @@ struct FragmentInput
 float4 FragmentMain(FragmentInput _Input) : SV_TARGET
 {
     // Bling-Phone
-    float3 Light = { 1.0, 1.0, 1.0 };
+    float3 Light = { 1.0, 0, 0 };
     float3 LightClipPos = { 0.0, 2.0, 0.0 };
     float3 LightDir = normalize(LightClipPos - _Input.Position.xyz);
 

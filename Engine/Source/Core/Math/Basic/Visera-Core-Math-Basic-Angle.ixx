@@ -67,68 +67,68 @@ export namespace VE
 		Float Value = 0.0;
 	};
 
-	Radian inline Tan(Radian Radian)
+	Float inline Tan(Radian _Radian)
 	{
-		return std::tan(Radian);
+		return std::tan(_Radian);
 	}
 
-	Degree inline Tan(Degree Degree)
+	Float inline Tan(Degree _Degree)
 	{
-		return Tan(static_cast<Radian>(Degree));
+		return Tan(_Degree.ToRadian());
 	}
 
-	Float inline ATan(Float Value)
+	Radian inline ATan(Float _Value)
 	{
-		return Radian{std::atan(Value)};
+		return Radian{std::atan(_Value)};
 	}
 
-	Double inline ATan(Double Value)
+	Radian inline ATan(Double _Value)
 	{
-		return ATan(static_cast<Float>(Value));
+		return ATan(static_cast<Float>(_Value));
 	}
 
-	Radian inline Sin(Radian Radian)
+	Float inline Sin(Radian _Radian)
 	{
-		return std::sin(Radian);
+		return std::sin(_Radian);
 	}
 
-	Degree inline Sin(Degree Degree)
+	Degree inline Sin(Degree _Degree)
 	{
-		return Sin(static_cast<Radian>(Degree));
+		return Sin(_Degree.ToRadian());
 	}
 
-	Float inline ASin(Float Value)
+	Radian inline ASin(Float _Value)
 	{
-		VE_ASSERT(Value >= -1.0f && Value <= 1.0f);
-		return Radian{ static_cast<Float>(std::asin(Value)) };
+		VE_ASSERT(_Value >= -1.0f && _Value <= 1.0f);
+		return Radian{ static_cast<Float>(std::asin(_Value)) };
 	}
 
-	Double inline ASin(Double Value)
+	Radian inline ASin(Double _Value)
 	{
-		return ASin(static_cast<Float>(Value));
+		return ASin(static_cast<Float>(_Value));
 	}
 
-	Radian inline Cos(Radian Radian)
+	Float inline Cos(Radian _Radian)
 	{
-		return std::cos(Radian);
+		return std::cos(_Radian);
 	}
 
-	Degree inline Cos(Degree Degree)
+	Float inline Cos(Degree _Degree)
 	{
-		return Cos(static_cast<Radian>(Degree));
+		return Cos(_Degree.ToRadian());
 	}
 
-	Float inline ACos(Float Value)
+	Radian inline ACos(Float _Value)
 	{
-		VE_ASSERT(Value >= -1.0f && Value <= 1.0f);
-		return Radian{ static_cast<Float>(std::acos(Value)) };
+		VE_ASSERT(_Value >= -1.0f && _Value <= 1.0f);
+		return Radian{ static_cast<Float>(std::acos(_Value)) };
 	}
 
-	Double inline ACos(Double Value)
+	Radian inline ACos(Double _Value)
 	{
-		return Radian{ ACos(static_cast<Float>(Value)) };
+		return Radian{ ACos(static_cast<Float>(_Value)) };
 	}
-	
+
 	Degree::Degree(Radian TargetRadian):Value{(TargetRadian / PI) * 180.0f} {};
 	Degree& Degree::operator=(Radian TargetRadian) { Value = TargetRadian.ToDegree(); return *this; }
 	Degree::operator Radian() const { return Radian{ (Value / 180.0f) * Float(PI) }; }
