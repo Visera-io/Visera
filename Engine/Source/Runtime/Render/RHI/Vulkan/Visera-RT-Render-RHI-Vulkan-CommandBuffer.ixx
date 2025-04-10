@@ -67,7 +67,7 @@ export namespace VE
 
 		void BindPipeline(SharedPtr<const FVulkanPipeline> _Pipeline);
 		void PushConstants(EVulkanShaderStage _ShaderStages, const void* _Data, UInt32 _Size, UInt32 _Offset);
-		void BindDescriptorSet(SharedPtr<const FVulkanDescriptorSet> _DescriptorSet);
+		void BindDescriptorSet(UInt32 _Index, SharedPtr<const FVulkanDescriptorSet> _DescriptorSet);
 
 		void Free()	 { Status = EStatus::Expired; }
 
@@ -262,7 +262,7 @@ export namespace VE
 	}
 
 	void FVulkanCommandBuffer::
-	BindDescriptorSet(SharedPtr<const FVulkanDescriptorSet> _DescriptorSet)
+	BindDescriptorSet(UInt32 _Index, SharedPtr<const FVulkanDescriptorSet> _DescriptorSet)
 	{
 		auto DescriptorSetHandle = _DescriptorSet->GetHandle();
 		if (CurrentPipeline != nullptr)
@@ -270,7 +270,7 @@ export namespace VE
 			vkCmdBindDescriptorSets(Handle,
 				AutoCast(CurrentPipeline->GetBindPoint()),
 				CurrentPipeline->GetLayout()->GetHandle(),
-				0,
+				_Index,
 				1,
 				&DescriptorSetHandle,
 				0,

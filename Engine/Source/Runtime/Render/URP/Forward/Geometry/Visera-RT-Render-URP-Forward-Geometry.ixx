@@ -20,7 +20,8 @@ export namespace VE
 
     private:
         //Resources
-        SharedPtr<RHI::FDescriptorSetLayout>   DescriptorSetLayout;
+        SharedPtr<RHI::FDescriptorSetLayout>   TransformsDSLayout;
+        SharedPtr<RHI::FDescriptorSetLayout>   TexturesDSLayout;
         //Layouts
         SharedPtr<RHI::FPipelineLayout>        PipelineLayout;
         SharedPtr<RHI::FRenderPipelineSetting> PipelineSetting;
@@ -31,17 +32,23 @@ export namespace VE
     FURPGeometryPass::
     FURPGeometryPass() : RHI::FRenderPass{ EType::DefaultForward }
     {
-        DescriptorSetLayout = RHI::CreateDescriptorSetLayout()
+        TransformsDSLayout = RHI::CreateDescriptorSetLayout()
             ->AddBinding(0, RHI::EDescriptorType::UniformBuffer, 1, RHI::EShaderStage::Vertex)
+            ->Build();
+
+        TexturesDSLayout = RHI::CreateDescriptorSetLayout()
+            ->AddBinding(0, RHI::EDescriptorType::CombinedImageSampler, 1, RHI::EShaderStage::Fragment)
             ->Build();
 
         PipelineLayout = RHI::CreatePipelineLayout()
             ->AddPushConstantRange(0, sizeof(UInt32), RHI::EShaderStage::Vertex | RHI::EShaderStage::Fragment)
-            ->AddDescriptorSetLayout(DescriptorSetLayout)
+            ->AddDescriptorSetLayout(TransformsDSLayout)
+            ->AddDescriptorSetLayout(TexturesDSLayout)
             ->Build();
         
         PipelineSetting = RHI::CreateRenderPipelineSetting()
             ->EnableDepthTest()
+            ->SetCullMode(RHI::ECullMode::Back)
             ->Confirm();
 
         PipelineSetting->SetVertexInputState(RHI::FRenderPipelineSetting::FVertexInputDescription
@@ -59,6 +66,11 @@ export namespace VE
                         .Location = 1,
                         .Format   = RHI::EFormat::Vertex3F,
                         .Offset   = offsetof(FMeshPrimitive::FVertex, Normal),
+                    },
+                    {
+                        .Location = 2,
+                        .Format   = RHI::EFormat::Vertex3F,
+                        .Offset   = offsetof(FMeshPrimitive::FVertex, TextureCoord),
                     }
                 }
             });

@@ -14,9 +14,10 @@
         {
             "Models": 
             {
-                "test": "spot.obj",
+                "test": "Cube.obj",
                 "spot": "spot.obj",
-                "cube": "Cube.obj"
+                "cube": "Cube.obj",
+                "marry": "Marry/Marry.obj"
             }
         },
         "PlugIns":

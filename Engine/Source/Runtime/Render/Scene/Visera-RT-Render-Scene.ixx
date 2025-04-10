@@ -66,6 +66,7 @@ export namespace VE
 		{ throw SRuntimeError(Text("Failed to add the Attachment({})! -- Already exists!", _Name.GetNameWithNumber())); }
 
 		auto MeshPrimitive = FMeshPrimitive::Create(_Model);
+		MeshPrimitive->UploadToGPU();
 		auto& NewAttachment = AttachmentTable[_Name];
 		NewAttachment.Name = _Name;
 		NewAttachment.Primitive = MeshPrimitive;

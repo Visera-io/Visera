@@ -11,57 +11,61 @@ import Visera.Runtime.Render.RHI;
 export namespace VE
 {
 
-  class FCanvas : public IWidget
-  {
+class FCanvas : public IWidget
+{
     static inline UInt32 ID = 0;
-  public:
+public:
     static inline auto
-     Create(SharedPtr<RHI::FDescriptorSet> _DescriptorSet, SharedPtr<const RHI::FSampler> _Sampler) { return CreateSharedPtr<FCanvas>(_DescriptorSet, _Sampler);  }
+    Create(SharedPtr<RHI::FDescriptorSet> _DescriptorSet, SharedPtr<const RHI::FSampler> _Sampler) { return CreateSharedPtr<FCanvas>(_DescriptorSet, _Sampler);  }
 
     virtual void Render() const override
     {
-      if (!IsVisible()) { return; }
+        if (!IsVisible()) { return; }
 
-      ImGui::Begin(Title.c_str());
-      ImGui::Image(ImTextureID(DescriptorSet->GetHandle()),
+        ImGui::Begin(Title.c_str());
+        ImGui::Image(ImTextureID(DescriptorSet->GetHandle()),
           Extent,
           {0, 1},
           {1, 0}); // UV Flipped.
-      ImGui::End();
+        ImGui::End();
     }
+
     void Write(SharedPtr<const FImage> _NewImage);
     void Write(SharedPtr<const RHI::FImageView> _RHIImageView, SharedPtr<const RHI::FSampler> _Sampler = nullptr);
+
+    auto inline
+    GetTexture() const -> SharedPtr<const RHI::FDescriptorSet> { return DescriptorSet; }
 
     FCanvas() = delete;
     FCanvas(SharedPtr<RHI::FDescriptorSet> _DescriptorSet, SharedPtr<const RHI::FSampler> _Sampler);
 
-  private:
-    String  Title;
-    ImVec2  Extent{ 0, 0 };
-    SharedPtr<const RHI::FSampler> ImageSampler;
-    SharedPtr<RHI::FImage>         RHIImage;
-    SharedPtr<RHI::FImageView>     RHIImageView;
-    SharedPtr<RHI::FDescriptorSet> DescriptorSet;
-  };
+    private:
+        String  Title;
+        ImVec2  Extent{ 0, 0 };
+        SharedPtr<const RHI::FSampler> ImageSampler;
+        SharedPtr<RHI::FImage>         RHIImage;
+        SharedPtr<RHI::FImageView>     RHIImageView;
+        SharedPtr<RHI::FDescriptorSet> DescriptorSet;
+    };
 
-  FCanvas::
-  FCanvas(SharedPtr<RHI::FDescriptorSet> _DescriptorSet, SharedPtr<const RHI::FSampler> _Sampler)
+    FCanvas::
+    FCanvas(SharedPtr<RHI::FDescriptorSet> _DescriptorSet, SharedPtr<const RHI::FSampler> _Sampler)
     : IWidget{ FName{Text("editor::widget::canvas_{}", ID++)} },
       Title     { GetName().GetNameWithNumber() },
       Extent    { 0, 0 },
       ImageSampler { std::move(_Sampler) },
       DescriptorSet{ std::move(_DescriptorSet) }
-  {
+    {
       VE_ASSERT(DescriptorSet && ImageSampler);
-  }
+    }
 
     void FCanvas::
     Write(SharedPtr<const FImage> _NewImage)
-    {   
+    {
         VE_ASSERT(_NewImage && _NewImage->GetSize());
 
         Extent = { Float(_NewImage->GetWidth()), Float(_NewImage->GetHeight()) };
-        
+
         auto NewRHIImage = RHI::CreateImage(
                 RHI::EImageType::Image2D,
                 RHI::FExtent3D{ UInt32(Extent.x), UInt32(Extent.y), 1},
@@ -90,7 +94,7 @@ export namespace VE
 
         auto NewRHIImageView  = NewRHIImage->CreateImageView();
         DescriptorSet->WriteImage(0, NewRHIImageView, ImageSampler);
-       
+
         RHIImage.swap(NewRHIImage);
         RHIImageView.swap(NewRHIImageView);
     }

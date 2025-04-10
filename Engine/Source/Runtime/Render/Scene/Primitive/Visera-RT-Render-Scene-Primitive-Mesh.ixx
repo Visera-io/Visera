@@ -18,13 +18,13 @@ export namespace VE
         using FIndex    = UInt32;
         using FPosition = Vector3F;
         using FNormal   = Vector3F;
-        using FUVCoord  = Vector2F;
+        using FUVCoord  = Vector3F;
 
         struct FVertex
         {
             alignas(16) FPosition Position;
             alignas(16) FNormal   Normal;
-            // Array<FUVCoord> UVs;
+            alignas(16) FUVCoord  TextureCoord;
         };
 
         static inline auto
@@ -52,64 +52,45 @@ export namespace VE
 
     FMeshPrimitive::
     FMeshPrimitive(SharedPtr<const FModel> _Model) //[TODO]: pass FModel::FMeshModel?
-        : IPrimitive{ _Model,
-        _Model->GetMeshes()[0]->mNumVertices * sizeof(FVertex),
-        _Model->GetMeshes()[0]->mNumFaces * (3 * sizeof(FIndex)) }
+        : IPrimitive{ _Model }
     {
-        auto Meshes = _Model->GetMeshes();
-        //for (UInt32 Idx = 0; Idx < _Model->GetMeshCount(); ++Idx)
-        auto Mesh = Meshes[0];
-        
-        Vertices.resize(Mesh->mNumVertices);
-        for (UInt64 Idx = 0; Idx < Vertices.size(); ++Idx)
+        const auto Meshes = _Model->GetMeshes();
+        for (UInt32 MeshID = 0; MeshID < _Model->GetMeshCount(); ++MeshID)
         {
-            auto& Position = Vertices[Idx].Position;
-            Memory::Memcpy(&Position, &(Mesh->mVertices[Idx]), sizeof(FPosition));
-            BoundingBox.MaxPosition = GetComponentWiseMax(BoundingBox.MaxPosition, Position);
-            BoundingBox.MinPosition = GetComponentWiseMin(BoundingBox.MinPosition, Position);
+            const auto Mesh = Meshes[MeshID];
 
-            auto& Normal = Vertices[Idx].Normal;
-            if (Mesh->HasNormals())
-            {  Memory::Memcpy(&Normal, &(Mesh->mNormals[Idx]), sizeof(FNormal)); }
-
-            if (Mesh->HasTextureCoords(0))
+            const UInt64 OldVertexCount = Vertices.size();
+            Vertices.resize(OldVertexCount + Mesh->mNumVertices);
+            for (UInt64 Idx = 0; Idx < Mesh->mNumVertices; ++Idx)
             {
-                //UVs.resize(Vertices.size());
-                //Memory::Memcpy(UVs.data()->data(), Mesh->mTextureCoords[0], UVs.size() * sizeof(FUVCoord));
+                FVertex& CurrentVertex = Vertices[OldVertexCount + Idx];
+                Memory::Memcpy(&CurrentVertex.Position, &(Mesh->mVertices[Idx]), sizeof(FPosition));
+                BoundingBox.MaxPosition = GetComponentWiseMax(BoundingBox.MaxPosition, CurrentVertex.Position);
+                BoundingBox.MinPosition = GetComponentWiseMin(BoundingBox.MinPosition, CurrentVertex.Position);
+
+                if (Mesh->HasNormals())
+                { Memory::Memcpy(&CurrentVertex.Normal, &(Mesh->mNormals[Idx]), sizeof(FNormal)); }
+
+                if (Mesh->HasTextureCoords(0))
+                {
+                    const auto& TextureCoord = Mesh->mTextureCoords[0][Idx];
+                    Memory::Memcpy(&CurrentVertex.TextureCoord, &TextureCoord, sizeof(FUVCoord));
+                }
+            }
+
+            const UInt64 OldIndexCount = Indices.size();
+            Indices.resize(OldIndexCount + 3 * Mesh->mNumFaces);
+            for (UInt64 Idx = 0; Idx < Mesh->mNumFaces; Idx++)
+            {
+                const auto Face = Mesh->mFaces[Idx];
+                VE_ASSERT(Face.mNumIndices == 3);
+                const UInt64 Offset = OldIndexCount + Idx * 3;
+                Indices[Offset + 0] = Face.mIndices[0] + OldVertexCount;
+                Indices[Offset + 1] = Face.mIndices[1] + OldVertexCount;
+                Indices[Offset + 2] = Face.mIndices[2] + OldVertexCount;
             }
         }
         BoundingBox.Center = (BoundingBox.MaxPosition + BoundingBox.MinPosition) / 2.0;
-       
-        Indices.resize(3 * Mesh->mNumFaces);
-        for (UInt32 Idx = 0; Idx < Mesh->mNumFaces; Idx++)
-        {
-            auto Face = Mesh->mFaces[Idx];
-            VE_ASSERT(Face.mNumIndices == 3);
-            Memory::Memcpy(Indices.data() + Face.mNumIndices * Idx,
-                           Face.mIndices,
-                           Face.mNumIndices * sizeof(FIndex));
-        }
-
-        //Load to GPU [TODO]: Batch upload at RHI level (Add a transfer cmdbuffer in each Frame)
-        auto VertexStagingBuffer = RHI::CreateStagingBuffer(GetCPUVertexBufferSize());
-        VertexStagingBuffer->Write(Vertices.data(), GetCPUVertexBufferSize());
-        auto IndexStagingBuffer  = RHI::CreateStagingBuffer(GetCPUIndexBufferSize());
-        IndexStagingBuffer->Write(Indices.data(), GetCPUIndexBufferSize());
-
-        auto Fence = RHI::CreateFence();
-        auto ImmeCmd = RHI::CreateOneTimeGraphicsCommandBuffer(); //[TODO]: Transfer Buffer
-        ImmeCmd->StartRecording();
-        {
-            ImmeCmd->WriteBuffer(VBO, VertexStagingBuffer);
-            ImmeCmd->WriteBuffer(IBO, IndexStagingBuffer);
-        }
-        ImmeCmd->StopRecording();
-        ImmeCmd->Submit(RHI::FCommandSubmitInfo
-            {
-                .WaitStages = RHI::EGraphicsPipelineStage::PipelineTop,
-                .SignalFence = &Fence
-            });
-        Fence.Wait();
     }
 
 }// namespace VE
