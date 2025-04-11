@@ -80,15 +80,15 @@ export namespace VE
 		using SSwapchainRecreation = FVulkanSwapchain::SRecreation;
 
 		enum ESystemRenderTarget : UInt8 { SV_Color, SV_Depth };
-		struct FMatrixUBOLayout
+		struct alignas(16) FMatrixUBOLayout
 		{
 			Matrix4x4F Projection     = Matrix4x4F::Identity();
 			Matrix4x4F Viewing	      = Matrix4x4F::Identity();
 			Matrix4x4F Model          = Matrix4x4F::Identity();
 
 			Matrix4x4F InverseProjection = Matrix4x4F::Identity();
-			Matrix4x4F InverseViewing = Matrix4x4F::Identity();
-			Matrix4x4F CofactorModel  = Matrix4x4F::Identity();
+			Matrix4x4F InverseViewing    = Matrix4x4F::Identity();
+			Matrix4x4F CofactorModel     = Matrix4x4F::Identity(); //Use Matrix3x3F in Shaders
 		};
 
 		class FFrameContext
