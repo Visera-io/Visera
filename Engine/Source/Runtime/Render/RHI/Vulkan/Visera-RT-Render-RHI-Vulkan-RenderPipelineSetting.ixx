@@ -148,7 +148,7 @@ export namespace VE
 			.rasterizerDiscardEnable= VK_FALSE, // if VK_TRUE, then geometry never passes through the rasterizer stage
 			.polygonMode			= VK_POLYGON_MODE_FILL,
 			.cullMode				= AutoCast(EVulkanCullMode::Back),
-			.frontFace				= VK_FRONT_FACE_COUNTER_CLOCKWISE, // Align with Unreal Engine. (Note Y-Flip)
+			.frontFace				= VK_FRONT_FACE_CLOCKWISE, // Visera is Left-Handedness.
 			.depthBiasEnable		= VK_TRUE,
 			.depthBiasConstantFactor= 0.0f, 
 			.depthBiasClamp			= 0.0f,

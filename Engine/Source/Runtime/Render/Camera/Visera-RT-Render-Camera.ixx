@@ -36,11 +36,14 @@ export namespace VE
 		auto GetAspectRatio() const -> Float { return AspectRatio; }
 		void SetAspectRatio(Float _NewAspectRatio) { bUpdateProject = True; AspectRatio = _NewAspectRatio; }
 
+		auto GetForward() const -> const Vector3F& { return Forward; }
+		void SetForward(const Vector3F& _NewForward) { bUpdateViewing = True; Forward = _NewForward; }
 		auto GetPosition() const -> const Vector3F& { return Origin; }
 		void SetPosition(const Vector3F& _NewPosition) { bUpdateViewing = True; Origin.x() = _NewPosition.x(); Origin.y() = _NewPosition.y(); Origin.z() = _NewPosition.z(); }
 
 		auto GetViewingMatrix() const -> const Matrix4x4F&;
 		auto GetProjectMatrix() const -> const Matrix4x4F&;
+		auto GetLookAtMatrix(const Vector3F& _Target)  const -> Matrix4x4F;
 
 		FCamera(EMode _Mode = EMode::Default) : Mode {_Mode} {};
 
@@ -48,8 +51,9 @@ export namespace VE
 		EMode      Mode   = EMode::Default;
 		Vector3F   Origin = Atlas::Visera.Origin;
 		Vector3F   Upward = Atlas::Visera.Upward;
+		Vector3F   Right  = Atlas::Visera.Right;
 		Vector3F   Forward= Atlas::Visera.Forward;
-		Float      Near   = 0.01;
+		Float      Near   = 0.1;
 		Float      Far    = 100.0;
 		Degree     FOV    = 90.0;
 		Float      AspectRatio = 16.0 / 9.0;
@@ -64,12 +68,31 @@ export namespace VE
 		mutable Bool bUpdateProject = True;
 	};
 
+	Matrix4x4F FCamera::
+	GetLookAtMatrix(const Vector3F& _Target)  const
+	{
+		Vector3F ViewDir   = (_Target - Origin).normalized();
+		Vector3F RightDir  = Upward.cross(ViewDir).normalized();
+		Vector3F UpwardDir = RightDir.cross(ViewDir).normalized();
+
+		Matrix4x4F LookAtMatrix = Matrix4x4F::Identity();
+		LookAtMatrix.block<3,1>(0,0) = RightDir;
+		LookAtMatrix.block<3,1>(0,1) = UpwardDir;
+		LookAtMatrix.block<3,1>(0,2) = ViewDir;
+
+		LookAtMatrix.block<3,1>(0,3) = Vector3F
+		{-RightDir.dot(Origin), -UpwardDir.dot(Origin), -ViewDir.dot(Origin)};
+
+		return LookAtMatrix;
+	}
+
 	const Matrix4x4F& FCamera::
 	GetViewingMatrix() const
 	{
 		if (bUpdateViewing)
 		{
 			ViewingMatrix = Matrix4x4F::Identity();
+
 			bUpdateViewing = False;
 		}
 
@@ -85,9 +108,12 @@ export namespace VE
 			ProjectMatrix = Matrix4x4F::Zero();
 			ProjectMatrix(0,0) = 1/(AspectRatio * Tan(FOV/2.0));
 			ProjectMatrix(1,1) = 1.0 / Tan(FOV/2.0);
-			ProjectMatrix(2,2) = Far/(Far - Near);
-			ProjectMatrix(2,3) = Far * Near / (Near - Far);
+			ProjectMatrix(2,2) = -Near/(Far - Near);
+			ProjectMatrix(2,3) = Far * Near / (-Near + Far);
 			ProjectMatrix(3,2) = 1.0;
+
+			//ProjectMatrix(2,2) = Far/(Far - Near);
+			//ProjectMatrix(2,3) = Far * Near / (-Far + Near);
 
 			bUpdateProject = False;
 		}
@@ -106,7 +132,7 @@ export namespace VE
 
 			//auto FocusPoint = Lens->Sample();
 			RTC::FRay Ray{{Origin.x() + i, Origin.y() - j, Origin.z() },
-			 		 {i, -j, -1}};
+			 		 {i, -j, Forward.z()}};
 			//FRay Ray{{0, 0 , 2}, {i, j , -1}};
 
 			_Scene->Accept(&Ray);

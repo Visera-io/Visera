@@ -23,6 +23,8 @@ cbuffer FMatrixUBO : register(b0)
     float4x4 InverseProjection;
     float4x4 InverseViewing;
     float4x4 CofactorModel;
+
+    float4 Padding;
 }MatrixUBO;
 
 [shader("vertex")]
@@ -31,10 +33,10 @@ VertexOutput VertexMain(VertexInput _Input)
     float4 WorldPos   = mul(float4(_Input.Position, 1.0), MatrixUBO.Model);
     float4 ViewingPos = mul(WorldPos, MatrixUBO.Viewing);
     float4 ClipPos    = mul(ViewingPos, MatrixUBO.Projection);
-
+    
     VertexOutput Output;
     Output.Position = ClipPos;
-    Output.Normal   = mul(MatrixUBO.CofactorModel, float4(_Input.Normal, 1.0)).xyz;
+    Output.Normal   = mul(float3x3(MatrixUBO.CofactorModel), _Input.Normal);
     Output.UVCoord  = _Input.UVCoord;
     return Output;
 }
@@ -63,9 +65,9 @@ float4 FragmentMain(FragmentInput _Input) : SV_TARGET
 
     float3 Albedo = { 0.5, 0.5, 0.5 };
     float3 AmbientColor = Albedo * Light;
-    return float4(_Input.Normal, 1.0); // Use interpolated normal as color
-    // float4 DiffuseColor = DiffuseTexture.Sample(TextureSampler, _Input.UVCoord.xy);
-    // return DiffuseColor;
+    //return float4(_Input.Normal, 1.0); // Use interpolated normal as color
+    float4 DiffuseColor = DiffuseTexture.Sample(TextureSampler, _Input.UVCoord.xy);
+    return DiffuseColor;
     
     //float3 DiffuseColor = max(dot(_Input.Normal, LightDir), 0.5);
 

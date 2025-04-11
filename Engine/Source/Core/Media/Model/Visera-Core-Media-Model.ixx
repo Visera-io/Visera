@@ -63,9 +63,8 @@ export namespace VE
         { return Log::Warn("You tried to load an unexpired model({})!", Path.ToPlatformString()); }
 
         Data = Importer.ReadFile(Path.ToPlatformString().data(),
-                aiProcess_Triangulate	        |
-                aiProcess_ConvertToLeftHanded   | //Tips: World::Atlas::Visera
-                aiProcess_FlipUVs               |
+                aiProcess_Triangulate	    |
+                aiProcess_ConvertToLeftHanded   | // <=> MakeLeftHanded | FlipUVs | FlipWindingOrder
                 aiProcess_GenNormals            |
                 aiProcess_FixInfacingNormals);
 
