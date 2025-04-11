@@ -15,9 +15,15 @@
             "Models": 
             {
                 "test": "Marry/Marry.obj",
+                "plane": "plane.obj",
                 "spot": "spot.obj",
                 "cube": "Cube.obj",
+                "box": "box.obj",
                 "marry": "Marry/Marry.obj"
+            },
+            "Images":
+            {
+                "default_texture" : "default_texture.png"
             }
         },
         "PlugIns":

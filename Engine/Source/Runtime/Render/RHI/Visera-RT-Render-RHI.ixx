@@ -301,6 +301,7 @@ export namespace VE
 
 				Frame.BackgroundRTs = FRenderTarget::Create()
 					->AddColorImage(ColorImage)
+					->AddDepthImage(DepthImage)
 				    ->Confirm();
 
 				Frame.ForwardRTs = FRenderTarget::Create()

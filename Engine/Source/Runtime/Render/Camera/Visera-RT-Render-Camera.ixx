@@ -7,6 +7,7 @@ export import Visera.Runtime.Render.Camera.Film;
 
 import Visera.Core.Math.Basic;
 import Visera.Core.Media.Image;
+import Visera.Core.Signal;
 
 import Visera.Runtime.World.Atlas;
 import Visera.Runtime.Render.Scene;
@@ -32,9 +33,10 @@ export namespace VE
 		auto GetFar()  const -> Float { return Far; }
 		void SetFar(Float _NewFar)    { bUpdateProject = True; Clamp(&_NewFar, Near, 10000); Far = _NewFar;  } //Max: 100 Meters
 		auto GetFOV() const -> Degree { return FOV; }
-		void SetFOV(Degree _NewFOV)   { bUpdateProject = True; Clamp(reinterpret_cast<Float*>(&_NewFOV), 10.0, 90.0); FOV = _NewFOV; }
+		void SetFOV(Degree _NewFOV)   { bUpdateProject = True; Mode == EMode::Perspective? FOV = GetClamped(_NewFOV.Data(), 10.0, 90.0) : FOV = _NewFOV; }
 		auto GetAspectRatio() const -> Float { return AspectRatio; }
 		void SetAspectRatio(Float _NewAspectRatio) { bUpdateProject = True; AspectRatio = _NewAspectRatio; }
+		void SetProjectionMode(EMode _NewMode) { bUpdateProject = True; Mode = _NewMode; }
 
 		auto GetForward() const -> const Vector3F& { return Forward; }
 		void SetForward(const Vector3F& _NewForward) { bUpdateViewing = True; Forward = _NewForward; }
@@ -55,8 +57,11 @@ export namespace VE
 		Vector3F   Forward= Atlas::Visera.Forward;
 		Float      Near   = 0.1;
 		Float      Far    = 100.0;
-		Degree     FOV    = 90.0;
 		Float      AspectRatio = 16.0 / 9.0;
+		union
+		{
+			Degree FOV = 90.0; Float OrthoScale;
+		};
 
 		mutable Matrix4x4F ViewingMatrix = Matrix4x4F::Identity();
 		mutable Matrix4x4F ProjectMatrix = Matrix4x4F::Identity();
@@ -92,7 +97,7 @@ export namespace VE
 		if (bUpdateViewing)
 		{
 			ViewingMatrix = Matrix4x4F::Identity();
-
+			VE_WIP;
 			bUpdateViewing = False;
 		}
 
@@ -102,22 +107,39 @@ export namespace VE
 	const Matrix4x4F& FCamera::
 	GetProjectMatrix() const
 	{
-		//Reversed Z
-		if (bUpdateProject)
+		if (!bUpdateProject) { return ProjectMatrix; }
+
+		switch (Mode)
 		{
+		case EMode::Perspective:
+		{
+			//Reversed Z
+			const Float TanHalfFOV = Tan(FOV/2.0);
+
 			ProjectMatrix = Matrix4x4F::Zero();
-			ProjectMatrix(0,0) = 1/(AspectRatio * Tan(FOV/2.0));
-			ProjectMatrix(1,1) = 1.0 / Tan(FOV/2.0);
-			ProjectMatrix(2,2) = -Near/(Far - Near);
+			ProjectMatrix(0,0) = 1.0 / (AspectRatio * TanHalfFOV);
+			ProjectMatrix(1,1) = 1.0 / TanHalfFOV;
+			ProjectMatrix(2,2) = -Near / (Far - Near);
 			ProjectMatrix(2,3) = Far * Near / (-Near + Far);
 			ProjectMatrix(3,2) = 1.0;
-
-			//ProjectMatrix(2,2) = Far/(Far - Near);
-			//ProjectMatrix(2,3) = Far * Near / (-Far + Near);
-
-			bUpdateProject = False;
+			break;
 		}
+		case EMode::Orthographic:
+		{
+			//Reversed Z
+			const Float Width  = OrthoScale;
+			const Float Height = Width / AspectRatio;
 
+			ProjectMatrix = Matrix4x4F::Identity();
+			ProjectMatrix(0,0) = 1.0 / Width;
+			ProjectMatrix(1,1) = 1.0 / Height;
+			ProjectMatrix(2,2) = -1.0 / (Far - Near);
+			ProjectMatrix(2,3) = Far / (Far - Near);
+			break;
+		}
+		default: throw SRuntimeError("Unknown Camera mode!");
+		}
+		bUpdateProject = False;
 		return ProjectMatrix;
 	}
 
