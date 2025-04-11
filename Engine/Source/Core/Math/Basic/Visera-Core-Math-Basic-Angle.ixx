@@ -15,6 +15,8 @@ export namespace VE
 	class Radian
 	{
 	public:
+		Float& Data() { return Value; }
+
 		constexpr Radian(Float Value):Value{ Value } {};
 		explicit  Radian() = default;
 		explicit  Radian(Degree TargetDegree);
@@ -43,6 +45,8 @@ export namespace VE
 	class Degree
 	{
 	public:
+		Float& Data() {return Value; }
+
 		constexpr Degree(Float Value) :Value{ Value } {};
 		explicit  Degree() = default;
 		explicit  Degree(Radian TargetRadian);

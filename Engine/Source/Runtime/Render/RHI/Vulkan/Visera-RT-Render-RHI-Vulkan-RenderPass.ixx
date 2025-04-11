@@ -87,6 +87,17 @@ export namespace VE
 				.InitialLayout	= EVulkanImageLayout::ShaderReadOnly, //At the start of each frame, the ColorImage is sampled by the Editor.
 				.FinalLayout	= EVulkanImageLayout::ShaderReadOnly,
 			});
+			Layout.DepthDesc =
+			{
+				.Layout			= EVulkanImageLayout::DepthStencilAttachment,
+				.Format			= EVulkanFormat::S32_Float_Depth32,
+				.SampleRate		= EVulkanSampleRate::X1,
+				.ViewType		= EVulkanImageViewType::Image2D,
+				.LoadOp			= EVulkanAttachmentIO::I_Clear,
+				.StoreOp		= EVulkanAttachmentIO::O_Store,
+				.InitialLayout  = EVulkanImageLayout::DepthStencilAttachment,
+				.FinalLayout    = EVulkanImageLayout::DepthStencilAttachment,
+			};
 			bCreated = True;
 			break;
 		}
@@ -109,8 +120,8 @@ export namespace VE
 				.Format			= EVulkanFormat::S32_Float_Depth32,
 				.SampleRate		= EVulkanSampleRate::X1,
 				.ViewType		= EVulkanImageViewType::Image2D,
-				.LoadOp			= EVulkanAttachmentIO::I_Clear,
-				.StoreOp		= EVulkanAttachmentIO::O_Whatever,
+				.LoadOp			= EVulkanAttachmentIO::I_Keep,
+				.StoreOp		= EVulkanAttachmentIO::I_Keep,
 				.InitialLayout  = EVulkanImageLayout::DepthStencilAttachment,
 				.FinalLayout    = EVulkanImageLayout::DepthStencilAttachment,
 			};

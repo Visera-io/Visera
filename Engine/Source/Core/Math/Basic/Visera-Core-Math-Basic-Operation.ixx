@@ -26,4 +26,12 @@ export namespace VE
 		if (Ceil  < *Value) { *Value = Ceil;  return; }
 	}
 
+	template<Number NumT, Number FloorT, Number CeilT>
+	NumT GetClamped(NumT Value, FloorT Floor, CeilT Ceil)
+	{
+		if (Floor > Value) return Floor;
+		if (Ceil  < Value) return Ceil;
+		return Value;
+	}
+
 } // namespace VE

@@ -48,7 +48,7 @@ export namespace VE
         
         PipelineSetting = RHI::CreateRenderPipelineSetting()
             ->EnableDepthTest()
-            ->SetCullMode(RHI::ECullMode::Back)
+            ->SetCullMode(RHI::ECullMode::Disable)
             ->Confirm();
 
         PipelineSetting->SetVertexInputState(RHI::FRenderPipelineSetting::FVertexInputDescription
