@@ -20,18 +20,18 @@ export namespace VE
 	Equal(T A, T B) { return std::abs(A - B) <= Epsilon<T>(); }
 
 	template<Number NumT, Number FloorT, Number CeilT>
-	void Clamp(NumT* Value, FloorT Floor, CeilT Ceil)
+	void Clamp(NumT* _Value_, FloorT _Floor, CeilT _Ceil)
 	{
-		if (Floor > *Value) { *Value = Floor; return; }
-		if (Ceil  < *Value) { *Value = Ceil;  return; }
+		if (_Floor > *_Value_) { *_Value_ = _Floor; return; }
+		if (_Ceil  < *_Value_) { *_Value_ = _Ceil;  return; }
 	}
 
 	template<Number NumT, Number FloorT, Number CeilT>
-	NumT GetClamped(NumT Value, FloorT Floor, CeilT Ceil)
+	NumT GetClamped(NumT _Value, FloorT _Floor, CeilT _Ceil)
 	{
-		if (Floor > Value) return Floor;
-		if (Ceil  < Value) return Ceil;
-		return Value;
+		if (_Floor > _Value) return _Floor;
+		if (_Ceil  < _Value) return _Ceil;
+		return _Value;
 	}
 
 } // namespace VE

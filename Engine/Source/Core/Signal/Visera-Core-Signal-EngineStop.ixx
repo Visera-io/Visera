@@ -7,14 +7,14 @@ import :Interface;
 export namespace VE
 {
 
-	class SEngineStop final : public SSignal
+	class SEngineStop final : public ISignal
 	{
 	public:
 		SEngineStop(
 			const String& Message, Int32 _StateCode = 0,
 			const std::source_location& Location = std::source_location::current())
 			:
-			SSignal{Message, _StateCode, Location}
+			ISignal{Message, _StateCode, Location}
 		{
 
 		}
