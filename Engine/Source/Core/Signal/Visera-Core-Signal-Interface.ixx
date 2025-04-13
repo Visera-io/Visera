@@ -6,7 +6,7 @@ export module Visera.Core.Signal:Interface;
 export namespace VE
 {
 
-	class SSignal : public std::exception
+	class ISignal : public std::exception
 	{
 	public:
 		virtual
@@ -30,7 +30,7 @@ export namespace VE
 		const std::source_location Location;
 		const Int32 StateCode;
 
-		SSignal(
+		ISignal(
 			const String& Message, Int32 _StateCode,
 			const std::source_location& Location = std::source_location::current())
 			:
