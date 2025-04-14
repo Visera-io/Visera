@@ -53,7 +53,7 @@ export namespace VE
 
 	        AppLogger->set_level(spdlog::level::level_enum(VE_LOG_SYSTEM_VERBOSITY));
 
-			AppLogger->set_pattern("%^[%Y-%m-%d %H:%M:%S.%e] [%L] [Thread:%t] %v%$");
+			AppLogger->set_pattern("%^[%Y-%m-%d %H:%M:%S.%e] [%L] [T:%t] %v%$");
 		}
 		virtual ~FAppLogger() noexcept
 		{

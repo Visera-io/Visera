@@ -1,6 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:RenderPipeline;
+#define VE_MODULE_NAME "Vulkan:RenderPipeline"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Pipeline;
@@ -98,7 +99,7 @@ export namespace VE
 				.pSpecializationInfo = nullptr
 			});
 		}
-		else { Log::Warn("Creating a Render Pipeline without a Fragment Shader!"); }
+		else { VE_LOG_WARN("Creating a Render Pipeline without a Fragment Shader!"); }
         
 		VkGraphicsPipelineCreateInfo CreateInfo =
 		{

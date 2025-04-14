@@ -52,7 +52,7 @@ public:
 
 		SystemLogger->set_level(spdlog::level::level_enum(VE_LOG_SYSTEM_VERBOSITY));
 
-		SystemLogger->set_pattern("%^[%Y-%m-%d %H:%M:%S.%e] [%L] [Thread:%t] %v%$");
+		SystemLogger->set_pattern("%^[%Y-%m-%d %H:%M:%S.%e] [%L] [T:%t] %v%$");
 	}
 	virtual ~FSystemLogger() noexcept
 	{

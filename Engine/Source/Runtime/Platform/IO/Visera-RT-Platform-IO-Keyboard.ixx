@@ -2,6 +2,7 @@ module;
 #include <Visera.h>
 #include <GLFW/glfw3.h>
 export module Visera.Runtime.Platform.IO:Keyboard;
+#define VE_MODULE_NAME "IO:Keyboard"
 import :Common;
 
 import Visera.Core.Type;
@@ -48,7 +49,7 @@ export namespace VE
 			{
 				if (!KeyboardEventTable.contains(_CreateInfo.Name))
 				{
-					Log::Debug("Creating a new keyboard key event({}).", _CreateInfo.Name.GetNameWithNumber());
+					VE_LOG_DEBUG("Creating a new keyboard key event({}).", _CreateInfo.Name.GetNameWithNumber());
 
 					KeyboardEventTable[_CreateInfo.Name]
 						= &KeyboardEventMap[UInt32(_CreateInfo.Action)][_CreateInfo.Key]
@@ -66,7 +67,7 @@ export namespace VE
 			{
 				if (KeyboardEventTable.contains(_Name))
 				{
-					Log::Debug("Deleting a keyboard key event({}).", _Name.GetNameWithNumber());
+					VE_LOG_DEBUG("Deleting a keyboard key event({}).", _Name.GetNameWithNumber());
 
 					auto& Exiler = KeyboardEventTable[_Name];
 					*Exiler = nullptr;

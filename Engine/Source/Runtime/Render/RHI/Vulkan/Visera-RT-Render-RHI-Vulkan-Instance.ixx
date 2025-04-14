@@ -198,7 +198,8 @@ export namespace VE
 		/*Find Proper Physical Device(Host)*/
 		UInt32 PhysicalDeviceCount = 0;
 		vkEnumeratePhysicalDevices(Handle, &PhysicalDeviceCount, nullptr);
-		if (!PhysicalDeviceCount) Log::Fatal("Failed to enumerate GPUs with Vulkan support!");
+		if (!PhysicalDeviceCount)
+		{ VE_LOG_FATAL("Failed to enumerate GPUs with Vulkan support!"); }
 
 		Array<VkPhysicalDevice> PhysicalDevices(PhysicalDeviceCount);
 		vkEnumeratePhysicalDevices(Handle, &PhysicalDeviceCount, PhysicalDevices.data());

@@ -4,7 +4,7 @@ module;
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 export module Visera.Core.Media.Model;
-
+#define VE_MODULE_NAME "Model"
 import Visera.Core.Type;
 import Visera.Core.Log;
 import Visera.Core.Signal;
@@ -60,7 +60,7 @@ export namespace VE
     Load()
     {
         if (!IsExpired())
-        { return Log::Warn("You tried to load an unexpired model({})!", Path.ToPlatformString()); }
+        { return VE_LOG_WARN("You tried to load an unexpired model({})!", Path.ToPlatformString()); }
 
         Data = Importer.ReadFile(Path.ToPlatformString().data(),
                 aiProcess_Triangulate	    |

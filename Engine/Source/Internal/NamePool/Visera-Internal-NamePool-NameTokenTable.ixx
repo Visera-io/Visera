@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 export module Visera.Internal.NamePool:NameTokenTable;
-
+#define VE_MODULE_NAME "NamePool:NameTokenTable"
 import :Common;
 import :NameEntryTable;
 
@@ -130,7 +130,7 @@ export namespace VE { namespace Internal
     {
         VE_ASSERT(!_Section.RWLock.TryToWrite());
 
-        //Log::Debug("Growing FNamePool::FNameSlot...");
+        VE_LOG_DEBUG("Growing FNameSlot...");
         auto* OldTokens     = _Section.Tokens;
         auto  OldCapacity   = _Section.Capacity;
 

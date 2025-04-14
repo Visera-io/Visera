@@ -2,6 +2,7 @@ module;
 #include <Visera.h>
 #include <GLFW/glfw3.h>
 export module Visera.Runtime.Platform.IO:Mouse;
+#define VE_MODULE_NAME "IO:Mouse"
 import :Common;
 
 import Visera.Core.Type;
@@ -34,7 +35,7 @@ export namespace VE
 			{
 				if (!ButtonEventTable.contains(_CreateInfo.Name))
 				{
-					Log::Debug("Creating a new mouse button event({}).", _CreateInfo.Name.GetNameWithNumber());
+					VE_LOG_DEBUG("Creating a new mouse button event({}).", _CreateInfo.Name.GetNameWithNumber());
 
 					ButtonEventTable[_CreateInfo.Name]
 						= &ButtonEventMap[UInt32(_CreateInfo.Button)][_CreateInfo.Action]
@@ -51,7 +52,7 @@ export namespace VE
 			{
 				if (ButtonEventTable.contains(_Name))
 				{
-					Log::Debug("Deleting a mouse button event({}).", _Name.GetNameWithNumber());
+					VE_LOG_DEBUG("Deleting a mouse button event({}).", _Name.GetNameWithNumber());
 
 					auto& Exiler = ButtonEventTable[_Name];
 					*Exiler = nullptr;

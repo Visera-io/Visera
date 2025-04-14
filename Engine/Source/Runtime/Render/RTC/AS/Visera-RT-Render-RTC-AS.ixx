@@ -38,7 +38,6 @@ export namespace VE
 	FAccelerationStructure::NodeID FAccelerationStructure::
 	Attach(SharedPtr<FNode> _Node, void* _UserData/* = nullptr*/)
 	{
-		//Log::Debug("Attaching a new Geometry({}) to Scene({})", _Geometry->GetHandle(), )
 		NodeID ID = rtcAttachGeometry(Handle, _Node->GetHandle());
 
 		rtcSetGeometryUserData(_Node->GetHandle(), _UserData);
