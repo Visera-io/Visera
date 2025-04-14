@@ -10,7 +10,7 @@ export namespace VE
 	{
 	public:
 		SAppStop(
-			const String& _Message, Int32 _StateCode = 0,
+			StringView _Message, Int32 _StateCode = 0,
 			const std::source_location& _Location = std::source_location::current())
 			:
 			ISignal{_Message, _StateCode, _Location}

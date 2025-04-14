@@ -1,6 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Instance;
+#define VE_MODULE_NAME "Vulkan:Instance"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Loader;
@@ -76,21 +77,25 @@ export namespace VE
 				const VkDebugUtilsMessengerCallbackDataEXT* CallbackData,
 				void* pUserData)
 		{
-			switch (MessageSeverity)
+			if (MessageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
 			{
-			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-				break;
-			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-				Log::Debug("[Vulkan]: {}",	CallbackData->pMessage);
-				break;
-			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-				Log::Warn("[Vulkan]: {}",	CallbackData->pMessage);
-				break;
-			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-				Log::Error("[Vulkan]: {}",	CallbackData->pMessage);
-				break;
-			default:
-				Log::Error("[Vulkan]: Unknow Message Severity {}", ErrorCode(MessageSeverity));
+				VE_LOG_TRACE("{}", CallbackData->pMessage);
+			}
+			else if (MessageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+			{
+				VE_LOG_DEBUG("{}", CallbackData->pMessage);
+			}
+			else if (MessageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+			{
+				VE_LOG_WARN("{}", CallbackData->pMessage);
+			}
+			else if (MessageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+			{
+				VE_LOG_ERROR("{}", CallbackData->pMessage);
+			}
+			else
+			{
+				VE_LOG_FATAL("Unknown Message Severity {}", ErrorCode(MessageSeverity));
 			}
 			return VK_FALSE; // Always return VK_FALSE
 		}
@@ -119,7 +124,8 @@ export namespace VE
 				if (strcmp(RequiredLayer, AvailableLayer.layerName) == 0)
 				{ Found = true; break; }
 			}
-			if (!Found) { Log::Fatal(Text("Failed to enable the Vulkan Validation Layer {}", RequiredLayer)); }
+			if (!Found)
+			{ throw SRuntimeError(Text("Failed to enable the Vulkan Validation Layer {}", RequiredLayer)); }
 		}
 
 		const VkApplicationInfo AppInfo

@@ -1,6 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan;
+#define VE_MODULE_NAME "Vulkan"
 export import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Context;
 export import :CommandPool;
@@ -26,6 +27,8 @@ export import :Device;
 export import :GPU;
 export import :Surface;
 export import :Swapchain;
+
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -69,6 +72,7 @@ export namespace VE
 	FVulkan::
 	FVulkan()
 	{
+		VE_LOG_TRACE("Creating Vulkan Context...");
 		GVulkan = new FVulkanContext();
 		auto* Context = const_cast<FVulkanContext* const>(GVulkan);
 		Context->Instance	= &Instance;
@@ -80,37 +84,40 @@ export namespace VE
 		Context->GraphicsPipelineCache = &GraphicsPipelineCache;
 		Context->AllocationCallbacks   = AllocationCallbacks;
 		
+		VE_LOG_TRACE("Creating Vulkan Loader...");
 		Loader.Create();
+		VE_LOG_TRACE("Creating Vulkan Instance...");
 		Loader.LoadInstance(Instance.Create());
-		
+		VE_LOG_TRACE("Creating Vulkan Surface...");
 		Surface.Create();
-		
+		VE_LOG_TRACE("Creating Vulkan Device...");
 		Loader.LoadDevice(Device.Create(&GPU, &Surface));
-
+		VE_LOG_TRACE("Creating Vulkan Memory Allcator (VMA)...");
 		Allocator.Create();
-
+		VE_LOG_TRACE("Creating Vulkan Swapchain...");
 		Swapchain.Create();
-
+		VE_LOG_TRACE("Creating Vulkan Graphics Pipeline Cache...");
 		GraphicsPipelineCache.Create();
 	}
 
 	FVulkan::
 	~FVulkan()
 	{
+		VE_LOG_TRACE("Destroying Vulkan Graphics Pipeline Cache...");
 		GraphicsPipelineCache.Destroy();
-
+		VE_LOG_TRACE("Destroying Vulkan Swapchain...");
 		Swapchain.Destroy();
-
+		VE_LOG_TRACE("Destroying Vulkan Memory Allcator (VMA)...");
 		Allocator.Destory();
-
+		VE_LOG_TRACE("Destroying Vulkan Device...");
 		Device.Destroy();
-
+		VE_LOG_TRACE("Destroying Vulkan Surface...");
 		Surface.Destroy();
-
+		VE_LOG_TRACE("Destroying Vulkan Instance...");
 		Instance.Destroy();
-
+		VE_LOG_TRACE("Destroying Vulkan Loader...");
 		Loader.Destroy();
-
+		VE_LOG_TRACE("Destroying Vulkan Context...");
 		delete GVulkan;
 	}
 

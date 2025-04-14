@@ -11,10 +11,10 @@ export namespace VE
 	{
 	public:
 		SRuntimeError(
-			const String& Message, Int32 _StateCode = 0,
+			StringView _Message, Int32 _StateCode = 0,
 			const std::source_location& Location = std::source_location::current())
 			:
-			ISignal{Message, _StateCode, Location}
+			ISignal{_Message, _StateCode, Location}
 		{
 
 		}
