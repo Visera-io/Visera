@@ -5,6 +5,7 @@ module;
 #include <Windows.h>
 #endif
 export module Visera;
+#define VE_MODULE_NAME "Visera"
 export import Visera.Core;
 export import Visera.Runtime;
 export import Visera.Editor;
@@ -39,7 +40,7 @@ export namespace VE
 
 			try
 			{
-				if (!App) { Log::Fatal("ViseraEngine App is not created!"); }
+				if (!App) { VE_LOG_FATAL("App is not created!"); }
 				Bootstrap(App);
 				{
 					while (!Window::ShouldClose())
@@ -56,7 +57,7 @@ export namespace VE
 						}
 						catch (const SRuntimeError& Signal)
 						{
-							Log::Error("ViseraApp Runtime Error:\n{}{}", Signal.What(), Signal.Where());
+							VE_LOG_ERROR("ViseraApp Runtime Error:\n{}{}", Signal.What(), Signal.Where());
 							StateCode = Signal.StateCode;
 							//App->Exit();
 						}
@@ -71,22 +72,22 @@ export namespace VE
 			}
 			catch (const SRuntimeError& Signal)
 			{
-				Log::Error("ViseraEngine Runtime Error:\n{}{}", Signal.What(), Signal.Where());
+				VE_LOG_ERROR("ViseraEngine Runtime Error:\n{}{}", Signal.What(), Signal.Where());
 				StateCode = Signal.StateCode;
 			}
 			catch (const SAppStop& Signal)
 			{
-				Log::Debug(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
+				VE_LOG_DEBUG(VISERA_APP_NAME "Exited:\n{}{}", Signal.What(), Signal.Where());
 				StateCode = Signal.StateCode;
 			}
 			catch (const SEngineStop& Signal)
 			{
-				Log::Debug("ViseraEngine Stopped:\n{}{}", Signal.What(), Signal.Where());
+				VE_LOG_DEBUG("ViseraEngine Stopped:\n{}{}", Signal.What(), Signal.Where());
 				StateCode = Signal.StateCode;
 			}
 
 			Terminate(App);
-			Log::Debug("ViseraEngine has been terminated successfully!");
+			VE_LOG_DEBUG("Visera Engine has been terminated successfully!");
 			return StateCode;
 		}
 
@@ -97,18 +98,25 @@ export namespace VE
 #if defined(VE_ON_WINDOWS_SYSTEM)
 			SetConsoleOutputCP(65001); // Enable Terminal WideString Output
 #endif
-			Log::Debug("Bootstrapping ViseraEngine Runtime...");
+			VE_LOG_DEBUG("Bootstrapping Runtime...");
+
+			VE_LOG_TRACE("Bootstrapping Window...");
 			Window::Bootstrap();
+			VE_LOG_TRACE("Bootstrapping IO...");
 			IO::Bootstrap();
+			VE_LOG_TRACE("Bootstrapping RHI...");
 			RHI::Bootstrap();
+			VE_LOG_TRACE("Bootstrapping RTC...");
 			RTC::Bootstrap();
+			VE_LOG_TRACE("Bootstrapping World...");
 			World::Bootstrap();
+			VE_LOG_TRACE("Bootstrapping Render...");
 			Render::Bootstrap();
 
-			Log::Debug("Bootstrapping ViseraEngine Edtior...");
+			VE_LOG_DEBUG("Bootstrapping Edtior...");
 			Editor::Bootstrap();
 
-			Log::Debug("Bootstrapping the " VISERA_APP_NAME "...");
+			VE_LOG_DEBUG("Bootstrapping the " VISERA_APP_NAME "...");
 			_App->Bootstrap();
 		}
 
@@ -116,19 +124,26 @@ export namespace VE
 		Terminate(ViseraApp* _App)
 		{	
 			RHI::WaitDeviceIdle();
-			Log::Debug("Terminating ViseraEngine App...");
+			VE_LOG_DEBUG("Terminating App...");
 			_App->Terminate();
 			delete _App;
 
-			Log::Debug("Terminating ViseraEngine Editor...");
+			VE_LOG_DEBUG("Terminating Editor...");
 			Editor::Terminate();
 
-			Log::Debug("Terminating ViseraEngine Runtime...");
+			VE_LOG_DEBUG("Terminating Runtime...");
+
+			VE_LOG_TRACE("Terminating Render...");
 			Render::Terminate();
+			VE_LOG_TRACE("Terminating World...");
 			World::Terminate();
+			VE_LOG_TRACE("Terminating RTC...");
 			RTC::Terminate();
+			VE_LOG_TRACE("Terminating Render...");
 			RHI::Terminate();
+			VE_LOG_TRACE("Terminating Render...");
 			IO::Terminate();
+			VE_LOG_TRACE("Terminating Render...");
 			Window::Terminate();
 		}
 	};

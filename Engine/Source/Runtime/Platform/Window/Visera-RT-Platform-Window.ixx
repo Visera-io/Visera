@@ -2,7 +2,9 @@ module;
 #include <Visera.h>
 #include <GLFW/glfw3.h>
 export module Visera.Runtime.Platform.Window;
+#define VE_MODULE_NAME "Window"
 
+import Visera.Core.Log;
 import Visera.Core.Signal;
 
 export namespace VE
@@ -11,7 +13,7 @@ export namespace VE
 	{
 		VE_MODULE_MANAGER_CLASS(Window);
 	public:
-		union Extent
+		union FExtent
 		{
 			struct { Int32 Width, Height; };
 			struct { Int32 X	, Y		; };
@@ -28,17 +30,17 @@ export namespace VE
 		GetHandle() { return Handle; }
 		static inline StringView
 		GetTitle() { return Title; }
-		static inline Extent
+		static inline FExtent
 		GetExtent() { return CurrentExtent; }
 		static inline const FContentScale&
 		GetContentScale() { return ContentScale; }
 
 		static inline void
 		QueryContentScale(Float* _ScaleX, Float* _ScaleY) { glfwGetWindowContentScale(Handle, _ScaleX, _ScaleY); }
-		static inline Extent
-		QueryFrameBufferExtent() { Extent FrameBufferExtent; glfwGetFramebufferSize(Handle, &FrameBufferExtent.Width, &FrameBufferExtent.Height); return FrameBufferExtent; }
+		static inline FExtent
+		QueryFrameBufferExtent() { FExtent FrameBufferFExtent; glfwGetFramebufferSize(Handle, &FrameBufferFExtent.Width, &FrameBufferFExtent.Height); return FrameBufferFExtent; }
 		static inline void
-		QueryFrameBufferExtent(Extent* Result) { glfwGetFramebufferSize(Handle, &Result->Width, &Result->Height); }
+		QueryFrameBufferExtent(FExtent* Result) { glfwGetFramebufferSize(Handle, &Result->Width, &Result->Height); }
 	
 	private:
 		static inline void
@@ -52,7 +54,7 @@ export namespace VE
 
 	private:
 		static inline String	Title				= VISERA_APP_NAME;
-		static inline Extent	CurrentExtent		{{.Width = 1600, .Height = 900}};
+		static inline FExtent	CurrentExtent		{{.Width = 1600, .Height = 900}};
 		static inline Bool		bMaximized			= False;
 		static inline FContentScale ContentScale;
 
@@ -96,6 +98,9 @@ export namespace VE
 				if (ContentScale.X != 1.0 || ContentScale.Y != 1.0)
 				{ SetSize(CurrentExtent.Width / ContentScale.X, CurrentExtent.Height / ContentScale.Y); }
 			}
+
+			VE_LOG_DEBUG("Created a new window (title:{}, extent:[{},{}], scales:[{},{}])",
+				Title, CurrentExtent.Width, CurrentExtent.Height, ContentScale.X, ContentScale.Y);
 		}
 		
 		VE_API Terminate() -> void

@@ -3,8 +3,8 @@ module;
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
-
 export module Visera.Core.Log:AppLogger;
+
 import Visera.Core.Signal;
 
 export namespace VE
@@ -17,72 +17,54 @@ export namespace VE
 		GetInstance()
 		{ static FAppLogger Singleton; return Singleton; }
 
-		inline void
-		Info(const String& message)
-		{ Spdlogger->info(message); }
-
 		template<typename... Args>
 		inline void
 		Info(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{ Spdlogger->info(Formatter, std::forward<Args>(Arguments)...); }
-
-		inline void
-		Warn(const String& message)
-		{ Spdlogger->warn(message); }
+		{ AppLogger->info(Formatter, std::forward<Args>(Arguments)...); }
 
 		template<typename... Args>
 		inline void
 		Warn(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{ Spdlogger->warn(Formatter, std::forward<Args>(Arguments)...); }
-
-		inline void
-		Error(const String& message)
-		{ Spdlogger->error(message); }
+		{ AppLogger->warn(Formatter, std::forward<Args>(Arguments)...); }
 
 		template<typename... Args>
 		inline void
 		Error(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{ Spdlogger->error(Formatter, std::forward<Args>(Arguments)...); }
+		{ AppLogger->error(Formatter, std::forward<Args>(Arguments)...); }
 
+		template<typename... Args>
 		inline void
-		Fatal(const String& Message, const std::source_location& Location)
-		{ 
-			SAppStop Signal{ Message, VISERA_APP_ERROR, Location };
-			Spdlogger->critical("{}{}", Signal.What(), Signal.Where());
-			throw Signal;
+		Fatal(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
+		{
+			AppLogger->critical(Formatter, std::forward<Args>(Arguments)...);
+			throw SRuntimeError("A Fatal Error was triggered.");
 		}
-
-		inline void
-		Debug(const String& message)
-		{ Spdlogger->debug(message); }
 
 		template<typename... Args>
 		inline void
 		Debug(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{ Spdlogger->debug(Formatter, std::forward<Args>(Arguments)...); }
+		{ AppLogger->debug(Formatter, std::forward<Args>(Arguments)...); }
+
 
 		FAppLogger() noexcept
 		{
 			auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-			Spdlogger = std::make_unique<spdlog::logger>("ViseraEngine Log", console_sink);
-	#ifndef NDEBUG
-			Spdlogger->set_level(spdlog::level::debug);
-	#else
-			Spdlogger->set_level(spdlog::level::warn);
-	#endif
-			//m_handle->set_pattern("[%^%l%$] [%Y-%m-%d %H:%M:%S] %v
-			Spdlogger->set_pattern("%^[" VISERA_APP_NAME " - %l - %H:%M:%S - Thread:%t]%$\n%v");
+			AppLogger = std::make_unique<spdlog::logger>("App Log", console_sink);
+
+	        AppLogger->set_level(spdlog::level::level_enum(VE_LOG_SYSTEM_VERBOSITY));
+
+			AppLogger->set_pattern("%^[%Y-%m-%d %H:%M:%S.%e] [%L] [Thread:%t] %v%$");
 		}
 		virtual ~FAppLogger() noexcept
 		{
-			Spdlogger->flush();
+			AppLogger->flush();
 
 			//Do not call drop_all() in your class!
 			spdlog::drop_all();
-			Spdlogger.reset();
+			AppLogger.reset();
 		}
 
 	protected:
-		UniquePtr<spdlog::logger> Spdlogger;
+		UniquePtr<spdlog::logger> AppLogger;
 	};
 } // namespace VE
