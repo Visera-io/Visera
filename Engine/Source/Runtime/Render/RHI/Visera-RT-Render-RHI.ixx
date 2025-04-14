@@ -2,9 +2,11 @@ module;
 #include <Visera.h>
 #include "Vulkan/VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI;
+#define VE_MODULE_NAME "RHI"
 import Visera.Runtime.Render.RHI.Vulkan;
 export import Visera.Runtime.Render.RHI.Vulkan.Common;
 
+import Visera.Core.Log;
 import Visera.Core.Signal;
 import Visera.Core.Time;
 import Visera.Core.Math.Basic;
@@ -104,13 +106,19 @@ export namespace VE
 
 			auto GetMatrixUBO() const -> SharedPtr<const FDescriptorSet> { return MatrixUBO; }
 
-			void SetModelMatrix(const Matrix4x4F& _ModelMatrix)			  { MatrixData->Write(_ModelMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Model)); }
-			void SetViewingMatrix(const Matrix4x4F& _ViewingMatrix)		  { MatrixData->Write(_ViewingMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Viewing)); }
-			void SetProjectionMatrix(const Matrix4x4F& _ProjectionMatrix) { MatrixData->Write(_ProjectionMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Projection)); }
+			void SetModelMatrix(const Matrix4x4F& _ModelMatrix)
+			{ MatrixData->Write(_ModelMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Model)); }
+			void SetViewingMatrix(const Matrix4x4F& _ViewingMatrix)
+			{ MatrixData->Write(_ViewingMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Viewing)); }
+			void SetProjectionMatrix(const Matrix4x4F& _ProjectionMatrix)
+			{ MatrixData->Write(_ProjectionMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Projection)); }
 
-			void SetInverseProjectionMatrix(const Matrix4x4F& _InverseProjectionMatrix) { MatrixData->Write(_InverseProjectionMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, InverseProjection)); }
-			void SetInverseViewingMatrix(const Matrix4x4F& _InverseViewingMatrix)       { MatrixData->Write(_InverseViewingMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, InverseViewing)); }
-			void SetCofactorModelMatrix(const Matrix4x4F& _CofactorModelMatrix)         { MatrixData->Write(_CofactorModelMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, CofactorModel)); }
+			void SetInverseProjectionMatrix(const Matrix4x4F& _InverseProjectionMatrix)
+			{ MatrixData->Write(_InverseProjectionMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, InverseProjection)); }
+			void SetInverseViewingMatrix(const Matrix4x4F& _InverseViewingMatrix)
+			{ MatrixData->Write(_InverseViewingMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, InverseViewing)); }
+			void SetCofactorModelMatrix(const Matrix4x4F& _CofactorModelMatrix)
+			{ MatrixData->Write(_CofactorModelMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, CofactorModel)); }
 
 			Bool IsReady() const { return !InFlightFence.IsBlocking(); }
 
@@ -144,65 +152,83 @@ export namespace VE
 		};
 
 	public:
-		static inline auto
-		CreateDescriptorSetLayout()	-> SharedPtr<FDescriptorSetLayout>	{ return FDescriptorSetLayout::Create(); }
-		static inline auto
-		CreateDescriptorSet(SharedPtr<const FDescriptorSetLayout> _SetLayout)		-> SharedPtr<FDescriptorSet>		{ return GlobalDescriptorPool->CreateDescriptorSet(_SetLayout);		}
-		static inline auto
-		CreateSampler(EFilter _Filter, ESamplerAddressMode _AddressMode = ESamplerAddressMode::ClampToEdge)	-> SharedPtr<FSampler> { return FSampler::Create(_Filter, _AddressMode); }
-		static inline auto
-		CreateGraphicsCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return ResetableGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
-		static inline auto
-		CreateOneTimeGraphicsCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary)	-> SharedPtr<FGraphicsCommandBuffer> { return TransientGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level); }
-		static inline auto
-		CreateImage(EImageType _Type, FExtent3D _Extent, EFormat _Format, EImageAspect _Aspects, EImageUsage _Usages, EImageTiling _Tiling = EImageTiling::Optimal,ESampleRate _SampleRate = ESampleRate::X1, UInt8 _MipmapLevels = 1,UInt8 _ArrayLayers = 1, ESharingMode	_SharingMode = ESharingMode::Exclusive,EMemoryUsage	_Location = EMemoryUsage::Auto)->SharedPtr<FImage> { return Vulkan->GetAllocator().CreateImage(_Type, _Extent, _Format, _Aspects, _Usages, _Tiling, _SampleRate, _MipmapLevels, _ArrayLayers, _SharingMode, _Location); }
-		static inline auto
-		CreateBuffer(UInt64 _Size, EBufferUsage _Usages, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive, EMemoryUsage _Location = EMemoryUsage::Auto) -> SharedPtr<FBuffer> { return Vulkan->GetAllocator().CreateBuffer(_Size, _Usages, _SharingMode, _Location); }
-		static inline auto
-		CreateVertexBuffer(UInt64 _Size) { return CreateBuffer(_Size, EBufferUsage::Vertex | EBufferUsage::TransferDestination); }
-		static inline auto
-		CreateIndexBuffer(UInt64 _Size)  { return CreateBuffer(_Size, EBufferUsage::Index | EBufferUsage::TransferDestination);  }
-		static inline auto
-		CreateStagingBuffer(UInt64 _Size, EBufferUsage _Usages = EBufferUsage::TransferSource, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive, EMemoryUsage _Location = EMemoryUsage::Auto) -> SharedPtr<FBuffer>;
-		static inline auto
-		CreateMappedBuffer(UInt64 _Size, EBufferUsage _Usages, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive) { return Vulkan->GetAllocator().CreateBuffer(_Size, _Usages, _SharingMode, EMemoryUsage::CPU, VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT); }
-		static inline auto
-		CreateFence(FFence::EStatus _Status = FFence::EStatus::Blocking) -> FFence     { return FFence{_Status}; }
-		static inline auto
-		CreateSemaphore()                                                -> FSemaphore { return FSemaphore();    }
-		static inline auto
-		CreateShader(EShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize) -> SharedPtr<FSPIRVShader> { return CreateSharedPtr<FSPIRVShader>(_ShaderStage, _SPIRVCode, _CodeSize); }
+		static inline SharedPtr<FDescriptorSetLayout>
+		CreateDescriptorSetLayout();
+		static inline SharedPtr<FDescriptorSet>
+		CreateDescriptorSet(SharedPtr<const FDescriptorSetLayout> _SetLayout);
+		
+		static inline SharedPtr<FGraphicsCommandBuffer>
+		CreateGraphicsCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary);
+		static inline SharedPtr<FGraphicsCommandBuffer>
+		CreateOneTimeGraphicsCommandBuffer(ECommandLevel _Level = ECommandLevel::Primary);
+
+		static inline SharedPtr<FImage>
+		CreateImage(EImageType   _Type,
+			        FExtent3D    _Extent,
+			        EFormat      _Format,
+			        EImageAspect _Aspects,
+			        EImageUsage  _Usages,
+			        EImageTiling _Tiling       = EImageTiling::Optimal,
+			        ESampleRate  _SampleRate   = ESampleRate::X1,
+			        UInt8        _MipmapLevels = 1,
+			        UInt8        _ArrayLayers  = 1,
+			        ESharingMode _SharingMode  = ESharingMode::Exclusive,
+			        EMemoryUsage _Location     = EMemoryUsage::Auto);
+		static inline SharedPtr<FSampler>
+		CreateSampler(EFilter _Filter, ESamplerAddressMode _AddressMode = ESamplerAddressMode::ClampToEdge);
+
+		static inline SharedPtr<FBuffer>
+		CreateBuffer(UInt64 _Size,
+			         EBufferUsage _Usages,
+			         ESharingMode _SharingMode     = EVulkanSharingMode::Exclusive,
+			         EMemoryUsage _Location        = EMemoryUsage::Auto,
+			         UInt32       _AllocationFlags = 0x0);
+		static inline SharedPtr<RHI::FBuffer>
+		CreateVertexBuffer(UInt64 _Size);
+		static inline SharedPtr<RHI::FBuffer>
+		CreateIndexBuffer(UInt64 _Size);
+		static inline SharedPtr<RHI::FBuffer>
+		CreateStagingBuffer(UInt64 _Size);
+		static inline SharedPtr<RHI::FBuffer>
+		CreateMappedBuffer(UInt64 _Size, EBufferUsage _Usages, ESharingMode _SharingMode = EVulkanSharingMode::Exclusive);
+
+		static inline FFence
+		CreateFence(FFence::EStatus _Status = FFence::EStatus::Blocking);
+		static inline FSemaphore
+		CreateSemaphore();
+		static inline SharedPtr<FSPIRVShader>
+		CreateShader(EShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize);
 		template<TRenderPass T> static auto
 		CreateRenderPass() -> SharedPtr<T>;
-		static inline auto
-		CreatePipelineLayout() { return FPipelineLayout::Create(); }
-		static inline auto
-		CreateRenderPipelineSetting() { return FRenderPipelineSetting::Create(); }
+		static inline SharedPtr<RHI::FPipelineLayout>
+		CreatePipelineLayout();
+		static inline SharedPtr<RHI::FRenderPipelineSetting>
+		CreateRenderPipelineSetting();
 
-		static inline auto
-		WaitFrameReady() -> FFrameContext&;
-		static inline auto
-		GetFrames() -> const Array<FFrameContext>& { return Frames;  }
-		static inline auto
-		GetCurrentFrame() -> FFrameContext&;
-		static inline auto
-		RenderAndPresentCurrentFrame() -> void;
-		static inline auto
-		GetFPS() -> UInt32 { return FPS; }
+		static inline FFrameContext&
+		WaitFrameReady();
+		static inline const Array<FFrameContext>&
+		GetFrames() { return Frames;  }
+		static inline FFrameContext&
+		GetCurrentFrame();
+		static inline void
+		RenderAndPresentCurrentFrame();
+		static inline UInt32
+		GetFPS() { return FPS; }
 
-		static inline auto
-		GetSwapchainFrameCount()	-> UInt32		  { return Vulkan->GetSwapchain().GetFrameCount(); }
-		static inline auto
-		GetSwapchainCursor()		-> UInt32		  { return Vulkan->GetSwapchain().GetCursor(); }
-		static inline auto
-		GetSwapchainFormat()		-> EFormat		  { return Vulkan->GetSwapchain().GetFormat(); }
+		static inline UInt32
+		GetSwapchainFrameCount() { return Vulkan->GetSwapchain().GetFrameCount(); }
+		static inline UInt32
+		GetSwapchainCursor()     { return Vulkan->GetSwapchain().GetCursor();     }
+		static inline EFormat
+		GetSwapchainFormat()     { return Vulkan->GetSwapchain().GetFormat();     }
 
-		static inline auto
-		WaitDeviceIdle()		 -> void { Vulkan->GetDevice().WaitIdle(); }
-		static inline auto
-		GetAPI()				 -> FVulkan* { return Vulkan; }
-		static inline auto
-		GetGlobalDescriptorPool() -> SharedPtr<const FDescriptorPool> { return GlobalDescriptorPool; }
+		static inline void
+		WaitDeviceIdle()		 { Vulkan->GetDevice().WaitIdle(); }
+		static inline FVulkan*
+		GetAPI()				 { return Vulkan; }
+		static inline SharedPtr<const FDescriptorPool>
+		GetGlobalDescriptorPool() { return GlobalDescriptorPool; }
 
 	private:
 		static inline FVulkan*							Vulkan;
@@ -218,7 +244,9 @@ export namespace VE
 		static void inline
 		Bootstrap()
 		{
+			VE_LOG_TRACE("Initializing Vulkan...");
 			Vulkan = new FVulkan();
+			VE_LOG_TRACE("Creating Global Descriptor Pool...");
 			GlobalDescriptorPool = FDescriptorPool::Create()
 				->AddEntry(EDescriptorType::UniformBuffer,        1000)
 				->AddEntry(EDescriptorType::StorageBuffer,        1000)
@@ -235,8 +263,8 @@ export namespace VE
 			ResetableGraphicsCommandPool = FGraphicsCommandPool::Create(ECommandPoolType::Resetable);
 			TransientGraphicsCommandPool = FGraphicsCommandPool::Create(ECommandPoolType::Transient);
 
+			VE_LOG_TRACE("Creating Frames...");
 			Frames.resize(GetSwapchainFrameCount());
-
 			auto ImmeCmds = CreateOneTimeGraphicsCommandBuffer();
 			ImmeCmds->StartRecording();
 
@@ -359,22 +387,25 @@ export namespace VE
 					.pSignalSemaphores		= nullptr,
 					.SignalFence			= &Fence,
 				});
-
 			Fence.Wait();
 		}
 
 		static void inline
 		Terminate()
 		{
+			VE_LOG_TRACE("Terminating RHI...");
 			WaitDeviceIdle();
+			VE_LOG_TRACE("Destroying Frames...");
 			Frames.clear();
 			FFrameContext::SVColorTextureDSLayout->Destroy();
 			FFrameContext::SVColorTextureSampler->Destroy();
 			FFrameContext::MatrixDSLayout->Destroy();
-
+			VE_LOG_TRACE("Destroying Command Pools...");
 			TransientGraphicsCommandPool.reset();
 			ResetableGraphicsCommandPool.reset();
+			VE_LOG_TRACE("Destroying Global Descriptor Pool...");
 			GlobalDescriptorPool->Destroy();
+			VE_LOG_TRACE("Finalizing Vulkan...");
 			delete Vulkan;
 		}
 	};
@@ -389,6 +420,7 @@ export namespace VE
 	SharedPtr<T> RHI::
 	CreateRenderPass()
 	{
+		VE_LOG_DEBUG("Creating a new render pass ({})", typeid(T).name());
 		auto NewRenderPass = CreateSharedPtr<T>();
 		Array<SharedPtr<FRenderTarget>> RenderTargets;
 
@@ -510,20 +542,141 @@ export namespace VE
 		}
 		catch (const SSwapchainRecreation& Signal)
 		{
+			VE_LOG_DEBUG("Recreating swapchain...");
 			throw SRuntimeError("WIP: Swapchain Recreation!");
 		}
 	}
 
-	SharedPtr<RHI::FBuffer> RHI::
-	CreateStagingBuffer(UInt64 _Size,
-		EBufferUsage _Usages     /* = EBufferUsage::TransferSource*/,
-		ESharingMode _SharingMode/* = EVulkanSharingMode::Exclusive*/,
-		EMemoryUsage _Location   /* = EMemoryUsage::Auto*/)
+	SharedPtr<RHI::FDescriptorSetLayout> RHI::
+	CreateDescriptorSetLayout()
 	{ 
-		return Vulkan->GetAllocator().CreateBuffer(
-			_Size, _Usages, _SharingMode, _Location, 
+		return FDescriptorSetLayout::Create();
+	}
+
+	SharedPtr<RHI::FDescriptorSet> RHI::
+	CreateDescriptorSet(SharedPtr<const FDescriptorSetLayout> _SetLayout)
+	{
+		VE_LOG_DEBUG("Creating a new descriptor set (layout:{}).", (Address)(_SetLayout->GetHandle()));
+		return GlobalDescriptorPool->CreateDescriptorSet(_SetLayout);
+	}
+
+	SharedPtr<RHI::FSampler> RHI::
+	CreateSampler(EFilter _Filter, ESamplerAddressMode _AddressMode/* = ESamplerAddressMode::ClampToEdge*/)
+	{
+		return FSampler::Create(_Filter, _AddressMode);
+	}
+
+	SharedPtr<RHI::FGraphicsCommandBuffer> RHI::
+	CreateGraphicsCommandBuffer(ECommandLevel _Level/* = ECommandLevel::Primary*/)
+	{
+		return ResetableGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level);
+	}
+
+	SharedPtr<RHI::FGraphicsCommandBuffer> RHI::
+	CreateOneTimeGraphicsCommandBuffer(ECommandLevel _Level/* = ECommandLevel::Primary*/)
+	{ 
+		return TransientGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level);
+	}
+
+	SharedPtr<RHI::FImage> RHI::
+	CreateImage(EImageType   _Type,
+		        FExtent3D    _Extent,
+		        EFormat      _Format,
+		        EImageAspect _Aspects,
+		        EImageUsage  _Usages,
+		        EImageTiling _Tiling      /* = EImageTiling::Optimal*/,
+		        ESampleRate  _SampleRate  /* = ESampleRate::X1*/,
+		        UInt8        _MipmapLevels/* = 1*/,
+		        UInt8        _ArrayLayers /* = 1*/,
+		        ESharingMode _SharingMode /* = ESharingMode::Exclusive*/,
+		        EMemoryUsage _Location    /* = EMemoryUsage::Auto*/)
+	{
+		VE_LOG_DEBUG("Creating a new image (format:{}, extent:[{}, {}, {}])",
+			UInt32(_Format), _Extent.width, _Extent.height, _Extent.depth);
+
+		return Vulkan->GetAllocator().CreateImage(
+			_Type, _Extent, _Format, _Aspects, _Usages,
+			_Tiling, _SampleRate, _MipmapLevels, _ArrayLayers, _SharingMode, _Location);
+	}
+
+	SharedPtr<RHI::FBuffer> RHI::
+	CreateBuffer(UInt64       _Size,
+		         EBufferUsage _Usages,
+		         ESharingMode _SharingMode     /*= EVulkanSharingMode::Exclusive*/,
+		         EMemoryUsage _Location        /*= EMemoryUsage::Auto*/,
+		         UInt32       _AllocationFlags /*= 0x0*/)
+	{
+		VE_LOG_DEBUG("Creating a new buffer (size:{})", _Size);
+		return Vulkan->GetAllocator().CreateBuffer(_Size, _Usages, _SharingMode, _Location, _AllocationFlags);
+	}
+
+	SharedPtr<RHI::FBuffer> RHI::
+	CreateMappedBuffer(UInt64 _Size,
+		EBufferUsage _Usages,
+		ESharingMode _SharingMode/* = EVulkanSharingMode::Exclusive*/)
+	{
+		return CreateBuffer(
+			_Size,
+			_Usages,
+			_SharingMode,
+			EMemoryUsage::CPU,
+			VMA_ALLOCATION_CREATE_MAPPED_BIT |
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+	}
+
+	SharedPtr<RHI::FBuffer> RHI::
+	CreateStagingBuffer(UInt64 _Size)
+	{ 
+		return CreateBuffer(
+			_Size,
+			EBufferUsage::TransferSource,
+			EVulkanSharingMode::Exclusive,
+			EMemoryUsage::Auto,
 			VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
 			VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+	}
+
+	SharedPtr<RHI::FBuffer> RHI::
+	CreateVertexBuffer(UInt64 _Size)
+	{
+		return CreateBuffer(_Size, EBufferUsage::Vertex | EBufferUsage::TransferDestination);
+	}
+
+	SharedPtr<RHI::FBuffer> RHI::
+	CreateIndexBuffer(UInt64 _Size) 
+	{ 
+		return CreateBuffer(_Size, EBufferUsage::Index | EBufferUsage::TransferDestination);
+	}
+
+	RHI::FFence RHI::
+	CreateFence(FFence::EStatus _Status/* = FFence::EStatus::Blocking*/)
+	{
+		return FFence{_Status};
+	}
+
+	RHI::FSemaphore RHI::
+	CreateSemaphore()
+	{
+		return FSemaphore();
+	}
+
+	SharedPtr<RHI::FSPIRVShader> RHI::
+	CreateShader(EShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize)
+	{
+		VE_LOG_DEBUG("Creating a new shader (stage:{}, size: {})", UInt32(_ShaderStage), _CodeSize);
+		return FSPIRVShader::Create(_ShaderStage, _SPIRVCode, _CodeSize);
+	}
+
+	SharedPtr<RHI::FPipelineLayout> RHI::
+	CreatePipelineLayout()
+	{
+		return FPipelineLayout::Create();
+	}
+
+	SharedPtr<RHI::FRenderPipelineSetting> RHI::
+	CreateRenderPipelineSetting()
+	{
+		return FRenderPipelineSetting::Create();
 	}
 
 } // namespace VE

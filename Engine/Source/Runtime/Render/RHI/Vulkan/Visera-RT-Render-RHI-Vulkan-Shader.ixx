@@ -13,6 +13,10 @@ export namespace VE
 	class FVulkanSPIRVShader
 	{
 	public:
+		static inline auto
+		Create(EVulkanShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize)
+		{ return CreateSharedPtr<FVulkanSPIRVShader>(_ShaderStage, _SPIRVCode, _CodeSize); }
+
 		auto GetEntryPoint()	const -> StringView				{ return "main"; }
 		auto GetStage()			const -> EVulkanShaderStage		{ return Stage; }
 

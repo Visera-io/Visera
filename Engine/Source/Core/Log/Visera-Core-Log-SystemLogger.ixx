@@ -1,6 +1,5 @@
 module;
 #include <Visera.h>
-
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -19,44 +18,25 @@ public:
 	GetInstance()
 	{ static FSystemLogger Singleton; return Singleton; }
 
-	inline void
-	Info(const String& message)
-	{ Spdlogger->info(message); }
-
 	template<typename... Args>
 	inline void
 	Info(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
 	{ Spdlogger->info(Formatter, std::forward<Args>(Arguments)...); }
-
-	inline void
-	Warn(const String& message)
-	{ Spdlogger->warn(message); }
 
 	template<typename... Args>
 	inline void
 	Warn(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
 	{ Spdlogger->warn(Formatter, std::forward<Args>(Arguments)...); }
 
-	inline void
-	Error(const String& message)
-	{ Spdlogger->error(message); }
-
 	template<typename... Args>
 	inline void
 	Error(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
 	{ Spdlogger->error(Formatter, std::forward<Args>(Arguments)...); }
 
+	template<typename... Args>
 	inline void
-	Fatal(const String& message, const std::source_location& location = std::source_location::current())
-	{
-		SEngineStop Signal{ message, VISERA_ENGINE_ERROR, location };
-		Spdlogger->critical("{}{}", Signal.What(), Signal.Where());
-		throw Signal;
-	}
-
-	inline void
-	Debug(const String& message)
-	{ Spdlogger->debug(message); }
+	Fatal(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
+	{ Spdlogger->critical(Formatter, std::forward<Args>(Arguments)...); }
 
 	template<typename... Args>
 	inline void
@@ -73,7 +53,8 @@ public:
 		Spdlogger->set_level(spdlog::level::warn);
 #endif
 		//m_handle->set_pattern("[%^%l%$] [%Y-%m-%d %H:%M:%S] %v");
-		Spdlogger->set_pattern("%^[ViseraEngine - %l - %H:%M:%S - Thread:%t]%$\n%v");
+
+		Spdlogger->set_pattern("%^[%H:%M:%S.%e] [%L] [Thread:%t] %v%$");
 	}
 	virtual ~FSystemLogger() noexcept
 	{

@@ -50,12 +50,14 @@
 #else
 #define VE_IS_APPLE_SYSTEM false
 #endif
+
 #if (defined(_M_IX86) || defined(__i386__) || defined(_M_X64) || defined(__amd64__) || defined(__x86_64__)) && !defined(_M_ARM64EC)
 #define VE_IS_X86_CPU true
 #define VE_ON_X86_CPU
 #else
 #define VE_IS_X86_CPU false
 #endif
+
 #if (defined(__arm__) || defined(_M_ARM) || defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC))
 #define VE_IS_ARM_CPU true
 #define VE_ON_ARM_CPU
@@ -63,10 +65,16 @@
 #define VE_IS_ARM_CPU false
 #endif
 
-#if (VE_IS_WINDOWS_SYSTEM)
-#define VE_PATH(Path) L##Path
+#if defined(_MSC_VER)
+#define VE_IS_MSVC_COMPILER true
 #else
-#define VE_PATH(Path) Path
+#define VE_ON_MSVC_COMPILER false
+#endif
+
+#if VE_IS_MSVC_COMPILER
+#define VE_NO_OPERATION __noop
+#else
+#define VE_NO_OPERATION (void)(0)
 #endif
 
 // << STD Modules >>
@@ -101,6 +109,53 @@
 #include <unordered_set>
 #include <variant>
 #include <type_traits>
+
+//      [       Level      ]   [Print in Console] [Sink in Files] [Text Color] [Background Color] [Additional Information]
+#define VE_LOG_LEVEL_TRACE 0 //|   Conditional  | | Conditional | |   Grey   | |                | |                      |
+#define VE_LOG_LEVEL_DEBUG 1 //|   Conditional  | |     Yes     | |   Blue   | |                | |                      |
+#define VE_LOG_LEVEL_INFO  2 //|   Conditional  | |     Yes     | |   Green  | |                | |                      |
+#define VE_LOG_LEVEL_WARN  3 //|      Yes       | |     Yes     | |   Yellow | |                | |                      |
+#define VE_LOG_LEVEL_ERROR 4 //|      Yes       | |     Yes     | |   Red    | |                | |                      |
+#define VE_LOG_LEVEL_FATAL 5 //|      Yes       | |     Yes     | |   Red    | |       Red      | |     SRuntimeError    |
+
+#define VE_LOG_SYSTEM_VERBOSITY VE_LOG_LEVEL_DEBUG
+//enum ELogCategory { Console, Display };
+
+#if VE_LOG_LEVEL_TRACE >= VE_LOG_SYSTEM_VERBOSITY
+#define VE_LOG_TRACE(_Formatter, ...) Log::Debug("[Module:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
+#else
+#define VE_LOG_TRACE(_Formatter, ...) VE_NO_OPERATION
+#endif
+
+#if VE_LOG_LEVEL_DEBUG >= VE_LOG_SYSTEM_VERBOSITY
+#define VE_LOG_DEBUG(_Formatter, ...) Log::Debug("[Module:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
+#else
+#define VE_LOG_DEBUG(_Formatter, ...) VE_NO_OPERATION
+#endif
+
+#if VE_LOG_LEVEL_INFO >= VE_LOG_SYSTEM_VERBOSITY
+#define VE_LOG_INFO(_Formatter, ...) Log::Info("[Module:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
+#else
+#define VE_LOG_INFO(_Formatter, ...) VE_NO_OPERATION
+#endif
+
+#if VE_LOG_LEVEL_WARN >= VE_LOG_SYSTEM_VERBOSITY
+#define VE_LOG_WARN(_Formatter, ...) Log::Warn("[Module:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
+#else
+#define VE_LOG_WARN(_Formatter, ...) VE_NO_OPERATION
+#endif
+
+#if VE_LOG_LEVEL_ERROR >= VE_LOG_SYSTEM_VERBOSITY
+#define VE_LOG_ERROR(_Formatter, ...) Log::Error("[Module:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
+#else
+#define VE_LOG_ERROR(_Formatter, ...) VE_NO_OPERATION
+#endif
+
+#if VE_LOG_LEVEL_FATAL >= VE_LOG_SYSTEM_VERBOSITY
+#define VE_LOG_FATAL(_Formatter, ...) Log::Fatal("[Module:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
+#else
+#define VE_LOG_FATAL(_Formatter, ...) VE_NO_OPERATION
+#endif
 
 namespace VE
 {

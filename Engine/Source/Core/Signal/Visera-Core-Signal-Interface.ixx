@@ -31,10 +31,10 @@ export namespace VE
 		const Int32 StateCode;
 
 		ISignal(
-			const String& Message, Int32 _StateCode,
+			StringView _Message, Int32 _StateCode,
 			const std::source_location& Location = std::source_location::current())
 			:
-			Message		{ std::move(Message) },
+			Message		{ _Message },
 			Location	{ std::move(Location) },
 			StateCode	{_StateCode}
 		{
