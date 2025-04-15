@@ -3,8 +3,10 @@ module;
 #include <slang.h>
 #include <slang-com-ptr.h>
 export module Visera.Runtime.Render.Shader;
+#define VE_MODULE_NAME "Shader"
 import Visera.Runtime.Render.Shader.Compiler;
 
+import Visera.Core.Log;
 import Visera.Core.Type;
 import Visera.Core.Signal;
 
@@ -34,7 +36,7 @@ export namespace VE
 
 		FShader() = delete;
 		FShader(StringView _ShaderFileName, StringView _EntryPoint);
-		~FShader() = default;
+		~FShader() { if (!IsCompiled()) { VE_LOG_WARN("You may forget to compile this shader: {}", FileName)} }
 
 	private:
 		SharedPtr<RHI::FSPIRVShader>Handle;
@@ -58,6 +60,7 @@ export namespace VE
 	Compile()
 	{
 		if (IsCompiled()) { return shared_from_this(); }
+		VE_LOG_DEBUG("Starting compiling the {}(entry point:{}).", FileName, EntryPoint);
 
 		switch (Language)
 		{

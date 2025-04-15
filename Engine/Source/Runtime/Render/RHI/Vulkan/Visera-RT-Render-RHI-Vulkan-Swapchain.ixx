@@ -1,6 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Swapchain;
+#define VE_MODULE_NAME "Vulkan:Swapchain"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :GPU;
@@ -82,7 +83,7 @@ export namespace VE
 			}
 			if (!bPresentModeSupport)
 			{
-				Log::Warn("Preferred Swapchain Present Mode is NOT supported! - Using FIFO mode by default.");
+				VE_LOG_WARN("Preferred Swapchain Present Mode is NOT supported! - Using FIFO mode by default.");
 				PresentMode = EVulkanPresentMode::FIFO;
 			}
 		

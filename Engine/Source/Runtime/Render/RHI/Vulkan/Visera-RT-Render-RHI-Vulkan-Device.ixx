@@ -1,6 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Device;
+#define VE_MODULE_NAME "Vulkan:Device"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Instance;
@@ -168,7 +169,7 @@ export namespace VE
 		{ throw SRuntimeError("Failed to find a suitable Physical Device on current computer!"); }
 
 		if (!GVulkan->GPU->IsDiscreteGPU())
-		{ Log::Warn("Current GPU is not a discrete GPU!"); }
+		{ VE_LOG_WARN("Current GPU is not a discrete GPU!"); }
 
 		auto& GraphicsQueueFamily	= QueueFamilies[AutoCast(EVulkanQueueFamily::Graphics)];
 		auto& PresentQueueFamily	= QueueFamilies[AutoCast(EVulkanQueueFamily::Present)];

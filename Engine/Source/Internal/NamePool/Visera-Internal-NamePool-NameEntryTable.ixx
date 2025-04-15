@@ -1,7 +1,7 @@
 module;
 #include <Visera.h>
 export module Visera.Internal.NamePool:NameEntryTable;
-
+#define VE_MODULE_NAME "NamePool:NameEntryTable"
 import :Common;
 
 import Visera.Core.OS.Memory;
@@ -106,7 +106,7 @@ export namespace VE { namespace Internal
 			}
 		}
 
-		Log::Debug("Allocating a new FNameEntryTable Section at index({}).", CurrentSectionCursor + 1);
+		VE_LOG_DEBUG("Allocating a new FNameEntryTable Section at index({}).", CurrentSectionCursor + 1);
 		auto& NewSection = Sections[++CurrentSectionCursor];
 		NewSection.Data = (Byte*)Memory::MallocNow(SectionByteSize, NameEntryAlignment);
 		NewSection.CurrentByteCursor = 0;

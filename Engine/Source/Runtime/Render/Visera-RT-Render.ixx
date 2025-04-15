@@ -26,7 +26,6 @@ export namespace VE
 	void Render::
 	Bootstrap()
 	{
-		//Log::Debug("Compiling Shaders")
 	}
 
 	void Render::

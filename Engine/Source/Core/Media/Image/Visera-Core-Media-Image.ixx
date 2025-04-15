@@ -2,7 +2,8 @@ module;
 #include <Visera.h>
 #include <FreeImagePlus.h>
 export module Visera.Core.Media.Image;
-
+#define VE_MODULE_NAME "Image"
+import Visera.Core.Log;
 import Visera.Core.Type;
 import Visera.Core.Signal;
 import Visera.Core.OS.Memory;
@@ -112,6 +113,7 @@ export namespace VE
 	FImage(const FPath& _Path) : Path{_Path}
 	{
 		LoadFreeImage();
+		VE_LOG_DEBUG("Loading a new image from {}", Path.ToPlatformString());
 
 		if (!Handle.load(Path.ToPlatformString().data()))
 		{ throw SIOFailure(Text("Failed to load the image({})!", Path.ToPlatformString())); }

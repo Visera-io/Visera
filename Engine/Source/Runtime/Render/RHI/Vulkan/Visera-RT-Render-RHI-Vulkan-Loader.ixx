@@ -2,6 +2,7 @@ module;
 #define VOLK_IMPLEMENTATION
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Loader;
+#define VE_MODULE_NAME "Vulkan:Loader"
 import :Context;
 import Visera.Core.Log;
 
@@ -27,7 +28,7 @@ export namespace VE
 	Create()
 	{
 		if (volkInitialize() != VK_SUCCESS)
-		{ Log::Fatal("Failed to initialize Volk!"); }
+		{ VE_LOG_FATAL("Failed to initialize Volk!"); }
 	}
 
 	void FVulkanLoader::

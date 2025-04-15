@@ -4,6 +4,7 @@ module;
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 export module Visera.Editor;
+#define VE_MODULE_NAME "Editor"
 import Visera.Editor.Widget;
 
 import Visera.Runtime.Platform.Window;
@@ -131,7 +132,7 @@ export namespace VE
 				.CheckVkResultFn = [](VkResult Err)
 				{
 					if (Err != VK_SUCCESS)
-					{ Log::Error("ImGUI Vulkan Error Code: {}", UInt32(Err)); }
+					{ VE_LOG_ERROR("ImGUI Vulkan Error Code: {}", UInt32(Err)); }
 				},
 			};
 

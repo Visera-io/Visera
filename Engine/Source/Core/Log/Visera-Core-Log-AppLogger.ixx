@@ -3,6 +3,7 @@ module;
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/rotating_file_sink.h>
 export module Visera.Core.Log:AppLogger;
 
 import Visera.Core.Signal;
@@ -16,6 +17,16 @@ export namespace VE
 		static inline FAppLogger&
 		GetInstance()
 		{ static FAppLogger Singleton; return Singleton; }
+
+		template<typename... Args>
+		inline void
+		Trace(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
+		{ AppLogger->trace(Formatter, std::forward<Args>(Arguments)...); }
+
+		template<typename... Args>
+		inline void
+		Debug(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
+		{ AppLogger->debug(Formatter, std::forward<Args>(Arguments)...); }
 
 		template<typename... Args>
 		inline void
@@ -40,20 +51,22 @@ export namespace VE
 			throw SRuntimeError("A Fatal Error was triggered.");
 		}
 
-		template<typename... Args>
-		inline void
-		Debug(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{ AppLogger->debug(Formatter, std::forward<Args>(Arguments)...); }
-
-
 		FAppLogger() noexcept
 		{
-			auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-			AppLogger = std::make_unique<spdlog::logger>("App Log", console_sink);
+			auto ConsoleSink = CreateSharedPtr<spdlog::sinks::stdout_color_sink_mt>();
+
+			auto RotatingSink = CreateSharedPtr<spdlog::sinks::rotating_file_sink_mt>(
+				VISERA_APP_CACHE_DIR"/Logs/App.log",
+				5 * OneMByte, // 5 MB per file, 
+				3             // keep 3 backups
+			);
+			Array<spdlog::sink_ptr> Sinks { ConsoleSink, RotatingSink };
+
+			AppLogger = CreateUniquePtr<spdlog::logger>("App Log", Sinks.begin(), Sinks.end());
 
 	        AppLogger->set_level(spdlog::level::level_enum(VE_LOG_SYSTEM_VERBOSITY));
 
-			AppLogger->set_pattern("%^[%Y-%m-%d %H:%M:%S.%e] [%L] [Thread:%t] %v%$");
+			AppLogger->set_pattern("%^[%Y-%m-%d %H:%M:%S.%e] [%L] [T:%t] %v%$");
 		}
 		virtual ~FAppLogger() noexcept
 		{

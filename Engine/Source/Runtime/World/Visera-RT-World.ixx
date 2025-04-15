@@ -1,6 +1,7 @@
 module;
 #include <Visera.h>
 export module Visera.Runtime.World;
+#define VE_MODULE_NAME "World"
 export import Visera.Runtime.World.Atlas;
 export import Visera.Runtime.World.Object;
 export import Visera.Runtime.World.Actor;
@@ -85,7 +86,7 @@ export namespace VE
 			}
 			else
 			{
-				Log::Warn("You may create a duplicated Object({}) to the World."
+				VE_LOG_WARN("You may create a duplicated Object({}) to the World."
 						  "-- If you want to do that, try to increase the number of FName.",
 						  _Name.GetNameWithNumber()); 
 			}
@@ -108,7 +109,7 @@ export namespace VE
 				if (Target->second->IsRecollectable() &&
 					Target->second.use_count() == 1)
 				{
-					Log::Warn("The searched object({}) is about to be recollected!", _Name.GetNameWithNumber());
+					VE_LOG_WARN("The searched object({}) is about to be recollected!", _Name.GetNameWithNumber());
 				}
 				Result = Target->second;
 			}
