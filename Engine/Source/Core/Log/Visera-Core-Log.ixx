@@ -14,6 +14,14 @@ export namespace VE
 		VE_MODULE_MANAGER_CLASS(Log);
 	public:
 		template<typename... Args> static void
+		Trace(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
+		{FSystemLogger::GetInstance().Trace(Formatter, std::forward<Args>(Arguments)...);}
+
+		template<typename... Args> static void
+		Debug(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
+		{FSystemLogger::GetInstance().Debug(Formatter, std::forward<Args>(Arguments)...);}
+
+		template<typename... Args> static void
 		Info(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
 		{FSystemLogger::GetInstance().Info(Formatter, std::forward<Args>(Arguments)...);}
 
@@ -29,9 +37,6 @@ export namespace VE
 		Fatal(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
 		{FSystemLogger::GetInstance().Fatal(Formatter, std::forward<Args>(Arguments)...);}
 
-		template<typename... Args> static void
-		Debug(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{FSystemLogger::GetInstance().Debug(Formatter, std::forward<Args>(Arguments)...);}
 	};
 
 } // namespace VE
@@ -43,6 +48,14 @@ export namespace VISERA_APP_NAMESPACE
 	{
 		VE_MODULE_MANAGER_CLASS(Log);
 	public:
+		template<typename... Args> static void
+		Trace(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
+		{FAppLogger::GetInstance().Trace(Formatter, std::forward<Args>(Arguments)...);}
+
+		template<typename... Args> static void
+		Debug(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
+		{FAppLogger::GetInstance().Debug(Formatter, std::forward<Args>(Arguments)...);}
+
 		template<typename... Args> static void
 		Info(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
 		{FAppLogger::GetInstance().Info(Formatter, std::forward<Args>(Arguments)...);}
@@ -58,10 +71,6 @@ export namespace VISERA_APP_NAMESPACE
 		template<typename... Args> static void
 		Fatal(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
 		{FAppLogger::GetInstance().Fatal(Formatter, std::forward<Args>(Arguments)...);}
-
-		template<typename... Args> static void
-		Debug(spdlog::format_string_t<Args...> Formatter, Args &&...Arguments)
-		{FAppLogger::GetInstance().Debug(Formatter, std::forward<Args>(Arguments)...);}
 	};
 
 } // namespace VISERA_APP_NAMESPACE

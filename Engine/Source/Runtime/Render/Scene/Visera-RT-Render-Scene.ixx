@@ -1,12 +1,14 @@
 module;
 #include <Visera.h>
 export module Visera.Runtime.Render.Scene;
+#define VE_MODULE_NAME "Scene"
 import Visera.Runtime.Render.Scene.Light;
 import Visera.Runtime.Render.Scene.Primitive;
 
 import Visera.Runtime.Render.RTC;
 import Visera.Runtime.Render.RHI;
 
+import Visera.Core.Log;
 import Visera.Core.Signal;
 import Visera.Core.Media;
 import Visera.Core.Type;
@@ -40,6 +42,9 @@ export namespace VE
 		void inline
 		Commit();
 
+		Bool inline
+		IsCommitted() const  { return bCommitted; }
+
 		void inline
 		Accept(RTC::FRay* _Ray) const { _Ray->CastTo(AccelerationStructure); }
 
@@ -47,15 +52,19 @@ export namespace VE
 		SharedPtr<RTC::FAccelerationStructure> AccelerationStructure;
 		
 		HashMap<FName, FAttachment> AttachmentTable;
+
+		Bool bCommitted = False;
 		
 	public:
 		FScene()  = default;
-		~FScene() = default;
+		~FScene() { if(!IsCommitted()) { VE_LOG_WARN("You may forget to commit the scene after attaching!"); } }
 	};
 
 	const FScene::FAttachment& FScene::
 	Attach(const FName& _Name, SharedPtr<const FModel> _Model)
 	{
+		Log::Trace("Attaching a new premitive {} to the scene.", _Name.GetNameWithNumber());
+
 		if (!AccelerationStructure)
 		{ AccelerationStructure = RTC::FAccelerationStructure::Create(); }
 
@@ -88,6 +97,7 @@ export namespace VE
 		};
 		NewAttachment.ID = AccelerationStructure->Attach(RTC::FSceneNode::Create(ASNodeCreateInfo));
 
+		bCommitted = False;
 		return NewAttachment;
 	}
 
@@ -95,6 +105,7 @@ export namespace VE
 	Commit()
 	{
 		AccelerationStructure->Update();
+		bCommitted = True;
 	}
 
 } // namespace VE

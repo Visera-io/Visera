@@ -122,7 +122,7 @@
 //enum ELogCategory { Console, Display };
 
 #if VE_LOG_LEVEL_TRACE >= VE_LOG_SYSTEM_VERBOSITY
-#define VE_LOG_TRACE(_Formatter, ...) Log::Debug("[M:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
+#define VE_LOG_TRACE(_Formatter, ...) Log::Trace("[M:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
 #else
 #define VE_LOG_TRACE(_Formatter, ...) VE_NO_OPERATION
 #endif

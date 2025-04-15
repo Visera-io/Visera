@@ -59,6 +59,7 @@ export namespace VE
     FModel::
     Load()
     {
+        VE_LOG_DEBUG("Loading a new model from {}", Path.ToPlatformString());
         if (!IsExpired())
         { return VE_LOG_WARN("You tried to load an unexpired model({})!", Path.ToPlatformString()); }
 
