@@ -1,8 +1,9 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Sampler;
+#define VE_MODULE_NAME "Vulkan:Sampler"
 import :Context;
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Device;
@@ -98,8 +99,12 @@ export namespace VE
             &CreateInfo,
             GVulkan->AllocationCallbacks,
             &Handle) != VK_SUCCESS)
-        { throw SRuntimeError("Failed to create the Vulkan Sampler!"); }
+        { VE_LOG_FATAL("Failed to create the Vulkan Sampler!"); }
 
+        VE_LOG_DEBUG("Built a new sampler (handle:{}, filter:[ZoomIn{},ZoomOut{}], address mode:[U{},V{},W{}]).",
+			(Address)(Handle),
+            UInt32(Filters.ZoomIn), UInt32(Filters.ZoomOut),
+            UInt32(AddressModes.U), UInt32(AddressModes.V),UInt32(AddressModes.W));
         return shared_from_this();
     }
 
@@ -117,7 +122,7 @@ export namespace VE
     void FVulkanSampler::
     Destroy()
     {
-        if (Handle != VK_NULL_HANDLE)
+        if (IsBuilt())
         {
             vkDestroySampler(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
             Handle = VK_NULL_HANDLE;

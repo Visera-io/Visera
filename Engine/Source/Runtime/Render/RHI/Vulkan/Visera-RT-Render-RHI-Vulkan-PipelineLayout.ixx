@@ -1,12 +1,13 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:PipelineLayout;
+#define VE_MODULE_NAME "Vulkan:PipelineLayout"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Device;
 import :DescriptorSetLayout;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -64,7 +65,7 @@ export namespace VE
 	AddDescriptorSetLayout(SharedPtr<const FVulkanDescriptorSetLayout> _DescriptorSetLayout)
 	{
 		if(!_DescriptorSetLayout->IsBuilt())
-		{ throw SRuntimeError("Failed to add the Descriptor Set! -- The Layout is not built!"); }
+		{ VE_LOG_FATAL("Failed to add the Descriptor Set! -- The Layout is not built!"); }
 
 		DescriptorSetLayouts.emplace_back(std::move(_DescriptorSetLayout));
 		return this;
@@ -98,8 +99,9 @@ export namespace VE
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create Vulkan Pipeline Layout!"); }
+		{ VE_LOG_FATAL("Failed to create Vulkan Pipeline Layout!"); }
 
+		VE_LOG_DEBUG("Built a new pipline layout (handle: ).", (Address)(Handle));
 		return shared_from_this();
 	}
 

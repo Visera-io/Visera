@@ -19,12 +19,15 @@ export namespace VE
 		operator const VkSemaphore() const { return Handle; }
 
 		FVulkanSemaphore(Bool bSignaled = False);
-		~FVulkanSemaphore();
-		FVulkanSemaphore(FVulkanSemaphore&& _Another) : Handle{ _Another.Handle } { _Another.Handle = VK_NULL_HANDLE; }
-		FVulkanSemaphore& operator=(FVulkanSemaphore&& _Another) { Handle = _Another.Handle; _Another.Handle = VK_NULL_HANDLE; return *this; }
+		~FVulkanSemaphore() { Destroy(); }
+		FVulkanSemaphore(FVulkanSemaphore&& _Another) : Handle{ _Another.Handle } {  _Another.Handle = VK_NULL_HANDLE; }
+		FVulkanSemaphore& operator=(FVulkanSemaphore&& _Another)
+		{ Destroy(); Handle = _Another.Handle; _Another.Handle = VK_NULL_HANDLE; return *this; }
 
 	private:
 		VkSemaphore	Handle{ VK_NULL_HANDLE };
+
+		void inline Destroy();
 	};
 	static_assert(sizeof(FVulkanSemaphore) == sizeof(VkFence));
 	static_assert(std::is_standard_layout_v<FVulkanSemaphore>);
@@ -43,12 +46,15 @@ export namespace VE
 		Bool IsBlocking()	const { return VK_SUCCESS != vkGetFenceStatus(GVulkan->Device->GetHandle(), Handle); }
 
 		FVulkanFence(EStatus _Status = EStatus::Blocking);
-		~FVulkanFence();
+		~FVulkanFence() { Destroy(); }
 		FVulkanFence(FVulkanFence&& _Another) : Handle{ _Another.Handle } { _Another.Handle = VK_NULL_HANDLE; }
-		FVulkanFence& operator=(FVulkanFence&& _Another) { Handle = _Another.Handle; _Another.Handle = VK_NULL_HANDLE; return *this; }
+		FVulkanFence& operator=(FVulkanFence&& _Another)
+		{ Destroy(); Handle = _Another.Handle; _Another.Handle = VK_NULL_HANDLE; return *this; }
 
 	private:
 		VkFence	 Handle{ VK_NULL_HANDLE };
+
+		void inline Destroy();
 	};
 	static_assert(sizeof(FVulkanFence) == sizeof(VkFence));
 	static_assert(std::is_standard_layout_v<FVulkanFence>);
@@ -80,8 +86,8 @@ export namespace VE
 		{ throw SRuntimeError("Failed to create Vulkan FSemaphore!"); }
 	}
 
-	FVulkanSemaphore::
-	~FVulkanSemaphore()
+	void FVulkanSemaphore::
+	Destroy()
 	{
 		if (Handle != VK_NULL_HANDLE)
 		{
@@ -106,8 +112,8 @@ export namespace VE
 		{ throw SRuntimeError("Failed to create Vulkan FFence!"); }
 	}
 
-	FVulkanFence::
-	~FVulkanFence()
+	void FVulkanFence::
+	Destroy()
 	{
 		if (Handle != VK_NULL_HANDLE)
 		{
