@@ -97,8 +97,8 @@ export namespace VE
 		{
 			friend class RHI;
 		public:
-			auto GetGraphicsCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer>    { return GraphicsCommandBuffer; }
-			auto GetEditorCommandBuffer()   -> SharedPtr<FGraphicsCommandBuffer>    { return EditorCommandBuffer;   }
+			auto GetGraphicsCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer>    { return CommandBuffers[Graphics]; }
+			auto GetEditorCommandBuffer()   -> SharedPtr<FGraphicsCommandBuffer>    { return CommandBuffers[Editor];   }
 
 			auto GetColorImageShaderReadView() const -> SharedPtr<const FImageView> { return SVColorView; }
 			auto GetSVColorTexture()    const -> SharedPtr<const FDescriptorSet>	{ return SVColorTexture; }
@@ -142,10 +142,9 @@ export namespace VE
 			SharedPtr<FBuffer>        MatrixData;
 			SharedPtr<FDescriptorSet> MatrixUBO;
 
-			SharedPtr<FGraphicsCommandBuffer> GraphicsCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
-			SharedPtr<FGraphicsCommandBuffer> EditorCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
-			FSemaphore GraphicsCommandsFinishedSemaphore= RHI::CreateSemaphore();
-			FSemaphore EditorCommandsFinishedSemaphore	= RHI::CreateSemaphore();
+			enum EFrameCommandBufferType { Resource, Graphics, Editor, MAX };
+			Segment<SharedPtr<FGraphicsCommandBuffer>, MAX> CommandBuffers;
+			Segment<FSemaphore, MAX>                        CommandsFinishedSemaphores;
 
 			FSemaphore SwapchainReadySemaphore			= RHI::CreateSemaphore();
 			FFence	   InFlightFence					= RHI::CreateFence(FFence::EStatus::Signaled);
@@ -230,6 +229,9 @@ export namespace VE
 		static inline SharedPtr<const FDescriptorPool>
 		GetGlobalDescriptorPool() { return GlobalDescriptorPool; }
 
+		static inline Bool
+		IsTexture2DFormatSupported(EFormat _Format) { return Vulkan->GetGPU().IsTexture2DFormatSupported(_Format); }
+
 	private:
 		static inline FVulkan*							Vulkan;
 		//[TODO]: ThreadSafe Paradigm
@@ -281,6 +283,15 @@ export namespace VE
 
 			for (auto& Frame : Frames)
 			{
+				for (auto& CommandBuffer : Frame.CommandBuffers)
+				{
+					CommandBuffer = RHI::CreateGraphicsCommandBuffer();
+				}
+				for (auto& Semephore : Frame.CommandsFinishedSemaphores)
+				{
+					Semephore = RHI::CreateSemaphore();
+				}
+
 				Frame.MatrixData = CreateMappedBuffer(sizeof(FMatrixUBOLayout), EBufferUsage::Uniform);
 				Frame.MatrixUBO = RHI::CreateDescriptorSet(FFrameContext::MatrixDSLayout);
 				Frame.MatrixUBO->WriteBuffer(0, Frame.MatrixData, 0, Frame.MatrixData->GetSize());
@@ -377,12 +388,13 @@ export namespace VE
 			ImmeCmds->StopRecording();
 			auto Fence = CreateFence();
 
+			EGraphicsPipelineStage WaitStages = EGraphicsPipelineStage::PipelineTop;
 			ImmeCmds->Submit(
 				FCommandSubmitInfo
 				{
 					.WaitSemaphoreCount		= 0,
 					.pWaitSemaphores		= nullptr,
-					.WaitStages				= {EGraphicsPipelineStage::PipelineTop},
+					.pWaitStages			{.Graphics = &WaitStages },
 					.SignalSemaphoreCount	= 0,
 					.pSignalSemaphores		= nullptr,
 					.SignalFence			= &Fence,
@@ -491,13 +503,20 @@ export namespace VE
 			Vulkan->GetSwapchain().WaitForNextImage(CurrentFrame.SwapchainReadySemaphore);
 			CurrentFrame.InFlightFence.Block();
 
-			CurrentFrame.EditorCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
-			CurrentFrame.EditorCommandBuffer->Reset();
+			auto& EditorCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Editor];
+			EditorCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
+			EditorCommandBuffer->Reset();
 			//Start Recording at Editor
 
-			CurrentFrame.GraphicsCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
-			CurrentFrame.GraphicsCommandBuffer->Reset();
-			CurrentFrame.GraphicsCommandBuffer->StartRecording();	
+			auto& GraphicsCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Graphics];
+			GraphicsCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
+			GraphicsCommandBuffer->Reset();
+			GraphicsCommandBuffer->StartRecording();
+
+			auto& ResourceCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Resource];
+			ResourceCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
+			ResourceCommandBuffer->Reset();
+			ResourceCommandBuffer->StartRecording();
 		}
 		catch (const SSwapchainRecreation& Signal)
 		{
@@ -512,33 +531,66 @@ export namespace VE
 	{
 		auto& CurrentFrame = GetCurrentFrame();
 
-		CurrentFrame.GraphicsCommandBuffer->StopRecording();
-		CurrentFrame.GraphicsCommandBuffer->Submit(
+		auto& ResourceCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Resource];
+		ResourceCommandBuffer->StopRecording();
+		static Segment<EVulkanGraphicsPipelineStage, 1> ResourceWaitStages
+		{
+			EVulkanGraphicsPipelineStage::PipelineTop
+		};
+		ResourceCommandBuffer->Submit(
 			FCommandSubmitInfo
 			{
-				.WaitSemaphoreCount		= 1,
-				.pWaitSemaphores		= &CurrentFrame.SwapchainReadySemaphore,//[FIXME]: Temp!
-				.WaitStages				= {EGraphicsPipelineStage::PipelineTop},
+				.WaitSemaphoreCount		= 0,
+				.pWaitSemaphores		= nullptr,
+				.pWaitStages			{.Graphics = ResourceWaitStages.data()},
 				.SignalSemaphoreCount	= 1,
-				.pSignalSemaphores		= &CurrentFrame.GraphicsCommandsFinishedSemaphore,
+				.pSignalSemaphores		= (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Resource]),
 				.SignalFence			= nullptr,
 			});
 
-		VE_ASSERT(FCommandBuffer::EStatus::ReadyToSubmit == CurrentFrame.EditorCommandBuffer->GetStatus()) //Stop Recording at Editor	
-		CurrentFrame.EditorCommandBuffer->Submit(
+		auto& GraphicsCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Graphics];
+		GraphicsCommandBuffer->StopRecording();
+
+		static Segment<VkSemaphore, 2> GraphicsWaitSemaphores;
+		GraphicsWaitSemaphores[0] = CurrentFrame.SwapchainReadySemaphore.GetHandle();
+		GraphicsWaitSemaphores[1] = CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Resource].GetHandle();
+		static Segment<EVulkanGraphicsPipelineStage, 2> GraphicsWaitStages
+		{
+			EVulkanGraphicsPipelineStage::PipelineTop,
+			EVulkanGraphicsPipelineStage::PipelineTop,
+		};
+
+		GraphicsCommandBuffer->Submit(
+			FCommandSubmitInfo
+			{
+				.WaitSemaphoreCount		= UInt32(GraphicsWaitSemaphores.size()),
+				.pWaitSemaphores		= GraphicsWaitSemaphores.data(),
+				.pWaitStages            {.Graphics = GraphicsWaitStages.data()},
+				.SignalSemaphoreCount	= 1,
+				.pSignalSemaphores		= (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Graphics]),
+				.SignalFence			= nullptr,
+			});
+
+		auto& EditorCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Editor];
+		VE_ASSERT(FCommandBuffer::EStatus::ReadyToSubmit == EditorCommandBuffer->GetStatus()) //Stop Recording at Editor
+		static Segment<EVulkanGraphicsPipelineStage, 1> EditorWaitStages
+		{
+			EVulkanGraphicsPipelineStage::PipelineTop
+		};
+		EditorCommandBuffer->Submit(
 			FCommandSubmitInfo
 			{
 				.WaitSemaphoreCount		= 1,
-				.pWaitSemaphores		= &CurrentFrame.GraphicsCommandsFinishedSemaphore,
-				.WaitStages				= {EGraphicsPipelineStage::FragmentShader},
+				.pWaitSemaphores		= (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Graphics]),
+				.pWaitStages			{.Graphics = EditorWaitStages.data()},
 				.SignalSemaphoreCount	= 1,
-				.pSignalSemaphores		= &CurrentFrame.EditorCommandsFinishedSemaphore,
+				.pSignalSemaphores		= (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Editor]),
 				.SignalFence			= &CurrentFrame.InFlightFence,
 			});
 
 		try
 		{
-			Vulkan->GetSwapchain().Present(&CurrentFrame.EditorCommandsFinishedSemaphore, 1);
+			Vulkan->GetSwapchain().Present(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Editor], 1);
 		}
 		catch (const SSwapchainRecreation& Signal)
 		{

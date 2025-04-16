@@ -21,15 +21,15 @@ export namespace VE
 	struct FVulkanCommandSubmitInfo
 	{
 		UInt32					WaitSemaphoreCount = 0;
-		const FVulkanSemaphore*	pWaitSemaphores = nullptr;
+		const VkSemaphore*      pWaitSemaphores = nullptr;
 		struct { union
 		{
-			EVulkanGraphicsPipelineStage GraphicsStages;
-			EVulkanComputePipelineStage  ComputeStages;
-		};}						WaitStages;
+			EVulkanGraphicsPipelineStage* Graphics;
+			EVulkanComputePipelineStage*  Compute;
+		};}                     pWaitStages;
 
 		UInt32					SignalSemaphoreCount = 0;
-		const FVulkanSemaphore*	pSignalSemaphores = nullptr;
+		const VkSemaphore*      pSignalSemaphores = nullptr;
 		
 		const FVulkanFence*		SignalFence = nullptr;
 
@@ -307,14 +307,13 @@ export namespace VE
 	{
 		VE_ASSERT(IsReadyToSubmit());
 
-		auto WaitStages = AutoCast(_SubmitInfo.WaitStages.GraphicsStages);
 		VkSubmitInfo SubmitInfo
 		{
 			.sType					= VK_STRUCTURE_TYPE_SUBMIT_INFO,
 			.pNext					= nullptr,
 			.waitSemaphoreCount		= _SubmitInfo.WaitSemaphoreCount,
-			.pWaitSemaphores		= reinterpret_cast<const VkSemaphore*>(_SubmitInfo.pWaitSemaphores),
-			.pWaitDstStageMask		= &WaitStages,
+			.pWaitSemaphores		= _SubmitInfo.pWaitSemaphores,
+			.pWaitDstStageMask		= reinterpret_cast<const VkPipelineStageFlags*>(_SubmitInfo.pWaitStages.Graphics),//[FIXME]: move to Graphics.
 			.commandBufferCount		= 1,
 			.pCommandBuffers		= &Handle,
 			.signalSemaphoreCount	= _SubmitInfo.SignalSemaphoreCount,

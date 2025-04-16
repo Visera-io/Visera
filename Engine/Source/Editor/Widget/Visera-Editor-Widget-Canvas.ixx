@@ -85,9 +85,11 @@ public:
             ImmeCmd->ConvertImageLayout(NewRHIImage, RHI::EImageLayout::ShaderReadOnly);
         }
         ImmeCmd->StopRecording();
+        
+		RHI::EGraphicsPipelineStage WaitStages = RHI::EGraphicsPipelineStage::PipelineTop;
         ImmeCmd->Submit(RHI::FCommandSubmitInfo
                         {
-                            .WaitStages = RHI::EGraphicsPipelineStage::PipelineTop,
+                            .pWaitStages {.Graphics = &WaitStages },
                             .SignalFence = &Fence,
                         });
         Fence.Wait();

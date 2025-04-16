@@ -7,6 +7,4 @@ export import :Mesh;
 export namespace VE
 {
 
-
-
 }// namespace VE
