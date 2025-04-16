@@ -102,9 +102,11 @@ export namespace VE
         ImmeCmd->WriteBuffer(IBO, IndexStagingBuffer);
         }
         ImmeCmd->StopRecording();
+        
+		RHI::EGraphicsPipelineStage WaitStages = RHI::EGraphicsPipelineStage::PipelineTop;
         ImmeCmd->Submit(RHI::FCommandSubmitInfo
             {
-                .WaitStages = RHI::EGraphicsPipelineStage::PipelineTop,
+                .pWaitStages  {.Graphics = &WaitStages },
                 .SignalFence = &Fence
             });
         Fence.Wait();

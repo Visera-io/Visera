@@ -1,13 +1,14 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:DescriptorPool;
+#define VE_MODULE_NAME "Vulkan:DescriptorPool"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Device;
 import :DescriptorSet;
 import :DescriptorSetLayout;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -40,7 +41,7 @@ export namespace VE
 		IsBuilt() const { return Handle != VK_NULL_HANDLE; }
 
 		FVulkanDescriptorPool() noexcept = default;
-		~FVulkanDescriptorPool() = default;
+		~FVulkanDescriptorPool() { Destroy(); }
 	private:
 		VkDescriptorPool						Handle{ VK_NULL_HANDLE };
 		UInt32									MaxSets{ 0 };
@@ -79,7 +80,7 @@ export namespace VE
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create the Vulkan Descriptor Pool!"); }
+		{ VE_LOG_FATAL("Failed to create the Vulkan Descriptor Pool!"); }
 
 		return shared_from_this();
 	}
@@ -87,9 +88,12 @@ export namespace VE
 	void FVulkanDescriptorPool::
 	Destroy()
 	{
-		CollectGarbages(True);
-		vkDestroyDescriptorPool(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
-		Handle = VK_NULL_HANDLE;
+		if (IsBuilt())
+		{
+			CollectGarbages(True);
+			vkDestroyDescriptorPool(GVulkan->Device->GetHandle(), Handle, GVulkan->AllocationCallbacks);
+			Handle = VK_NULL_HANDLE;
+		}
 	}
 
 	void FVulkanDescriptorPool::
@@ -143,17 +147,17 @@ export namespace VE
 	CreateDescriptorSet(SharedPtr<const FVulkanDescriptorSetLayout> _Layout)
 	{
 		if(!_Layout->IsBuilt())
-		{ throw SRuntimeError("Failed to create the Descriptor Set! -- The Layout is not built!"); }
+		{ VE_LOG_FATAL("Failed to create the Descriptor Set! -- The Layout is not built!"); }
 
 		if (Children.size() >= MaxSets)
-		{ throw SRuntimeError(Text("Cannot create more DescriptorSet from this DescriptorPool! -- (MaxSets:{})", MaxSets)); }
+		{ VE_LOG_FATAL("Cannot create more DescriptorSet from this DescriptorPool! -- (MaxSets:{})", MaxSets); }
 
 		for (auto& Binding : _Layout->Bindings)
 		{
 			auto& Resource = DescriptorTable[EVulkanDescriptorType(Binding.descriptorType)];
 			Resource -= Binding.descriptorCount;
 			if (Resource < 0)
-			{ throw SRuntimeError(Text("Failed to allocate Descriptor({}) from current DescriptorPool!", UInt32(Binding.descriptorType))); }
+			{ VE_LOG_FATAL("Failed to allocate Descriptor({}) from current DescriptorPool!", UInt32(Binding.descriptorType)); }
 		}
 
 		auto DescriptorSet = CreateSharedPtr<FVulkanDescriptorSet>(shared_from_this(), _Layout);
@@ -170,7 +174,7 @@ export namespace VE
 			GVulkan->Device->GetHandle(),
 			&AllocateInfo,
 			&DescriptorSet->Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create the Vulkan Descriptor Sets!"); }
+		{ VE_LOG_FATAL("Failed to create the Vulkan Descriptor Sets!"); }
 		
 		return Children.emplace_back(std::move(DescriptorSet));
 	}

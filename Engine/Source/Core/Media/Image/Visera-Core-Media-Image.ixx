@@ -85,8 +85,8 @@ export namespace VE
 
 		void ConvertToSRGB()		{ Handle.convertTo32Bits(); }
 
-		void Save() const { if (!Handle.save(Path.ToPlatformString().data())) { throw SIOFailure(Text("Failed to save the image({})!", Path.ToPlatformString())); } }
-		void SaveAs(const FPath& _Path) const { if (!Handle.save(_Path.ToPlatformString().data())) { throw SIOFailure(Text("Failed to save the image({})!", _Path.ToPlatformString())); } }
+		void SaveAs(const FPath& _Path) const;
+		void Save() const { SaveAs(Path); }
 
 		FImage() = delete;
 		FImage(UInt32 _Width, UInt32 _Height, UInt32 _BPP = 4*8);
@@ -113,16 +113,15 @@ export namespace VE
 	FImage(const FPath& _Path) : Path{_Path}
 	{
 		LoadFreeImage();
-		VE_LOG_DEBUG("Loading a new image from {}", Path.ToPlatformString());
 
-		if (!Handle.load(Path.ToPlatformString().data()))
-		{ throw SIOFailure(Text("Failed to load the image({})!", Path.ToPlatformString())); }
-		
-		// Force Convert to 32Bit Bitmap for Vulkan.
-		if (!HasAlpha())
-		{
-			if (!Handle.convertTo32Bits())
-			{ throw SRuntimeError(Text("Failed to convert the image({}) to 32Bits!", Path.ToPlatformString())); }
+		const String PlatformPath = Path.ToPlatformString();
+		VE_LOG_DEBUG("Loading a new image from {}", PlatformPath);
+
+		if (!Handle.load(PlatformPath.data()))
+		{ 
+			String ErrorInfo = Text("Failed to load the image({})! -- throw (SIOFailure).", PlatformPath);
+			VE_LOG_ERROR("{}", ErrorInfo);
+			throw SIOFailure(ErrorInfo);
 		}
 
 		ColorType = static_cast<EColorType>(Handle.getColorType());
@@ -132,12 +131,29 @@ export namespace VE
 	FImage(UInt32 _Width, UInt32 _Height, UInt32 _BPP/* = 4*8 */)
 	{
 		LoadFreeImage();
+
 		VE_ASSERT(_Width > 0 && _Height > 0 && _BPP > 0 && _BPP % 8 == 0);
 
 		if (!Handle.setSize(FIT_BITMAP, _Width, _Height, _BPP))
-		{ throw SRuntimeError(Text("Failed to create a blank image ({}x{}x{})!", _Width, _Height, _BPP / 4)); }
+		{
+			String ErrorInfo = Text("Failed to create a blank image ({}x{}x{})! -- throw(SRuntimeError)", _Width, _Height, _BPP / 4);
+			VE_LOG_WARN("{}", ErrorInfo);
+			throw SRuntimeError(ErrorInfo);
+		}
 
 		ColorType = static_cast<EColorType>(Handle.getColorType());
+	}
+
+	void FImage::
+	SaveAs(const FPath& _Path) const
+	{ 
+		String PlatformPath = _Path.ToPlatformString();
+		if (!Handle.save(PlatformPath.data()))
+		{
+			String ErrorInfo = Text("Failed to save image as {}! -- throw(SIOFailure)", PlatformPath);
+			VE_LOG_WARN("{}", ErrorInfo);
+			throw SIOFailure(ErrorInfo);
+		}
 	}
 
 } // namespace VE

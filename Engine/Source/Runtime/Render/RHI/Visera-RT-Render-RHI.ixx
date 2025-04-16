@@ -7,7 +7,6 @@ import Visera.Runtime.Render.RHI.Vulkan;
 export import Visera.Runtime.Render.RHI.Vulkan.Common;
 
 import Visera.Core.Log;
-import Visera.Core.Signal;
 import Visera.Core.Time;
 import Visera.Core.Math.Basic;
 import Visera.Runtime.Platform.Window;
@@ -97,8 +96,9 @@ export namespace VE
 		{
 			friend class RHI;
 		public:
-			auto GetGraphicsCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer>    { return GraphicsCommandBuffer; }
-			auto GetEditorCommandBuffer()   -> SharedPtr<FGraphicsCommandBuffer>    { return EditorCommandBuffer;   }
+			auto GetResourceCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer>    { return CommandBuffers[Resource]; }
+			auto GetGraphicsCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer>    { return CommandBuffers[Graphics]; }
+			auto GetEditorCommandBuffer()   -> SharedPtr<FGraphicsCommandBuffer>    { return CommandBuffers[Editor];   }
 
 			auto GetColorImageShaderReadView() const -> SharedPtr<const FImageView> { return SVColorView; }
 			auto GetSVColorTexture()    const -> SharedPtr<const FDescriptorSet>	{ return SVColorTexture; }
@@ -142,10 +142,9 @@ export namespace VE
 			SharedPtr<FBuffer>        MatrixData;
 			SharedPtr<FDescriptorSet> MatrixUBO;
 
-			SharedPtr<FGraphicsCommandBuffer> GraphicsCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
-			SharedPtr<FGraphicsCommandBuffer> EditorCommandBuffer	= RHI::CreateGraphicsCommandBuffer();
-			FSemaphore GraphicsCommandsFinishedSemaphore= RHI::CreateSemaphore();
-			FSemaphore EditorCommandsFinishedSemaphore	= RHI::CreateSemaphore();
+			enum EFrameCommandBufferType { Resource, Graphics, Editor, MAX };
+			Segment<SharedPtr<FGraphicsCommandBuffer>, MAX> CommandBuffers;
+			Segment<FSemaphore, MAX>                        CommandsFinishedSemaphores;
 
 			FSemaphore SwapchainReadySemaphore			= RHI::CreateSemaphore();
 			FFence	   InFlightFence					= RHI::CreateFence(FFence::EStatus::Signaled);
@@ -230,6 +229,9 @@ export namespace VE
 		static inline SharedPtr<const FDescriptorPool>
 		GetGlobalDescriptorPool() { return GlobalDescriptorPool; }
 
+		static inline Bool
+		IsTexture2DFormatSupported(EFormat _Format) { return Vulkan->GetGPU().IsTexture2DFormatSupported(_Format); }
+
 	private:
 		static inline FVulkan*							Vulkan;
 		//[TODO]: ThreadSafe Paradigm
@@ -281,6 +283,15 @@ export namespace VE
 
 			for (auto& Frame : Frames)
 			{
+				for (auto& CommandBuffer : Frame.CommandBuffers)
+				{
+					CommandBuffer = RHI::CreateGraphicsCommandBuffer();
+				}
+				for (auto& Semephore : Frame.CommandsFinishedSemaphores)
+				{
+					Semephore = RHI::CreateSemaphore();
+				}
+
 				Frame.MatrixData = CreateMappedBuffer(sizeof(FMatrixUBOLayout), EBufferUsage::Uniform);
 				Frame.MatrixUBO = RHI::CreateDescriptorSet(FFrameContext::MatrixDSLayout);
 				Frame.MatrixUBO->WriteBuffer(0, Frame.MatrixData, 0, Frame.MatrixData->GetSize());
@@ -377,12 +388,13 @@ export namespace VE
 			ImmeCmds->StopRecording();
 			auto Fence = CreateFence();
 
+			EGraphicsPipelineStage WaitStages = EGraphicsPipelineStage::PipelineTop;
 			ImmeCmds->Submit(
 				FCommandSubmitInfo
 				{
 					.WaitSemaphoreCount		= 0,
 					.pWaitSemaphores		= nullptr,
-					.WaitStages				= {EGraphicsPipelineStage::PipelineTop},
+					.pWaitStages			{.Graphics = &WaitStages },
 					.SignalSemaphoreCount	= 0,
 					.pSignalSemaphores		= nullptr,
 					.SignalFence			= &Fence,
@@ -420,14 +432,16 @@ export namespace VE
 	SharedPtr<T> RHI::
 	CreateRenderPass()
 	{
-		VE_LOG_DEBUG("Creating a new render pass ({})", typeid(T).name());
+		VE_LOG_INFO("Creating a new render pass ({}).", typeid(T).name());
 		auto NewRenderPass = CreateSharedPtr<T>();
 		Array<SharedPtr<FRenderTarget>> RenderTargets;
 
+		const char* RenderPassType{};
 		switch (FRenderPass::EType(NewRenderPass->GetType()))
 		{
 		case FRenderPass::EType::Background:
 		{
+			RenderPassType = "Background";
 			RenderTargets.resize(Frames.size());
 			for (UInt8 Idx = 0; Idx < RenderTargets.size(); ++Idx)
 			{ RenderTargets[Idx] = Frames[Idx].BackgroundRTs; }
@@ -437,6 +451,7 @@ export namespace VE
 		}
 		case FRenderPass::EType::DefaultForward:
 		{
+			RenderPassType = "DefaultForward";
 			RenderTargets.resize(Frames.size());
 			for (UInt8 Idx = 0; Idx < RenderTargets.size(); ++Idx)
 			{ RenderTargets[Idx] = Frames[Idx].ForwardRTs; }
@@ -446,6 +461,7 @@ export namespace VE
 		}
 		case FRenderPass::EType::Postprocessing:
 		{
+			RenderPassType = "Postprocessing";
 			RenderTargets.resize(Frames.size());
 			for (UInt8 Idx = 0; Idx < RenderTargets.size(); ++Idx)
 			{ RenderTargets[Idx] = Frames[Idx].PostprocessingRTs; }
@@ -455,6 +471,7 @@ export namespace VE
 		}
 		case FRenderPass::EType::Overlay:
 		{
+			RenderPassType = "Overlay";
 			auto SwapchainExtent = Vulkan->GetSwapchain().GetExtent();
 			FRenderArea SwapchainArea
 			{
@@ -465,10 +482,19 @@ export namespace VE
 			break;
 		}
 		case FRenderPass::EType::Customized:
-			throw SRuntimeError("Customized Render Pass WIP...");
+			RenderPassType = "Customized";
+			VE_LOG_FATAL("Customized Render Pass WIP...");
 		default:
-			throw SRuntimeError("Failed to create the renderpass -- Unknown RenderPass Type!");
+			RenderPassType = "Unknown";
+			VE_LOG_FATAL("Failed to create the renderpass -- Unknown RenderPass Type!");
 		}
+		
+		const auto& RenderArea = NewRenderPass->GetRenderArea();
+		VE_LOG_INFO("Successfully created {} (handle:{}, type:{}, render area:[{},{},{},{}]).",
+			typeid(T).name(),
+			(Address)(NewRenderPass->GetHandle()),
+			RenderPassType,
+			RenderArea.offset.x, RenderArea.offset.y, RenderArea.extent.width, RenderArea.extent.height);
 
 		return NewRenderPass;
 	}
@@ -491,17 +517,24 @@ export namespace VE
 			Vulkan->GetSwapchain().WaitForNextImage(CurrentFrame.SwapchainReadySemaphore);
 			CurrentFrame.InFlightFence.Block();
 
-			CurrentFrame.EditorCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
-			CurrentFrame.EditorCommandBuffer->Reset();
+			auto& EditorCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Editor];
+			EditorCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
+			EditorCommandBuffer->Reset();
 			//Start Recording at Editor
 
-			CurrentFrame.GraphicsCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
-			CurrentFrame.GraphicsCommandBuffer->Reset();
-			CurrentFrame.GraphicsCommandBuffer->StartRecording();	
+			auto& GraphicsCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Graphics];
+			GraphicsCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
+			GraphicsCommandBuffer->Reset();
+			GraphicsCommandBuffer->StartRecording();
+
+			auto& ResourceCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Resource];
+			ResourceCommandBuffer->SetStatus(FGraphicsCommandBuffer::EStatus::Idle);
+			ResourceCommandBuffer->Reset();
+			ResourceCommandBuffer->StartRecording();
 		}
 		catch (const SSwapchainRecreation& Signal)
 		{
-			throw SRuntimeError("WIP: Swapchain Recreation!");
+			VE_LOG_FATAL("WIP: Swapchain Recreation!");
 		}
 
 		return CurrentFrame;
@@ -512,70 +545,115 @@ export namespace VE
 	{
 		auto& CurrentFrame = GetCurrentFrame();
 
-		CurrentFrame.GraphicsCommandBuffer->StopRecording();
-		CurrentFrame.GraphicsCommandBuffer->Submit(
+		auto& ResourceCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Resource];
+		ResourceCommandBuffer->StopRecording();
+		static Segment<EVulkanGraphicsPipelineStage, 1> ResourceWaitStages
+		{
+			EVulkanGraphicsPipelineStage::PipelineTop
+		};
+		ResourceCommandBuffer->Submit(
 			FCommandSubmitInfo
 			{
-				.WaitSemaphoreCount		= 1,
-				.pWaitSemaphores		= &CurrentFrame.SwapchainReadySemaphore,//[FIXME]: Temp!
-				.WaitStages				= {EGraphicsPipelineStage::PipelineTop},
+				.WaitSemaphoreCount		= 0,
+				.pWaitSemaphores		= nullptr,
+				.pWaitStages			{.Graphics = ResourceWaitStages.data()},
 				.SignalSemaphoreCount	= 1,
-				.pSignalSemaphores		= &CurrentFrame.GraphicsCommandsFinishedSemaphore,
+				.pSignalSemaphores		= (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Resource]),
 				.SignalFence			= nullptr,
 			});
 
-		VE_ASSERT(FCommandBuffer::EStatus::ReadyToSubmit == CurrentFrame.EditorCommandBuffer->GetStatus()) //Stop Recording at Editor	
-		CurrentFrame.EditorCommandBuffer->Submit(
+		auto& GraphicsCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Graphics];
+		GraphicsCommandBuffer->StopRecording();
+
+		static Segment<VkSemaphore, 2> GraphicsWaitSemaphores;
+		GraphicsWaitSemaphores[0] = CurrentFrame.SwapchainReadySemaphore.GetHandle();
+		GraphicsWaitSemaphores[1] = CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Resource].GetHandle();
+		static Segment<EVulkanGraphicsPipelineStage, 2> GraphicsWaitStages
+		{
+			EVulkanGraphicsPipelineStage::PipelineTop,
+			EVulkanGraphicsPipelineStage::PipelineTop,
+		};
+
+		GraphicsCommandBuffer->Submit(
+			FCommandSubmitInfo
+			{
+				.WaitSemaphoreCount		= UInt32(GraphicsWaitSemaphores.size()),
+				.pWaitSemaphores		= GraphicsWaitSemaphores.data(),
+				.pWaitStages            {.Graphics = GraphicsWaitStages.data()},
+				.SignalSemaphoreCount	= 1,
+				.pSignalSemaphores		= (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Graphics]),
+				.SignalFence			= nullptr,
+			});
+
+		auto& EditorCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Editor];
+		VE_ASSERT(FCommandBuffer::EStatus::ReadyToSubmit == EditorCommandBuffer->GetStatus()) //Stop Recording at Editor
+		static Segment<EVulkanGraphicsPipelineStage, 1> EditorWaitStages
+		{
+			EVulkanGraphicsPipelineStage::PipelineTop
+		};
+		EditorCommandBuffer->Submit(
 			FCommandSubmitInfo
 			{
 				.WaitSemaphoreCount		= 1,
-				.pWaitSemaphores		= &CurrentFrame.GraphicsCommandsFinishedSemaphore,
-				.WaitStages				= {EGraphicsPipelineStage::FragmentShader},
+				.pWaitSemaphores		= (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Graphics]),
+				.pWaitStages			{.Graphics = EditorWaitStages.data()},
 				.SignalSemaphoreCount	= 1,
-				.pSignalSemaphores		= &CurrentFrame.EditorCommandsFinishedSemaphore,
+				.pSignalSemaphores		= (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Editor]),
 				.SignalFence			= &CurrentFrame.InFlightFence,
 			});
 
 		try
 		{
-			Vulkan->GetSwapchain().Present(&CurrentFrame.EditorCommandsFinishedSemaphore, 1);
+			Vulkan->GetSwapchain().Present(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Editor], 1);
 		}
 		catch (const SSwapchainRecreation& Signal)
 		{
 			VE_LOG_DEBUG("Recreating swapchain...");
-			throw SRuntimeError("WIP: Swapchain Recreation!");
+			VE_LOG_FATAL("WIP: Swapchain Recreation!");
 		}
 	}
 
 	SharedPtr<RHI::FDescriptorSetLayout> RHI::
 	CreateDescriptorSetLayout()
 	{ 
-		return FDescriptorSetLayout::Create();
+		auto NewDescriptorSetLayout = FDescriptorSetLayout::Create();
+		VE_LOG_DEBUG("Created a new descriptor set layout (need to be built).");
+		return NewDescriptorSetLayout;
 	}
 
 	SharedPtr<RHI::FDescriptorSet> RHI::
 	CreateDescriptorSet(SharedPtr<const FDescriptorSetLayout> _SetLayout)
 	{
-		VE_LOG_DEBUG("Creating a new descriptor set (layout:{}).", (Address)(_SetLayout->GetHandle()));
-		return GlobalDescriptorPool->CreateDescriptorSet(_SetLayout);
+		auto NewDescriptorSet = GlobalDescriptorPool->CreateDescriptorSet(_SetLayout);
+		VE_LOG_DEBUG("Created a new descriptor set (handle:{}, layout:{}).",
+			(Address)(NewDescriptorSet->GetHandle()), (Address)(_SetLayout->GetHandle()));
+		return NewDescriptorSet;
 	}
 
 	SharedPtr<RHI::FSampler> RHI::
 	CreateSampler(EFilter _Filter, ESamplerAddressMode _AddressMode/* = ESamplerAddressMode::ClampToEdge*/)
 	{
-		return FSampler::Create(_Filter, _AddressMode);
+		auto NewSampler = FSampler::Create(_Filter, _AddressMode);
+		VE_LOG_DEBUG("Created a new sampler (need to be built).");
+		return NewSampler;
 	}
 
 	SharedPtr<RHI::FGraphicsCommandBuffer> RHI::
 	CreateGraphicsCommandBuffer(ECommandLevel _Level/* = ECommandLevel::Primary*/)
 	{
-		return ResetableGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level);
+		auto NewResettableGraphicsCMD = ResetableGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level);
+		VE_LOG_DEBUG("Created a new resettable graphics command buffer (handle:{}, level:{})",
+			(Address)(NewResettableGraphicsCMD->GetHandle()), UInt32(_Level));
+		return NewResettableGraphicsCMD;
 	}
 
 	SharedPtr<RHI::FGraphicsCommandBuffer> RHI::
 	CreateOneTimeGraphicsCommandBuffer(ECommandLevel _Level/* = ECommandLevel::Primary*/)
 	{ 
-		return TransientGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level);
+		auto NewTransientGraphicsCMD = TransientGraphicsCommandPool->CreateGraphicsCommandBuffer(_Level);
+		VE_LOG_DEBUG("Created a new transient graphics command buffer (handle:{}, level:{})",
+			(Address)(NewTransientGraphicsCMD->GetHandle()), UInt32(_Level));
+		return NewTransientGraphicsCMD;
 	}
 
 	SharedPtr<RHI::FImage> RHI::
@@ -591,12 +669,14 @@ export namespace VE
 		        ESharingMode _SharingMode /* = ESharingMode::Exclusive*/,
 		        EMemoryUsage _Location    /* = EMemoryUsage::Auto*/)
 	{
-		VE_LOG_DEBUG("Creating a new image (format:{}, extent:[{}, {}, {}])",
-			UInt32(_Format), _Extent.width, _Extent.height, _Extent.depth);
-
-		return Vulkan->GetAllocator().CreateImage(
+		auto NewImage = Vulkan->GetAllocator().CreateImage(
 			_Type, _Extent, _Format, _Aspects, _Usages,
 			_Tiling, _SampleRate, _MipmapLevels, _ArrayLayers, _SharingMode, _Location);
+
+		VE_LOG_DEBUG("Created a new image (handle:{}, format:{}, extent:[{}, {}, {}]).",
+			(Address)(NewImage->GetHandle()), UInt32(_Format), _Extent.width, _Extent.height, _Extent.depth);
+
+		return NewImage;
 	}
 
 	SharedPtr<RHI::FBuffer> RHI::
@@ -606,8 +686,9 @@ export namespace VE
 		         EMemoryUsage _Location        /*= EMemoryUsage::Auto*/,
 		         UInt32       _AllocationFlags /*= 0x0*/)
 	{
-		VE_LOG_DEBUG("Creating a new buffer (size:{})", _Size);
-		return Vulkan->GetAllocator().CreateBuffer(_Size, _Usages, _SharingMode, _Location, _AllocationFlags);
+		auto NewBuffer = Vulkan->GetAllocator().CreateBuffer(_Size, _Usages, _SharingMode, _Location, _AllocationFlags);
+		VE_LOG_DEBUG("Created a new buffer (handle:{}, size:{})", (Address)(NewBuffer->GetHandle()), _Size);
+		return NewBuffer;
 	}
 
 	SharedPtr<RHI::FBuffer> RHI::
@@ -651,32 +732,43 @@ export namespace VE
 	RHI::FFence RHI::
 	CreateFence(FFence::EStatus _Status/* = FFence::EStatus::Blocking*/)
 	{
-		return FFence{_Status};
+		FFence NewFence{_Status};
+		VE_LOG_DEBUG("Created a new fence (handle:{}, signaled:{}).",
+			(Address)(NewFence.GetHandle()), (_Status == FFence::EStatus::Signaled));
+		return NewFence;
 	}
 
 	RHI::FSemaphore RHI::
 	CreateSemaphore()
 	{
-		return FSemaphore();
+		FSemaphore NewSemaphore{};
+		VE_LOG_DEBUG("Created a new semaphore (handle:{}).", (Address)(NewSemaphore.GetHandle()));
+		return NewSemaphore;
 	}
 
 	SharedPtr<RHI::FSPIRVShader> RHI::
 	CreateShader(EShaderStage _ShaderStage, const void* _SPIRVCode, UInt64 _CodeSize)
 	{
-		VE_LOG_DEBUG("Creating a new shader (stage:{}, size: {})", UInt32(_ShaderStage), _CodeSize);
-		return FSPIRVShader::Create(_ShaderStage, _SPIRVCode, _CodeSize);
+		auto NewShader = FSPIRVShader::Create(_ShaderStage, _SPIRVCode, _CodeSize);
+		VE_LOG_DEBUG("Created a new shader (handle:{}, stage:{}, size: {}).",
+			(Address)(NewShader->GetHandle()), UInt32(_ShaderStage), _CodeSize);
+		return NewShader;
 	}
 
 	SharedPtr<RHI::FPipelineLayout> RHI::
 	CreatePipelineLayout()
 	{
-		return FPipelineLayout::Create();
+		auto NewPipelineLayout = FPipelineLayout::Create();
+		VE_LOG_DEBUG("Created a new pipline layout (need to be built).");
+		return NewPipelineLayout;
 	}
 
 	SharedPtr<RHI::FRenderPipelineSetting> RHI::
 	CreateRenderPipelineSetting()
 	{
-		return FRenderPipelineSetting::Create();
+		auto NewRenderPipelineSetting = FRenderPipelineSetting::Create();
+		VE_LOG_DEBUG("Created a new render pipline setting.");
+		return NewRenderPipelineSetting;
 	}
 
 } // namespace VE

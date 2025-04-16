@@ -59,11 +59,13 @@ export namespace VE
     FModel::
     Load()
     {
-        VE_LOG_DEBUG("Loading a new model from {}", Path.ToPlatformString());
-        if (!IsExpired())
-        { return VE_LOG_WARN("You tried to load an unexpired model({})!", Path.ToPlatformString()); }
+        const String PlatformPath = Path.ToPlatformString();
+        VE_LOG_DEBUG("Loading a new model from {}", PlatformPath);
 
-        Data = Importer.ReadFile(Path.ToPlatformString().data(),
+        if (!IsExpired())
+        { return VE_LOG_WARN("You tried to load an unexpired model({})!", PlatformPath); }
+
+        Data = Importer.ReadFile(PlatformPath.data(),
                 aiProcess_Triangulate	    |
                 aiProcess_ConvertToLeftHanded   | // <=> MakeLeftHanded | FlipUVs | FlipWindingOrder
                 aiProcess_GenNormals            |
@@ -72,9 +74,13 @@ export namespace VE
         if (!Data            ||
             !Data->mRootNode ||
              Data->mFlags & AI_SCENE_FLAGS_INCOMPLETE)
-        { throw SIOFailure("Failed to load Model!"); }
+        {
+            String ErrorInfo = Text("Failed to load the model({})! -- throw (SIOFailure).", PlatformPath);
+			VE_LOG_ERROR("{}", ErrorInfo);
+            throw SIOFailure(ErrorInfo);
+        }
 
         if (!HasMesh())
-        { throw SIOFailure("Invalid Model!"); }
+        { VE_LOG_WARN("The model {} has 0 mesh!", Path.ToPlatformString()); }
     }
 }

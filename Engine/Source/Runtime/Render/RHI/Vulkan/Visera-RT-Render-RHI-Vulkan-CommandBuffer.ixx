@@ -1,6 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:CommandBuffer;
+#define VE_MODULE_NAME "Vulkan:CommandBuffer"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Allocator;
@@ -11,7 +12,7 @@ import :RenderPipeline;
 import :DescriptorSet;
 import :Synchronization;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -21,15 +22,15 @@ export namespace VE
 	struct FVulkanCommandSubmitInfo
 	{
 		UInt32					WaitSemaphoreCount = 0;
-		const FVulkanSemaphore*	pWaitSemaphores = nullptr;
+		const VkSemaphore*      pWaitSemaphores = nullptr;
 		struct { union
 		{
-			EVulkanGraphicsPipelineStage GraphicsStages;
-			EVulkanComputePipelineStage  ComputeStages;
-		};}						WaitStages;
+			EVulkanGraphicsPipelineStage* Graphics;
+			EVulkanComputePipelineStage*  Compute;
+		};}                     pWaitStages;
 
 		UInt32					SignalSemaphoreCount = 0;
-		const FVulkanSemaphore*	pSignalSemaphores = nullptr;
+		const VkSemaphore*      pSignalSemaphores = nullptr;
 		
 		const FVulkanFence*		SignalFence = nullptr;
 
@@ -246,7 +247,7 @@ export namespace VE
 				_Data
 			);
 		}
-		else throw SRuntimeError("Call BindPipeline(...) before PushConstants(...)!");
+		else VE_LOG_FATAL("Call BindPipeline(...) before PushConstants(...)!");
 	}
 
 	void FVulkanGraphicsCommandBuffer::
@@ -276,7 +277,7 @@ export namespace VE
 				0,
 				nullptr);
 		}
-		else throw SRuntimeError("Call BindPipeline(...) before BindDescriptorSet(...)!");
+		else VE_LOG_FATAL("Call BindPipeline(...) before BindDescriptorSet(...)!");
 	}
 
 	void FVulkanGraphicsCommandBuffer::
@@ -307,14 +308,13 @@ export namespace VE
 	{
 		VE_ASSERT(IsReadyToSubmit());
 
-		auto WaitStages = AutoCast(_SubmitInfo.WaitStages.GraphicsStages);
 		VkSubmitInfo SubmitInfo
 		{
 			.sType					= VK_STRUCTURE_TYPE_SUBMIT_INFO,
 			.pNext					= nullptr,
 			.waitSemaphoreCount		= _SubmitInfo.WaitSemaphoreCount,
-			.pWaitSemaphores		= reinterpret_cast<const VkSemaphore*>(_SubmitInfo.pWaitSemaphores),
-			.pWaitDstStageMask		= &WaitStages,
+			.pWaitSemaphores		= _SubmitInfo.pWaitSemaphores,
+			.pWaitDstStageMask		= reinterpret_cast<const VkPipelineStageFlags*>(_SubmitInfo.pWaitStages.Graphics),//[FIXME]: move to Graphics.
 			.commandBufferCount		= 1,
 			.pCommandBuffers		= &Handle,
 			.signalSemaphoreCount	= _SubmitInfo.SignalSemaphoreCount,
@@ -326,7 +326,7 @@ export namespace VE
 			1,
 			&SubmitInfo,
 			_SubmitInfo.SignalFence? _SubmitInfo.SignalFence->GetHandle() : VK_NULL_HANDLE) != VK_SUCCESS)
-		{ throw SRuntimeError(Text("Failed to submit the Vulkan Graphics CommandBuffer(QueueIndex:{})", _SubmitInfo.QueueIndex)); }
+		{ VE_LOG_FATAL("Failed to submit the Vulkan Graphics CommandBuffer(QueueIndex:{})", _SubmitInfo.QueueIndex); }
 
 		Status = EStatus::Submitted;
 	}
@@ -403,7 +403,7 @@ export namespace VE
 			.pInheritanceInfo = nullptr
 		};
 		if (vkBeginCommandBuffer(Handle, &BeginInfo) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to begin recording Vulkan Command FVulkanBuffer!"); }
+		{ VE_LOG_FATAL("Failed to begin recording Vulkan Command FVulkanBuffer!"); }
 
 		Status = EStatus::Recording;
 	}
@@ -414,7 +414,7 @@ export namespace VE
 		VE_ASSERT(IsRecording());
 
 		if (vkEndCommandBuffer(Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to stop recording Vulkan Command FVulkanBuffer!"); }
+		{ VE_LOG_FATAL("Failed to stop recording Vulkan Command FVulkanBuffer!"); }
 
 		CurrentPipeline.reset();
 		Status = EStatus::ReadyToSubmit;
@@ -463,7 +463,7 @@ export namespace VE
 	WriteImage(SharedPtr<FVulkanImage> _Image, SharedPtr<const FVulkanBuffer> _StagingBuffer)
 	{
 		if (_Image->GetLayout() != EVulkanImageLayout::TransferDestination)
-		{ throw SRuntimeError("Failed to write the image! - Not transferable!"); }
+		{ VE_LOG_FATAL("Failed to write the image! - Not transferable!"); }
 
 		VkBufferImageCopy WriteInfo
 		{

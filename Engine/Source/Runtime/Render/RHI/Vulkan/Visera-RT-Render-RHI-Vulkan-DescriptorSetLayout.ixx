@@ -1,12 +1,13 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:DescriptorSetLayout;
+#define VE_MODULE_NAME "Vulkan:DescriptorSetLayout"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Device;
 import :Sampler;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -73,8 +74,9 @@ export namespace VE
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create the FVulkanDescriptorSetLayout!"); }
+		{ VE_LOG_FATAL("Failed to create the FVulkanDescriptorSetLayout!"); }
 
+		VE_LOG_DEBUG("Built a new descriptor set layout (handle:{}, bindings:{})", (Address)(Handle), GetBindingCount());
 		return shared_from_this();
 	}
 

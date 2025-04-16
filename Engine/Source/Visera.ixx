@@ -139,11 +139,11 @@ export namespace VE
 			World::Terminate();
 			VE_LOG_TRACE("Terminating RTC...");
 			RTC::Terminate();
-			VE_LOG_TRACE("Terminating Render...");
+			VE_LOG_TRACE("Terminating RHI...");
 			RHI::Terminate();
-			VE_LOG_TRACE("Terminating Render...");
+			VE_LOG_TRACE("Terminating IO...");
 			IO::Terminate();
-			VE_LOG_TRACE("Terminating Render...");
+			VE_LOG_TRACE("Terminating Window...");
 			Window::Terminate();
 		}
 	};

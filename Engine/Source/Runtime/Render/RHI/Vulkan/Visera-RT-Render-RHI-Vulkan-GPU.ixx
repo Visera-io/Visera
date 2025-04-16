@@ -13,7 +13,7 @@ export namespace VE
 	{
 		friend class FVulkan;
 	public:
-		auto GetFileName()				const -> RawString								{ return Properties.deviceName; }
+		auto GetName()				    const -> RawString								{ return Properties.deviceName; }
 		auto GetHandle()				const -> VkPhysicalDevice						{ return Handle; }
 		auto GetFeatures()				const -> const VkPhysicalDeviceFeatures&		{ return Features; }
 		auto GetProperties()			const -> const VkPhysicalDeviceProperties&		{ return Properties; }
@@ -21,9 +21,15 @@ export namespace VE
 		auto GetQueueFamilyProperties() const -> const Array<VkQueueFamilyProperties>&	{ return QueueFamilyProperties; }
 		auto GetExtensionProperties()	const -> const Array<VkExtensionProperties>&	{ return ExtensionProperties; }
 
-		auto QueryFormatProperties(EVulkanFormat Format) const -> VkFormatProperties { VkFormatProperties Properties; vkGetPhysicalDeviceFormatProperties(Handle, AutoCast(Format), &Properties); return Properties; }
+		inline const VkFormatProperties&
+		QueryFormatProperties(EVulkanFormat _Format) const;
+		inline const Optional<VkImageFormatProperties>&
+		QueryTexture2DFormatProperties(EVulkanFormat _Format) const;
 
-		Bool IsDiscreteGPU() const { return Properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU; }
+		Bool inline
+		IsDiscreteGPU() const { return Properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU; }
+		Bool inline
+		IsTexture2DFormatSupported(EVulkanFormat _Format) const;
 		
 	private:
 		VkPhysicalDevice					Handle { VK_NULL_HANDLE };
@@ -32,6 +38,12 @@ export namespace VE
 		VkPhysicalDeviceMemoryProperties	MemoryProperties;
 		Array<VkExtensionProperties>		ExtensionProperties;
 		Array<VkQueueFamilyProperties>		QueueFamilyProperties;
+
+		using FFormatPropertyTable = HashMap<EVulkanFormat, VkFormatProperties>;
+		mutable FFormatPropertyTable          FormatPropertyTable;
+
+		using FTexture2DFormatPropertyTable = HashMap<EVulkanFormat, Optional<VkImageFormatProperties>>;
+		mutable FTexture2DFormatPropertyTable Texture2DFormatPropertyTable;
 
 	public:
 		FVulkanGPU() noexcept = default;
@@ -64,5 +76,47 @@ export namespace VE
 			Handle = VK_NULL_HANDLE;
 		}
 	};
+
+	const VkFormatProperties& FVulkanGPU::
+	QueryFormatProperties(EVulkanFormat _Format) const
+	{
+		if (FormatPropertyTable.contains(_Format))
+		{ return FormatPropertyTable[_Format]; }
+
+		auto& NewFormatProperties = FormatPropertyTable[_Format];
+		vkGetPhysicalDeviceFormatProperties(Handle, AutoCast(_Format), &NewFormatProperties);
+		
+		return NewFormatProperties;
+	}
+
+	const Optional<VkImageFormatProperties>& FVulkanGPU::
+	QueryTexture2DFormatProperties(EVulkanFormat _Format) const
+	{
+		if(Texture2DFormatPropertyTable.contains(_Format))
+		{ return Texture2DFormatPropertyTable[_Format]; }
+		
+		VkImageFormatProperties ImageFormatProperties{};
+
+		if(vkGetPhysicalDeviceImageFormatProperties(Handle,
+			AutoCast(_Format),
+			AutoCast(EVulkanImageType::Image2D),
+			AutoCast(EVulkanImageTiling::Optimal),
+			AutoCast(EVulkanImageUsage::Sampled             |
+				     EVulkanImageUsage::TransferDestination |
+				     EVulkanImageUsage::InputAttachment),
+			0x0,
+			&ImageFormatProperties) == VK_SUCCESS)
+		{
+			return Texture2DFormatPropertyTable[_Format] = ImageFormatProperties;
+		}
+
+		return {};
+	}
+
+	Bool FVulkanGPU::
+	IsTexture2DFormatSupported(EVulkanFormat _Format) const
+	{
+		return QueryTexture2DFormatProperties(_Format).has_value();
+	}
 
 } // namespace VE
