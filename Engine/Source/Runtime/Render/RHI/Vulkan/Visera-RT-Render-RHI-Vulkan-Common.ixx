@@ -176,24 +176,24 @@ export namespace VE
 
 		// 8Bits Formats
 		// U8_Normalized_R4G4			= VK_FORMAT_R4G4_UNORM_PACK8,
-		// U8_Normalized_R8			= VK_FORMAT_R8_UNORM,
-		// S8_Normalized_R8			= VK_FORMAT_R8_SNORM,
+		U8_Normalized_R8			= VK_FORMAT_R8_UNORM,
+		S8_Normalized_R8			= VK_FORMAT_R8_SNORM,
 		// U8_Scaled_R8				= VK_FORMAT_R8_USCALED,
 		// S8_Scaled_R8				= VK_FORMAT_R8_SSCALED,
 		// U8_Integer_R8				= VK_FORMAT_R8_UINT,
 		// S8_Integer_R8				= VK_FORMAT_R8_SINT,
-		// U8_sRGB_R8					= VK_FORMAT_R8_SRGB,
+		U8_sRGB_R8					= VK_FORMAT_R8_SRGB,
 		//
 		// // 16Bits Formats
-		// U16_Normalized_R4_G4_B4_A4	= VK_FORMAT_R4G4B4A4_UNORM_PACK16,
-		// U16_Normalized_B4_G4_R4_A4	= VK_FORMAT_B4G4R4A4_UNORM_PACK16,
+		U16_Normalized_R4_G4_B4_A4	= VK_FORMAT_R4G4B4A4_UNORM_PACK16,
+		U16_Normalized_B4_G4_R4_A4	= VK_FORMAT_B4G4R4A4_UNORM_PACK16,
 		// U16_Normalized_R5_G6_B5		= VK_FORMAT_R5G6B5_UNORM_PACK16,
 		// U16_Normalized_B5_G6_R5		= VK_FORMAT_B5G6R5_UNORM_PACK16,
 		// U16_Normalized_R5_G5_B5_A1	= VK_FORMAT_R5G5B5A1_UNORM_PACK16,
 		// U16_Normalized_B5_G5_R5_A1	= VK_FORMAT_B5G5R5A1_UNORM_PACK16,
 		// U16_Normalized_A1_R5_G5_B5	= VK_FORMAT_A1R5G5B5_UNORM_PACK16,
-		// U16_Normalized_R8_G8		= VK_FORMAT_R8G8_UNORM,
-		// S16_Normalized_R8_G8		= VK_FORMAT_R8G8_SNORM,
+		U16_Normalized_R8_G8		= VK_FORMAT_R8G8_UNORM,
+		S16_Normalized_R8_G8		= VK_FORMAT_R8G8_SNORM,
 		// U16_Scaled_R8_G8			= VK_FORMAT_R8G8_USCALED,
 		// S16_Scaled_R8_G8			= VK_FORMAT_R8G8_SSCALED,
 		// U16_Integer_R8_G8			= VK_FORMAT_R8G8_UINT,
@@ -209,15 +209,15 @@ export namespace VE
 		// VK_FORMAT_R16_SFLOAT,
 
 		// 24Bits Formats
-		// U24_Normalized_R8_G8_B8 = VK_FORMAT_R8G8B8_UNORM,
-		// S24_Normalized_R8_G8_B8 = VK_FORMAT_R8G8B8_SNORM,
+		U24_Normalized_R8_G8_B8 = VK_FORMAT_R8G8B8_UNORM,
+		S24_Normalized_R8_G8_B8 = VK_FORMAT_R8G8B8_SNORM,
 		// U24_Scaled_R8_G8_B8		= VK_FORMAT_R8G8B8_USCALED,
 		// S24_Scaled_R8_G8_B8		= VK_FORMAT_R8G8B8_SSCALED,
 		// U24_Integer_R8_G8_B8	= VK_FORMAT_R8G8B8_UINT,
 		// S24_Integer_R8_G8_B8	= VK_FORMAT_R8G8B8_SINT,
-		// U24_sRGB_R8_G8_B8		= VK_FORMAT_R8G8B8_SRGB,
-		// U24_Normalized_B8_G8_R8 = VK_FORMAT_B8G8R8_UNORM,
-		// S24_Normalized_B8_G8_R8 = VK_FORMAT_B8G8R8_SNORM,
+		U24_sRGB_R8_G8_B8		= VK_FORMAT_R8G8B8_SRGB,
+		U24_Normalized_B8_G8_R8 = VK_FORMAT_B8G8R8_UNORM,
+		S24_Normalized_B8_G8_R8 = VK_FORMAT_B8G8R8_SNORM,
 		// U24_Scaled_B8_G8_R8		= VK_FORMAT_B8G8R8_USCALED,
 		// S24_Scaled_B8_G8_R8		= VK_FORMAT_B8G8R8_SSCALED,
 		// U24_Integer_B8_G8_R8    = VK_FORMAT_B8G8R8_UINT,
@@ -561,12 +561,12 @@ export namespace VE
 	};
 	VE_REGISTER_AUTOCAST(VkAttachmentLoadOp, VkAttachmentStoreOp);
 
-	struct FVulkanComponentMapping
+	struct FVulkanSwizzle
 	{
-		EVulkanSwizzle RMapping = EVulkanSwizzle::Identity;
-		EVulkanSwizzle GMapping = EVulkanSwizzle::Identity;
-		EVulkanSwizzle BMapping = EVulkanSwizzle::Identity;
-		EVulkanSwizzle AMapping = EVulkanSwizzle::Identity;
+		EVulkanSwizzle R = EVulkanSwizzle::Identity;
+		EVulkanSwizzle G = EVulkanSwizzle::Identity;
+		EVulkanSwizzle B = EVulkanSwizzle::Identity;
+		EVulkanSwizzle A = EVulkanSwizzle::Identity;
 	};
 
 	using FVulkanExtent2D = VkExtent2D;

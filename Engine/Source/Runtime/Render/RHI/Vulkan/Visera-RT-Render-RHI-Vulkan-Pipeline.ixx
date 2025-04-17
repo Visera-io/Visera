@@ -1,12 +1,13 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Pipeline;
+#define VE_MODULE_NAME "Vulkan:Pipeline"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Device;
 import :PipelineLayout;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -23,7 +24,7 @@ export namespace VE
 		FVulkanPipeline() = delete;
 		FVulkanPipeline(EVulkanPipelineBindPoint _BindPoint, SharedPtr<const FVulkanPipelineLayout> _Layout) 
 			:BindPoint{_BindPoint}, Layout{ std::move(_Layout) }
-		{ if(!Layout->IsBuilt()) { throw SRuntimeError("For logic safty, you MUST built PipelineLayout in advance!"); } }
+		{ if(!Layout->IsBuilt()) { VE_LOG_FATAL("For logic safty, you MUST built PipelineLayout in advance!"); } }
 		
 	protected:
 		VkPipeline                             Handle{ VK_NULL_HANDLE };

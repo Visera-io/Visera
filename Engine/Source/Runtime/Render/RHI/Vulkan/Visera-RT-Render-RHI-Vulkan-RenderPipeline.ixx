@@ -11,7 +11,6 @@ import :PipelineCache;
 import :Device;
 import :Shader;
 
-import Visera.Core.Signal;
 import Visera.Core.Log;
 
 export namespace VE
@@ -58,13 +57,13 @@ export namespace VE
 	Build(const VkRenderPass _Owner, UInt32 _SubpassIndex)
 	{
 		if(_Owner == VK_NULL_HANDLE)
-		{ throw SRuntimeError("Failed to build the Render Pipeline! -- The Render Pass is NULL!"); }
+		{ VE_LOG_FATAL("Failed to build the Render Pipeline! -- The Render Pass is NULL!"); }
 
 		if(!Layout->IsBuilt())
-		{ throw SRuntimeError("Failed to build RenderPipeline! -- The Layout is not built!"); }
+		{ VE_LOG_FATAL("Failed to build RenderPipeline! -- The Layout is not built!"); }
 
 		if(!Setting->IsConfirmed())
-		{ throw SRuntimeError("Failed to build RenderPipeline! -- The Setting is not confirmed!"); }
+		{ VE_LOG_FATAL("Failed to build RenderPipeline! -- The Setting is not confirmed!"); }
 		
 		Array<VkPipelineShaderStageCreateInfo> ShaderStageCreateInfos;
 
@@ -81,12 +80,12 @@ export namespace VE
 				.pSpecializationInfo = nullptr
 			});
 		}
-		else { throw SRuntimeError("Failed to create the Render Pipeline! -- The vertex shader is required!"); }
+		else { VE_LOG_FATAL("Failed to create the Render Pipeline! -- The vertex shader is required!"); }
 		
 		if (FragmentShader)
 		{ 
 			if (FragmentShader->IsExpired())
-			{ throw SRuntimeError("Failed to create the Render Pipeline! -- The fragment shader is expired!"); }
+			{ VE_LOG_FATAL("Failed to create the Render Pipeline! -- The fragment shader is expired!"); }
 
 			ShaderStageCreateInfos.emplace_back(VkPipelineShaderStageCreateInfo
 			{
@@ -129,7 +128,7 @@ export namespace VE
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create Vulkan Render Pipeline!"); }
+		{ VE_LOG_FATAL("Failed to create Vulkan Render Pipeline!"); }
 	}
 
 	void FVulkanRenderPipeline::

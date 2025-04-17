@@ -1,8 +1,9 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Shader;
+#define VE_MODULE_NAME "Vulkan:Shader"
 import :Context;
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Device;
@@ -55,7 +56,7 @@ export namespace VE
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create Vulkan Shader Module!"); }
+		{ VE_LOG_FATAL("Failed to create Vulkan Shader Module!"); }
 	}
 
 	FVulkanSPIRVShader::

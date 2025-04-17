@@ -101,7 +101,7 @@ export namespace VE
 			&Handle) != VK_SUCCESS)
 		{ VE_LOG_FATAL("Failed to create Vulkan Pipeline Layout!"); }
 
-		VE_LOG_DEBUG("Built a new pipline layout (handle: ).", (Address)(Handle));
+		VE_LOG_DEBUG("Built a new pipline layout (handle: {}).", (Address)(Handle));
 		return shared_from_this();
 	}
 

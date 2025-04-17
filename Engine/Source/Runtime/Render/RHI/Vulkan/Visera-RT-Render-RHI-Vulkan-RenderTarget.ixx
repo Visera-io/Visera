@@ -1,11 +1,12 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:RenderTarget;
+#define VE_MODULE_NAME "Vulkan:RenderTarget"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Allocator;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -63,9 +64,7 @@ export namespace VE
 					_ColorImage->GetExtent(),
 					_ColorImage->GetFormat(),
 					EVulkanImageAspect::Color,
-					EVulkanImageUsage::ColorAttachment | EVulkanImageUsage::InputAttachment,
-					EVulkanImageTiling::Optimal,
-					EVulkanSampleRate::X1)
+					EVulkanImageUsage::ColorAttachment | EVulkanImageUsage::InputAttachment)
 			));
 		}
 
@@ -81,7 +80,7 @@ export namespace VE
 		{  
 			DepthImage = std::move(_DepthImage);
 		} 
-		else { throw SRuntimeError("Cannnot add more than one depth image!"); }
+		else { VE_LOG_FATAL("Cannnot add more than one depth image!"); }
 
 		return this;
 	}

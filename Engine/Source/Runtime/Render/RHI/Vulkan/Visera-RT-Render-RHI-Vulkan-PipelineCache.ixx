@@ -1,12 +1,13 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:PipelineCache;
+#define VE_MODULE_NAME "Vulkan:PipelineCache"
 import :Context;
 import :Device;
 import :GPU;
 
 import Visera.Core.OS.FileSystem;
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -58,7 +59,7 @@ export namespace VE
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create Vulkan Pipeline Cache!"); }
+		{ VE_LOG_FATAL("Failed to create Vulkan Pipeline Cache!"); }
 	}
 
 	void FVulkanPipelineCache::

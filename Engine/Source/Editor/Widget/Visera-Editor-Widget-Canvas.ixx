@@ -2,9 +2,10 @@ module;
 #include <Visera.h>
 #include <imgui.h>
 export module Visera.Editor.Widget:Canvas;
+#define VE_MODULE_NAME "Widget:Canvas"
 import :Interface;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 import Visera.Core.Media.Image;
 import Visera.Runtime.Render.RHI;
 
@@ -68,15 +69,16 @@ public:
 
         auto NewRHIImage = RHI::CreateImage(
                 RHI::EImageType::Image2D,
-                RHI::FExtent3D{ UInt32(Extent.x), UInt32(Extent.y), 1},
-                _NewImage->IsSRGB()? RHI::EFormat::U32_sRGB_B8_G8_R8_A8 : RHI::EFormat::U32_Normalized_B8_G8_R8_A8,
+                RHI::FExtent3D{ _NewImage->GetWidth(), _NewImage->GetHeight(), 1},
+                _NewImage->IsSRGB()? RHI::EFormat::U32_Normalized_B8_G8_R8_A8 : RHI::EFormat::U24_Normalized_B8_G8_R8,
                 RHI::EImageAspect::Color,
                 RHI::EImageUsage::Sampled | RHI::EImageUsage::TransferDestination);
 
-        auto StagingBuffer = RHI::CreateStagingBuffer(_NewImage->GetSize());
+
+        VE_LOG_WARN("{},{}", UInt64(NewRHIImage->GetSize()), _NewImage->GetSize());
+        auto StagingBuffer = RHI::CreateStagingBuffer(NewRHIImage->GetSize());
         StagingBuffer->Write(_NewImage->GetData(), _NewImage->GetSize());
 
-        auto Fence = RHI::CreateFence();
         auto ImmeCmd = RHI::CreateOneTimeGraphicsCommandBuffer();
         ImmeCmd->StartRecording();
         {
@@ -86,13 +88,7 @@ public:
         }
         ImmeCmd->StopRecording();
         
-		RHI::EGraphicsPipelineStage WaitStages = RHI::EGraphicsPipelineStage::PipelineTop;
-        ImmeCmd->Submit(RHI::FCommandSubmitInfo
-                        {
-                            .pWaitStages {.Graphics = &WaitStages },
-                            .SignalFence = &Fence,
-                        });
-        Fence.Wait();
+        ImmeCmd->SubmitAndWait();
 
         auto NewRHIImageView  = NewRHIImage->CreateImageView();
         DescriptorSet->WriteImage(0, NewRHIImageView, ImageSampler);
@@ -105,7 +101,7 @@ public:
     Write(SharedPtr<const RHI::FImageView> _RHIImageView, SharedPtr<const RHI::FSampler> _Sampler/* = nullptr*/)
     {
         if (_RHIImageView->IsExpired())
-        { throw SRuntimeError("Failed to write FCanvas -- RHIImage is expired."); }
+        { VE_LOG_FATAL("Failed to write FCanvas -- RHIImage is expired."); }
 
         const auto& Sampler = _Sampler ? _Sampler : ImageSampler;
 
@@ -113,7 +109,7 @@ public:
         {
             DescriptorSet->WriteImage(0, _RHIImageView, Sampler);
         }
-        else throw SRuntimeError("Failed to write FCanvas -- convert the RHIImage to EImageLayout::ShaderReadOnly before writing.");
+        else VE_LOG_FATAL("Failed to write FCanvas -- convert the RHIImage to EImageLayout::ShaderReadOnly before writing.");
     }
 
 } // namespace VE

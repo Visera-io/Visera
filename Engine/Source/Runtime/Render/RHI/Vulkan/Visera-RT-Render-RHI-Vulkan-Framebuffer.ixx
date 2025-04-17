@@ -1,12 +1,13 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Framebuffer;
+#define VE_MODULE_NAME "Vulkan:Framebuffer"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Device;
 import :RenderTarget;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -75,7 +76,7 @@ export namespace VE
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create Vulkan Framebuffer!"); }
+		{ VE_LOG_FATAL("Failed to create Vulkan Framebuffer!"); }
 	}
 
 	void FVulkanFramebuffer::

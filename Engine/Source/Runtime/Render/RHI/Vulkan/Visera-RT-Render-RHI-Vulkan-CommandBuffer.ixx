@@ -19,29 +19,15 @@ export namespace VE
 	class FVulkanCommandPool;
 	class FVulkanGraphicsCommandPool;
 
-	struct FVulkanCommandSubmitInfo
-	{
-		UInt32					WaitSemaphoreCount = 0;
-		const VkSemaphore*      pWaitSemaphores = nullptr;
-		struct { union
-		{
-			EVulkanGraphicsPipelineStage* Graphics;
-			EVulkanComputePipelineStage*  Compute;
-		};}                     pWaitStages;
-
-		UInt32					SignalSemaphoreCount = 0;
-		const VkSemaphore*      pSignalSemaphores = nullptr;
-		
-		const FVulkanFence*		SignalFence = nullptr;
-
-		UInt32					QueueIndex = 0;
-	};
-
 	class FVulkanCommandBuffer : public std::enable_shared_from_this<FVulkanCommandBuffer>
 	{
 		friend class FVulkanCommandPool;
 	public:
 		enum class EStatus { Expired, Idle, Recording, ReadyToSubmit, Submitted }; //[FIXME]: Currrent Status is not trustable
+		
+		void StartRecording();
+		void StopRecording();
+		void Reset() const { VE_ASSERT(IsIdle() && IsResettable()); vkResetCommandBuffer(Handle, 0x0); }
 
 		Bool IsExpired()			const { return Status == EStatus::Expired;		}
 		Bool IsIdle()				const { return Status == EStatus::Idle;			}
@@ -60,12 +46,6 @@ export namespace VE
 
 		void SetStatus(EStatus _NewStatus) { Status = _NewStatus; }
 
-		void Submit(const FVulkanCommandSubmitInfo& _SubmitInfo);
-		void Reset() const { VE_ASSERT(IsIdle() && IsResettable()); vkResetCommandBuffer(Handle, 0x0); }
-
-		void StartRecording();
-		void StopRecording();
-
 		void BindPipeline(SharedPtr<const FVulkanPipeline> _Pipeline);
 		void PushConstants(EVulkanShaderStage _ShaderStages, const void* _Data, UInt32 _Size, UInt32 _Offset);
 		void BindDescriptorSet(UInt32 _Index, SharedPtr<const FVulkanDescriptorSet> _DescriptorSet);
@@ -79,7 +59,7 @@ export namespace VE
 
 		SharedPtr<const FVulkanPipeline>	CurrentPipeline;
 
-		EStatus Status = EStatus::Idle;
+		mutable EStatus Status = EStatus::Idle;
 		UInt8 bIsResettable  : 1;
 		UInt8 bIsPrimary	 : 1;
 
@@ -95,6 +75,12 @@ export namespace VE
 	public:
 		void StartRecording() { FVulkanCommandBuffer::StartRecording(); }
 		void StopRecording()  { FVulkanCommandBuffer::StopRecording();  }
+		
+		void Submit(const VkSemaphore*                  _pWaitSemaphores,   UInt32 _WaitSemaphoreCount,
+			        const EVulkanGraphicsPipelineStage* _pWaitStages,    // WaitStageCount == _WaitSemaphoreCount
+			        const VkSemaphore*                  _pSignalSemaphores, UInt32 _SignalSemaphoreCount,
+			        const FVulkanFence*                 _SignalFence = nullptr) const;
+		void SubmitAndWait() const { FVulkanFence Fence{}; Submit(nullptr, 0, nullptr, nullptr, 0, &Fence); Fence.Wait(); }
 
 		void WriteImage(SharedPtr<FVulkanImage> _Image, SharedPtr<const FVulkanBuffer> _StagingBuffer);
 
@@ -113,6 +99,8 @@ export namespace VE
 		DrawIndexed(UInt32 _IndexCount, UInt32 _InstanceCount = 1, UInt32 _FirstIndex = 0, UInt32 _VertexOffset = 0, UInt32 _FirstInstance = 0) const;
 		void LeaveRenderPass(SharedPtr<const FVulkanRenderPass> _RenderPass);
 
+		void ConvertImageLayout(VkImage _Image, EVulkanImageLayout _OldLayout, EVulkanImageLayout _NewLayout,
+			                    EVulkanImageAspect _Aspect, UInt32 _LevelCount, UInt32 _LayerCount) const;
 		void ConvertImageLayout(SharedPtr<FVulkanImage> _Image, EVulkanImageLayout _NewLayout) const;
 		void BlitImage(SharedPtr<const FVulkanImage> _SrcImage, SharedPtr<FVulkanImage> _DstImage, EVulkanFilter _Filter) const;
 
@@ -144,25 +132,30 @@ export namespace VE
 	}
 
 	void FVulkanGraphicsCommandBuffer::
-	ConvertImageLayout(SharedPtr<FVulkanImage> _Image, EVulkanImageLayout _NewLayout) const
+	ConvertImageLayout(VkImage _Image,
+		EVulkanImageLayout     _OldLayout,
+		EVulkanImageLayout     _NewLayout,
+		EVulkanImageAspect     _Aspect,
+		UInt32                 _LevelCount,
+		UInt32                 _LayerCount) const
 	{
 		VkImageMemoryBarrier ImageMemoryBarrier
 		{
 			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
 			.srcAccessMask = AutoCast(EVulkanAccess::R_Memory),
 			.dstAccessMask = AutoCast(EVulkanAccess::None),
-			.oldLayout = AutoCast(_Image->GetLayout()),
+			.oldLayout = AutoCast(_OldLayout),
 			.newLayout = AutoCast(_NewLayout),
 			.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
 			.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-			.image = _Image->GetHandle(),
+			.image = _Image,
 			.subresourceRange
 			{
-				.aspectMask		= AutoCast(_Image->GetAspects()),
+				.aspectMask		= AutoCast(_Aspect),
 				.baseMipLevel	= 0,
-				.levelCount		= _Image->GetMipmapLevels(),
+				.levelCount		= _LevelCount,
 				.baseArrayLayer = 0,
-				.layerCount		= _Image->GetArrayLayers(),
+				.layerCount		= _LayerCount,
 			}
 		};
 		vkCmdPipelineBarrier(
@@ -174,7 +167,12 @@ export namespace VE
 			0, nullptr,	// Buffer Memory Barrier
 			1,
 			&ImageMemoryBarrier);
+	}
 
+	void FVulkanGraphicsCommandBuffer::
+	ConvertImageLayout(SharedPtr<FVulkanImage> _Image, EVulkanImageLayout _NewLayout) const
+	{
+		ConvertImageLayout(_Image->Handle, _Image->Layout, _NewLayout, _Image->Aspects, _Image->MipmapLevels, _Image->ArrayLayers);
 		_Image->Layout = _NewLayout;
 	}
 
@@ -301,34 +299,6 @@ export namespace VE
 
 		auto IndexBufferHanedle = _IndexBuffer->GetHandle();
 		vkCmdBindIndexBuffer(Handle, IndexBufferHanedle, 0, VK_INDEX_TYPE_UINT32);
-	}
-
-	void FVulkanCommandBuffer::
-	Submit(const FVulkanCommandSubmitInfo& _SubmitInfo)
-	{
-		VE_ASSERT(IsReadyToSubmit());
-
-		VkSubmitInfo SubmitInfo
-		{
-			.sType					= VK_STRUCTURE_TYPE_SUBMIT_INFO,
-			.pNext					= nullptr,
-			.waitSemaphoreCount		= _SubmitInfo.WaitSemaphoreCount,
-			.pWaitSemaphores		= _SubmitInfo.pWaitSemaphores,
-			.pWaitDstStageMask		= reinterpret_cast<const VkPipelineStageFlags*>(_SubmitInfo.pWaitStages.Graphics),//[FIXME]: move to Graphics.
-			.commandBufferCount		= 1,
-			.pCommandBuffers		= &Handle,
-			.signalSemaphoreCount	= _SubmitInfo.SignalSemaphoreCount,
-			.pSignalSemaphores		= reinterpret_cast<const VkSemaphore*>(_SubmitInfo.pSignalSemaphores),
-		};
-		auto& TargetQueueFamily = GVulkan->Device->GetQueueFamily(EVulkanQueueFamily::Graphics);
-		if (vkQueueSubmit(
-			TargetQueueFamily.Queues[_SubmitInfo.QueueIndex],
-			1,
-			&SubmitInfo,
-			_SubmitInfo.SignalFence? _SubmitInfo.SignalFence->GetHandle() : VK_NULL_HANDLE) != VK_SUCCESS)
-		{ VE_LOG_FATAL("Failed to submit the Vulkan Graphics CommandBuffer(QueueIndex:{})", _SubmitInfo.QueueIndex); }
-
-		Status = EStatus::Submitted;
 	}
 
 	void FVulkanGraphicsCommandBuffer::
@@ -458,6 +428,37 @@ export namespace VE
 		SetViewport();
 	}
 
+	void FVulkanGraphicsCommandBuffer::
+	Submit(const VkSemaphore*                  _pWaitSemaphores,   UInt32 _WaitSemaphoreCount,
+		   const EVulkanGraphicsPipelineStage* _pWaitStages,    // WaitStageCount == _WaitSemaphoreCount
+		   const VkSemaphore*                  _pSignalSemaphores, UInt32 _SignalSemaphoreCount,
+		   const FVulkanFence*                 _SignalFence/* = nullptr*/) const
+	{
+		VE_ASSERT(IsReadyToSubmit());
+
+		VkSubmitInfo SubmitInfo
+		{
+			.sType					= VK_STRUCTURE_TYPE_SUBMIT_INFO,
+			.pNext					= nullptr,
+			.waitSemaphoreCount		= _WaitSemaphoreCount,
+			.pWaitSemaphores		= _pWaitSemaphores,
+			.pWaitDstStageMask		= reinterpret_cast<const VkPipelineStageFlags*>(_pWaitStages),
+			.commandBufferCount		= 1,
+			.pCommandBuffers		= &Handle,
+			.signalSemaphoreCount	= _SignalSemaphoreCount,
+			.pSignalSemaphores		= _pSignalSemaphores,
+		};
+
+		auto& GraphicsQueueFamily = GVulkan->Device->GetQueueFamily(EVulkanQueueFamily::Graphics);
+		if (vkQueueSubmit(
+			GraphicsQueueFamily.Queues[0],
+			1,
+			&SubmitInfo,
+			_SignalFence? _SignalFence->GetHandle() : VK_NULL_HANDLE) != VK_SUCCESS)
+		{ VE_LOG_FATAL("Failed to submit the Vulkan Graphics CommandBuffer (handle:{}, queue:{})", (Address)(Handle), 0); }
+
+		Status = EStatus::Submitted;
+	}
 
 	void FVulkanGraphicsCommandBuffer::
 	WriteImage(SharedPtr<FVulkanImage> _Image, SharedPtr<const FVulkanBuffer> _StagingBuffer)

@@ -2,13 +2,14 @@ module;
 #include <Visera.h>
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:RenderPipelineSetting;
+#define VE_MODULE_NAME "Vulkan:RenderPipelineSetting"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Device;
 import :Shader;
 import :Swapchain;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {

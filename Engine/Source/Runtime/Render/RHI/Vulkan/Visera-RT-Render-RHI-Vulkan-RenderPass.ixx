@@ -1,6 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:RenderPass;
+#define VE_MODULE_NAME "Vulkan:RenderPass"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Allocator;
@@ -13,7 +14,7 @@ import :RenderPipeline;
 import :RenderPassLayout;
 import :RenderTarget;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -75,7 +76,7 @@ export namespace VE
 		case EType::Background:
 		{
 			static Bool bCreated = False;
-			if (bCreated) { throw SRuntimeError("You can only create one Background Pass!"); }
+			if (bCreated) { VE_LOG_FATAL("You can only create one Background Pass!"); }
 			Layout.AddColorAttachmentDesc(
 			{
 				.Layout			= EVulkanImageLayout::ColorAttachment,
@@ -161,7 +162,7 @@ export namespace VE
 		{
 			break;
 		}
-		default: throw SRuntimeError("Unkonwn RenderPassLayout Preset!");
+		default: VE_LOG_FATAL("Unkonwn RenderPassLayout Preset!");
 		}
 	}
 
@@ -314,7 +315,7 @@ export namespace VE
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create Vulkan RenderPass!"); }
+		{ VE_LOG_FATAL("Failed to create Vulkan RenderPass!"); }
 
 		// Create Subpasses (Setted in the derived class)
 		for (UInt8 Idx = 0; Idx < Subpasses.size(); ++Idx)
@@ -329,7 +330,7 @@ export namespace VE
 			{
 				
 			}
-			else { throw SRuntimeError("Cannot Build a Subpass without any Pipeline!"); }
+			else { VE_LOG_FATAL("Cannot Build a Subpass without any Pipeline!"); }
 		}
 
 		// Create Framebuffers
@@ -393,7 +394,7 @@ export namespace VE
 					&ImageViewCreateInfo,
 					GVulkan->AllocationCallbacks,
 					&CurrentFramebuffer.RenderTargetViews[0]) != VK_SUCCESS)
-				{ throw SRuntimeError("Failed to create Vulkan Image View!"); }
+				{ VE_LOG_FATAL("Failed to create Vulkan Image View!"); }
 
 				VkFramebufferCreateInfo FramebufferCreateInfo
 				{
@@ -413,7 +414,7 @@ export namespace VE
 					&FramebufferCreateInfo,
 					GVulkan->AllocationCallbacks,
 					&CurrentFramebuffer.Handle) != VK_SUCCESS)
-				{ throw SRuntimeError("Failed to create Vulkan Framebuffer for current Overlay Pass!"); }
+				{ VE_LOG_FATAL("Failed to create Vulkan Framebuffer for current Overlay Pass!"); }
 			}
 		}
 	}
@@ -452,14 +453,14 @@ export namespace VE
 	AddSubpass(const FSubpass& _SubpassInfo)
 	{
 		if(!_SubpassInfo.Pipeline)
-		{ throw SRuntimeError("Cannot create a subpass without a pipeline!"); }
+		{ VE_LOG_FATAL("Cannot create a subpass without a pipeline!"); }
 		
 		if(_SubpassInfo.ColorImageReferences.empty())
-		{ throw SRuntimeError("Cannot create a subpass without any color reference!"); }
+		{ VE_LOG_FATAL("Cannot create a subpass without any color reference!"); }
 
 		if(_SubpassInfo.SrcStage == EVulkanGraphicsPipelineStage::None ||
 		   _SubpassInfo.DstStage == EVulkanGraphicsPipelineStage::None)
-		{ throw SRuntimeError("Cannot create a subpass without assigning src/dst stages!"); }
+		{ VE_LOG_FATAL("Cannot create a subpass without assigning src/dst stages!"); }
 
 		Subpasses.emplace_back(std::move(_SubpassInfo));
 	}
