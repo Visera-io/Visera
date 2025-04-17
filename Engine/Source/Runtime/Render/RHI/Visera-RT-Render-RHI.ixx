@@ -230,6 +230,8 @@ export namespace VE
 		GetAPI()				 { return Vulkan; }
 		static inline SharedPtr<const FDescriptorPool>
 		GetGlobalDescriptorPool() { return GlobalDescriptorPool; }
+		static inline SharedPtr<const FSampler>
+		GetGlobalTexture2DSampler() { return FFrameContext::SVColorTextureSampler; }
 
 		static inline Bool
 		IsTexture2DFormatSupported(EFormat _Format) { return Vulkan->GetGPU().IsTexture2DFormatSupported(_Format); }

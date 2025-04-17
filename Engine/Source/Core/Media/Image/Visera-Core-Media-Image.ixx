@@ -84,7 +84,6 @@ export namespace VE
 		Bool IsBitmap()     const { return GetFormat() == EFormat::Bitmap; }
 		Bool IsValid()		const { return Handle.isValid(); }
 		Bool IsGrayScale()	const { return Handle.isGrayscale(); }
-		Bool IsSRGB()		const { return GetColorType() == EColorType::RGBA || GetColorType() == EColorType::RGB; } //[FIXME]: Remove
 		Bool HasAlpha()		const { return FreeImage_GetBPP(Handle) == 32; }
 
 		void ConvertToSRGB() { if (!Handle.convertTo32Bits()) { VE_LOG_WARN("Failed to convert image ({}) to SRGB!", Path.ToPlatformString()); } }
@@ -127,7 +126,7 @@ export namespace VE
 		}
 
 		VE_LOG_DEBUG("Loaded a new image from {} (extent:[W:{},H:{},Bits:{}]).",
-			PlatformPath,GetWidth(), GetHeight(), GetBitsPerPixel(), GetPaletteSize());
+			PlatformPath,GetWidth(), GetHeight(), GetBitsPerPixel());
 	}
 
 	FImage::
@@ -143,6 +142,10 @@ export namespace VE
 			VE_LOG_WARN("{}", ErrorInfo);
 			throw SRuntimeError(ErrorInfo);
 		}
+
+
+		VE_LOG_DEBUG("Created a new empty image (extent:[W:{},H:{},Bits:{}]).",
+			GetWidth(), GetHeight(), GetBitsPerPixel());
 	}
 
 	void FImage::

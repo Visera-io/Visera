@@ -35,7 +35,6 @@ export namespace VE
 		
 		static inline SharedPtr<FImage>                    EditorLogo;
 		static inline SharedPtr<RHI::FDescriptorSetLayout> ImGuiDescriptorSetLayout;
-		static inline SharedPtr<RHI::FSampler>			   DefaultImageSampler;
 
 	public:
 		class FUIRenderPass : public RHI::FRenderPass
@@ -141,8 +140,6 @@ export namespace VE
 			auto VulkanInstanceHandle = API->GetInstance().GetHandle();
 			ImGui_ImplVulkan_Init(&CreateInfo);
 
-			DefaultImageSampler = RHI::CreateSampler(RHI::EFilter::Nearest)
-				->Build();
 			ImGuiDescriptorSetLayout = RHI::CreateDescriptorSetLayout()
 				->AddBinding(0, RHI::EDescriptorType::CombinedImageSampler, 1, RHI::EShaderStage::Fragment)
 				->Build();
@@ -159,7 +156,6 @@ export namespace VE
 			Widgets.clear();
 
 			EditorRenderPass.reset();
-			DefaultImageSampler.reset();
 			ImGuiDescriptorSetLayout.reset();
 			
 			EditorLogo.reset();
@@ -174,7 +170,7 @@ export namespace VE
 	WeakPtr<FCanvas> Editor::
 	CreateCanvas(SharedPtr<const FImage> _Image)
 	{
-		auto NewCanvas = FCanvas::Create(RHI::CreateDescriptorSet(ImGuiDescriptorSetLayout), DefaultImageSampler);
+		auto NewCanvas = FCanvas::Create(RHI::CreateDescriptorSet(ImGuiDescriptorSetLayout));
 		Widgets[NewCanvas->GetName()] = NewCanvas;
 		NewCanvas->Write(_Image);
 		return NewCanvas;
