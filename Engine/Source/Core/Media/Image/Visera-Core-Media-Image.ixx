@@ -26,7 +26,7 @@ export namespace VE
 
 		enum class EFormat
 		{
-			Unkonwn			= FIT_UNKNOWN,	//! unknown type
+			Unknown			= FIT_UNKNOWN,	//! unknown type
 			Bitmap			= FIT_BITMAP,	//! standard image			: 1-, 4-, 8-, 16-, 24-, 32-bit
 			RGB				= FIT_RGBF,		//! 96-bit RGB float image	: 3 x 32-bit IEEE floating point
 			RGBA			= FIT_RGBAF,	//! 128-bit RGBA float image: 4 x 32-bit IEEE floating point
@@ -71,19 +71,22 @@ export namespace VE
 		auto GetPixel(UInt32 _X, UInt32 _Y) const -> Optional<FPixel> { FPixel Pixel; if (!Handle.getPixelColor(_X, _Y, &Pixel.Data)) { return {}; } else { return Pixel; } }
 		Bool SetPixel(UInt32 _X, UInt32 _Y, FPixel _Value) { VE_ASSERT(!IsGrayScale()); return Handle.setPixelColor(_X, _Y, &_Value.Data); }
 		auto GetData()		const -> Byte*		{ return Handle.accessPixels(); }
-		auto GetSize()		const -> UInt64		{ return Handle.getImageSize(); }
 		auto GetHeight()    const -> UInt32		{ return Handle.getHeight(); }
 		auto GetWidth()     const -> UInt32		{ return Handle.getWidth(); }
-		auto GetPixelCount()const -> UInt64		{ return GetHeight() * GetWidth(); }
+		auto GetBitsPerPixel() const -> UInt32  { return Handle.getBitsPerPixel(); }
+		auto GetSize()		   const -> UInt64		{ return (GetPixelCount() * GetBitsPerPixel()) >> 3; } // div8 (Byte)
+		auto GetPixelCount()   const -> UInt64		{ return GetHeight() * GetWidth(); }
+		auto GetPaletteSize()  const ->UInt32    { return Handle.getPaletteSize(); }
 		auto GetFormat()	const -> EFormat	{ return static_cast<EFormat>(Handle.getImageType()); }
-		auto GetColorType() const -> EColorType { return ColorType; }
+		auto GetColorType() const -> EColorType { return static_cast<EColorType>(Handle.getColorType()); }
+		auto GetPath()      const -> const FPath& { return Path; }
 
+		Bool IsBitmap()     const { return GetFormat() == EFormat::Bitmap; }
 		Bool IsValid()		const { return Handle.isValid(); }
 		Bool IsGrayScale()	const { return Handle.isGrayscale(); }
-		Bool IsSRGB()		const { return ColorType == EColorType::RGBA || ColorType == EColorType::RGB; }
 		Bool HasAlpha()		const { return FreeImage_GetBPP(Handle) == 32; }
 
-		void ConvertToSRGB()		{ Handle.convertTo32Bits(); }
+		void ConvertToSRGB() { if (!Handle.convertTo32Bits()) { VE_LOG_WARN("Failed to convert image ({}) to SRGB!", Path.ToPlatformString()); } }
 
 		void SaveAs(const FPath& _Path) const;
 		void Save() const { SaveAs(Path); }
@@ -99,7 +102,6 @@ export namespace VE
 	private:
 		const	FPath		Path;
 		mutable fipImage	Handle;
-		EColorType			ColorType;
 
 		//FreeImagePlus Doc: https://freeimage.sourceforge.io/fip/index.html
 		struct FFreeImage
@@ -115,16 +117,16 @@ export namespace VE
 		LoadFreeImage();
 
 		const String PlatformPath = Path.ToPlatformString();
-		VE_LOG_DEBUG("Loading a new image from {}", PlatformPath);
 
 		if (!Handle.load(PlatformPath.data()))
-		{ 
+		{
 			String ErrorInfo = Text("Failed to load the image({})! -- throw (SIOFailure).", PlatformPath);
 			VE_LOG_ERROR("{}", ErrorInfo);
 			throw SIOFailure(ErrorInfo);
 		}
 
-		ColorType = static_cast<EColorType>(Handle.getColorType());
+		VE_LOG_DEBUG("Loaded a new image from {} (extent:[W:{},H:{},Bits:{}]).",
+			PlatformPath,GetWidth(), GetHeight(), GetBitsPerPixel());
 	}
 
 	FImage::
@@ -141,7 +143,9 @@ export namespace VE
 			throw SRuntimeError(ErrorInfo);
 		}
 
-		ColorType = static_cast<EColorType>(Handle.getColorType());
+
+		VE_LOG_DEBUG("Created a new empty image (extent:[W:{},H:{},Bits:{}]).",
+			GetWidth(), GetHeight(), GetBitsPerPixel());
 	}
 
 	void FImage::

@@ -8,7 +8,6 @@ import :Instance;
 import :GPU;
 import :Surface;
 
-import Visera.Core.Signal;
 import Visera.Core.Log;
 
 export namespace VE
@@ -104,7 +103,7 @@ export namespace VE
 										PresentQueueFamilies.begin(),  PresentQueueFamilies.end(),
 										std::back_inserter(GraphicsAndPresentQueueFamilies));
 				if(GraphicsAndPresentQueueFamilies.empty())
-				{ throw SRuntimeError("Failed to find a queue family supporting both Graphics and Present!"); }
+				{ VE_LOG_FATAL("Failed to find a queue family supporting both Graphics and Present!"); }
 
 				Bool Found = False;
 				for (UInt32 IdxA : GraphicsAndPresentQueueFamilies)
@@ -125,7 +124,7 @@ export namespace VE
 					}
 					if (Found) break;
 				}
-				if (!Found) throw SRuntimeError("Failed to find queue families that fit all requirements!");
+				if (!Found) VE_LOG_FATAL("Failed to find queue families that fit all requirements!");
 			}
 
 			//Extension Supports
@@ -166,7 +165,7 @@ export namespace VE
 			{ *GPU = std::move(GPUCandidate); break; }
 		}
 		if (GVulkan->GPU->GetHandle() == VK_NULL_HANDLE)
-		{ throw SRuntimeError("Failed to find a suitable Physical Device on current computer!"); }
+		{ VE_LOG_FATAL("Failed to find a suitable Physical Device on current computer!"); }
 
 		if (!GVulkan->GPU->IsDiscreteGPU())
 		{ VE_LOG_WARN("Current GPU is not a discrete GPU!"); }
@@ -230,7 +229,7 @@ export namespace VE
 			GVulkan->GPU->GetHandle(),
 			&DeviceCreateInfo,
 			GVulkan->AllocationCallbacks,&Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create Vulkan Device!"); }
+		{ VE_LOG_FATAL("Failed to create Vulkan Device!"); }
 
 		//Retrieve Queues
 		{

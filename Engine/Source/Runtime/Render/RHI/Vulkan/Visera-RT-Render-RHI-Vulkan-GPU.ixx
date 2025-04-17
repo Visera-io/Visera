@@ -1,6 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:GPU;
+#define VE_MODULE_NAME "Vulkan:GPU"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 

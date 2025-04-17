@@ -46,9 +46,9 @@ export namespace VE
 		using FRenderPipelineSetting= FVulkanRenderPipelineSetting;
 		using FCommandPool          = FVulkanCommandPool;
 		using FCommandBuffer        = FVulkanCommandBuffer;
-		using FCommandSubmitInfo	= FVulkanCommandSubmitInfo;
 		using FRenderArea			= FVulkanRenderArea;
 		using FSampler				= FVulkanSampler;
+		using FSwizzle              = FVulkanSwizzle;
 
 		using ESharingMode			= EVulkanSharingMode;
 		using ESampleRate			= EVulkanSampleRate;
@@ -77,6 +77,7 @@ export namespace VE
 		using ESamplerMipmapMode	= EVulkanSamplerMipmapMode;
 		using ESamplerAddressMode	= EVulkanSamplerAddressMode;
 		using ECullMode             = EVulkanCullMode;
+		using ESwizzle              = EVulkanSwizzle;
 
 		using SSwapchainRecreation = FVulkanSwapchain::SRecreation;
 
@@ -167,6 +168,7 @@ export namespace VE
 			        EFormat      _Format,
 			        EImageAspect _Aspects,
 			        EImageUsage  _Usages,
+			        FSwizzle     _Swizzle      = {},
 			        EImageTiling _Tiling       = EImageTiling::Optimal,
 			        ESampleRate  _SampleRate   = ESampleRate::X1,
 			        UInt8        _MipmapLevels = 1,
@@ -228,6 +230,8 @@ export namespace VE
 		GetAPI()				 { return Vulkan; }
 		static inline SharedPtr<const FDescriptorPool>
 		GetGlobalDescriptorPool() { return GlobalDescriptorPool; }
+		static inline SharedPtr<const FSampler>
+		GetGlobalTexture2DSampler() { return FFrameContext::SVColorTextureSampler; }
 
 		static inline Bool
 		IsTexture2DFormatSupported(EFormat _Format) { return Vulkan->GetGPU().IsTexture2DFormatSupported(_Format); }
@@ -301,19 +305,15 @@ export namespace VE
 					{ FFrameContext::RenderArea.extent.width, FFrameContext::RenderArea.extent.height, 1 },
 					EFormat::U32_Normalized_R8_G8_B8_A8,
 					EImageAspect::Color,
-					EImageUsage::ColorAttachment | EImageUsage::Sampled | EImageUsage::TransferSource,
-					EImageTiling::Optimal,
-					ESampleRate::X1
-				);
+					EImageUsage::ColorAttachment | EImageUsage::Sampled | EImageUsage::TransferSource);
+
 				auto PostprocessImage = CreateImage(
 					EImageType::Image2D,
 					{ FFrameContext::RenderArea.extent.width, FFrameContext::RenderArea.extent.height, 1 },
 					EFormat::U32_Normalized_R8_G8_B8_A8,
 					EImageAspect::Color,
-					EImageUsage::ColorAttachment | EImageUsage::Sampled | EImageUsage::TransferSource,
-					EImageTiling::Optimal,
-					ESampleRate::X1
-				);
+					EImageUsage::ColorAttachment | EImageUsage::Sampled | EImageUsage::TransferSource);
+
 				ImmeCmds->ConvertImageLayout(ColorImage, EVulkanImageLayout::ShaderReadOnly);
 				ImmeCmds->ConvertImageLayout(PostprocessImage, EVulkanImageLayout::ShaderReadOnly);
 
@@ -332,10 +332,8 @@ export namespace VE
 					{ FFrameContext::RenderArea.extent.width, FFrameContext::RenderArea.extent.height, 1 },
 					EFormat::S32_Float_Depth32,
 					EImageAspect::Depth,
-					EImageUsage::DepthStencilAttachment,
-					EImageTiling::Optimal,
-					ESampleRate::X1
-				);
+					EImageUsage::DepthStencilAttachment);
+
 				ImmeCmds->ConvertImageLayout(DepthImage, EVulkanImageLayout::DepthStencilAttachment);
 
 				Frame.BackgroundRTs = FRenderTarget::Create()
@@ -356,50 +354,16 @@ export namespace VE
 			//[TODO]: Move to VulkanSwapchain Class?
 			for (auto& SwapchainImage : Vulkan->GetSwapchain().GetImages())
 			{
-				VkImageMemoryBarrier SwapchainTransferBarrier
-				{
-					.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-					.srcAccessMask = AutoCast(EAccess::None),
-					.dstAccessMask = AutoCast(EAccess::None),
-					.oldLayout = AutoCast(EImageLayout::Undefined),
-					.newLayout = AutoCast(EImageLayout::Present),
-					.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-					.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-					.image = SwapchainImage,
-					.subresourceRange
-					{
-						.aspectMask		= AutoCast(EImageAspect::Color),
-						.baseMipLevel	= 0,
-						.levelCount		= 1,
-						.baseArrayLayer = 0,
-						.layerCount		= 1
-					}
-				};
-				vkCmdPipelineBarrier(
-					ImmeCmds->GetHandle(),
-					AutoCast(EGraphicsPipelineStage::PipelineTop),
-					AutoCast(EGraphicsPipelineStage::PipelineBottom),
-					0x0,		// Dependency Flags
-					0, nullptr,	// Memory Barrier
-					0, nullptr,	// Buffer Memory Barrier
-					1,
-					&SwapchainTransferBarrier);
+				ImmeCmds->ConvertImageLayout(SwapchainImage,
+					                         EImageLayout::Undefined,
+					                         EImageLayout::Present,
+					                         EImageAspect::Color,
+					                         1,
+					                         1);
 			}
 			ImmeCmds->StopRecording();
-			auto Fence = CreateFence();
 
-			EGraphicsPipelineStage WaitStages = EGraphicsPipelineStage::PipelineTop;
-			ImmeCmds->Submit(
-				FCommandSubmitInfo
-				{
-					.WaitSemaphoreCount		= 0,
-					.pWaitSemaphores		= nullptr,
-					.pWaitStages			{.Graphics = &WaitStages },
-					.SignalSemaphoreCount	= 0,
-					.pSignalSemaphores		= nullptr,
-					.SignalFence			= &Fence,
-				});
-			Fence.Wait();
+			ImmeCmds->SubmitAndWait();
 		}
 
 		static void inline
@@ -547,20 +511,8 @@ export namespace VE
 
 		auto& ResourceCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Resource];
 		ResourceCommandBuffer->StopRecording();
-		static Segment<EVulkanGraphicsPipelineStage, 1> ResourceWaitStages
-		{
-			EVulkanGraphicsPipelineStage::PipelineTop
-		};
-		ResourceCommandBuffer->Submit(
-			FCommandSubmitInfo
-			{
-				.WaitSemaphoreCount		= 0,
-				.pWaitSemaphores		= nullptr,
-				.pWaitStages			{.Graphics = ResourceWaitStages.data()},
-				.SignalSemaphoreCount	= 1,
-				.pSignalSemaphores		= (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Resource]),
-				.SignalFence			= nullptr,
-			});
+		ResourceCommandBuffer->Submit(nullptr, 0, nullptr,
+			                         (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Resource]), 1);
 
 		auto& GraphicsCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Graphics];
 		GraphicsCommandBuffer->StopRecording();
@@ -573,17 +525,9 @@ export namespace VE
 			EVulkanGraphicsPipelineStage::PipelineTop,
 			EVulkanGraphicsPipelineStage::PipelineTop,
 		};
-
-		GraphicsCommandBuffer->Submit(
-			FCommandSubmitInfo
-			{
-				.WaitSemaphoreCount		= UInt32(GraphicsWaitSemaphores.size()),
-				.pWaitSemaphores		= GraphicsWaitSemaphores.data(),
-				.pWaitStages            {.Graphics = GraphicsWaitStages.data()},
-				.SignalSemaphoreCount	= 1,
-				.pSignalSemaphores		= (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Graphics]),
-				.SignalFence			= nullptr,
-			});
+		GraphicsCommandBuffer->Submit(GraphicsWaitSemaphores.data(), UInt32(GraphicsWaitSemaphores.size()),
+			                          GraphicsWaitStages.data(),
+			                         (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Graphics]), 1);
 
 		auto& EditorCommandBuffer = CurrentFrame.CommandBuffers[FFrameContext::Editor];
 		VE_ASSERT(FCommandBuffer::EStatus::ReadyToSubmit == EditorCommandBuffer->GetStatus()) //Stop Recording at Editor
@@ -591,17 +535,10 @@ export namespace VE
 		{
 			EVulkanGraphicsPipelineStage::PipelineTop
 		};
-		EditorCommandBuffer->Submit(
-			FCommandSubmitInfo
-			{
-				.WaitSemaphoreCount		= 1,
-				.pWaitSemaphores		= (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Graphics]),
-				.pWaitStages			{.Graphics = EditorWaitStages.data()},
-				.SignalSemaphoreCount	= 1,
-				.pSignalSemaphores		= (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Editor]),
-				.SignalFence			= &CurrentFrame.InFlightFence,
-			});
-
+		EditorCommandBuffer->Submit((VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Graphics]), 1,
+			                        EditorWaitStages.data(),
+			                        (VkSemaphore*)(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Editor]), 1,
+		                            &CurrentFrame.InFlightFence);
 		try
 		{
 			Vulkan->GetSwapchain().Present(&CurrentFrame.CommandsFinishedSemaphores[FFrameContext::Editor], 1);
@@ -662,6 +599,7 @@ export namespace VE
 		        EFormat      _Format,
 		        EImageAspect _Aspects,
 		        EImageUsage  _Usages,
+		        FSwizzle     _Swizzle     /* = {} */,
 		        EImageTiling _Tiling      /* = EImageTiling::Optimal*/,
 		        ESampleRate  _SampleRate  /* = ESampleRate::X1*/,
 		        UInt8        _MipmapLevels/* = 1*/,
@@ -671,10 +609,14 @@ export namespace VE
 	{
 		auto NewImage = Vulkan->GetAllocator().CreateImage(
 			_Type, _Extent, _Format, _Aspects, _Usages,
-			_Tiling, _SampleRate, _MipmapLevels, _ArrayLayers, _SharingMode, _Location);
+			_Swizzle, _Tiling, _SampleRate,
+			_MipmapLevels, _ArrayLayers,
+			_SharingMode, _Location);
 
-		VE_LOG_DEBUG("Created a new image (handle:{}, format:{}, extent:[{}, {}, {}]).",
-			(Address)(NewImage->GetHandle()), UInt32(_Format), _Extent.width, _Extent.height, _Extent.depth);
+		VE_LOG_DEBUG("Created a new image (handle:{}, format:{}, size:{}, extent:[{}, {}, {}], swizzle:[{},{},{},{}]).",
+			(Address)(NewImage->GetHandle()), UInt32(_Format), NewImage->GetSize(),
+			_Extent.width, _Extent.height, _Extent.depth,
+			UInt32(_Swizzle.R), UInt32(_Swizzle.G), UInt32(_Swizzle.B), UInt32(_Swizzle.A));
 
 		return NewImage;
 	}

@@ -1,11 +1,12 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:RenderPassLayout;
+#define VE_MODULE_NAME "Vulkan:RenderPassLayout"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :RenderTarget;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {

@@ -94,22 +94,15 @@ export namespace VE
         auto IndexStagingBuffer  = RHI::CreateStagingBuffer(GetCPUIndexBufferSize());
         IndexStagingBuffer->Write(GetIndexData(), GetCPUIndexBufferSize());
 
-        auto Fence = RHI::CreateFence();
         auto ImmeCmd = RHI::CreateOneTimeGraphicsCommandBuffer(); //[TODO]: Transfer Buffer
         ImmeCmd->StartRecording();
         {
-        ImmeCmd->WriteBuffer(VBO, VertexStagingBuffer);
-        ImmeCmd->WriteBuffer(IBO, IndexStagingBuffer);
+            ImmeCmd->WriteBuffer(VBO, VertexStagingBuffer);
+            ImmeCmd->WriteBuffer(IBO, IndexStagingBuffer);
         }
         ImmeCmd->StopRecording();
         
-		RHI::EGraphicsPipelineStage WaitStages = RHI::EGraphicsPipelineStage::PipelineTop;
-        ImmeCmd->Submit(RHI::FCommandSubmitInfo
-            {
-                .pWaitStages  {.Graphics = &WaitStages },
-                .SignalFence = &Fence
-            });
-        Fence.Wait();
+        ImmeCmd->SubmitAndWait();
     }
 
 }// namespace VE

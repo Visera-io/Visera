@@ -2,6 +2,7 @@ module;
 #define VMA_IMPLEMENTATION
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Allocator;
+#define VE_MODULE_NAME "Vulkan:Allocator"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Instance;
@@ -9,7 +10,7 @@ import :Device;
 import :GPU;
 import :Synchronization;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 import Visera.Core.OS.Memory;
 
 export namespace VE
@@ -24,22 +25,24 @@ export namespace VE
 	{
 		friend class FVulkan;
 	public:
-		auto CreateBuffer(VkDeviceSize _Size,
+		auto CreateBuffer(VkDeviceSize       _Size,
 						  EVulkanBufferUsage _Usages,
 						  EVulkanSharingMode _SharingMode = EVulkanSharingMode::Exclusive,
 						  EVulkanMemoryUsage _Location    = EVulkanMemoryUsage::Auto,
 						  VmaPoolCreateFlags _VMAFlags    = 0x0) const -> SharedPtr<FVulkanBuffer>;
-		auto CreateImage(EVulkanImageType		_Type,
-						FVulkanExtent3D	_Extent,
-						EVulkanFormat			_Format,
+
+		auto CreateImage(EVulkanImageType   _Type,
+						FVulkanExtent3D	    _Extent,
+						EVulkanFormat       _Format,
 						EVulkanImageAspect	_Aspects,
-						EVulkanImageUsage		_Usages,
-						EVulkanImageTiling	_Tiling		  = EVulkanImageTiling::Optimal,
-						EVulkanSampleRate     _SampleRate	  = EVulkanSampleRate::X1,
-						UInt8			_MipmapLevels = 1,
-						UInt8			_ArrayLayers  = 1,
-						EVulkanSharingMode	_SharingMode  = EVulkanSharingMode::Exclusive,
-						EVulkanMemoryUsage	_Location	  = EVulkanMemoryUsage::Auto) const -> SharedPtr<FVulkanImage>;
+						EVulkanImageUsage   _Usages,
+						FVulkanSwizzle      _Swizzle      = {},
+						EVulkanImageTiling  _Tiling		  = EVulkanImageTiling::Optimal,
+						EVulkanSampleRate   _SampleRate	  = EVulkanSampleRate::X1,
+						UInt8               _MipmapLevels = 1,
+						UInt8               _ArrayLayers  = 1,
+						EVulkanSharingMode  _SharingMode  = EVulkanSharingMode::Exclusive,
+						EVulkanMemoryUsage  _Location	  = EVulkanMemoryUsage::Auto) const -> SharedPtr<FVulkanImage>;
 
 		auto GetHandle() const -> VmaAllocator { return Handle; }
 		operator VmaAllocator() const { return Handle; }
@@ -64,7 +67,7 @@ export namespace VE
 				.vulkanApiVersion = GVulkan->Instance->GetVulkanAPIVersion()
 			};
 			if (vmaCreateAllocator(&CreateInfo, &Handle) != VK_SUCCESS)
-			{ throw SRuntimeError("Failed to create VMA Allocator!"); }
+			{ VE_LOG_FATAL("Failed to create VMA Allocator!"); }
 		}
 
 		void Destory()
@@ -128,6 +131,7 @@ export namespace VE
 		EVulkanImageViewType		TypeView;
 		EVulkanImageAspect			AspectView;
 		EVulkanFormat				FormatView;
+		FVulkanSwizzle              SwizzleView;
 		Pair<UInt8, UInt8>			MipmapLevelRange{ 0, 0 };
 		Pair<UInt8, UInt8>			ArrayLayerRange	{ 0, 0 };
 
@@ -146,12 +150,12 @@ export namespace VE
 		friend class FVulkanGraphicsCommandBuffer;
 	public:
 		auto CreateImageView(
-			EVulkanImageViewType	_Type   = EVulkanImageViewType::Auto,
-			EVulkanFormat			_Format = EVulkanFormat::None,
-			EVulkanImageAspect		_Aspect = EVulkanImageAspect::Undefined,
+			Optional<FVulkanSwizzle>_Swizzle = {},
 			Pair<UInt8, UInt8>		_MipmapLevelRange = {0,0},
 			Pair<UInt8, UInt8>		_ArrayLayerRange  = {0,0},
-			const FVulkanComponentMapping& _ComponentMapping = {}) const -> SharedPtr<FVulkanImageView>;
+			EVulkanFormat			_Format = EVulkanFormat::None,
+			EVulkanImageViewType	_Type   = EVulkanImageViewType::Auto,
+			EVulkanImageAspect		_Aspect = EVulkanImageAspect::Undefined) const -> SharedPtr<FVulkanImageView>;
 
 		auto GetExtent()		const -> const FVulkanExtent3D&	{ return Extent; }
 		auto GetSize()			const -> VkDeviceSize			{ return Allocation->GetSize(); }
@@ -181,6 +185,7 @@ export namespace VE
 		EVulkanImageLayout	Layout{ EVulkanImageLayout::Undefined };
 		EVulkanImageType	Type;
 		EVulkanFormat		Format;
+		FVulkanSwizzle      Swizzle;
 		FVulkanExtent3D		Extent;
 		EVulkanImageAspect  Aspects;
 		EVulkanImageUsage	Usages;
@@ -201,15 +206,16 @@ export namespace VE
 	};
 
 	SharedPtr<FVulkanImage> FVulkanAllocator::
-	CreateImage(EVulkanImageType		_Type,
-				FVulkanExtent3D	_Extent,
-				EVulkanFormat			_Format,
+	CreateImage(EVulkanImageType    _Type,
+				FVulkanExtent3D	    _Extent,
+				EVulkanFormat		_Format,
 				EVulkanImageAspect	_Aspects,
-				EVulkanImageUsage		_Usages,
+				EVulkanImageUsage	_Usages,
+				FVulkanSwizzle      _Swizzle    /*= {}*/,
 				EVulkanImageTiling	_Tiling		/*= EImageTiling::Optimal*/,
-				EVulkanSampleRate     _SampleRate /*= ESampleRate::X1*/,
-				UInt8			_MipmapLevels/* = 1*/,
-				UInt8			_ArrayLayers/* = 1*/,
+				EVulkanSampleRate   _SampleRate /*= ESampleRate::X1*/,
+				UInt8               _MipmapLevels/* = 1*/,
+				UInt8               _ArrayLayers/* = 1*/,
 				EVulkanSharingMode	_SharingMode/* = ESharingMode::Exclusive*/,
 				EVulkanMemoryUsage	_Location	/*= EMemoryUsage::Auto*/) const
 	{
@@ -219,6 +225,7 @@ export namespace VE
 		NewImage->Format		= _Format;
 		NewImage->Aspects		= _Aspects;
 		NewImage->Usages		= _Usages;
+		NewImage->Swizzle       = _Swizzle;
 		NewImage->Tiling		= _Tiling;
 		NewImage->SampleRate	= _SampleRate;
 		NewImage->MipmapLevels	= _MipmapLevels;
@@ -258,7 +265,7 @@ export namespace VE
 			&NewImage->Handle,
 			&NewImage->Allocation,
 			nullptr) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create Vulkan Image!"); }
+		{ VE_LOG_FATAL("Failed to create Vulkan Image!"); }
 
 		return NewImage;
 	}
@@ -296,12 +303,12 @@ export namespace VE
 	}
 	
 	SharedPtr<FVulkanImageView> FVulkanImage::
-	CreateImageView(EVulkanImageViewType _Type  /*= EImageViewType::Auto*/,
-					EVulkanFormat	   _Format/* = EFormat::None*/,
-					EVulkanImageAspect _Aspect/* = EImageAspect::Undefined*/,
-					Pair<UInt8, UInt8> _MipmapLevelRange/* = { 0,0 }*/,
-					Pair<UInt8, UInt8> _ArrayLayerRange /* = { 0,0 }*/,
-					const FVulkanComponentMapping& _ComponentMapping/* = {}*/) const
+	CreateImageView(Optional<FVulkanSwizzle>_Swizzle /*= {}*/,
+					Pair<UInt8, UInt8>		_MipmapLevelRange/* = {0,0}*/,
+					Pair<UInt8, UInt8>		_ArrayLayerRange /* = {0,0}*/,
+					EVulkanFormat			_Format/* = EVulkanFormat::None*/,
+					EVulkanImageViewType	_Type  /* = EVulkanImageViewType::Auto*/,
+					EVulkanImageAspect		_Aspect/* = EVulkanImageAspect::Undefined*/) const
 	{
 		//[TODO]: Check more ImageView validity.
 		VE_ASSERT(IsOrderedPair(_MipmapLevelRange) && IsOrderedPair(_ArrayLayerRange));
@@ -314,7 +321,8 @@ export namespace VE
 		NewImageView->AspectView = (_Aspect == EVulkanImageAspect::Undefined)? this->Aspects : _Aspect;
 		NewImageView->MipmapLevelRange = std::move(_MipmapLevelRange);
 		NewImageView->ArrayLayerRange  = std::move(_ArrayLayerRange);
-		
+		NewImageView->SwizzleView = _Swizzle.has_value()? _Swizzle.value() : Swizzle;
+
 		VkImageViewCreateInfo CreateInfo
 		{
 			.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -323,10 +331,10 @@ export namespace VE
 			.format   = AutoCast(NewImageView->FormatView),
 			.components
 			{
-				 .r = AutoCast(_ComponentMapping.RMapping),
-				 .g = AutoCast(_ComponentMapping.GMapping),
-				 .b = AutoCast(_ComponentMapping.BMapping),
-				 .a = AutoCast(_ComponentMapping.AMapping),
+				 .r = AutoCast(NewImageView->SwizzleView.R),
+				 .g = AutoCast(NewImageView->SwizzleView.G),
+				 .b = AutoCast(NewImageView->SwizzleView.B),
+				 .a = AutoCast(NewImageView->SwizzleView.A),
 			},
 			.subresourceRange
 			{
@@ -342,7 +350,7 @@ export namespace VE
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&NewImageView->Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create Vulkan Image View!"); }
+		{ VE_LOG_FATAL("Failed to create Vulkan Image View!"); }
 
 		return NewImageView;
 	}
@@ -387,7 +395,7 @@ export namespace VE
 			&NewBuffer->Handle,
 			&NewBuffer->Allocation,
 			nullptr) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create VMA FVulkanBuffer!"); }
+		{ VE_LOG_FATAL("Failed to create VMA FVulkanBuffer!"); }
 
 		return NewBuffer;
 	}
@@ -418,6 +426,7 @@ export namespace VE
 			Format,
 			Aspects,
 			Usages,
+			Swizzle,
 			Tiling,
 			SampleRate,
 			MipmapLevels,

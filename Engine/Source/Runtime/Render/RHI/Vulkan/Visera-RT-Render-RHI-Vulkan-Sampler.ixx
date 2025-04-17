@@ -28,7 +28,19 @@ export namespace VE
         Bool inline
         IsBuilt() const { return Handle != VK_NULL_HANDLE; }
 
-        auto GetHandle() const -> const VkSampler { return Handle; }
+        auto inline
+        GetHandle() const -> const VkSampler { return Handle; }
+        auto inline
+        GetAddressModes() const -> const auto& { return AddressModes; }
+        auto inline
+        GetBorderColor() const { return BorderColor; }
+        auto inline
+        GetMipmapMode() const { return MipmapMode; }
+        auto inline
+        GetFilters() const -> const auto& { return Filters; }
+
+        Bool inline
+        IsAnisotropy() const { return bAnisotropy; }
 
         FVulkanSampler(EVulkanFilter _Filter,
                        EVulkanSamplerAddressMode _AddressMode = EVulkanSamplerAddressMode::ClampToEdge);

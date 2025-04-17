@@ -8,7 +8,6 @@ import :Loader;
 import :GPU;
 
 import Visera.Core.Log;
-import Visera.Core.Signal;
 
 export namespace VE
 {
@@ -111,7 +110,7 @@ export namespace VE
 
 		UInt32 LayerPropertyCount = 0;
 		if(VK_SUCCESS != vkEnumerateInstanceLayerProperties(&LayerPropertyCount, nullptr))
-		{ throw SRuntimeError("Failed to enumerate instance layer properties!"); }
+		{ VE_LOG_FATAL("Failed to enumerate instance layer properties!"); }
 
 		Array<VkLayerProperties> LayerProperties(LayerPropertyCount);
 		vkEnumerateInstanceLayerProperties(&LayerPropertyCount, LayerProperties.data());
@@ -125,7 +124,7 @@ export namespace VE
 				{ Found = true; break; }
 			}
 			if (!Found)
-			{ throw SRuntimeError(Text("Failed to enable the Vulkan Validation Layer {}", RequiredLayer)); }
+			{ VE_LOG_FATAL("Failed to enable the Vulkan Validation Layer {}", RequiredLayer); }
 		}
 
 		const VkApplicationInfo AppInfo
@@ -175,7 +174,7 @@ export namespace VE
 										GVulkan->AllocationCallbacks,
 										&Handle);
 		if(Result != VK_SUCCESS)
-		{ throw SRuntimeError(Text("Failed to create Vulkan Instance ({})!", Int32(Result))); }
+		{ VE_LOG_FATAL("Failed to create Vulkan Instance ({})!", Int32(Result)); }
 
 		return Handle;
 	}

@@ -1,6 +1,7 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:DescriptorSet;
+#define VE_MODULE_NAME "Vulkan:DescriptorSet"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Allocator;
@@ -8,7 +9,7 @@ import :Sampler;
 import :Device;
 import :DescriptorSetLayout;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -50,7 +51,7 @@ export namespace VE
 	WriteBuffer(UInt32 _BindPoint, SharedPtr<const FVulkanBuffer> _Buffer, UInt64 _Offset, UInt64 _Size)
 	{
 		if (!Layout->HasBinding(_BindPoint))
-		{ throw SRuntimeError("Failed to write the buffer! -- Invaild BindPoint!"); }
+		{ VE_LOG_FATAL("Failed to write the buffer! -- Invaild BindPoint!"); }
 
 		auto& TargetBinding = Layout->GetBinding(_BindPoint);
 
@@ -81,10 +82,10 @@ export namespace VE
 	WriteImage(UInt32 _BindPoint, SharedPtr<const FVulkanImageView> _ImageView, SharedPtr<const FVulkanSampler> _Sampler)
 	{
 		if (!Layout->HasBinding(_BindPoint))
-		{ throw SRuntimeError("Failed to write the image! -- Invaild BindPoint!"); }
+		{ VE_LOG_FATAL("Failed to write the image! -- Invaild BindPoint!"); }
 
 		if (_ImageView->IsExpired())
-		{ throw SRuntimeError("Failed to write an expired VulkanImage to the descriptor set!"); }
+		{ VE_LOG_FATAL("Failed to write an expired VulkanImage to the descriptor set!"); }
 
 		VkDescriptorImageInfo ImageInfo
 		{

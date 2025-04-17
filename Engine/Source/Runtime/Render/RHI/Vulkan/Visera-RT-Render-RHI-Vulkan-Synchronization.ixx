@@ -1,8 +1,9 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Synchronization;
+#define VE_MODULE_NAME "Vulkan:Synchronization"
 import :Context;
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Device;
@@ -83,7 +84,7 @@ export namespace VE
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle))
-		{ throw SRuntimeError("Failed to create Vulkan FSemaphore!"); }
+		{ VE_LOG_FATAL("Failed to create Vulkan FSemaphore!"); }
 	}
 
 	void FVulkanSemaphore::
@@ -109,7 +110,7 @@ export namespace VE
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle))
-		{ throw SRuntimeError("Failed to create Vulkan FFence!"); }
+		{ VE_LOG_FATAL("Failed to create Vulkan FFence!"); }
 	}
 
 	void FVulkanFence::

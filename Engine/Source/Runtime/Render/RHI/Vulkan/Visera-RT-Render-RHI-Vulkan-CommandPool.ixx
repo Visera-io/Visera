@@ -1,13 +1,14 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:CommandPool;
+#define VE_MODULE_NAME "Vulkan:CommandPool"
 import :Context;
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Device;
 import :Synchronization;
 import :CommandBuffer;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -65,7 +66,7 @@ export namespace VE
 			&CreateInfo,
 			GVulkan->AllocationCallbacks,
 			&Handle))
-		{ throw SRuntimeError("Failed to create Vulkan FCommandPool!"); }
+		{ VE_LOG_FATAL("Failed to create Vulkan FCommandPool!"); }
 
 		Trashbin.resize(8);
 	}
@@ -96,7 +97,7 @@ export namespace VE
 			GVulkan->Device->GetHandle(),
 			&AllocateInfo,
 			&CommandBuffer->Handle) != VK_SUCCESS)
-		{ throw SRuntimeError("Failed to create FGraphicsCommandBuffer!"); }
+		{ VE_LOG_FATAL("Failed to create FGraphicsCommandBuffer!"); }
 
 		Children.push_back(CommandBuffer);
 		return CommandBuffer;

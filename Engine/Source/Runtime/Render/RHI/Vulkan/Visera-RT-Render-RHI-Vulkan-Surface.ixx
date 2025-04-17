@@ -1,12 +1,13 @@
 module;
 #include "VISERA_MODULE_LOCAL.H"
 export module Visera.Runtime.Render.RHI.Vulkan:Surface;
+#define VE_MODULE_NAME "Vulkan:Surface"
 import :Context;
 import :Instance;
 import :GPU;
 
 import Visera.Runtime.Platform.Window;
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -46,7 +47,7 @@ export namespace VE
 			Window::GetHandle(),
 			GVulkan->AllocationCallbacks,
 			&Handle))
-		{ throw SRuntimeError("Failed to create Vulkan Window Surface!"); }
+		{ VE_LOG_FATAL("Failed to create Vulkan Window Surface!"); }
 	}
 
 	void FVulkanSurface::
