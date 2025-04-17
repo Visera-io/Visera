@@ -1,8 +1,7 @@
 module;
 #include <Visera.h>
-export module Visera.Runtime.Render.Texture;
-#define VE_MODULE_NAME "Texture"
-export import :SRGB;
+export module Visera.Runtime.Render.Texture:SRGB;
+#define VE_MODULE_NAME "Texture:SRGB"
 
 import Visera.Core.Log;
 import Visera.Core.Media.Image;
@@ -11,19 +10,19 @@ import Visera.Runtime.Render.RHI;
 export namespace VE
 {
 
-    class FTexture2D
+    class FSRGBTexture2D
     {
     public:
         static inline auto
         Create(SharedPtr<const FImage> _Image, SharedPtr<const RHI::FSampler> _Sampler = nullptr)
-        { return CreateSharedPtr<FTexture2D>(_Image, _Sampler); }
+        { return CreateSharedPtr<FSRGBTexture2D>(_Image, _Sampler); }
 
         void inline
         BindToDescriptorSet(SharedPtr<RHI::FDescriptorSet> _DescriptorSet, UInt32 _Binding) const;
 
-        FTexture2D() = delete;
-        FTexture2D(SharedPtr<const FImage> _Image, SharedPtr<const RHI::FSampler> _Sampler = nullptr);
-        ~FTexture2D();
+        FSRGBTexture2D() = delete;
+        FSRGBTexture2D(SharedPtr<const FImage> _Image, SharedPtr<const RHI::FSampler> _Sampler = nullptr);
+        ~FSRGBTexture2D();
 
     private:
         WeakPtr<const FImage>          ImageReference;
@@ -32,14 +31,14 @@ export namespace VE
         SharedPtr<const RHI::FSampler> Sampler;
     };
 
-    void FTexture2D::
+    void FSRGBTexture2D::
     BindToDescriptorSet(SharedPtr<RHI::FDescriptorSet> _DescriptorSet, UInt32 _Binding) const
     {
         _DescriptorSet->WriteImage(_Binding, RHIImageView, Sampler);
     }
 
-    FTexture2D::
-    FTexture2D(SharedPtr<const FImage> _Image, SharedPtr<const RHI::FSampler> _Sampler/* = nullptr */)
+    FSRGBTexture2D::
+    FSRGBTexture2D(SharedPtr<const FImage> _Image, SharedPtr<const RHI::FSampler> _Sampler/* = nullptr */)
         :ImageReference{_Image},
          Sampler{_Sampler? _Sampler : RHI::GetGlobalTexture2DSampler()}
     {
@@ -59,16 +58,16 @@ export namespace VE
         {
         case FImage::EColorType::RGB:
         {
-            if(RHI::IsTexture2DFormatSupported(RHI::EFormat::U24_Normalized_B8_G8_R8))
+            if(RHI::IsTexture2DFormatSupported(RHI::EFormat::U24_sRGB_B8_G8_R8))
             {
-                FormatName = "U24_Normalized_B8_G8_R8";
-                RHIImageFormat = RHI::EFormat::U24_Normalized_B8_G8_R8;
+                FormatName = "U24_sRGB_B8_G8_R8";
+                RHIImageFormat = RHI::EFormat::U24_sRGB_B8_G8_R8;
                 break;
             }
-            if(RHI::IsTexture2DFormatSupported(RHI::EFormat::U24_Normalized_R8_G8_B8))
+            if(RHI::IsTexture2DFormatSupported(RHI::EFormat::U24_sRGB_R8_G8_B8))
             {
-                FormatName = "U24_Normalized_R8_G8_B8";
-                RHIImageFormat = RHI::EFormat::U24_Normalized_R8_G8_B8;
+                FormatName = "U24_sRGB_R8_G8_B8";
+                RHIImageFormat = RHI::EFormat::U24_sRGB_R8_G8_B8;
                 ImageSwizzle.R = RHI::ESwizzle::B;
                 ImageSwizzle.B = RHI::ESwizzle::R;
                 break;
@@ -79,16 +78,16 @@ export namespace VE
         }
         case FImage::EColorType::RGBA:
         {
-            if (RHI::IsTexture2DFormatSupported(RHI::EFormat::U32_Normalized_B8_G8_R8_A8))
+            if (RHI::IsTexture2DFormatSupported(RHI::EFormat::U32_sRGB_B8_G8_R8_A8))
             {
-                FormatName = "U32_Normalized_B8_G8_R8_A8";
-                RHIImageFormat = RHI::EFormat::U32_Normalized_B8_G8_R8_A8;
+                FormatName = "U32_sRGB_B8_G8_R8_A8";
+                RHIImageFormat = RHI::EFormat::U32_sRGB_B8_G8_R8_A8;
                 break;
             }
-            if (RHI::IsTexture2DFormatSupported(RHI::EFormat::U32_Normalized_R8_G8_B8_A8))
+            if (RHI::IsTexture2DFormatSupported(RHI::EFormat::U32_sRGB_R8_G8_B8_A8))
             {
-                FormatName = "U32_Normalized_R8_G8_B8_A8";
-                RHIImageFormat = RHI::EFormat::U32_Normalized_R8_G8_B8_A8;
+                FormatName = "U32_sRGB_R8_G8_B8_A8";
+                RHIImageFormat = RHI::EFormat::U32_sRGB_R8_G8_B8_A8;
                 ImageSwizzle.R = RHI::ESwizzle::B;
                 ImageSwizzle.B = RHI::ESwizzle::R;
                 break;
@@ -123,11 +122,11 @@ export namespace VE
 
         RHIImageView = RHIImage->CreateImageView();
 
-        VE_LOG_INFO("Created a new Texture2D (format:{}, sampler:{}).", FormatName, (Address)(Sampler->GetHandle()));
+        VE_LOG_INFO("Created a new sRGB Texture2D (format:{}, sampler:{}).", FormatName, (Address)(Sampler->GetHandle()));
     }
 
-    FTexture2D::
-    ~FTexture2D()
+    FSRGBTexture2D::
+    ~FSRGBTexture2D()
     {
 
     }

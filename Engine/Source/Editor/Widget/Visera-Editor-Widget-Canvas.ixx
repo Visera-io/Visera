@@ -45,7 +45,7 @@ public:
     private:
         String  Title;
         ImVec2  Extent{ 0, 0 };
-        SharedPtr<FTexture2D>          Texture;
+        SharedPtr<FSRGBTexture2D>          Texture;
         SharedPtr<RHI::FDescriptorSet> DescriptorSet;
     };
 
@@ -66,7 +66,7 @@ public:
 
         Extent = { Float(_NewImage->GetWidth()), Float(_NewImage->GetHeight()) };
 
-        auto NewTexture = FTexture2D::Create(_NewImage);
+        auto NewTexture = FSRGBTexture2D::Create(_NewImage);
         NewTexture->BindToDescriptorSet(DescriptorSet, 0);
         Texture.swap(NewTexture);
     }
