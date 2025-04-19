@@ -75,7 +75,9 @@ export namespace VE
         Data.resize(RowBytes * Height);
         for (UInt32 Row = 0; Row < Height; ++Row)
         {
-            png_read_row(_PNGPtr, Data.data() + Row * RowBytes, nullptr);
+            png_read_row(_PNGPtr, &Data[(Row) * RowBytes], nullptr); // Flip Vertically
+
+            //png_read_row(_PNGPtr, &Data[(Height - Row - 1) * RowBytes], nullptr); // Flip Vertically
         }
     }
 

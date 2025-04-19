@@ -33,7 +33,7 @@ public:
         ImGui::End();
     }
 
-    void Write(SharedPtr<const FImage> _NewImage);
+    void Write(SharedPtr<const IImage> _NewImage);
     void Write(SharedPtr<const RHI::FImageView> _RHIImageView, SharedPtr<const RHI::FSampler> _Sampler = nullptr);
 
     auto inline
@@ -60,9 +60,9 @@ public:
     }
 
     void FCanvas::
-    Write(SharedPtr<const FImage> _NewImage)
+    Write(SharedPtr<const IImage> _NewImage)
     {
-        VE_ASSERT(_NewImage && _NewImage->GetSize());
+        VE_ASSERT(_NewImage && !_NewImage->IsEmpty());
 
         Extent = { Float(_NewImage->GetWidth()), Float(_NewImage->GetHeight()) };
 
