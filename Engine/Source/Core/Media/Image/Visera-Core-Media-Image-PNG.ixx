@@ -57,14 +57,34 @@ export namespace VE
     void FPNGImage::
     Preprocessing(const png_structp _PNGPtr, const png_infop _InfoPtr)
     {
-        const auto ColorType = png_get_color_type(_PNGPtr, _InfoPtr);
-        const auto BitDepth  = png_get_bit_depth(_PNGPtr, _InfoPtr);
-        if (ColorType == PNG_COLOR_TYPE_PALETTE) { png_set_palette_to_rgb(_PNGPtr); }
-        if (ColorType == PNG_COLOR_TYPE_GRAY && BitDepth < 8) { png_set_expand_gray_1_2_4_to_8(_PNGPtr); }
+        auto ColorType = png_get_color_type(_PNGPtr, _InfoPtr);
+        auto BitDepth  = png_get_bit_depth(_PNGPtr, _InfoPtr);
         // Force to be 8bits (enough for human's visual perception)
-        if (BitDepth > 8) { if (BitDepth == 16) { png_set_strip_16(_PNGPtr); } else 
-                            { VE_LOG_WARN("Unsupported bit depth ({}) of image ({})", BitDepth, Path.ToPlatformString()); } }
-        if (BitDepth < 8) { png_set_packing(_PNGPtr); }
+        if (ColorType == PNG_COLOR_TYPE_PALETTE)
+        {
+            VE_LOG_WARN("The image ({}) is a palette and has been converted to RGB!", Path.ToPlatformString());
+            png_set_palette_to_rgb(_PNGPtr);
+        }
+        if (ColorType == PNG_COLOR_TYPE_GRAY && BitDepth < 8)
+        { 
+            VE_LOG_WARN("The image ({}) is gray(<8bits), so it has been converted to gray(8bits)!", Path.ToPlatformString());
+            png_set_expand_gray_1_2_4_to_8(_PNGPtr);
+            BitDepth = 8;
+        }
+        if (BitDepth > 8)
+        {
+            if (BitDepth != 16) { VE_LOG_ERROR("Unsupported bit depth ({}) of image ({})!", BitDepth, Path.ToPlatformString()); }
+            else
+            {
+                VE_LOG_WARN("The system do NOT support 16bits image ({}), it has be converted to 8bits image!", Path.ToPlatformString());
+                png_set_strip_16(_PNGPtr);
+            }
+        }
+        if (BitDepth < 8)
+        {
+            VE_LOG_WARN("The bit depth of image ({}) < 8bits, and it has been converted to 8bits!", Path.ToPlatformString());
+            png_set_packing(_PNGPtr);
+        }
         png_read_update_info(_PNGPtr, _InfoPtr); // Once you update the data, you MUST call "png_read_update_info"
     }
 
