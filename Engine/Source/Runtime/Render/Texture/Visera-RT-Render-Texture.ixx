@@ -83,7 +83,9 @@ export namespace VE
 
         RHIImageView = RHIImage->CreateImageView();
 
-        VE_LOG_INFO("Created a new Texture2D (format:{}, sampler:{}).", SupportedFormat.Name, (Address)(Sampler->GetHandle()));
+        VE_LOG_INFO("Created a new Texture2D (image:{}, format:{}, sampler:{}).",
+            _Image->GetPath().GetFileName().ToPlatformString(),
+            SupportedFormat.Name, (Address)(Sampler->GetHandle()));
     }
 
     FTexture2D::FSupportedFormat FTexture2D::
