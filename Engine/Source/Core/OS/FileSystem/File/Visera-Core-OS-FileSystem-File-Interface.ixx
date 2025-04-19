@@ -1,8 +1,9 @@
 module;
 #include <Visera.h>
 export module Visera.Core.OS.FileSystem.File:Interface;
-
+#define VE_MODULE_NAME "File:Interface"
 import Visera.Core.Type;
+import Visera.Core.Log;
 import Visera.Core.Signal;
 
 export namespace VE
@@ -51,11 +52,20 @@ export namespace VE
  		    OutputFile->write(Data.data(), Data.size());
 
  		    if (OutputFile->fail())
- 		    { throw SIOFailure(Text("Failed to write to {}", "FilePath.GetData().c_str()")); }
+ 		    {
+ 		    	String ErrorInfo = Text("Failed to write to {}! -- throw(SIOFailure)",  Path.ToPlatformString());
+ 		    	VE_LOG_ERROR("{}", ErrorInfo);
+	 		    throw SIOFailure(ErrorInfo);
+ 		    }
 
  		    CloseOStream();
  	    }
- 	    else throw SIOFailure(Text("Failed to open {}", "FilePath.GetData().c_str()"));	
+ 	    else
+ 	    {
+ 	    	String ErrorInfo = Text("Failed to open {}! -- throw(SIOFailure)",  Path.ToPlatformString());
+ 	    	VE_LOG_ERROR("{}", ErrorInfo);
+ 	    	throw SIOFailure(ErrorInfo);
+ 	    }
     }
 
     void IFile::
@@ -71,7 +81,12 @@ export namespace VE
 
             Data = std::move(Buffer.str());
  	    }
- 	    else throw SIOFailure(Text("Failed to open {}", "FilePath.GetData().c_str()"));
+ 	    else
+ 	    {
+ 	    	String ErrorInfo = Text("Failed to open {}! -- throw(SIOFailure)", Path.ToPlatformString());
+ 	    	VE_LOG_ERROR("{}", ErrorInfo);
+	 	    throw SIOFailure(ErrorInfo);
+ 	    }
     }
 
     std::ifstream* IFile::

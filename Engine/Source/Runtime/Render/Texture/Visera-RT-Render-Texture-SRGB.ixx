@@ -73,7 +73,7 @@ export namespace VE
                 break;
             }
             VE_LOG_WARN("Current platform do NOT support RGB image format, the image was forced to be converted to RGBA!");
-            std::const_pointer_cast<FImage>(_Image)->ConvertToSRGB();
+            std::const_pointer_cast<FImage>(_Image)->ConvertToRGBA32();
             //Pass to the next branch
         }
         case FImage::EColorType::RGBA:

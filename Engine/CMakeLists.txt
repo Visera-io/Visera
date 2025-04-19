@@ -73,6 +73,9 @@ link_assimp(${VISERA})
 include(install_freeimage)
 link_freeimage(${VISERA})
 
+include(install_libpng)
+link_libpng(${VISERA})
+
 include(install_spdlog)
 link_spdlog(${VISERA})
 

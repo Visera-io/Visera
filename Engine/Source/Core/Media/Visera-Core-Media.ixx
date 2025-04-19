@@ -16,6 +16,7 @@ export namespace VE
 	{
 		VE_MODULE_MANAGER_CLASS(Media);
 	public:
+		//[TODO]: Remove
 		VE_API CreateImage(FName _Name, const FPath& _Path)->SharedPtr<FImage>;
 		VE_API CreateImage(FName _Name, UInt32 _Width, UInt32 _Height, UInt32 _BPP = 4*8)->SharedPtr<FImage>;
 

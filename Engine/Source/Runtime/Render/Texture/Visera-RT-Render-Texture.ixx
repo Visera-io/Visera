@@ -55,6 +55,55 @@ export namespace VE
         RHI::FSwizzle ImageSwizzle{};
         RHI::EFormat RHIImageFormat{RHI::EFormat::None};
         const char* FormatName{};
+
+        if (_Image->IsSRGB()) switch (_Image->GetColorType())
+        {
+            case FImage::EColorType::RGB:
+            {
+                if (RHI::IsTexture2DFormatSupported(RHI::EFormat::U24_sRGB_B8_G8_R8))
+                {
+                    FormatName = "U24_sRGB_B8_G8_R8";
+                    RHIImageFormat = RHI::EFormat::U24_sRGB_B8_G8_R8;
+                    break;
+                }
+                if (RHI::IsTexture2DFormatSupported(RHI::EFormat::U24_sRGB_R8_G8_B8))
+                {
+                    FormatName = "U24_Normalized_R8_G8_B8";
+                    RHIImageFormat = RHI::EFormat::U24_sRGB_R8_G8_B8;
+                    ImageSwizzle.R = RHI::ESwizzle::B;
+                    ImageSwizzle.B = RHI::ESwizzle::R;
+                    break;
+                }
+                VE_LOG_WARN("Current platform do NOT support RGB image format, the image was forced to be converted to RGBA!");
+                std::const_pointer_cast<FImage>(_Image)->ConvertToRGBA32();
+                //Pass to the next branch
+            }
+            case FImage::EColorType::RGBA:
+            {
+                    if (RHI::IsTexture2DFormatSupported(RHI::EFormat::U32_sRGB_B8_G8_R8_A8))
+                    {
+                        FormatName = "U32_sRGB_B8_G8_R8_A8";
+                        RHIImageFormat = RHI::EFormat::U32_sRGB_B8_G8_R8_A8;
+                        break;
+                    }
+                    if (RHI::IsTexture2DFormatSupported(RHI::EFormat::U32_sRGB_R8_G8_B8_A8))
+                    {
+                        FormatName = "U32_sRGB_R8_G8_B8_A8";
+                        RHIImageFormat = RHI::EFormat::U32_sRGB_R8_G8_B8_A8;
+                        ImageSwizzle.R = RHI::ESwizzle::B;
+                        ImageSwizzle.B = RHI::ESwizzle::R;
+                        break;
+                    }
+            }
+        }
+
+        if (RHIImageFormat == RHI::EFormat::None && _Image->IsSRGB())
+        {
+            VE_LOG_WARN("Current platform do NOT support sRGB image type, the image was forced to linear color space!");
+            std::const_pointer_cast<FImage>(_Image)->ConvertToLinear();
+        }
+
+        if (RHIImageFormat == RHI::EFormat::None)
         switch (_Image->GetColorType())
         {
         case FImage::EColorType::RGB:
@@ -74,7 +123,7 @@ export namespace VE
                 break;
             }
             VE_LOG_WARN("Current platform do NOT support RGB image format, the image was forced to be converted to RGBA!");
-            std::const_pointer_cast<FImage>(_Image)->ConvertToSRGB();
+            std::const_pointer_cast<FImage>(_Image)->ConvertToRGBA32();
             //Pass to the next branch
         }
         case FImage::EColorType::RGBA:
