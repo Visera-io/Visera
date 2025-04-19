@@ -2,8 +2,6 @@ module;
 #include <Visera.h>
 export module Visera.Runtime.Render.Texture;
 #define VE_MODULE_NAME "Texture"
-export import :SRGB;
-
 import Visera.Core.Log;
 import Visera.Core.Media.Image;
 import Visera.Runtime.Render.RHI;
