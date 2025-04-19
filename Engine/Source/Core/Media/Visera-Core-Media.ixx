@@ -1,9 +1,11 @@
 module;
 #include <Visera.h>
 export module Visera.Core.Media;
+#define VE_MODULE_NAME "Media"
 export import Visera.Core.Media.Image;
 export import Visera.Core.Media.Model;
 
+import Visera.Core.Log;
 import Visera.Core.Type;
 import Visera.Core.OS.FileSystem;
 import Visera.Core.OS.Concurrency;
@@ -16,61 +18,67 @@ export namespace VE
 	{
 		VE_MODULE_MANAGER_CLASS(Media);
 	public:
-		VE_API CreateImage(FName _Name, const FPath& _Path)->SharedPtr<FImage>;
-		VE_API CreateImage(FName _Name, UInt32 _Width, UInt32 _Height, UInt32 _BPP = 4*8)->SharedPtr<FImage>;
+		//[TODO]: Unify Image APIs
+		VE_API CreateImage(const FName& _Name, const FPath& _Path)->SharedPtr<IImage>;
+		VE_API CreateOldImage(const FName& _Name, UInt32 _Width, UInt32 _Height, UInt32 _BPP = 4*8)->SharedPtr<FImage>;
 
-		VE_API SearchImage(FName _Name) -> SharedPtr<FImage>;
+		VE_API SearchImage(const FName& _Name) -> SharedPtr<IImage>;
 
-		VE_API CreateModel(FName _Name, const FPath& _Path)->SharedPtr<FModel>;
+		VE_API CreateModel(const FName& _Name, const FPath& _Path)->SharedPtr<FModel>;
 
 	private:
 		static inline FRWLock RWLock;
-		static inline HashMap<FName, SharedPtr<FImage>> ImageTable; //[TODO]: MediaTable
-		static inline HashMap<FName, SharedPtr<FModel>> ModelTable; //[TODO]: MediaTable
+		static inline HashMap<FName, SharedPtr<IImage>> ImageTable;
+		static inline HashMap<FName, SharedPtr<FModel>> ModelTable;
 	};
 
-	SharedPtr<FImage> Media::
-	CreateImage(FName _Name, const FPath& _Path)
+	SharedPtr<FPNGImage>
+	CreatePNGImage(const FName& _Name, const FPath& _Path)
 	{
-		SharedPtr<FImage> Result;
-
-		RWLock.StartWriting();
-		{
-			auto& ImageSlot = ImageTable[_Name];
-			if (ImageSlot == nullptr)
-			{ 
-				ImageSlot =  CreateSharedPtr<FImage>(_Path);
-				Result    = ImageSlot;
-			}
-		}
-		RWLock.StopWriting();
-
-		return Result;
+		return CreateSharedPtr<FPNGImage>(_Path);
 	}
 
-	SharedPtr<FImage> Media::
-	CreateImage(FName _Name, UInt32 _Width, UInt32 _Height, UInt32 _BPP /* = 4*8*/ )
+	SharedPtr<IImage> Media::
+	CreateImage(const FName& _Name, const FPath& _Path)
 	{
-		SharedPtr<FImage> Result;
+		SharedPtr<IImage> NewImage;
 
-		RWLock.StartWriting();
+		if (_Path.GetExtension().ToPlatformString() == ".png")
 		{
-			auto& ImageSlot = ImageTable[_Name];
-			if (ImageSlot == nullptr)
+			RWLock.StartWriting();
 			{
-				ImageSlot =  CreateSharedPtr<FImage>(_Width, _Height, _BPP);
-				Result    = ImageSlot;
+				auto& ImageSlot = ImageTable[_Name];
+				if (ImageSlot == nullptr)
+				{
+					ImageSlot = CreateSharedPtr<FPNGImage>(_Path);
+					NewImage  = ImageSlot;
+				}
+				else
+				{
+					VE_LOG_ERROR("Failed to create image! -- a duplicated image name ({})!", _Name.GetNameWithNumber());
+				}
 			}
+			RWLock.StopWriting();
 		}
-		RWLock.StopWriting();
+		else
+		{
+			VE_LOG_FATAL("Other Image formats WIP...");
+		}
 
-		return Result;
+		return NewImage;
 	}
 
 	SharedPtr<FImage> Media::
-	SearchImage(FName _Name)
+	CreateOldImage(const FName& _Name, UInt32 _Width, UInt32 _Height, UInt32 _BPP /* = 4*8*/ )
 	{
-		SharedPtr<FImage> Result;
+		VE_LOG_WARN("Creating a new image({}) via an EXPIRED API({})!", _Name.GetNameWithNumber(), __FUNCTION__);
+		return CreateSharedPtr<FImage>(_Width, _Height, _BPP);
+	}
+
+	SharedPtr<IImage> Media::
+	SearchImage(const FName& _Name)
+	{
+		SharedPtr<IImage> Result;
 
 		RWLock.StartReading();
 		{
@@ -84,7 +92,7 @@ export namespace VE
 	}
 
 	SharedPtr<FModel> Media::
-	CreateModel(FName _Name, const FPath& _Path)
+	CreateModel(const FName& _Name, const FPath& _Path)
 	{
 		SharedPtr<FModel> Result;
 

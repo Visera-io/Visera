@@ -27,13 +27,12 @@ export namespace VE
 		static inline void
 		Display();
 		static inline auto
-		CreateCanvas(SharedPtr<const FImage> _Image) -> WeakPtr<FCanvas>; //[TODO]: Return FName instead of WeakPtr
+		CreateCanvas(SharedPtr<const IImage> _Image) -> WeakPtr<FCanvas>; //[TODO]: Return FName instead of WeakPtr
 
 	private:
 		static inline String LayoutFilePath{FPath{"ViseraEditor.ini"}.ToPlatformString()};
 		static inline HashMap<FName, SharedPtr<IWidget>> Widgets;
-		
-		static inline SharedPtr<FImage>                    EditorLogo;
+
 		static inline SharedPtr<RHI::FDescriptorSetLayout> ImGuiDescriptorSetLayout;
 
 	public:
@@ -143,8 +142,6 @@ export namespace VE
 			ImGuiDescriptorSetLayout = RHI::CreateDescriptorSetLayout()
 				->AddBinding(0, RHI::EDescriptorType::CombinedImageSampler, 1, RHI::EShaderStage::Fragment)
 				->Build();
-
-			EditorLogo = Media::CreateImage(FName{ "editor::logo" }, FPath{ VISERA_ENGINE_IMAGES_DIR"/Logo.png" });
 		}
 
 		static void Terminate()
@@ -157,8 +154,6 @@ export namespace VE
 
 			EditorRenderPass.reset();
 			ImGuiDescriptorSetLayout.reset();
-			
-			EditorLogo.reset();
 		}
 
 	private:
@@ -168,7 +163,7 @@ export namespace VE
 	};
 
 	WeakPtr<FCanvas> Editor::
-	CreateCanvas(SharedPtr<const FImage> _Image)
+	CreateCanvas(SharedPtr<const IImage> _Image)
 	{
 		auto NewCanvas = FCanvas::Create(RHI::CreateDescriptorSet(ImGuiDescriptorSetLayout));
 		Widgets[NewCanvas->GetName()] = NewCanvas;

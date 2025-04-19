@@ -17,12 +17,13 @@ export namespace VE
 #endif
 
 		Bool HasFileName() const  { return Data.has_filename(); }
-		//auto GetFileName() const -> PathString { if (HasFileName()) { return Handle.filename().c_str(); } else { return L""; } }
+		auto GetFileName() const -> FPath { if (HasFileName()) { return FPath{ Data.filename().c_str() }; } else { return FPath{}; } }
 		Bool SetFileName(StringView _FileName) { if (HasFileName()) { Data.replace_filename(_FileName); return True; } else { return False; } }
 		Bool RemoveFileName() { if (HasFileName()) { Data.remove_filename(); return True; } return False; }
 		
 		Bool HasExtension() const { return Data.has_extension();}
-		//auto GetExtension() const ->StringView { if (HasExtension()) { return Handle.extension().c_str(); } else { return ""; } }
+		auto GetExtension() const ->FPath { if (HasExtension()) { return { Data.extension().c_str()} ; } else { return FPath{}; } }
+		Bool IsEmpty()      const { return Data.empty(); }
 
 		FPath& Join(StringView _Path) { Data.append(_Path); return *this; }
 		FPath& Join(const FPath& _Path)   { Data.append(_Path.Data.c_str()); return *this; }
