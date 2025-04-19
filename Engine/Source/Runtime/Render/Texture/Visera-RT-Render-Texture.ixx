@@ -2,8 +2,6 @@ module;
 #include <Visera.h>
 export module Visera.Runtime.Render.Texture;
 #define VE_MODULE_NAME "Texture"
-export import :SRGB;
-
 import Visera.Core.Log;
 import Visera.Core.Media.Image;
 import Visera.Runtime.Render.RHI;
@@ -85,7 +83,9 @@ export namespace VE
 
         RHIImageView = RHIImage->CreateImageView();
 
-        VE_LOG_INFO("Created a new Texture2D (format:{}, sampler:{}).", SupportedFormat.Name, (Address)(Sampler->GetHandle()));
+        VE_LOG_INFO("Created a new Texture2D (image:{}, format:{}, sampler:{}).",
+            _Image->GetPath().GetFileName().ToPlatformString(),
+            SupportedFormat.Name, (Address)(Sampler->GetHandle()));
     }
 
     FTexture2D::FSupportedFormat FTexture2D::

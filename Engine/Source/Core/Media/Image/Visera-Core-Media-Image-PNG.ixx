@@ -57,14 +57,34 @@ export namespace VE
     void FPNGImage::
     Preprocessing(const png_structp _PNGPtr, const png_infop _InfoPtr)
     {
-        const auto ColorType = png_get_color_type(_PNGPtr, _InfoPtr);
-        const auto BitDepth  = png_get_bit_depth(_PNGPtr, _InfoPtr);
-        if (ColorType == PNG_COLOR_TYPE_PALETTE) { png_set_palette_to_rgb(_PNGPtr); }
-        if (ColorType == PNG_COLOR_TYPE_GRAY && BitDepth < 8) { png_set_expand_gray_1_2_4_to_8(_PNGPtr); }
+        auto ColorType = png_get_color_type(_PNGPtr, _InfoPtr);
+        auto BitDepth  = png_get_bit_depth(_PNGPtr, _InfoPtr);
         // Force to be 8bits (enough for human's visual perception)
-        if (BitDepth > 8) { if (BitDepth == 16) { png_set_strip_16(_PNGPtr); } else 
-                            { VE_LOG_WARN("Unsupported bit depth ({}) of image ({})", BitDepth, Path.ToPlatformString()); } }
-        if (BitDepth < 8) { png_set_packing(_PNGPtr); }
+        if (ColorType == PNG_COLOR_TYPE_PALETTE)
+        {
+            VE_LOG_WARN("The image ({}) is a palette and has been converted to RGB!", Path.ToPlatformString());
+            png_set_palette_to_rgb(_PNGPtr);
+        }
+        if (ColorType == PNG_COLOR_TYPE_GRAY && BitDepth < 8)
+        { 
+            VE_LOG_WARN("The image ({}) is gray(<8bits), so it has been converted to gray(8bits)!", Path.ToPlatformString());
+            png_set_expand_gray_1_2_4_to_8(_PNGPtr);
+            BitDepth = 8;
+        }
+        if (BitDepth > 8)
+        {
+            if (BitDepth != 16) { VE_LOG_ERROR("Unsupported bit depth ({}) of image ({})!", BitDepth, Path.ToPlatformString()); }
+            else
+            {
+                VE_LOG_WARN("The system do NOT support 16bits image ({}), it has be converted to 8bits image!", Path.ToPlatformString());
+                png_set_strip_16(_PNGPtr);
+            }
+        }
+        if (BitDepth < 8)
+        {
+            VE_LOG_WARN("The bit depth of image ({}) < 8bits, and it has been converted to 8bits!", Path.ToPlatformString());
+            png_set_packing(_PNGPtr);
+        }
         png_read_update_info(_PNGPtr, _InfoPtr); // Once you update the data, you MUST call "png_read_update_info"
     }
 
@@ -75,7 +95,7 @@ export namespace VE
         Data.resize(RowBytes * Height);
         for (UInt32 Row = 0; Row < Height; ++Row)
         {
-            png_read_row(_PNGPtr, &Data[(Row) * RowBytes], nullptr); // Flip Vertically
+            png_read_row(_PNGPtr, &Data[(Row) * RowBytes], nullptr);
 
             //png_read_row(_PNGPtr, &Data[(Height - Row - 1) * RowBytes], nullptr); // Flip Vertically
         }
@@ -88,24 +108,23 @@ export namespace VE
         const auto ColorType = png_get_color_type(_PNGPtr, _InfoPtr);
         switch (ColorType)
         {
-            case PNG_COLOR_TYPE_RGB:
-                Format = EImageFormat::RGB_R8_G8_B8;
+        case PNG_COLOR_TYPE_RGB:
+            Format = EImageFormat::RGB_R8_G8_B8;
             break;
-            case PNG_COLOR_TYPE_RGB_ALPHA:
-                Format = EImageFormat::RGBA_R8_G8_B8_A8;
+        case PNG_COLOR_TYPE_RGB_ALPHA:
+            Format = EImageFormat::RGBA_R8_G8_B8_A8;
             break;
-            case PNG_COLOR_TYPE_GRAY:
-                VE_LOG_WARN("The gray image ({}) is NOT safely supported!", Path.ToPlatformString())
-                Format = EImageFormat::Gray;
+        case PNG_COLOR_TYPE_GRAY:
+            VE_LOG_WARN("The gray image ({}) is NOT safely supported!", Path.ToPlatformString())
+            Format = EImageFormat::Gray;
             break;
-            case PNG_COLOR_TYPE_GRAY_ALPHA:
-                VE_LOG_WARN("The gray alpha image ({}) is NOT safely supported!", Path.ToPlatformString())
-                Format = EImageFormat::GrayAlpha;
+        case PNG_COLOR_TYPE_GRAY_ALPHA:
+            VE_LOG_WARN("The gray alpha image ({}) is NOT safely supported!", Path.ToPlatformString())
+            Format = EImageFormat::GrayAlpha;
             break;
-            default:
-                VE_LOG_WARN("The format of image ({}) is NOT supported!", Path.ToPlatformString())
-                Format = EImageFormat::Unknown;
-            break;
+        default:
+            VE_LOG_WARN("The format of image ({}) is NOT supported!", Path.ToPlatformString())
+            Format = EImageFormat::Unknown;
         }
     }
 
@@ -122,7 +141,12 @@ export namespace VE
         if (png_get_valid(_PNGPtr, _InfoPtr, PNG_INFO_gAMA))
         {
             png_get_gAMA(_PNGPtr, _InfoPtr, &Gamma);
-            ColorSpace = EColorSpace::sRGB;
+            if (!IsSRGB())
+            {
+                VE_LOG_WARN("The image ({}) is not sRGB but the gAMA was found in the metadata, set as sRGB!",
+                    Path.ToPlatformString());
+                ColorSpace = EColorSpace::sRGB;
+            }
         }
         else
         {
