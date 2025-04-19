@@ -12,6 +12,7 @@ export module Visera.Core.Media.Image:Interface;
 import Visera.Core.Log;
 import Visera.Core.Type;
 import Visera.Core.Math.Basic;
+import Visera.Core.OS.Memory;
 
 export namespace VE
 {
@@ -59,6 +60,8 @@ export namespace VE
         Resize(UInt32 _NewWidth, UInt32 _NewHeight);
         void inline
         ConvertToRGBA(UInt8 _Alpha = 255);
+        void inline
+        FlipVertically();
 
         auto inline
         GetData()       const -> const void*  { return Data.data(); }
@@ -110,6 +113,22 @@ export namespace VE
 
         FPath        Path;
     };
+
+    void IImage::
+    FlipVertically()
+    {
+        const UInt64 RowBytes = Width * Channels;
+        Byte* SwapBuffer = static_cast<Byte*>(Memory::Malloc(RowBytes, 8));
+        for (UInt32 Row = 0; Row < Height / 2; Row++)
+        {
+            Byte* Top    = &Data[Row * RowBytes];
+            Byte* Bottom = &Data[(Height - Row - 1) * RowBytes];
+            Memory::Memcpy(SwapBuffer, Top, RowBytes);
+            Memory::Memcpy(Top, Bottom, RowBytes);
+            Memory::Memcpy(Bottom, SwapBuffer, RowBytes);
+        }
+        Memory::Free(SwapBuffer, 8);
+    }
 
     String IImage::
     GetInfo() const

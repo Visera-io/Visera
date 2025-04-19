@@ -104,7 +104,8 @@ export namespace VE
         return AllocatedMemory;
     }
 
-    void Memory::Memset(void* _Memory, Int32 _Value, UInt64 _Size)
+    void Memory::
+    Memset(void* _Memory, Int32 _Value, UInt64 _Size)
     {
         memset(_Memory, _Value, _Size);
     }
