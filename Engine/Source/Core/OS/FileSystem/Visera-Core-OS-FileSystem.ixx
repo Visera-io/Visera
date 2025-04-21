@@ -1,9 +1,10 @@
 module;
 #include <Visera.h>
 export module Visera.Core.OS.FileSystem;
+#define VE_MODULE_NAME "FileSystem"
 export import Visera.Core.OS.FileSystem.File;
 
-import Visera.Core.Signal;
+import Visera.Core.Log;
 export import Visera.Core.Type;
 
 export namespace VE
@@ -26,8 +27,10 @@ export namespace VE
 		if (!IsExistedFile(_Path))
  	    {
  		    std::ofstream NewFile(_Path.ToPlatformString().data());
- 		    if (NewFile.is_open()) NewFile.close();
-			else throw SIOFailure(Text("Failed to create a new file at {}", "_Path"));
+ 		    if (NewFile.is_open())
+ 		    { return NewFile.close(); }
+
+			VE_LOG_ERROR("Failed to create {}", _Path.ToPlatformString());
  	    }
 	}
 } // namespace VE

@@ -6,8 +6,8 @@ module;
 #include <arm_acle.h>
 #endif
 export module Visera.Core.OS.Memory;
-
-import Visera.Core.Signal;
+#define VE_MODULE_NAME "Memory"
+import Visera.Core.Log;
 
 export namespace VE
 {
@@ -71,7 +71,7 @@ export namespace VE
          Alignment{_Alignment},
          Data{ Memory::Malloc(_Size, _Alignment) }
     { 
-        
+
     }
 
     Memory::FBuffer::
@@ -99,8 +99,11 @@ export namespace VE
         else AllocatedMemory = std::malloc(_Size);
             
         if (!AllocatedMemory)
-        { throw SRuntimeError(Text("Failed to allocate memory! (size: {}, alignment: {})", _Size, _Alignment)); }
-            
+        {
+            VE_LOG_ERROR("Failed to allocate memory!"
+                         "(size: {}, alignment: {})",
+                        _Size, _Alignment);
+        }
         return AllocatedMemory;
     }
 
@@ -129,8 +132,12 @@ export namespace VE
         else ReallocatedMemory = std::realloc(_Memory, _NewSize);
 
         if (!ReallocatedMemory)
-        { throw SRuntimeError(Text("Failed to re-allocate memory! (size: {}, alignment: {})", _NewSize, _NewAlignment)); }  
-            
+        {
+            VE_LOG_ERROR("Failed to re-allocate memory! "
+                "(memory:{}, from [{},{}] to [{}, {}]).",
+                  (Address)(_Memory),
+                  _OldSize, _OldAlignment, _NewSize, _NewAlignment);
+        }
         return ReallocatedMemory;
     }
 

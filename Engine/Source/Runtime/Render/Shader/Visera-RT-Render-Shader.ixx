@@ -33,6 +33,7 @@ export namespace VE
 		auto GetShaderStage()	const -> RHI::EShaderStage { VE_ASSERT(IsCompiled()); return Handle->GetStage(); }
 		auto GetCompiledShader()const -> SharedPtr<const RHI::FSPIRVShader> { VE_ASSERT(IsCompiled()); return Handle; }
 		auto GetCompatiblePipelineLayout() const -> SharedPtr<const RHI::FPipelineLayout> { return CompatiblePipelineLayout; }
+		auto GetInfo()          const -> String { return Text("(file:{}, entry point:{})", FileName, EntryPoint); }
 
 		FShader() = delete;
 		FShader(StringView _ShaderFileName, StringView _EntryPoint);
@@ -60,7 +61,7 @@ export namespace VE
 	Compile()
 	{
 		if (IsCompiled()) { return shared_from_this(); }
-		VE_LOG_DEBUG("Starting compiling the {}(entry point:{}).", FileName, EntryPoint);
+		VE_LOG_DEBUG("Compiling the shader {}.", GetInfo());
 
 		switch (Language)
 		{
@@ -70,7 +71,12 @@ export namespace VE
 			Handle = SlangCompiler.CompileShader(FileName, EntryPoint);
 			break;
 		}
-		default:throw SRuntimeError("Failed to compile the FShader - Unkowon Language!");
+		default:
+			String ErrorInfo = Text(
+				"The shader language of {} is NOT supported!"
+				" -- throw(SRuntimeError)", GetInfo());
+			VE_LOG_ERROR("{}", ErrorInfo);
+			throw SRuntimeError(ErrorInfo);
 		}
 
 		return shared_from_this();

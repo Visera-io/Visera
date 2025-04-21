@@ -7,7 +7,6 @@ import :Common;
 
 import Visera.Core.Type;
 import Visera.Core.Log;
-import Visera.Core.Signal;
 import Visera.Core.OS.Concurrency;
 
 import Visera.Runtime.Platform.Window;
@@ -51,11 +50,15 @@ export namespace VE
 				{
 					VE_LOG_DEBUG("Creating a new keyboard key event({}).", _CreateInfo.Name.GetNameWithNumber());
 
-					KeyboardEventTable[_CreateInfo.Name]
-						= &KeyboardEventMap[UInt32(_CreateInfo.Action)][_CreateInfo.Key]
-							.emplace_back(_CreateInfo.Event);
+					auto& Slot = KeyboardEventMap[UInt32(_CreateInfo.Action)]
+					                                                  [_CreateInfo.Key];
+					KeyboardEventTable[_CreateInfo.Name] = &Slot.emplace_back(_CreateInfo.Event);
 				}
-				else { throw SRuntimeError(Text("Failed to register the keyboard key event({}) - duplicated event!", _CreateInfo.Name.GetNameWithNumber())); }
+				else
+				{
+					VE_LOG_ERROR("Failed to register the keyboard key event({})"
+								 " - duplicated event!", _CreateInfo.Name.GetNameWithNumber());
+				}
 			}
 			RWLock.StopWriting();
 		}
@@ -73,7 +76,11 @@ export namespace VE
 					*Exiler = nullptr;
 					KeyboardEventTable.erase(_Name);
 				}
-				else { throw SRuntimeError(Text("Failed to delete the keyboard key event({}) - duplicated event!", _Name.GetNameWithNumber())); }
+				else
+				{
+					VE_LOG_ERROR("Failed to delete the keyboard key event({})"
+					             " - duplicated event!", _Name.GetNameWithNumber());
+				}
 			}
 			RWLock.StopWriting();
 		}
@@ -89,20 +96,21 @@ export namespace VE
 		    	switch (Action)
 		    	{
 		    	case EAction::Release:
-          		{
             	    Action = EAction::Detach;
-          		}
+		    		break;
 		    	case EAction::Press:
-            	{
-            	    auto& TargetEventMap = KeyboardEventMap[UInt32(Action)];
-            	    if (TargetEventMap.contains(Key))
-            	  	{
-             	 		for (const auto& Event : TargetEventMap[Key])
-						{ if (Event != nullptr) { Event(); } }
-            	  	}
-            		break;
-           		}
+		    		break;
+		    	default:
+		    		VE_LOG_ERROR("Unhandled key (id:{}, action:{}, mods:{}).",
+		    			         _Key, _Action, _Mods);
 		    	}
+
+				auto& TargetEventMap = KeyboardEventMap[UInt32(Action)];
+				if (TargetEventMap.contains(Key))
+				{
+					for (const auto& Event : TargetEventMap[Key])
+					{ if (Event != nullptr) { Event(); } }
+				}
             }
             RWLock.StopReading();
         }
