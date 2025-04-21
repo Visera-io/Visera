@@ -29,7 +29,7 @@ target_link_libraries(
 add_custom_command(
     TARGET ${VISERA_APP}
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E $<IF:$<CONFIG:Debug>,copy_if_different, echo>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
         "${VISERA_APP_DEBUG_DIR}/tbb12_debug.dll"
         "$<TARGET_FILE_DIR:${VISERA_APP}>/tbb12.dll"
 )

@@ -17,6 +17,11 @@ export namespace VE
         auto inline
         GetName() const -> const FName& { return Name; }
 
+        void inline
+        Hide()   const { bVisible = False; }
+        void inline
+        Reveal() const { bVisible = True; }
+
         IWidget() = delete;
         IWidget(const FName& _Name) : Name(_Name) {}
         virtual
@@ -24,7 +29,7 @@ export namespace VE
 
     private:
         FName   Name;
-        Bool    bVisible = True;
+        mutable Bool bVisible = True;
     };
 
 } // namespace VE
