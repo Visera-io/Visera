@@ -40,6 +40,13 @@ Ensure you have the following tools installed:
      ```
    **Note**: These steps may take approximately **30 minutes** to complete.
 
+    - Run the Aloha Visera (Debug):
+     ```bash
+     run debug
+     ```
+    ![Aloha Visera](./Apps/AlohaVisera/Assets/AlohaVisera.png)
+
+
 ## macOS
 
 - **Work in Progress**: Currently testing on a MacBook M3 Pro. Updates to follow.
