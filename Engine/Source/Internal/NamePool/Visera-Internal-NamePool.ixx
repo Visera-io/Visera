@@ -1,12 +1,13 @@
 module;
 #include <Visera.h>
 export module Visera.Internal.NamePool;
+#define VE_MODULE_NAME "NamePool"
 import :Common;
 import :NameTokenTable;
 import :NameEntryTable;
 
 import Visera.Core.Math.Hash;
-import Visera.Core.Signal;
+import Visera.Core.Log;
 
 export namespace VE { namespace Internal
 {
@@ -59,7 +60,8 @@ export namespace VE { namespace Internal
     Register(String _CopiedName)
     {
         auto [Number, NameLength] = ParseName(_CopiedName.data(), _CopiedName.size());
-        if (Number < 0) { throw SRuntimeError("Bad Name! -- Naming Convention:([#Name][_#Number]?)."); }
+        if (Number < 0)
+        { VE_LOG_FATAL("Bad Name! -- Naming Convention:([#Name][_#Number]?)."); }
 
         StringView PureName{ _CopiedName.data(), NameLength};
         FNameHash  NameHash{ PureName };
@@ -124,7 +126,7 @@ export namespace VE { namespace Internal
         case EName::Main:
             return "main";
         default:
-            throw SRuntimeError("Unexpected EName!");
+            VE_LOG_FATAL("Unexpected EName!");
         }
     }
 

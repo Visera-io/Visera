@@ -35,7 +35,7 @@ export namespace VE
 		Num6 = GLFW_KEY_6,  Num7 = GLFW_KEY_7, Num8 = GLFW_KEY_8,
 		Num9 = GLFW_KEY_9, 
 
-		//FX
+		//Fn
 		F1 = GLFW_KEY_F1,   F2 = GLFW_KEY_F2,  F3 = GLFW_KEY_F3,
 		F4 = GLFW_KEY_F4,   F5 = GLFW_KEY_F5,  F6 = GLFW_KEY_F6,
 		F7 = GLFW_KEY_F7,   F8 = GLFW_KEY_F8,  F9 = GLFW_KEY_F9,

@@ -4,10 +4,8 @@ module;
 export module Visera.Runtime.Platform.IO:Mouse;
 #define VE_MODULE_NAME "IO:Mouse"
 import :Common;
-
 import Visera.Core.Type;
 import Visera.Core.Log;
-import Visera.Core.Signal;
 import Visera.Core.Math.Basic;
 import Visera.Core.OS.Concurrency;
 
@@ -35,13 +33,18 @@ export namespace VE
 			{
 				if (!ButtonEventTable.contains(_CreateInfo.Name))
 				{
-					VE_LOG_DEBUG("Creating a new mouse button event({}).", _CreateInfo.Name.GetNameWithNumber());
+					VE_LOG_DEBUG("Creating a new mouse button event({}).",
+						_CreateInfo.Name.GetNameWithNumber());
 
-					ButtonEventTable[_CreateInfo.Name]
-						= &ButtonEventMap[UInt32(_CreateInfo.Button)][_CreateInfo.Action]
-							.emplace_back(_CreateInfo.Event);
+					auto& Slot = ButtonEventMap[UInt32(_CreateInfo.Button)]
+					                                                [_CreateInfo.Action];
+					ButtonEventTable[_CreateInfo.Name] = &Slot.emplace_back(_CreateInfo.Event);
 				}
-				else { throw SRuntimeError(Text("Failed to register the mouse button event({}) - duplicated event!", _CreateInfo.Name.GetNameWithNumber())); }
+				else
+				{
+					VE_LOG_ERROR("Failed to register the mouse button event({})"
+						" - duplicated event!", _CreateInfo.Name.GetNameWithNumber());
+				}
 			}
 			RWLock.StopWriting();
 		}
@@ -58,7 +61,11 @@ export namespace VE
 					*Exiler = nullptr;
 					ButtonEventTable.erase(_Name);
 				}
-				else { throw SRuntimeError(Text("Failed to delete the keyboard key event({}) - duplicated event!", _Name.GetNameWithNumber())); }
+				else
+				{
+					VE_LOG_ERROR("Failed to delete the keyboard key event({})"
+						" - duplicated event!",_Name.GetNameWithNumber());
+				}
 			}
 			RWLock.StopWriting();
 		}

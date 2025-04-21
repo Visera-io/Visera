@@ -71,6 +71,11 @@ export namespace VE { namespace Internal
 #endif
 
         Tokens   = (FNameToken*)Memory::MallocNow(InitSectionSize, TokenAlignment);
+        if(!Tokens)
+        {
+            VE_LOG_ERROR("Failed to allocate memory! (func:{}, line:{})",
+                        __FUNCTION__, __LINE__);
+        }
         Capacity = InitNameTokens;
         UseCount = 0;
     }
@@ -92,23 +97,26 @@ export namespace VE { namespace Internal
         Section.RWLock.StartWriting();
         {
             if (Section.ShouldGrow()) { GrowAndRehash(Section); }
+
             auto& Token = Section.ProbeToken(_NameHash,
-                                             /*Further Comparsion*/
-                                             [&](FNameToken _Token)->Bool
-                                             { 
-                                                 VE_ASSERT(_Token.IsClaimed());
-                                                 FNameEntryHandle NameEntryHandle{_Token};
-                                                 auto& NameEntry = LinkedNameEntryTable->LookUp(NameEntryHandle);
-                                                 if (NameEntry.GetHeader().LowerCaseProbeHash == _NameHash.GetLowerCaseProbeHash())
-                                                 {
-                                                     if (NameEntry.GetANSIName() == _ParsedName)
-                                                     {
-                                                         return True; // [O]
-                                                     }
-                                                     return False; // [X]: Different String Literal
-                                                 }
-                                                 return False; // [X]: Different LowerCase Probe Hash
-                                             });
+                /*Further Comparsion*/
+                [&](FNameToken _Token)->Bool
+                { 
+                    VE_ASSERT(_Token.IsClaimed());
+                    FNameEntryHandle NameEntryHandle{_Token};
+                    auto& NameEntry = LinkedNameEntryTable->LookUp(NameEntryHandle);
+                    if (NameEntry.GetHeader().LowerCaseProbeHash
+                        ==
+                        _NameHash.GetLowerCaseProbeHash())
+                    {
+                        if (NameEntry.GetANSIName() == _ParsedName)
+                        {
+                            return True; // [O]
+                        }
+                        return False; // [X]: Different String Literal
+                    }
+                    return False; // [X]: Different LowerCase Probe Hash
+                });
             
             if (!Token.IsClaimed())
             {
@@ -138,6 +146,11 @@ export namespace VE { namespace Internal
         _Section.Capacity  <<= 1; // Double
         _Section.UseCount  = 0;
         _Section.Tokens    = (FNameToken*)Memory::MallocNow(_Section.Capacity * sizeof(FNameToken), alignof(FNameToken));
+        if(!_Section.Tokens)
+        {
+            VE_LOG_FATAL("Failed to allocate memory! (func:{}, line:{})",
+                        __FUNCTION__, __LINE__);
+        }
 
         // Rehashing
         for (UInt32 It = 0; It < OldCapacity; ++It)

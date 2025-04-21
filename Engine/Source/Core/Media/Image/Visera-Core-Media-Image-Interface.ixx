@@ -119,6 +119,12 @@ export namespace VE
     {
         const UInt64 RowBytes = Width * Channels;
         Byte* SwapBuffer = static_cast<Byte*>(Memory::Malloc(RowBytes, 8));
+        if(!SwapBuffer)
+        {
+            VE_LOG_ERROR("Failed to allocate memory! (func:{}, line:{})",
+                        __FUNCTION__, __LINE__);
+            return;
+        }
         for (UInt32 Row = 0; Row < Height / 2; Row++)
         {
             Byte* Top    = &Data[Row * RowBytes];
@@ -133,7 +139,7 @@ export namespace VE
     String IImage::
     GetInfo() const
     {
-        return Text("(file:\"{}\", extent:[W{},H{},C{}]), type:{}, format:{}, color space:{})",
+        return Text("(file:\"{}\", extent:[W{},H{},C{}], type:{}, format:{}, color space:{})",
             Path.GetFileName().ToPlatformString(), GetWidth(), GetHeight(), GetChannels(),
             Text(Type), Text(Format), Text(ColorSpace));
     }
@@ -163,7 +169,9 @@ export namespace VE
         Data   = std::move(NewData);
         Width  = _NewWidth;
         Height = _NewHeight;
-        VE_LOG_DEBUG("The image ({}) was resized from [W{},H{}] to [W{},H{}].", Path.GetFileName().ToPlatformString(), Width, Height, _NewWidth, _NewHeight);
+        VE_LOG_DEBUG("The image ({}) was resized from [W{},H{}] to [W{},H{}].",
+            Path.GetFileName().ToPlatformString(),
+            Width, Height, _NewWidth, _NewHeight);
     }
 
     void IImage::
@@ -199,7 +207,7 @@ export namespace VE
         Format   = EImageFormat::RGBA_R8_G8_B8_A8;
         Data     = std::move(NewData);
         Channels = 4;
-        VE_LOG_DEBUG("The image ({}) was converted to RGBA.", Path.GetFileName().ToPlatformString());
+        VE_LOG_DEBUG("The image {} was converted to RGBA.", GetInfo());
     }
 
 } // namespace VE

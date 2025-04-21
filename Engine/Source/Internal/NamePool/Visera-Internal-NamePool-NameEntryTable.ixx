@@ -92,23 +92,31 @@ export namespace VE { namespace Internal
 	AllocateNewSection()
     {
 		if (CurrentSectionCursor >= MaxSections)
-		{ throw SRuntimeError(Text("NamePool's MemoryBlocks have reached the maximum limit {}!", UInt32(MaxSections))); }
-
+		{ VE_LOG_FATAL("Exceeded the maximum MemoryBlocks{}!", UInt32(MaxSections)); }
 			
 		if (CurrentSectionCursor >= 0)
 		{
 			auto& CurrentSection = Sections[CurrentSectionCursor];
 			// Solve Special Case: Terminator
-			if (CurrentSection.CurrentByteCursor + Memory::GetDataOffset(&FNameEntry::ANSIName) <= SectionByteSize)
+			UInt64 ExpectedByteSize = CurrentSection.CurrentByteCursor
+				                    + Memory::GetDataOffset(&FNameEntry::ANSIName);
+			if (ExpectedByteSize <= SectionByteSize)
 			{
-				FNameEntry* Terminator = (FNameEntry*)(Sections[CurrentSectionCursor].Data + CurrentSection.CurrentByteCursor);
+				FNameEntry* Terminator = (FNameEntry*)(
+					                      Sections[CurrentSectionCursor].Data
+					                   +  CurrentSection.CurrentByteCursor);
 				Terminator->Header.Size = 0;
 			}
 		}
 
-		VE_LOG_DEBUG("Allocating a new FNameEntryTable Section at index({}).", CurrentSectionCursor + 1);
+		VE_LOG_DEBUG("Allocating a new Section (index:{}).", CurrentSectionCursor + 1);
 		auto& NewSection = Sections[++CurrentSectionCursor];
 		NewSection.Data = (Byte*)Memory::MallocNow(SectionByteSize, NameEntryAlignment);
+		if(!NewSection.Data)
+		{
+			VE_LOG_FATAL("Failed to allocate memory! (func:{}, line:{})",
+                        __FUNCTION__, __LINE__);
+		}
 		NewSection.CurrentByteCursor = 0;
     }
 
