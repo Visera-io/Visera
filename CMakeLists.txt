@@ -57,6 +57,14 @@ set(VISERA_APP_DIR      "${VISERA_DIR}/Apps")
 set(VISERA_PACKAGES_DIR "${VISERA_DIR}/Packages")
 set(VISERA_ENGINE_DIR   "${VISERA_DIR}/Engine")
 set(VISERA_CACHE_DIR    "${VISERA_DIR}/Cache")
+
+set(VISERA_CURRENT_APP_DIR  "${VISERA_APP_DIR}/${VISERA_APP}")
+set(VISERA_APP_DEBUG_DIR    "${VISERA_CURRENT_APP_DIR}/Binaries/Debug/")
+set(VISERA_APP_RELEASE_DIR  "${VISERA_CURRENT_APP_DIR}/Binaries/Release/")
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG    "${VISERA_APP_DEBUG_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE  "${VISERA_APP_RELEASE_DIR}")
+
 #[Macros]
 add_compile_definitions(NOMINMAX)
 add_compile_definitions(VISERA_DIR=\"${VISERA_DIR}\")
@@ -68,7 +76,7 @@ add_compile_definitions(VISERA_APP_SHADERS_DIR=\"${VISERA_APP_DIR}/${VISERA_APP}
 add_compile_definitions(VISERA_APP_CACHE_DIR=\"${VISERA_APP_DIR}/${VISERA_APP}/Cache\")
 #[Packages]
 add_subdirectory("${VISERA_PACKAGES_DIR}")
-#[Engine]
-add_subdirectory("${VISERA_ENGINE_DIR}")
 #[App]
 add_subdirectory("${VISERA_APP_DIR}/${VISERA_APP}")
+#[Engine]
+add_subdirectory("${VISERA_ENGINE_DIR}")

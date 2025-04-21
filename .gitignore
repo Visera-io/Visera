@@ -4,6 +4,7 @@
 
 #[Architecture]
 Apps/*
+!Apps/AlohaVisera/
 Engine/OldPackages/*
 Python/*
 __pycache__
