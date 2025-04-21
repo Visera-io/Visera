@@ -16,17 +16,16 @@ export namespace VISERA_APP_NAMESPACE
 		SharedPtr<FScene>   Scene = FScene::Create();
 		WeakPtr<Editor::FCanvas>  SampleCanvas;
 		WeakPtr<Editor::FCanvas>  TextureCanvas;
-		SharedPtr<IImage> Image;
-		Bool bCameraMoved = False;
-        
-		SharedPtr<FURPBackgroundPass> TestRenderPass;
+		SharedPtr<IImage> MariTexImage;
+
+		SharedPtr<FURPBackgroundPass> BackgroundPass;
 		SharedPtr<FURPGeometryPass> GeometryPass;
 		SharedPtr<FURPPostprocessPass> PostprocessingPass;
 		const FScene::FAttachment* GeoAttachment = nullptr;
 		const FScene::FAttachment* CubeAttachment = nullptr;
 		RHI::FMatrixUBOLayout MatrixUBOData;
 
-		WeakPtr<Editor::FCanvas> TestCanvas;
+		WeakPtr<Editor::FCanvas> MariTexCanvas;
 
 		Matrix4x4F LookAtMatrix;
 		Vector3F Target;
@@ -35,12 +34,12 @@ export namespace VISERA_APP_NAMESPACE
 		{
 			auto& Frame = RHI::GetCurrentFrame();
 			auto GCmds = Frame.GetGraphicsCommandBuffer();
-			GCmds->ReachRenderPass(TestRenderPass);
+			GCmds->ReachRenderPass(BackgroundPass);
 			{
-				GCmds->BindRenderPipeline(TestRenderPass->GetSkyboxPipeline());
+				GCmds->BindRenderPipeline(BackgroundPass->GetSkyboxPipeline());
 				GCmds->Draw(3);
 			}
-			GCmds->LeaveRenderPass(TestRenderPass);
+			GCmds->LeaveRenderPass(BackgroundPass);
 
 			GCmds->ReachRenderPass(GeometryPass);
 			{
@@ -94,7 +93,7 @@ export namespace VISERA_APP_NAMESPACE
 				Frame.SetProjectionMatrix(Camera->GetProjectMatrix());
 
 				GCmds->BindDescriptorSet(0, Frame.GetMatrixUBO());
-				GCmds->BindDescriptorSet(1, TestCanvas.lock()->GetTexture());
+				GCmds->BindDescriptorSet(1, MariTexCanvas.lock()->GetTexture());
 
 				GCmds->BindVertexBuffer(GeoAttachment->GetPrimitive()->GetGPUVertexBuffer());
 
@@ -140,49 +139,42 @@ export namespace VISERA_APP_NAMESPACE
 		virtual void Bootstrap() override
 		{
 			//VE_LOG_INFO(Bootstraping " VISERA_APP_NAME);
-			auto Config = FileSystem::CreateJSONFile(FPath{"D:/Programs/ViseraEngine/Visera/Engine/Configs/Configs.json"});
+			auto Config = FileSystem::CreateJSONFile(FPath{"../../../../Engine/Configs/Configs.json"});
 			Config->Load();
 			auto JSON = Config->Parse();
 			VE_LOG_INFO("{}", JSON["Engine"]["Assets"]["Models"]["test"].GetString());
 			auto Model = Media::CreateModel(FName{ "model" },
-				FPath{"D:/Programs/ViseraEngine/Visera/Engine/Assets/Models/"}
+				FPath{"../../../../Engine/Assets/Models/"}
 				.Join(FPath{JSON["Engine"]["Assets"]["Models"]["test"].GetString()}));
 
 			auto CubePlane = Media::CreateModel(FName{ "model_cube_0" },
-				FPath{"D:/Programs/ViseraEngine/Visera/Engine/Assets/Models/"}
+				FPath{"../../../../Engine/Assets/Models/"}
 				.Join(FPath{JSON["Engine"]["Assets"]["Models"]["box"].GetString()}));
 
 			GeoAttachment = &Scene->Attach(FName{"model_0"}, Model);
 			CubeAttachment = &Scene->Attach(FName{"model_1"}, CubePlane);
 			Scene->Commit();
-			auto LogoImage = Media::CreateImage(FName{"logo"}, FPath{"D:/Programs/ViseraEngine/Visera/Engine/Assets/Images/Logo.png"});
+
+			auto LogoImage = Media::CreateImage(FName{"logo"},
+				FPath{"../../../../Engine/Assets/Images/Logo.png"});
 			LogoImage->FlipVertically();
 			Editor::CreateCanvas(LogoImage);
-			VE_LOG_INFO("\nMinBB:{}\nMaxBB:{}\nCenter:{}",
-				Text(GeoAttachment->GetPrimitive()->GetBoundingBox().MinPosition),
-				Text(GeoAttachment->GetPrimitive()->GetBoundingBox().MaxPosition),
-				Text(GeoAttachment->GetPrimitive()->GetBoundingBox().Center));
+			MariTexImage = Media::CreateImage(FName{"MariTexImage"},
+				FPath{"../../../../Engine/Assets/Models/Marry/MC003_Kozakura_Mari.png"});
 
-			VE_LOG_INFO("\nMinBB:{}\nMaxBB:{}\nCenter:{}",
-				Text(CubeAttachment->GetPrimitive()->GetBoundingBox().MinPosition),
-				Text(CubeAttachment->GetPrimitive()->GetBoundingBox().MaxPosition),
-				Text(CubeAttachment->GetPrimitive()->GetBoundingBox().Center));
-
-			//QuadImage = Media::CreateImage(FName{"quad_image"}, 400, 400);
-			Image = Media::CreateImage(FName{"image"}, FPath{"D:/Programs/ViseraEngine/Visera/Engine/Assets/Models/Marry/MC003_Kozakura_Mari.png"});
-			///SampleCanvas = Editor::CreateCanvas(QuadImage);
 			TextureCanvas = Editor::CreateCanvas(Media::CreateImage(FName{"default_texture"},
-				FPath{"D:/Programs/ViseraEngine/Visera/Engine/Assets/Images/"}
+				FPath{"../../../../Engine/Assets/Images/"}
 				.Join(FPath{JSON["Engine"]["Assets"]["Images"]["default_texture"].GetString()})));
+			TextureCanvas.lock()->Hide();	
 
 		    Camera = CreateUniquePtr<FCamera>();
 			Camera->SetPosition({0, 3, -4});
 			Camera->SetLens(CreateSharedPtr<FPinhole>());
 			Camera->SetFilm(CreateSharedPtr<FRawFilm>(400, 400));
 
-			TestCanvas = Editor::CreateCanvas(Image);
+			MariTexCanvas = Editor::CreateCanvas(MariTexImage);
 
-			TestRenderPass = RHI::CreateRenderPass<FURPBackgroundPass>();
+			BackgroundPass = RHI::CreateRenderPass<FURPBackgroundPass>();
 			GeometryPass   = RHI::CreateRenderPass<FURPGeometryPass>();
 			PostprocessingPass = RHI::CreateRenderPass<FURPPostprocessPass>();
 
@@ -225,7 +217,7 @@ export namespace VISERA_APP_NAMESPACE
 
 		virtual void Terminate() override
 		{
-			//Film->SaveAs(FPath{ "D:\\Downloads\\Film.bmp" });
+			
 		}
 	};
 } // namespace VISERA_APP_NAMESPACE
