@@ -6,30 +6,32 @@ set VISERA_PYTHON_DIR=%VISERA_ROOT_DIR%Python
 set VISERA_PYTHON_VERSION=3.10.15
 set VISERA_PYTHON_INTERPRETER_DIR=%VISERA_PYTHON_DIR%\Python-%VISERA_PYTHON_VERSION%
 
-@REM Check local Python environment
-if not exist %VISERA_PYTHON_INTERPRETER_DIR%\python.bat (
-    @REM Download CPython
-    mkdir %VISERA_CACHE_DIR%\
-    mkdir %VISERA_CACHE_DIR%\Downloads\
-    if not exist %VISERA_CACHE_DIR%\Downloads\Python.tar.xz (
-        @REM Check cache to accelerate reinstallation.
-        call curl -o %VISERA_CACHE_DIR%\Downloads\Python.tar.xz https://www.python.org/ftp/python/%VISERA_PYTHON_VERSION%/Python-%VISERA_PYTHON_VERSION%.tar.xz
-        call tar -xf %VISERA_CACHE_DIR%\Downloads\Python.tar.xz -C %VISERA_PYTHON_DIR%
-    )
+call python %VISERA_SCRIPTS_DIR%\CLI.py
 
-    @REM Install CPython
-    call %VISERA_PYTHON_INTERPRETER_DIR%\PCBuild\build.bat
+@REM @REM Check local Python environment
+@REM if not exist %VISERA_PYTHON_INTERPRETER_DIR%\python.bat (
+@REM     @REM Download CPython
+@REM     mkdir %VISERA_CACHE_DIR%\
+@REM     mkdir %VISERA_CACHE_DIR%\Downloads\
+@REM     if not exist %VISERA_CACHE_DIR%\Downloads\Python.tar.xz (
+@REM         @REM Check cache to accelerate reinstallation.
+@REM         call curl -o %VISERA_CACHE_DIR%\Downloads\Python.tar.xz https://www.python.org/ftp/python/%VISERA_PYTHON_VERSION%/Python-%VISERA_PYTHON_VERSION%.tar.xz
+@REM         call tar -xf %VISERA_CACHE_DIR%\Downloads\Python.tar.xz -C %VISERA_PYTHON_DIR%
+@REM     )
+
+@REM     @REM Install CPython
+@REM     call %VISERA_PYTHON_INTERPRETER_DIR%\PCBuild\build.bat
     
-    @REM Install Pip
-    call %VISERA_PYTHON_INTERPRETER_DIR%\python -m ensurepip --upgrade
+@REM     @REM Install Pip
+@REM     call %VISERA_PYTHON_INTERPRETER_DIR%\python -m ensurepip --upgrade
 
-    @REM Install Packages
-    call %VISERA_PYTHON_INTERPRETER_DIR%\python -m pip install --upgrade pip
-    call %VISERA_PYTHON_INTERPRETER_DIR%\python -m pip install requests
+@REM     @REM Install Packages
+@REM     call %VISERA_PYTHON_INTERPRETER_DIR%\python -m pip install --upgrade pip
+@REM     call %VISERA_PYTHON_INTERPRETER_DIR%\python -m pip install requests
 
-    @REM Clean Cache
-    attrib -r %VISERA_CACHE_DIR%\Downloads\Python.tar.xz
-    del %VISERA_CACHE_DIR%\Downloads\Python.tar.xz
-)
+@REM     @REM Clean Cache
+@REM     attrib -r %VISERA_CACHE_DIR%\Downloads\Python.tar.xz
+@REM     del %VISERA_CACHE_DIR%\Downloads\Python.tar.xz
+@REM )
 
-call %VISERA_PYTHON_INTERPRETER_DIR%\python %VISERA_SCRIPTS_DIR%\CLI.py
+@REM call %VISERA_PYTHON_INTERPRETER_DIR%\python %VISERA_SCRIPTS_DIR%\CLI.py

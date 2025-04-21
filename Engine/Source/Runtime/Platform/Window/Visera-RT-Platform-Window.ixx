@@ -96,7 +96,10 @@ export namespace VE
 			else
 			{
 				if (ContentScale.X != 1.0 || ContentScale.Y != 1.0)
-				{ SetSize(CurrentExtent.Width / ContentScale.X, CurrentExtent.Height / ContentScale.Y); }
+				{
+					SetSize(CurrentExtent.Width / ContentScale.X,
+					        CurrentExtent.Height / ContentScale.Y);
+				}
 			}
 
 			VE_LOG_DEBUG("Created a new window (title:{}, extent:[{},{}], scales:[{},{}])",
