@@ -121,40 +121,78 @@
 #define VE_LOG_SYSTEM_VERBOSITY VE_LOG_LEVEL_DEBUG
 //enum ELogCategory { Console, Display };
 
-#if VE_LOG_LEVEL_TRACE >= VE_LOG_SYSTEM_VERBOSITY
-#define VE_LOG_TRACE(_Formatter, ...) Log::Trace("[M:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
-#else
-#define VE_LOG_TRACE(_Formatter, ...) VE_NO_OPERATION
-#endif
+#if VE_IS_MSVC_COMPILER
+	#if VE_LOG_LEVEL_TRACE >= VE_LOG_SYSTEM_VERBOSITY
+	#define VE_LOG_TRACE(_Formatter, ...) Log::Trace("[M:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
+	#else
+	#define VE_LOG_TRACE(_Formatter, ...) VE_NO_OPERATION
+	#endif
 
-#if VE_LOG_LEVEL_DEBUG >= VE_LOG_SYSTEM_VERBOSITY
-#define VE_LOG_DEBUG(_Formatter, ...) Log::Debug("[M:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
-#else
-#define VE_LOG_DEBUG(_Formatter, ...) VE_NO_OPERATION
-#endif
+	#if VE_LOG_LEVEL_DEBUG >= VE_LOG_SYSTEM_VERBOSITY
+	#define VE_LOG_DEBUG(_Formatter, ...) Log::Debug("[M:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
+	#else
+	#define VE_LOG_DEBUG(_Formatter, ...) VE_NO_OPERATION
+	#endif
 
-#if VE_LOG_LEVEL_INFO >= VE_LOG_SYSTEM_VERBOSITY
-#define VE_LOG_INFO(_Formatter, ...) Log::Info("[M:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
-#else
-#define VE_LOG_INFO(_Formatter, ...) VE_NO_OPERATION
-#endif
+	#if VE_LOG_LEVEL_INFO >= VE_LOG_SYSTEM_VERBOSITY
+	#define VE_LOG_INFO(_Formatter, ...) Log::Info("[M:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
+	#else
+	#define VE_LOG_INFO(_Formatter, ...) VE_NO_OPERATION
+	#endif
 
-#if VE_LOG_LEVEL_WARN >= VE_LOG_SYSTEM_VERBOSITY
-#define VE_LOG_WARN(_Formatter, ...) Log::Warn("[M:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
-#else
-#define VE_LOG_WARN(_Formatter, ...) VE_NO_OPERATION
-#endif
+	#if VE_LOG_LEVEL_WARN >= VE_LOG_SYSTEM_VERBOSITY
+	#define VE_LOG_WARN(_Formatter, ...) Log::Warn("[M:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
+	#else
+	#define VE_LOG_WARN(_Formatter, ...) VE_NO_OPERATION
+	#endif
 
-#if VE_LOG_LEVEL_ERROR >= VE_LOG_SYSTEM_VERBOSITY
-#define VE_LOG_ERROR(_Formatter, ...) Log::Error("[M:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
-#else
-#define VE_LOG_ERROR(_Formatter, ...) VE_NO_OPERATION
-#endif
+	#if VE_LOG_LEVEL_ERROR >= VE_LOG_SYSTEM_VERBOSITY
+	#define VE_LOG_ERROR(_Formatter, ...) Log::Error("[M:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
+	#else
+	#define VE_LOG_ERROR(_Formatter, ...) VE_NO_OPERATION
+	#endif
 
-#if VE_LOG_LEVEL_FATAL >= VE_LOG_SYSTEM_VERBOSITY
-#define VE_LOG_FATAL(_Formatter, ...) Log::Fatal("[M:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
+	#if VE_LOG_LEVEL_FATAL >= VE_LOG_SYSTEM_VERBOSITY
+	#define VE_LOG_FATAL(_Formatter, ...) Log::Fatal("[M:{}] " _Formatter, VE_MODULE_NAME, __VA_ARGS__);
+	#else
+	#define VE_LOG_FATAL(_Formatter, ...) VE_NO_OPERATION
+	#endif
 #else
-#define VE_LOG_FATAL(_Formatter, ...) VE_NO_OPERATION
+	#if VE_LOG_LEVEL_TRACE >= VE_LOG_SYSTEM_VERBOSITY
+	#define VE_LOG_TRACE(_Formatter, ...) Log::Trace("[M:{}] " _Formatter, VE_MODULE_NAME, ##__VA_ARGS__);
+	#else
+	#define VE_LOG_TRACE(_Formatter, ...) VE_NO_OPERATION
+	#endif
+
+	#if VE_LOG_LEVEL_DEBUG >= VE_LOG_SYSTEM_VERBOSITY
+	#define VE_LOG_DEBUG(_Formatter, ...) Log::Debug("[M:{}] " _Formatter, VE_MODULE_NAME, ##__VA_ARGS__);
+	#else
+	#define VE_LOG_DEBUG(_Formatter, ...) VE_NO_OPERATION
+	#endif
+
+	#if VE_LOG_LEVEL_INFO >= VE_LOG_SYSTEM_VERBOSITY
+	#define VE_LOG_INFO(_Formatter, ...) Log::Info("[M:{}] " _Formatter, VE_MODULE_NAME, ##__VA_ARGS__);
+	#else
+	#define VE_LOG_INFO(_Formatter, ...) VE_NO_OPERATION
+	#endif
+
+	#if VE_LOG_LEVEL_WARN >= VE_LOG_SYSTEM_VERBOSITY
+	#define VE_LOG_WARN(_Formatter, ...) Log::Warn("[M:{}] " _Formatter, VE_MODULE_NAME, ##__VA_ARGS__);
+	#else
+	#define VE_LOG_WARN(_Formatter, ...) VE_NO_OPERATION
+	#endif
+
+	#if VE_LOG_LEVEL_ERROR >= VE_LOG_SYSTEM_VERBOSITY
+	#define VE_LOG_ERROR(_Formatter, ...) Log::Error("[M:{}] " _Formatter, VE_MODULE_NAME, ##__VA_ARGS__);
+	#else
+	#define VE_LOG_ERROR(_Formatter, ...) VE_NO_OPERATION
+	#endif
+
+	#if VE_LOG_LEVEL_FATAL >= VE_LOG_SYSTEM_VERBOSITY
+	#define VE_LOG_FATAL(_Formatter, ...) Log::Fatal("[M:{}] " _Formatter, VE_MODULE_NAME, ##__VA_ARGS__);
+	#else
+	#define VE_LOG_FATAL(_Formatter, ...) VE_NO_OPERATION
+	#endif
 #endif
 
 namespace VE
