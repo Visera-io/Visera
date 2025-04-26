@@ -3,6 +3,7 @@ module;
 #include <imgui.h>
 export module AlohaVisera;
 #define VE_MODULE_NAME "AlohaVisera"
+import :AppScene;
 
 import Visera;
 using namespace VE;
@@ -12,16 +13,19 @@ export namespace VISERA_APP_NAMESPACE
 	
 	class App final : public ViseraApp
 	{
-		UniquePtr<FCamera>  Camera;
+		UniquePtr<FAppScene> AppScene;
+
 		SharedPtr<FScene>   Scene = FScene::Create();
 		WeakPtr<Editor::FCanvas>  SampleCanvas;
 		WeakPtr<Editor::FCanvas>  TextureCanvas;
 		SharedPtr<IImage> MariTexImage;
 
-		SharedPtr<FURPBackgroundPass> BackgroundPass;
-		SharedPtr<FURPGeometryPass> GeometryPass;
+		SharedPtr<FURPBackgroundPass>  BackgroundPass;
+		SharedPtr<FURPShadowPass>      ShadowPass;
+		SharedPtr<FURPGeometryPass>    GeometryPass;
 		SharedPtr<FURPPostprocessPass> PostprocessingPass;
-		const FScene::FAttachment* GeoAttachment = nullptr;
+
+		const FScene::FAttachment* GeoAttachment  = nullptr;
 		const FScene::FAttachment* CubeAttachment = nullptr;
 		RHI::FMatrixUBOLayout MatrixUBOData;
 
@@ -40,6 +44,32 @@ export namespace VISERA_APP_NAMESPACE
 				GCmds->Draw(3);
 			}
 			GCmds->LeaveRenderPass(BackgroundPass);
+
+			GCmds->ReachRenderPass(ShadowPass);
+			{
+				GCmds->BindRenderPipeline(ShadowPass->GetParallelShadowPipeline());
+
+				Target = GeoAttachment->GetPrimitive()->GetBoundingBox().Center;
+				LookAtMatrix = AppScene->ShadowCamera->GetLookAtMatrix(Target);
+
+				GCmds->BindDescriptorSet(0, AppScene->LightUBO);
+				GCmds->BindVertexBuffer(GeoAttachment->GetPrimitive()->GetGPUVertexBuffer());
+
+				if (GeoAttachment->GetPrimitive()->HasIndex())
+				{
+					GCmds->BindIndexBuffer(GeoAttachment->GetPrimitive()->GetGPUIndexBuffer());
+					GCmds->DrawIndexed(GeoAttachment->GetPrimitive()->GetIndexCount());
+				}
+				else
+				{
+					GCmds->Draw(3 * GeoAttachment->GetPrimitive()->GetVertexCount());
+				}
+
+				GCmds->BindVertexBuffer(CubeAttachment->GetPrimitive()->GetGPUVertexBuffer());
+				GCmds->BindIndexBuffer(CubeAttachment->GetPrimitive()->GetGPUIndexBuffer());
+				GCmds->DrawIndexed(CubeAttachment->GetPrimitive()->GetIndexCount());
+			}
+			GCmds->LeaveRenderPass(ShadowPass);
 
 			GCmds->ReachRenderPass(GeometryPass);
 			{
@@ -67,30 +97,28 @@ export namespace VISERA_APP_NAMESPACE
 				CofactorMat.block<3,3>(0,0) = ComputeCofactorMatrixFromHomogeneous(MatrixUBOData.Model);
 				Frame.SetCofactorModelMatrix(CofactorMat);
 
-				static Vector3F CamPos = Camera->GetPosition();
-				static Float Fov{90};
+				static Vector3F CamPos = Vector3F{ AppScene->MainCamera->GetPosition() };
+				static Float Fov = AppScene->MainCamera->GetFOV();
 				if (ImGui::InputFloat("FOV", &Fov))
-				{
-					Camera->SetFOV(Degree{Fov});
-				}
+				{ AppScene->MainCamera->SetFOV(Degree{Fov}); }
 
 				static Bool bPerspective = True;
 				if (ImGui::Button("Camera Mode"))
 				{
 					bPerspective = !bPerspective;
-					if (bPerspective) Camera->SetProjectionMode(FCamera::EMode::Perspective);
-					else Camera->SetProjectionMode(FCamera::EMode::Orthographic);
+					if (bPerspective) AppScene->MainCamera->SetProjectionMode(FCamera::EMode::Perspective);
+					else AppScene->MainCamera->SetProjectionMode(FCamera::EMode::Orthographic);
 				}
 				Target= GeoAttachment->GetPrimitive()->GetBoundingBox().Center;
-				LookAtMatrix = Camera->GetLookAtMatrix(Target);
+				LookAtMatrix = AppScene->MainCamera->GetLookAtMatrix(Target);
 				if(ImGui::InputFloat3("CamPos", CamPos.data()))
 				{
-					Camera->SetPosition(CamPos);
-					LookAtMatrix = Camera->GetLookAtMatrix(Target);
+					AppScene->MainCamera->SetPosition(CamPos);
+					LookAtMatrix = AppScene->MainCamera->GetLookAtMatrix(Target);
 				}
 				Frame.SetViewingMatrix(LookAtMatrix);
-				//Frame.SetViewingMatrix(Camera->GetViewingMatrix());
-				Frame.SetProjectionMatrix(Camera->GetProjectMatrix());
+				//Frame.SetViewingMatrix(AppScene->MainCamera->GetViewingMatrix());
+				Frame.SetProjectionMatrix(AppScene->MainCamera->GetProjectMatrix());
 
 				GCmds->BindDescriptorSet(0, Frame.GetMatrixUBO());
 				GCmds->BindDescriptorSet(1, MariTexCanvas.lock()->GetTexture());
@@ -170,41 +198,41 @@ export namespace VISERA_APP_NAMESPACE
 				.Join(FPath{JSON["Engine"]["Assets"]["Images"]["default_texture"].GetString()})));
 			TextureCanvas.lock()->Hide();	
 
-			VE_LOG_DEBUG("Creating Camera...");
-		    Camera = CreateUniquePtr<FCamera>();
-			Camera->SetPosition({0, 3, -4});
-			Camera->SetLens(CreateSharedPtr<FPinhole>());
-			Camera->SetFilm(CreateSharedPtr<FRawFilm>(400, 400));
-
 			MariTexCanvas = Editor::CreateCanvas(MariTexImage);
 			
 			VE_LOG_DEBUG("Creating Render Passes...");
 			BackgroundPass = RHI::CreateRenderPass<FURPBackgroundPass>();
+			ShadowPass     = RHI::CreateRenderPass<FURPShadowPass>();
 			GeometryPass   = RHI::CreateRenderPass<FURPGeometryPass>();
 			PostprocessingPass = RHI::CreateRenderPass<FURPPostprocessPass>();
 
+			
+			FAppScene::LookAtTarget = GeoAttachment->GetPrimitive()->GetBoundingBox().Center;
+			AppScene = CreateUniquePtr<FAppScene>(ShadowPass->GetUBOLayout());
+
+
 			IO::RegisterMouseButtonEvent(IO::FMouseButtonCreateInfo
 				{
-					.Name   = FName{"camera_zoomin"},
+					.Name   = FName{"AppScene->MainCamera_zoomin"},
 					.Button	= IO::EMouseButton::Left,
 					.Action = IO::EAction::Press,
 					.Event  = [&]()
 					{
-						auto CurrentPos = Camera->GetPosition();
-						Camera->SetPosition(Vector3F{CurrentPos.x(), CurrentPos.y(), CurrentPos.z() + 0.2f});
-						LookAtMatrix = Camera->GetLookAtMatrix(Target);
+						auto CurrentPos = AppScene->MainCamera->GetPosition();
+						AppScene->MainCamera->SetPosition(Vector3F{CurrentPos.x(), CurrentPos.y(), CurrentPos.z() + 0.2f});
+						LookAtMatrix = AppScene->MainCamera->GetLookAtMatrix(Target);
 					},
 				});
 			IO::RegisterMouseButtonEvent(IO::FMouseButtonCreateInfo
 			{
-				.Name   = FName{"camera_zoomout"},
+				.Name   = FName{"AppScene->MainCamera_zoomout"},
 				.Button	= IO::EMouseButton::Right,
 				.Action = IO::EAction::Press,
 				.Event  = [&]()
 				{
-					auto CurrentPos = Camera->GetPosition();
-					Camera->SetPosition(Vector3F{CurrentPos.x(), CurrentPos.y(), CurrentPos.z() - 0.2f});
-					LookAtMatrix = Camera->GetLookAtMatrix(Target);
+					auto CurrentPos = AppScene->MainCamera->GetPosition();
+					AppScene->MainCamera->SetPosition(Vector3F{CurrentPos.x(), CurrentPos.y(), CurrentPos.z() - 0.2f});
+					LookAtMatrix = AppScene->MainCamera->GetLookAtMatrix(Target);
 				},
 			});
 			IO::RegisterKeyboardKeyEvent(IO::FKeyboardKeyEventCreateInfo

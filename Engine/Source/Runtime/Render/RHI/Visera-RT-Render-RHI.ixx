@@ -130,11 +130,14 @@ export namespace VE
 			static inline SharedPtr<FDescriptorSetLayout> MatrixDSLayout;
 
 			SharedPtr<FRenderTarget> BackgroundRTs;
+			SharedPtr<FRenderTarget> ShadowRTs;
 			SharedPtr<FRenderTarget> ForwardRTs;
 			SharedPtr<FRenderTarget> PostprocessingRTs;
 
 			SharedPtr<FImageView>     SVColorView;
 			SharedPtr<FDescriptorSet> SVColorTexture;
+			SharedPtr<FImageView>     SVShadowMapView;
+			SharedPtr<FDescriptorSet> SVShadowMapTexture;
 			SharedPtr<FImageView>     PostprocessInputView;
 			SharedPtr<FDescriptorSet> PostprocessInputTexture;
 			SharedPtr<FImageView>     PostprocessOutputView;
@@ -307,6 +310,17 @@ export namespace VE
 					EImageAspect::Color,
 					EImageUsage::ColorAttachment | EImageUsage::Sampled | EImageUsage::TransferSource);
 
+				ImmeCmds->ConvertImageLayout(ColorImage, EVulkanImageLayout::ShaderReadOnly);
+
+				auto ShadowMapImage = CreateImage(
+					EImageType::Image2D,
+					{ FFrameContext::RenderArea.extent.width, FFrameContext::RenderArea.extent.height, 1 },
+					EFormat::S32_Float_Depth32,
+					EImageAspect::Depth,
+					EImageUsage::DepthStencilAttachment | EImageUsage::Sampled | EImageUsage::TransferSource);
+
+				ImmeCmds->ConvertImageLayout(ShadowMapImage, EVulkanImageLayout::DepthAttachment);
+
 				auto PostprocessImage = CreateImage(
 					EImageType::Image2D,
 					{ FFrameContext::RenderArea.extent.width, FFrameContext::RenderArea.extent.height, 1 },
@@ -314,18 +328,7 @@ export namespace VE
 					EImageAspect::Color,
 					EImageUsage::ColorAttachment | EImageUsage::Sampled | EImageUsage::TransferSource);
 
-				ImmeCmds->ConvertImageLayout(ColorImage, EVulkanImageLayout::ShaderReadOnly);
 				ImmeCmds->ConvertImageLayout(PostprocessImage, EVulkanImageLayout::ShaderReadOnly);
-
-				Frame.SVColorView = ColorImage->CreateImageView();
-				Frame.SVColorTexture = RHI::CreateDescriptorSet(FFrameContext::SVColorTextureDSLayout);
-				Frame.SVColorTexture->WriteImage(0, Frame.SVColorView, FFrameContext::SVColorTextureSampler);
-
-				Frame.PostprocessInputView     = Frame.SVColorView;
-				Frame.PostprocessInputTexture  = Frame.SVColorTexture;
-				Frame.PostprocessOutputView    = PostprocessImage->CreateImageView();
-				Frame.PostprocessOutputTexture = RHI::CreateDescriptorSet(FFrameContext::SVColorTextureDSLayout);
-				Frame.PostprocessOutputTexture->WriteImage(0, Frame.PostprocessOutputView, FFrameContext::SVColorTextureSampler);
 
 				auto DepthImage = CreateImage(
 					EImageType::Image2D,
@@ -334,12 +337,30 @@ export namespace VE
 					EImageAspect::Depth,
 					EImageUsage::DepthStencilAttachment);
 
-				ImmeCmds->ConvertImageLayout(DepthImage, EVulkanImageLayout::DepthStencilAttachment);
+				ImmeCmds->ConvertImageLayout(DepthImage, EVulkanImageLayout::DepthAttachment);
+
+				Frame.SVColorView = ColorImage->CreateImageView();
+				Frame.SVColorTexture = RHI::CreateDescriptorSet(FFrameContext::SVColorTextureDSLayout);
+				Frame.SVColorTexture->WriteImage(0, Frame.SVColorView, FFrameContext::SVColorTextureSampler);
+
+				Frame.SVShadowMapView = ColorImage->CreateImageView();
+				Frame.SVShadowMapTexture = RHI::CreateDescriptorSet(FFrameContext::SVColorTextureDSLayout);
+				Frame.SVShadowMapTexture->WriteImage(0, Frame.SVShadowMapView, FFrameContext::SVColorTextureSampler);
+
+				Frame.PostprocessInputView     = Frame.SVColorView;
+				Frame.PostprocessInputTexture  = Frame.SVColorTexture;
+				Frame.PostprocessOutputView    = PostprocessImage->CreateImageView();
+				Frame.PostprocessOutputTexture = RHI::CreateDescriptorSet(FFrameContext::SVColorTextureDSLayout);
+				Frame.PostprocessOutputTexture->WriteImage(0, Frame.PostprocessOutputView, FFrameContext::SVColorTextureSampler);
 
 				Frame.BackgroundRTs = FRenderTarget::Create()
 					->AddColorImage(ColorImage)
 					->AddDepthImage(DepthImage)
 				    ->Confirm();
+
+				Frame.ShadowRTs = FRenderTarget::Create()
+					->AddDepthImage(ShadowMapImage)
+					->Confirm();
 
 				Frame.ForwardRTs = FRenderTarget::Create()
 					->AddColorImage(ColorImage)
@@ -351,7 +372,6 @@ export namespace VE
 				    ->Confirm();
 			}
 
-			//[TODO]: Move to VulkanSwapchain Class?
 			for (auto& SwapchainImage : Vulkan->GetSwapchain().GetImages())
 			{
 				ImmeCmds->ConvertImageLayout(SwapchainImage,
@@ -409,6 +429,16 @@ export namespace VE
 			RenderTargets.resize(Frames.size());
 			for (UInt8 Idx = 0; Idx < RenderTargets.size(); ++Idx)
 			{ RenderTargets[Idx] = Frames[Idx].BackgroundRTs; }
+
+			NewRenderPass->Build(FFrameContext::RenderArea, RenderTargets);
+			break;
+		}
+		case FRenderPass::EType::Shadow:
+		{
+			RenderPassType = "Shadow";
+			RenderTargets.resize(Frames.size());
+			for (UInt8 Idx = 0; Idx < RenderTargets.size(); ++Idx)
+			{ RenderTargets[Idx] = Frames[Idx].ShadowRTs; }
 
 			NewRenderPass->Build(FFrameContext::RenderArea, RenderTargets);
 			break;

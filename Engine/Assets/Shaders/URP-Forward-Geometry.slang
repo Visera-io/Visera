@@ -23,8 +23,7 @@ cbuffer FMatrixUBO : register(b0)
     float4x4 InverseProjection;
     float4x4 InverseViewing;
     float4x4 CofactorModel;
-
-    float4 Padding;
+    
 }MatrixUBO;
 
 [shader("vertex")]
