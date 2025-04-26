@@ -139,16 +139,16 @@ export namespace VISERA_APP_NAMESPACE
 		virtual void Bootstrap() override
 		{
 			//VE_LOG_INFO(Bootstraping " VISERA_APP_NAME);
-			auto Config = FileSystem::CreateJSONFile(FPath{"../../../../Engine/Configs/Configs.json"});
+			auto Config = FileSystem::CreateJSONFile(FPath{VISERA_ENGINE_CONFIGS_DIR"/Configs.json"});
 			Config->Load();
 			auto JSON = Config->Parse();
 			VE_LOG_INFO("{}", JSON["Engine"]["Assets"]["Models"]["test"].GetString());
 			auto Model = Media::CreateModel(FName{ "model" },
-				FPath{"../../../../Engine/Assets/Models/"}
+				FPath{VISERA_ENGINE_MODELS_DIR}
 				.Join(FPath{JSON["Engine"]["Assets"]["Models"]["test"].GetString()}));
 
 			auto CubePlane = Media::CreateModel(FName{ "model_cube_0" },
-				FPath{"../../../../Engine/Assets/Models/"}
+				FPath{VISERA_ENGINE_MODELS_DIR}
 				.Join(FPath{JSON["Engine"]["Assets"]["Models"]["box"].GetString()}));
 
 			GeoAttachment = &Scene->Attach(FName{"model_0"}, Model);
@@ -156,24 +156,29 @@ export namespace VISERA_APP_NAMESPACE
 			Scene->Commit();
 
 			auto LogoImage = Media::CreateImage(FName{"logo"},
-				FPath{"../../../../Engine/Assets/Images/Logo.png"});
+				FPath{ VISERA_ENGINE_IMAGES_DIR }
+			    .Join(FPath{ "Logo.png" }));
 			LogoImage->FlipVertically();
 			Editor::CreateCanvas(LogoImage);
+
 			MariTexImage = Media::CreateImage(FName{"MariTexImage"},
-				FPath{"../../../../Engine/Assets/Models/Marry/MC003_Kozakura_Mari.png"});
+				FPath{ VISERA_ENGINE_MODELS_DIR }
+				.Join(FPath{"Marry/MC003_Kozakura_Mari.png"}));
 
 			TextureCanvas = Editor::CreateCanvas(Media::CreateImage(FName{"default_texture"},
-				FPath{"../../../../Engine/Assets/Images/"}
+				FPath{VISERA_ENGINE_IMAGES_DIR}
 				.Join(FPath{JSON["Engine"]["Assets"]["Images"]["default_texture"].GetString()})));
 			TextureCanvas.lock()->Hide();	
 
+			VE_LOG_DEBUG("Creating Camera...");
 		    Camera = CreateUniquePtr<FCamera>();
 			Camera->SetPosition({0, 3, -4});
 			Camera->SetLens(CreateSharedPtr<FPinhole>());
 			Camera->SetFilm(CreateSharedPtr<FRawFilm>(400, 400));
 
 			MariTexCanvas = Editor::CreateCanvas(MariTexImage);
-
+			
+			VE_LOG_DEBUG("Creating Render Passes...");
 			BackgroundPass = RHI::CreateRenderPass<FURPBackgroundPass>();
 			GeometryPass   = RHI::CreateRenderPass<FURPGeometryPass>();
 			PostprocessingPass = RHI::CreateRenderPass<FURPPostprocessPass>();

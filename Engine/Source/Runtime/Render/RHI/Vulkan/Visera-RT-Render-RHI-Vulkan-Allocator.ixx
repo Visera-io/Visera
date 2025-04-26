@@ -247,8 +247,8 @@ export namespace VE
 			.tiling					= AutoCast(NewImage->Tiling),
 			.usage					= AutoCast(NewImage->Usages),
 			.sharingMode			= AutoCast(_SharingMode),
-			//.queueFamilyIndexCount	= 1,
-			//.pQueueFamilyIndices	= &(GVulkan->Device->GetQueueFamily(EQueueFamily::Graphics).Index),
+			.queueFamilyIndexCount	= 0,
+			.pQueueFamilyIndices	= nullptr,
 			.initialLayout			= AutoCast(EVulkanImageLayout::Undefined),
 		};
 

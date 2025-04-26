@@ -52,31 +52,51 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
 endif()
 
 #[Environment]
+#<Visera>
 set(VISERA_DIR          "${CMAKE_CURRENT_SOURCE_DIR}")
-set(VISERA_APP_DIR      "${VISERA_DIR}/Apps")
-set(VISERA_PACKAGES_DIR "${VISERA_DIR}/Packages")
-set(VISERA_ENGINE_DIR   "${VISERA_DIR}/Engine")
-set(VISERA_CACHE_DIR    "${VISERA_DIR}/Cache")
-
-set(VISERA_CURRENT_APP_DIR  "${VISERA_APP_DIR}/${VISERA_APP}")
-set(VISERA_APP_DEBUG_DIR    "${VISERA_CURRENT_APP_DIR}/Binaries/Debug/")
-set(VISERA_APP_RELEASE_DIR  "${VISERA_CURRENT_APP_DIR}/Binaries/Release/")
+add_compile_definitions(VISERA_DIR=\"${VISERA_DIR}\")
+#<APP>
+set(VISERA_APP_DIR              "${VISERA_DIR}/Apps")
+set(VISERA_CURRENT_APP_DIR      "${VISERA_APP_DIR}/${VISERA_APP}")
+set(VISERA_APP_DEBUG_DIR        "${VISERA_CURRENT_APP_DIR}/Binaries/Debug/")
+set(VISERA_APP_RELEASE_DIR      "${VISERA_CURRENT_APP_DIR}/Binaries/Release/")
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG    "${VISERA_APP_DEBUG_DIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE  "${VISERA_APP_RELEASE_DIR}")
 
-#[Macros]
-add_compile_definitions(NOMINMAX)
-add_compile_definitions(VISERA_DIR=\"${VISERA_DIR}\")
-add_compile_definitions(VISERA_ENGINE_NAME=\"${VISERA}\")
 add_compile_definitions(VISERA_APP_NAME=\"${VISERA_APP}\")
 add_compile_definitions(VISERA_APP_NAMESPACE=${VISERA_APP})
 add_compile_definitions(VISERA_APP_ASSETS_DIR=\"${VISERA_APP_DIR}/${VISERA_APP}/Assets\")
 add_compile_definitions(VISERA_APP_SHADERS_DIR=\"${VISERA_APP_DIR}/${VISERA_APP}/Shaders\")
 add_compile_definitions(VISERA_APP_CACHE_DIR=\"${VISERA_APP_DIR}/${VISERA_APP}/Cache\")
-#[Packages]
+
+#<Engine>
+set(VISERA_ENGINE_DIR   "${VISERA_DIR}/Engine")
+set(VISERA_ENGINE_CONFIGS_DIR   "${VISERA_ENGINE_DIR}/Configs")
+set(VISERA_ENGINE_SOURCE_DIR    "${VISERA_ENGINE_DIR}/Source")
+set(VISERA_ENGINE_TEMPLATES_DIR "${VISERA_ENGINE_DIR}/Templates")
+set(VISERA_ENGINE_ASSETS_DIR    "${VISERA_ENGINE_DIR}/Assets")
+set(VISERA_ENGINE_SHADERS_DIR   "${VISERA_ENGINE_ASSETS_DIR}/Shaders")
+set(VISERA_ENGINE_IMAGES_DIR    "${VISERA_ENGINE_ASSETS_DIR}/Images")
+set(VISERA_ENGINE_MODELS_DIR    "${VISERA_ENGINE_ASSETS_DIR}/Models")
+set(VISERA_ENGINE_FONTS_DIR     "${VISERA_ENGINE_ASSETS_DIR}/Fonts")
+
+add_compile_definitions(VISERA_ENGINE_NAME=\"${VISERA}\")
+add_compile_definitions(VISERA_ENGINE_CONFIGS_DIR=\"${VISERA_ENGINE_CONFIGS_DIR}\")
+add_compile_definitions(VISERA_ENGINE_ASSETS_DIR=\"${VISERA_ENGINE_ASSETS_DIR}\")
+add_compile_definitions(VISERA_ENGINE_SHADERS_DIR=\"${VISERA_ENGINE_SHADERS_DIR}\")
+add_compile_definitions(VISERA_ENGINE_IMAGES_DIR=\"${VISERA_ENGINE_IMAGES_DIR}\")
+add_compile_definitions(VISERA_ENGINE_MODELS_DIR=\"${VISERA_ENGINE_MODELS_DIR}\")
+add_compile_definitions(VISERA_ENGINE_FONTS_DIR=\"${VISERA_ENGINE_FONTS_DIR}\")
+
+#<Packages>
+set(VISERA_PACKAGES_DIR "${VISERA_DIR}/Packages")
+
+#[Building]
+add_compile_definitions(NOMINMAX)
+#<Packages>
 add_subdirectory("${VISERA_PACKAGES_DIR}")
-#[App]
+#<App>
 add_subdirectory("${VISERA_APP_DIR}/${VISERA_APP}")
-#[Engine]
+#<Engine>
 add_subdirectory("${VISERA_ENGINE_DIR}")

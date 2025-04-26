@@ -42,6 +42,10 @@ export namespace VE
     void FTexture2D::
     BindToDescriptorSet(SharedPtr<RHI::FDescriptorSet> _DescriptorSet, UInt32 _Binding) const
     {
+        VE_ASSERT(!_DescriptorSet->IsExpired());
+        VE_LOG_DEBUG("Binding texture2D ({}) to set({}:{})",
+            (Address)(RHIImage->GetHandle()),
+            (Address)(_DescriptorSet->GetHandle()), _Binding);
         _DescriptorSet->WriteImage(_Binding, RHIImageView, Sampler);
     }
 
