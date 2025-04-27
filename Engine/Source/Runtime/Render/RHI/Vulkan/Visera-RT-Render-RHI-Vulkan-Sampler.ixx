@@ -4,6 +4,7 @@ export module Visera.Runtime.Render.RHI.Vulkan:Sampler;
 #define VE_MODULE_NAME "Vulkan:Sampler"
 import :Context;
 import Visera.Core.Log;
+import Visera.Core.Math.Basic;
 
 import Visera.Runtime.Render.RHI.Vulkan.Common;
 import :Device;
@@ -20,6 +21,12 @@ export namespace VE
         { return CreateSharedPtr<FVulkanSampler>(_Filter, _AddressMode); }
         auto inline
         SetFilters(EVulkanFilter _ZoomIn, EVulkanFilter _ZoomOut) { Filters.ZoomIn = _ZoomIn; Filters.ZoomOut = _ZoomOut; return this; }
+        auto inline
+        SetCompareMode(EVulkanCompareOp _CompareMode) { CompareMode = _CompareMode; return this; }
+        auto inline
+        SetAnisotropy(Float _Anisotropy) { MaxAnisotropy = GetClamped(_Anisotropy, 1.0, GVulkan->GPU->GetProperties().limits.maxSamplerAnisotropy); return this; }
+        auto inline
+        SetBorderColor(EVulkanBorderColor _BorderColor) { BorderColor = _BorderColor; return this; }
         auto inline
         Build() -> SharedPtr<FVulkanSampler>;
         void inline
@@ -40,7 +47,7 @@ export namespace VE
         GetFilters() const -> const auto& { return Filters; }
 
         Bool inline
-        IsAnisotropy() const { return bAnisotropy; }
+        IsAnisotropy() const { return MaxAnisotropy > 1.0; }
 
         FVulkanSampler(EVulkanFilter _Filter,
                        EVulkanSamplerAddressMode _AddressMode = EVulkanSamplerAddressMode::ClampToEdge);
@@ -72,7 +79,7 @@ export namespace VE
         EVulkanBorderColor		    BorderColor = EVulkanBorderColor::Black_Int;
         EVulkanSamplerMipmapMode    MipmapMode  = EVulkanSamplerMipmapMode::Linear;
         EVulkanCompareOp	        CompareMode = EVulkanCompareOp::Never;
-        Bool                        bAnisotropy = True;
+        Float                       MaxAnisotropy = GVulkan->GPU->GetProperties().limits.maxSamplerAnisotropy;
     };
 
     SharedPtr<FVulkanSampler> FVulkanSampler::
@@ -93,10 +100,10 @@ export namespace VE
 
             .mipLodBias   = 0.0,
 
-            .anisotropyEnable = bAnisotropy? VK_TRUE : VK_FALSE,
-            .maxAnisotropy	  = GVulkan->GPU->GetProperties().limits.maxSamplerAnisotropy,
+            .anisotropyEnable = IsAnisotropy()? VK_TRUE : VK_FALSE,
+            .maxAnisotropy	  = MaxAnisotropy,
 
-            .compareEnable	= AutoCast(CompareMode)? VK_TRUE : VK_FALSE,
+            .compareEnable	= CompareMode == EVulkanCompareOp::Never? VK_FALSE : VK_TRUE,
             .compareOp		= AutoCast(CompareMode),
 
             .minLod = -1000.0,
@@ -113,10 +120,16 @@ export namespace VE
             &Handle) != VK_SUCCESS)
         { VE_LOG_FATAL("Failed to create the Vulkan Sampler!"); }
 
-        VE_LOG_DEBUG("Built a new sampler (handle:{}, filter:[ZoomIn{},ZoomOut{}], address mode:[U{},V{},W{}]).",
+        VE_LOG_DEBUG("Built a new sampler (handle:{},"
+            " filter:[ZoomIn{},ZoomOut{}],"
+            " address mode:[U{},V{},W{}],"
+            " compare mode:{},"
+            " anisotropy:{}).",
 			(Address)(Handle),
             UInt32(Filters.ZoomIn), UInt32(Filters.ZoomOut),
-            UInt32(AddressModes.U), UInt32(AddressModes.V),UInt32(AddressModes.W));
+            UInt32(AddressModes.U), UInt32(AddressModes.V), UInt32(AddressModes.W),
+            UInt32(CompareMode),
+            MaxAnisotropy);
         return shared_from_this();
     }
 

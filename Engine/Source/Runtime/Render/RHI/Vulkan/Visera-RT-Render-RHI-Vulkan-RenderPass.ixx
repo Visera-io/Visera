@@ -22,7 +22,7 @@ export namespace VE
 	class FVulkanRenderPass
 	{
 	public:
-		enum class EType { Background, DefaultForward, Postprocessing, Overlay, Customized };
+		enum class EType { Background, Shadow, DefaultForward, Postprocessing, Overlay, Customized };
 		struct FSubpass final
 		{
 			SharedPtr<FVulkanRenderPipeline>Pipeline;
@@ -100,6 +100,21 @@ export namespace VE
 				.FinalLayout    = EVulkanImageLayout::DepthStencilAttachment,
 			};
 			bCreated = True;
+			break;
+		}
+		case EType::Shadow:
+		{
+			Layout.DepthDesc =
+			{
+				.Layout			= EVulkanImageLayout::DepthStencilAttachment,
+				.Format			= EVulkanFormat::S32_Float_Depth32,
+				.SampleRate		= EVulkanSampleRate::X1,
+				.ViewType		= EVulkanImageViewType::Image2D,
+				.LoadOp			= EVulkanAttachmentIO::I_Clear,
+				.StoreOp		= EVulkanAttachmentIO::I_Keep,
+				.InitialLayout  = EVulkanImageLayout::DepthStencilAttachment,
+				.FinalLayout    = EVulkanImageLayout::DepthStencilAttachment,
+			};
 			break;
 		}
 		case EType::DefaultForward:
@@ -338,15 +353,9 @@ export namespace VE
 		FVulkanExtent3D Extent{ RenderArea.extent.width, RenderArea.extent.height, 1 };
 
 		//[TODO]: Redesign this API
-		if (Type == EType::Postprocessing)
+		if (Type == EType::Customized)
 		{
-			VE_ASSERT(_RenderTargets.size() == GVulkan->Swapchain->GetFrameCount());
-			Framebuffers.resize(_RenderTargets.size());
-
-			for(UInt8 Idx = 0; Idx < Framebuffers.size(); ++Idx)
-			{
-				Framebuffers[Idx].Build(Handle, Extent, _RenderTargets[Idx]);
-			}
+			VE_LOG_FATAL("Customized Render Pass WIP...");
 		}
 		else if (Type != EType::Overlay)
 		{
@@ -455,7 +464,7 @@ export namespace VE
 		if(!_SubpassInfo.Pipeline)
 		{ VE_LOG_FATAL("Cannot create a subpass without a pipeline!"); }
 		
-		if(_SubpassInfo.ColorImageReferences.empty())
+		if(_SubpassInfo.ColorImageReferences.empty() && Type != EType::Shadow)
 		{ VE_LOG_FATAL("Cannot create a subpass without any color reference!"); }
 
 		if(_SubpassInfo.SrcStage == EVulkanGraphicsPipelineStage::None ||

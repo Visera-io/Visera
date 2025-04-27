@@ -20,6 +20,13 @@ export namespace VE
 	{
 	public:
 		using FPrimID = UInt32;
+
+		enum EAttachmentLoadOp
+		{
+			None,
+			FlipFaceWinding
+		};
+
 		class FAttachment
 		{
 			friend class FScene;
@@ -38,7 +45,7 @@ export namespace VE
 		Create() { return CreateSharedPtr<FScene>(); }
 
 		auto inline
-		Attach(const FName& _Name, SharedPtr<const FModel> _Model) -> const FAttachment&;
+		Attach(const FName& _Name, SharedPtr<const FModel> _Model, EAttachmentLoadOp _LoadOps = None) -> const FAttachment&;
 		void inline
 		Commit();
 
@@ -61,7 +68,9 @@ export namespace VE
 	};
 
 	const FScene::FAttachment& FScene::
-	Attach(const FName& _Name, SharedPtr<const FModel> _Model)
+	Attach(const FName&            _Name,
+		   SharedPtr<const FModel> _Model,
+		   EAttachmentLoadOp       _LoadOps /*= None*/)
 	{
 		Log::Trace("Attaching a new premitive {} to the scene.", _Name.GetNameWithNumber());
 
@@ -75,6 +84,10 @@ export namespace VE
 		{ throw SRuntimeError(Text("Failed to add the Attachment({})! -- Already exists!", _Name.GetNameWithNumber())); }
 
 		auto MeshPrimitive = FMeshPrimitive::Create(_Model);
+		if (_LoadOps & FlipFaceWinding)
+		{
+			MeshPrimitive->FlipFaceWinding();
+		}
 		MeshPrimitive->UploadToGPU();
 		auto& NewAttachment = AttachmentTable[_Name];
 		NewAttachment.Name = _Name;

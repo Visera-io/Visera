@@ -4,7 +4,6 @@ export module Visera.Runtime.Render.URP.Forward.Geometry;
 import :Opaque;
 
 import Visera.Core.OS.FileSystem;
-
 import Visera.Runtime.Render.RHI;
 import Visera.Runtime.Render.Shader;
 import Visera.Runtime.Render.Scene.Primitive;
@@ -20,8 +19,11 @@ export namespace VE
 
     private:
         //Resources
-        SharedPtr<RHI::FDescriptorSetLayout>   TransformsDSLayout;
-        SharedPtr<RHI::FDescriptorSetLayout>   TexturesDSLayout;
+        SharedPtr<const RHI::FDescriptorSetLayout>   TransformsDSLayout;
+        SharedPtr<const RHI::FDescriptorSetLayout>   LightUBODSLayout;
+
+        SharedPtr<const RHI::FDescriptorSetLayout>   TexturesDSLayout;
+        SharedPtr<const RHI::FDescriptorSetLayout>   ShadowMapDSLayout;
         //Layouts
         SharedPtr<RHI::FPipelineLayout>        PipelineLayout;
         SharedPtr<RHI::FRenderPipelineSetting> PipelineSetting;
@@ -32,23 +34,26 @@ export namespace VE
     FURPGeometryPass::
     FURPGeometryPass() : RHI::FRenderPass{ EType::DefaultForward }
     {
-        TransformsDSLayout = RHI::CreateDescriptorSetLayout()
-            ->AddBinding(0, RHI::EDescriptorType::UniformBuffer, 1, RHI::EShaderStage::Vertex)
-            ->Build();
+        TransformsDSLayout = RHI::FFrameContext::MatrixUBODSLayout;
+        LightUBODSLayout   = RHI::FFrameContext::LightUBODSLayout;
 
-        TexturesDSLayout = RHI::CreateDescriptorSetLayout()
-            ->AddBinding(0, RHI::EDescriptorType::CombinedImageSampler, 1, RHI::EShaderStage::Fragment)
-            ->Build();
+        TexturesDSLayout = RHI::FFrameContext::SVColorTextureDSLayout;
+        ShadowMapDSLayout = RHI::FFrameContext::SVColorTextureDSLayout;
 
         PipelineLayout = RHI::CreatePipelineLayout()
+            //All Stages
             ->AddPushConstantRange(0, sizeof(UInt32), RHI::EShaderStage::Vertex | RHI::EShaderStage::Fragment)
+            //Vertex Shader
             ->AddDescriptorSetLayout(TransformsDSLayout)
+            ->AddDescriptorSetLayout(LightUBODSLayout)
+            //Fragment Shader
             ->AddDescriptorSetLayout(TexturesDSLayout)
+            ->AddDescriptorSetLayout(ShadowMapDSLayout)
             ->Build();
         
         PipelineSetting = RHI::CreateRenderPipelineSetting()
             ->EnableDepthTest()
-            ->SetCullMode(RHI::ECullMode::Disable)
+            ->SetCullMode(RHI::ECullMode::Back)
             ->Confirm();
 
         PipelineSetting->SetVertexInputState(RHI::FRenderPipelineSetting::FVertexInputDescription
