@@ -67,7 +67,7 @@ export namespace VE
 		if(!_DescriptorSetLayout->IsBuilt())
 		{ VE_LOG_FATAL("Failed to add the Descriptor Set! -- The Layout is not built!"); }
 
-		DescriptorSetLayouts.emplace_back(std::move(_DescriptorSetLayout));
+		DescriptorSetLayouts.push_back(std::move(_DescriptorSetLayout));
 		return this;
 	}
 

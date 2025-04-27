@@ -52,7 +52,9 @@ export namespace VISERA_APP_NAMESPACE
 				Target = GeoAttachment->GetPrimitive()->GetBoundingBox().Center;
 				LookAtMatrix = AppScene->ShadowCamera->GetLookAtMatrix(Target);
 
-				GCmds->BindDescriptorSet(0, AppScene->LightUBO);
+				Frame.SetLightSpaceTransform(AppScene->ShadowCamera->GetProjectMatrix() * LookAtMatrix);
+
+				GCmds->BindDescriptorSet(0, Frame.GetLightUBO());
 				GCmds->BindVertexBuffer(GeoAttachment->GetPrimitive()->GetGPUVertexBuffer());
 
 				if (GeoAttachment->GetPrimitive()->HasIndex())
@@ -65,12 +67,13 @@ export namespace VISERA_APP_NAMESPACE
 					GCmds->Draw(3 * GeoAttachment->GetPrimitive()->GetVertexCount());
 				}
 
-				GCmds->BindVertexBuffer(CubeAttachment->GetPrimitive()->GetGPUVertexBuffer());
-				GCmds->BindIndexBuffer(CubeAttachment->GetPrimitive()->GetGPUIndexBuffer());
-				GCmds->DrawIndexed(CubeAttachment->GetPrimitive()->GetIndexCount());
+				//GCmds->BindVertexBuffer(CubeAttachment->GetPrimitive()->GetGPUVertexBuffer());
+				//GCmds->BindIndexBuffer(CubeAttachment->GetPrimitive()->GetGPUIndexBuffer());
+				//GCmds->DrawIndexed(CubeAttachment->GetPrimitive()->GetIndexCount());
 			}
 			GCmds->LeaveRenderPass(ShadowPass);
 
+			GCmds->ConvertImageLayout(Frame.GetSVShadowImage(), RHI::EImageLayout::ShaderReadOnly);
 			GCmds->ReachRenderPass(GeometryPass);
 			{
 				GCmds->BindRenderPipeline(GeometryPass->GetOpaquePipeline());
@@ -121,7 +124,9 @@ export namespace VISERA_APP_NAMESPACE
 				Frame.SetProjectionMatrix(AppScene->MainCamera->GetProjectMatrix());
 
 				GCmds->BindDescriptorSet(0, Frame.GetMatrixUBO());
-				GCmds->BindDescriptorSet(1, MariTexCanvas.lock()->GetTexture());
+				GCmds->BindDescriptorSet(1, Frame.GetLightUBO());
+				GCmds->BindDescriptorSet(2, MariTexCanvas.lock()->GetTexture());
+				GCmds->BindDescriptorSet(3, Frame.GetSVShadowMap());
 
 				GCmds->BindVertexBuffer(GeoAttachment->GetPrimitive()->GetGPUVertexBuffer());
 
@@ -142,7 +147,9 @@ export namespace VISERA_APP_NAMESPACE
 				GCmds->BindRenderPipeline(GeometryPass->GetOpaquePipeline());
 
 				GCmds->BindDescriptorSet(0, Frame.GetMatrixUBO());
-				GCmds->BindDescriptorSet(1, TextureCanvas.lock()->GetTexture());
+				GCmds->BindDescriptorSet(1, Frame.GetLightUBO());
+				GCmds->BindDescriptorSet(2, TextureCanvas.lock()->GetTexture());
+				GCmds->BindDescriptorSet(3, Frame.GetSVShadowMap());
 
 				GCmds->BindVertexBuffer(CubeAttachment->GetPrimitive()->GetGPUVertexBuffer());
 
@@ -150,6 +157,8 @@ export namespace VISERA_APP_NAMESPACE
 				GCmds->DrawIndexed(CubeAttachment->GetPrimitive()->GetIndexCount());
 			}
 			GCmds->LeaveRenderPass(GeometryPass);
+
+			GCmds->ConvertImageLayout(Frame.GetSVShadowImage(), RHI::EImageLayout::DepthAttachment);
 
 			GCmds->ReachRenderPass(PostprocessingPass);
 			{
@@ -180,7 +189,7 @@ export namespace VISERA_APP_NAMESPACE
 				.Join(FPath{JSON["Engine"]["Assets"]["Models"]["box"].GetString()}));
 
 			GeoAttachment = &Scene->Attach(FName{"model_0"}, Model);
-			CubeAttachment = &Scene->Attach(FName{"model_1"}, CubePlane);
+			CubeAttachment = &Scene->Attach(FName{"model_1"}, CubePlane, FScene::FlipFaceWinding);
 			Scene->Commit();
 
 			auto LogoImage = Media::CreateImage(FName{"logo"},
@@ -213,7 +222,7 @@ export namespace VISERA_APP_NAMESPACE
 
 			IO::RegisterMouseButtonEvent(IO::FMouseButtonCreateInfo
 				{
-					.Name   = FName{"AppScene->MainCamera_zoomin"},
+					.Name   = FName{"main_camera_zoomin"},
 					.Button	= IO::EMouseButton::Left,
 					.Action = IO::EAction::Press,
 					.Event  = [&]()
@@ -225,7 +234,7 @@ export namespace VISERA_APP_NAMESPACE
 				});
 			IO::RegisterMouseButtonEvent(IO::FMouseButtonCreateInfo
 			{
-				.Name   = FName{"AppScene->MainCamera_zoomout"},
+				.Name   = FName{"main_camera_zoomout"},
 				.Button	= IO::EMouseButton::Right,
 				.Action = IO::EAction::Press,
 				.Event  = [&]()

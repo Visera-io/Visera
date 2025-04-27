@@ -43,6 +43,10 @@ export namespace VE
         virtual auto
         GetIndexByteSize()   const -> UInt64        override { return sizeof(FIndex);  }
 
+        void inline //[FIXME]: if No IBO
+        FlipFaceWinding() { for (size_t i = 0; i < Indices.size(); i += 3) {std::swap(Indices[i + 1], Indices[i + 2]); } }
+
+        FMeshPrimitive() = delete;
         FMeshPrimitive(SharedPtr<const FModel> _Model);
 
     private:

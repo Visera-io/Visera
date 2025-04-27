@@ -65,9 +65,14 @@ export namespace VE
             VE_LOG_WARN("The image ({}) is a palette and has been converted to RGB!", Path.ToPlatformString());
             png_set_palette_to_rgb(_PNGPtr);
         }
+        if (png_get_valid(_PNGPtr, _InfoPtr, PNG_INFO_tRNS))
+        {
+            VE_LOG_WARN("The image ({}) has tRNS, and has been converted to full alpha!", Path.ToPlatformString());
+            png_set_tRNS_to_alpha(_PNGPtr);
+        }
         if (ColorType == PNG_COLOR_TYPE_GRAY && BitDepth < 8)
         { 
-            VE_LOG_WARN("The image ({}) is gray(<8bits), so it has been converted to gray(8bits)!", Path.ToPlatformString());
+            VE_LOG_WARN("The image ({}) is gray(<8bits), and has been converted to gray(8bits)!", Path.ToPlatformString());
             png_set_expand_gray_1_2_4_to_8(_PNGPtr);
             BitDepth = 8;
         }

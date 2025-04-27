@@ -26,7 +26,7 @@ export namespace VE
 
     private:
         //Resources
-        SharedPtr<RHI::FDescriptorSetLayout>   TransformsDSLayout;
+        SharedPtr<const RHI::FDescriptorSetLayout> TransformsDSLayout;
         //Layouts
         SharedPtr<RHI::FPipelineLayout>        PipelineLayout;
         SharedPtr<RHI::FRenderPipelineSetting> PipelineSetting;
@@ -37,9 +37,7 @@ export namespace VE
     FURPShadowPass::
     FURPShadowPass() : RHI::FRenderPass{ EType::Shadow }
     {
-        TransformsDSLayout = RHI::CreateDescriptorSetLayout()
-            ->AddBinding(0, RHI::EDescriptorType::UniformBuffer, 1, RHI::EShaderStage::Vertex)
-            ->Build();
+        TransformsDSLayout = RHI::FFrameContext::MatrixUBODSLayout;
 
         PipelineLayout = RHI::CreatePipelineLayout()
             ->AddDescriptorSetLayout(TransformsDSLayout)

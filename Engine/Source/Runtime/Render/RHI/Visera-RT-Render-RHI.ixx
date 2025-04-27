@@ -78,6 +78,7 @@ export namespace VE
 		using ESamplerAddressMode	= EVulkanSamplerAddressMode;
 		using ECullMode             = EVulkanCullMode;
 		using ESwizzle              = EVulkanSwizzle;
+		using ECompareMode          = EVulkanCompareOp;
 
 		using SSwapchainRecreation = FVulkanSwapchain::SRecreation;
 
@@ -93,6 +94,11 @@ export namespace VE
 			Matrix4x4F CofactorModel     = Matrix4x4F::Identity(); //Use Matrix3x3F in Shaders
 		};
 
+		struct alignas(16) FLightUBOLayout
+		{
+			Matrix4x4F LightSpaceTransform = Matrix4x4F::Identity();
+		};
+
 		class FFrameContext
 		{
 			friend class RHI;
@@ -103,31 +109,39 @@ export namespace VE
 
 			auto GetColorImageShaderReadView() const -> SharedPtr<const FImageView> { return SVColorView; }
 			auto GetSVColorTexture()    const -> SharedPtr<const FDescriptorSet>	{ return SVColorTexture; }
+			auto GetSVShadowMap()       const -> SharedPtr<const FDescriptorSet>	{ return SVShadowMapTexture; }
+			auto GetSVShadowImage()     const -> SharedPtr<FImage>	{ return SVShadowMapImage; }
 			auto GetFinalColorTexture() const -> SharedPtr<const FDescriptorSet>    { return PostprocessOutputTexture; }
 
 			auto GetMatrixUBO() const -> SharedPtr<const FDescriptorSet> { return MatrixUBO; }
+			auto GetLightUBO()  const -> SharedPtr<const FDescriptorSet> { return LightUBO; }
 
 			void SetModelMatrix(const Matrix4x4F& _ModelMatrix)
-			{ MatrixData->Write(_ModelMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Model)); }
+			{ MatrixUBOData->Write(_ModelMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Model)); }
 			void SetViewingMatrix(const Matrix4x4F& _ViewingMatrix)
-			{ MatrixData->Write(_ViewingMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Viewing)); }
+			{ MatrixUBOData->Write(_ViewingMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Viewing)); }
 			void SetProjectionMatrix(const Matrix4x4F& _ProjectionMatrix)
-			{ MatrixData->Write(_ProjectionMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Projection)); }
+			{ MatrixUBOData->Write(_ProjectionMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, Projection)); }
 
 			void SetInverseProjectionMatrix(const Matrix4x4F& _InverseProjectionMatrix)
-			{ MatrixData->Write(_InverseProjectionMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, InverseProjection)); }
+			{ MatrixUBOData->Write(_InverseProjectionMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, InverseProjection)); }
 			void SetInverseViewingMatrix(const Matrix4x4F& _InverseViewingMatrix)
-			{ MatrixData->Write(_InverseViewingMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, InverseViewing)); }
+			{ MatrixUBOData->Write(_InverseViewingMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, InverseViewing)); }
 			void SetCofactorModelMatrix(const Matrix4x4F& _CofactorModelMatrix)
-			{ MatrixData->Write(_CofactorModelMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, CofactorModel)); }
+			{ MatrixUBOData->Write(_CofactorModelMatrix.data(), sizeof(Matrix4x4F), offsetof(FMatrixUBOLayout, CofactorModel)); }
+
+			void SetLightSpaceTransform(const Matrix4x4F& _LightSpaceTransform)
+			{ LightUBOData->Write(_LightSpaceTransform.data(), sizeof(Matrix4x4F), offsetof(FLightUBOLayout, LightSpaceTransform)); }
 
 			Bool IsReady() const { return !InFlightFence.IsBlocking(); }
 
+			static inline SharedPtr<FDescriptorSetLayout> MatrixUBODSLayout;
+			static inline SharedPtr<FDescriptorSetLayout> LightUBODSLayout;
+			static inline SharedPtr<FDescriptorSetLayout> SVColorTextureDSLayout;
+			static inline SharedPtr<FSampler>             SVColorTextureSampler;
+			static inline SharedPtr<FSampler>             SVShadowMapSampler;
 		private:
 			static inline FRenderArea RenderArea{ {0,0},{UInt32(Window::GetExtent().Width), UInt32(Window::GetExtent().Height) } }; //[FIXME]: Read from Config
-			static inline SharedPtr<FDescriptorSetLayout> SVColorTextureDSLayout;
-			static inline SharedPtr<FSampler>			  SVColorTextureSampler;
-			static inline SharedPtr<FDescriptorSetLayout> MatrixDSLayout;
 
 			SharedPtr<FRenderTarget> BackgroundRTs;
 			SharedPtr<FRenderTarget> ShadowRTs;
@@ -136,6 +150,7 @@ export namespace VE
 
 			SharedPtr<FImageView>     SVColorView;
 			SharedPtr<FDescriptorSet> SVColorTexture;
+			SharedPtr<FImage>         SVShadowMapImage;
 			SharedPtr<FImageView>     SVShadowMapView;
 			SharedPtr<FDescriptorSet> SVShadowMapTexture;
 			SharedPtr<FImageView>     PostprocessInputView;
@@ -143,8 +158,10 @@ export namespace VE
 			SharedPtr<FImageView>     PostprocessOutputView;
 			SharedPtr<FDescriptorSet> PostprocessOutputTexture;
 
-			SharedPtr<FBuffer>        MatrixData;
+			SharedPtr<FBuffer>        MatrixUBOData;
 			SharedPtr<FDescriptorSet> MatrixUBO;
+			SharedPtr<FBuffer>        LightUBOData;
+			SharedPtr<FDescriptorSet> LightUBO;
 
 			enum EFrameCommandBufferType { Resource, Graphics, Editor, MAX };
 			Segment<SharedPtr<FGraphicsCommandBuffer>, MAX> CommandBuffers;
@@ -284,7 +301,17 @@ export namespace VE
 			FFrameContext::SVColorTextureSampler = RHI::CreateSampler(EFilter::Linear)
 				->Build();
 
-			FFrameContext::MatrixDSLayout = RHI::CreateDescriptorSetLayout()
+			FFrameContext::SVShadowMapSampler = RHI::CreateSampler(EFilter::Linear)
+				->SetCompareMode(ECompareMode::Greater) // Reversed Z
+				->SetAnisotropy(1.0)
+				->SetBorderColor(EBorderColor::White_Float)
+				->Build();
+
+			FFrameContext::MatrixUBODSLayout = RHI::CreateDescriptorSetLayout()
+				->AddBinding(0, EDescriptorType::UniformBuffer, 1, EShaderStage::Vertex)
+				->Build();
+
+			FFrameContext::LightUBODSLayout = RHI::CreateDescriptorSetLayout()
 				->AddBinding(0, EDescriptorType::UniformBuffer, 1, EShaderStage::Vertex)
 				->Build();
 
@@ -299,9 +326,13 @@ export namespace VE
 					Semephore = RHI::CreateSemaphore();
 				}
 
-				Frame.MatrixData = CreateMappedBuffer(sizeof(FMatrixUBOLayout), EBufferUsage::Uniform);
-				Frame.MatrixUBO = RHI::CreateDescriptorSet(FFrameContext::MatrixDSLayout);
-				Frame.MatrixUBO->WriteBuffer(0, Frame.MatrixData, 0, Frame.MatrixData->GetSize());
+				Frame.MatrixUBOData = CreateMappedBuffer(sizeof(FMatrixUBOLayout), EBufferUsage::Uniform);
+				Frame.MatrixUBO = RHI::CreateDescriptorSet(FFrameContext::MatrixUBODSLayout);
+				Frame.MatrixUBO->WriteBuffer(0, Frame.MatrixUBOData, 0, Frame.MatrixUBOData->GetSize());
+
+				Frame.LightUBOData = CreateMappedBuffer(sizeof(FLightUBOLayout), EBufferUsage::Uniform);
+				Frame.LightUBO = RHI::CreateDescriptorSet(FFrameContext::LightUBODSLayout);
+				Frame.LightUBO->WriteBuffer(0, Frame.LightUBOData, 0, Frame.LightUBOData->GetSize());
 
 				auto ColorImage = CreateImage(
 					EImageType::Image2D,
@@ -312,14 +343,17 @@ export namespace VE
 
 				ImmeCmds->ConvertImageLayout(ColorImage, EVulkanImageLayout::ShaderReadOnly);
 
-				auto ShadowMapImage = CreateImage(
+				Frame.SVShadowMapImage = CreateImage(
 					EImageType::Image2D,
 					{ FFrameContext::RenderArea.extent.width, FFrameContext::RenderArea.extent.height, 1 },
 					EFormat::S32_Float_Depth32,
 					EImageAspect::Depth,
 					EImageUsage::DepthStencilAttachment | EImageUsage::Sampled | EImageUsage::TransferSource);
 
-				ImmeCmds->ConvertImageLayout(ShadowMapImage, EVulkanImageLayout::DepthAttachment);
+				//[FIXME]: Need new APIs
+				ImmeCmds->ConvertImageLayout(Frame.SVShadowMapImage, EVulkanImageLayout::ShaderReadOnly);
+				Frame.SVShadowMapView    = Frame.SVShadowMapImage->CreateImageView();
+				ImmeCmds->ConvertImageLayout(Frame.SVShadowMapImage, EVulkanImageLayout::DepthAttachment);
 
 				auto PostprocessImage = CreateImage(
 					EImageType::Image2D,
@@ -339,13 +373,12 @@ export namespace VE
 
 				ImmeCmds->ConvertImageLayout(DepthImage, EVulkanImageLayout::DepthAttachment);
 
-				Frame.SVColorView = ColorImage->CreateImageView();
+				Frame.SVColorView    = ColorImage->CreateImageView();
 				Frame.SVColorTexture = RHI::CreateDescriptorSet(FFrameContext::SVColorTextureDSLayout);
 				Frame.SVColorTexture->WriteImage(0, Frame.SVColorView, FFrameContext::SVColorTextureSampler);
 
-				Frame.SVShadowMapView = ColorImage->CreateImageView();
 				Frame.SVShadowMapTexture = RHI::CreateDescriptorSet(FFrameContext::SVColorTextureDSLayout);
-				Frame.SVShadowMapTexture->WriteImage(0, Frame.SVShadowMapView, FFrameContext::SVColorTextureSampler);
+				Frame.SVShadowMapTexture->WriteImage(0, Frame.SVShadowMapView, FFrameContext::SVShadowMapSampler);
 
 				Frame.PostprocessInputView     = Frame.SVColorView;
 				Frame.PostprocessInputTexture  = Frame.SVColorTexture;
@@ -359,7 +392,7 @@ export namespace VE
 				    ->Confirm();
 
 				Frame.ShadowRTs = FRenderTarget::Create()
-					->AddDepthImage(ShadowMapImage)
+					->AddDepthImage(Frame.SVShadowMapImage)
 					->Confirm();
 
 				Frame.ForwardRTs = FRenderTarget::Create()
@@ -395,7 +428,9 @@ export namespace VE
 			Frames.clear();
 			FFrameContext::SVColorTextureDSLayout->Destroy();
 			FFrameContext::SVColorTextureSampler->Destroy();
-			FFrameContext::MatrixDSLayout->Destroy();
+			FFrameContext::SVShadowMapSampler->Destroy();
+			FFrameContext::MatrixUBODSLayout->Destroy();
+			FFrameContext::LightUBODSLayout->Destroy();
 			VE_LOG_TRACE("Destroying Command Pools...");
 			TransientGraphicsCommandPool.reset();
 			ResetableGraphicsCommandPool.reset();
