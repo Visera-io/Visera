@@ -17,7 +17,7 @@ export namespace VE
         auto GetGammaCorrectionPipeline() const -> SharedPtr<const RHI::FRenderPipeline> { return GammaCorrectionPipeline; }
 
     private:
-        SharedPtr<RHI::FDescriptorSetLayout>   DescriptorSetLayout;
+        SharedPtr<const RHI::FDescriptorSetLayout> SVColorDSLayout;
 
         SharedPtr<RHI::FPipelineLayout>        PipelineLayout;
         SharedPtr<RHI::FRenderPipelineSetting> PipelineSetting;
@@ -28,12 +28,10 @@ export namespace VE
     FURPPostprocessPass::
     FURPPostprocessPass() : RHI::FRenderPass{ EType::Postprocessing }
     {
-        DescriptorSetLayout = RHI::CreateDescriptorSetLayout()
-            ->AddBinding(0, RHI::EDescriptorType::CombinedImageSampler, 1, RHI::EShaderStage::Fragment)
-            ->Build();
+        SVColorDSLayout = RHI::FFrameContext::SVColorTextureDSLayout;
 
         PipelineLayout  = RHI::CreatePipelineLayout()
-            ->AddDescriptorSetLayout(DescriptorSetLayout)
+            ->AddDescriptorSetLayout(SVColorDSLayout)
             ->Build();
 
         PipelineSetting = RHI::CreateRenderPipelineSetting()

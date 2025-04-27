@@ -12,9 +12,12 @@ struct VertexOutput
     float4 Position : SV_Position;
     float3 Normal   : NORMAL;
     float3 UVCoord  : TEXCOORD0;
+
+    float4 FragPosLightSpace;
 };
 
-cbuffer FMatrixUBO : register(b0)
+[[vk::binding(0, 0)]]
+cbuffer FMatrixUBO : register(space0, b0)
 {
     float4x4 Projection;
     float4x4 Viewing;
@@ -23,9 +26,13 @@ cbuffer FMatrixUBO : register(b0)
     float4x4 InverseProjection;
     float4x4 InverseViewing;
     float4x4 CofactorModel;
+} MatrixUBO;
 
-    float4 Padding;
-}MatrixUBO;
+[[vk::binding(0, 1)]]
+cbuffer FLightUBO : register(space1, b0)
+{
+    float4x4 VPMatrix;
+} LightUBO;
 
 [shader("vertex")]
 VertexOutput VertexMain(VertexInput _Input)
@@ -38,6 +45,8 @@ VertexOutput VertexMain(VertexInput _Input)
     Output.Position = ClipPos;
     Output.Normal   = mul(float3x3(MatrixUBO.CofactorModel), _Input.Normal);
     Output.UVCoord  = _Input.UVCoord;
+
+    Output.FragPosLightSpace = mul(WorldPos, LightUBO.VPMatrix);
     return Output;
 }
 
@@ -48,29 +57,51 @@ struct FragmentInput
     float4 Position : SV_Position;
     float3 Normal   : NORMAL; // Matches vertex output
     float3 UVCoord  : TEXCOORD0;
+
+    float4 FragPosLightSpace;
 };
 
-[[vk::binding(0, 1)]]
-Texture2D<float4> DiffuseTexture : register(t0); // Texture
-[[vk::binding(0, 1)]]
-SamplerState      TextureSampler : register(s0);      // Sampler
+[[vk::binding(0, 2)]]
+Texture2D<float4> DiffuseTexture : register(space2, t0); // Texture
+[[vk::binding(0, 2)]]
+SamplerState TextureSampler      : register(space2, s0); // Sampler
+[[vk::binding(0, 3)]]
+Texture2D<float4> ShadowMap      : register(space3, t1); // Texture
+[[vk::binding(0, 3)]]
+SamplerState ShadowMapSampler    : register(space3, s1); // Sampler
+
+float ComputeShadow(float4 _FragPosLightSpace)
+{
+    // Percentage Closer Filtering (PCF)
+    float2 ProjCoords = _FragPosLightSpace.xy / _FragPosLightSpace.w;
+    ProjCoords = ProjCoords * 0.5 + 0.5;
+
+    float CameraViewDepth = _FragPosLightSpace.z / _FragPosLightSpace.w;
+    float Bias = 0.001f;
+    float Shadow = 0.0;
+    float Width, Height, Levels;
+    ShadowMap.GetDimensions(0, Width, Height, Levels);
+    float2 Offsets = (1.0 / float2(Width, Height));
+    for (float dx = -1.5; dx <= 1.5; dx += 1.0)
+    {
+        for (float dy = -1.5; dy <= 1.5; dy += 1.0)
+        {
+            float2 SampleCoords  = ProjCoords + Offsets * float2(dx, dy);
+            float LightViewDepth = ShadowMap.Sample(ShadowMapSampler, SampleCoords).r;
+            Shadow += (CameraViewDepth + Bias) > LightViewDepth ? 0.0 : 1.0; // Reversed Z
+        }
+    }
+    return Shadow / 16.0;
+}
 
 [shader("fragment")]
 float4 FragmentMain(FragmentInput _Input) : SV_TARGET
 {
-    // Bling-Phone
-    float3 Light = { 1.0, 1.0, 1.0 };
-    float3 LightClipPos = { 1.0, 2.0, 0.0 };
-    float3 LightDir = normalize(LightClipPos - _Input.Position.xyz);
-
-    float3 Albedo = { 0.5, 0.5, 0.5 };
-    float3 AmbientColor = Albedo * Light;
-    //return float4(_Input.Normal, 1.0); // Use interpolated normal as color
-    float4 DiffuseColor = DiffuseTexture.Sample(TextureSampler, _Input.UVCoord.xy);
-    return DiffuseColor;
+    // return float4(_Input.Normal, 1.0); // Use interpolated normal as color
+    float Shadow = ComputeShadow(_Input.FragPosLightSpace);
+    float3 DiffuseColor = (1.0 - Shadow) 
+                        * DiffuseTexture.Sample(TextureSampler, _Input.UVCoord.xy).xyz;
+    return float4(DiffuseColor, 1.0);
     
-    //float3 DiffuseColor = max(dot(_Input.Normal, LightDir), 0.5);
-
-    //return float4(AmbientColor + DiffuseColor, 1.0);
     //return float4(_Input.Normal, 1.0); // Use interpolated normal as color
 }
