@@ -43,27 +43,31 @@ export namespace VE
 	{
 		SharedPtr<IImage> NewImage;
 
-		if (_Path.GetExtension().ToPlatformString() == ".png")
+		const String ImageFileExtension = std::move(_Path.GetExtension().ToPlatformString());
+		if (".png" == ImageFileExtension)
 		{
-			RWLock.StartWriting();
-			{
-				auto& ImageSlot = ImageTable[_Name];
-				if (ImageSlot == nullptr)
-				{
-					ImageSlot = CreateSharedPtr<FPNGImage>(_Path);
-					NewImage  = ImageSlot;
-				}
-				else
-				{
-					VE_LOG_ERROR("Failed to create image! -- a duplicated image name ({})!", _Name.GetNameWithNumber());
-				}
-			}
-			RWLock.StopWriting();
+			NewImage = CreateSharedPtr<FPNGImage>(_Path);
+		}
+		else if (".exr" == ImageFileExtension)
+		{
+			NewImage = CreateSharedPtr<FEXRImage>(_Path);
 		}
 		else
 		{
 			VE_LOG_FATAL("Other Image formats WIP...");
 		}
+
+		RWLock.StartWriting();
+		{
+			auto& ImageSlot = ImageTable[_Name];
+			if (ImageSlot != nullptr)
+			{
+				VE_LOG_ERROR("Failed to add the image({}) to media! -- a duplicated image name!",
+				_Name.GetNameWithNumber());
+			}
+			ImageSlot = NewImage;
+		}
+		RWLock.StopWriting();
 
 		return NewImage;
 	}

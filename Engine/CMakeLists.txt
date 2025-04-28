@@ -60,6 +60,9 @@ link_stb(${VISERA})
 include(install_libpng)
 link_libpng(${VISERA})
 
+include(install_openexr)
+link_openexr(${VISERA})
+
 include(install_spdlog)
 link_spdlog(${VISERA})
 

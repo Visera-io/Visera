@@ -25,9 +25,9 @@ export namespace VE
 		auto GetExtension() const ->FPath { if (HasExtension()) { return { Data.extension().c_str()} ; } else { return FPath{}; } }
 		Bool IsEmpty()      const { return Data.empty(); }
 
-		FPath& Join(StringView _Path) { Data.append(_Path); return *this; }
-		FPath& Join(const FPath& _Path)   { Data.append(_Path.Data.c_str()); return *this; }
-		FPath& operator+=(StringView _Path) { Join(_Path); return *this; }
+		auto Join(StringView _Path)   const -> FPath   { return FPath{ Data / _Path }; }
+		auto Join(const FPath& _Path) const -> FPath   { return FPath{ Data / _Path.Data };}
+		FPath& operator+=(StringView _Path)     { Join(_Path); return *this; }
 		FPath& operator+=(const FPath& _Path)   { Join(_Path); return *this; }
 		
 		FPath() = default;
