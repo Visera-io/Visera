@@ -176,35 +176,27 @@ export namespace VISERA_APP_NAMESPACE
 		virtual void Bootstrap() override
 		{
 			//VE_LOG_INFO(Bootstraping " VISERA_APP_NAME);
-			auto Config = FileSystem::CreateJSONFile(FPath{VISERA_ENGINE_CONFIGS_DIR"/Configs.json"});
-			Config->Load();
-			auto JSON = Config->Parse();
-			VE_LOG_INFO("{}", JSON["Engine"]["Assets"]["Models"]["test"].GetString());
 			auto Model = Media::CreateModel(FName{ "model" },
-				FPath{VISERA_ENGINE_MODELS_DIR}
-				.Join(FPath{JSON["Engine"]["Assets"]["Models"]["test"].GetString()}));
+				GEngine::Path.Assets
+				.Join(FPath{GEngine::GetConfigs()["Assets"]["Models"]["test"].GetString()}));
 
 			auto CubePlane = Media::CreateModel(FName{ "model_cube_0" },
-				FPath{VISERA_ENGINE_MODELS_DIR}
-				.Join(FPath{JSON["Engine"]["Assets"]["Models"]["box"].GetString()}));
+				GEngine::Path.Assets.Join(FPath{"Models/box.obj"}));
 
 			GeoAttachment = &Scene->Attach(FName{"model_0"}, Model);
 			CubeAttachment = &Scene->Attach(FName{"model_1"}, CubePlane, FScene::FlipFaceWinding);
 			Scene->Commit();
 
 			auto LogoImage = Media::CreateImage(FName{"logo"},
-				FPath{ VISERA_ENGINE_IMAGES_DIR }
-			    .Join(FPath{ "Logo.png" }));
+			GEngine::Path.Assets.Join(FPath{ "Images/Logo.png" }));
 			LogoImage->FlipVertically();
 			Editor::CreateCanvas(LogoImage);
 
 			MariTexImage = Media::CreateImage(FName{"MariTexImage"},
-				FPath{ VISERA_ENGINE_MODELS_DIR }
-				.Join(FPath{"Marry/MC003_Kozakura_Mari.png"}));
+			GEngine::Path.Assets.Join(FPath{"Models/Marry/MC003_Kozakura_Mari.png"}));
 
 			TextureCanvas = Editor::CreateCanvas(Media::CreateImage(FName{"default_texture"},
-				FPath{VISERA_ENGINE_IMAGES_DIR}
-				.Join(FPath{JSON["Engine"]["Assets"]["Images"]["default_texture"].GetString()})));
+				GEngine::Path.Assets.Join(FPath{"Images/default_texture.png"})));
 			TextureCanvas.lock()->Hide();	
 
 			MariTexCanvas = Editor::CreateCanvas(MariTexImage);

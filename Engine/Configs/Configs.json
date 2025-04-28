@@ -14,7 +14,7 @@
         {
             "Models": 
             {
-                "test": "Marry/Marry.obj",
+                "test": "Models/Marry/Marry.obj",
                 "plane": "plane.obj",
                 "spot": "spot.obj",
                 "cube": "Cube.obj",
@@ -23,6 +23,7 @@
             },
             "Images":
             {
+                "default_skybox"  : "HDR/autumn_field_puresky_4k.exr",
                 "default_texture" : "default_texture.png"
             }
         },

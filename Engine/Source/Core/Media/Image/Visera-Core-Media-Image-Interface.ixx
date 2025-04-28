@@ -22,6 +22,7 @@ export namespace VE
         Bitmap,
         PNG,
         JPEG,
+        EXR,
 
         Unknown,
     };

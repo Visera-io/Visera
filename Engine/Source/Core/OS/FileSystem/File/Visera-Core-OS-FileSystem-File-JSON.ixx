@@ -24,6 +24,8 @@ export namespace VE
 	FJSON FJSONFile::
 	Parse()
 	{
+		if (IsEmpty()) { Load(); }
+
 		Document Root;
 		if (Root.Parse(Data.data()).HasParseError())
 		{

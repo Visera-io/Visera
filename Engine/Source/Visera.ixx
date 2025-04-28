@@ -100,6 +100,8 @@ export namespace VE
 #endif
 			VE_LOG_DEBUG("Bootstrapping Runtime...");
 
+			VE_LOG_TRACE("Bootstrapping Global...");
+			GEngine::Bootstrap();
 			VE_LOG_TRACE("Bootstrapping Window...");
 			Window::Bootstrap();
 			VE_LOG_TRACE("Bootstrapping IO...");
@@ -145,6 +147,8 @@ export namespace VE
 			IO::Terminate();
 			VE_LOG_TRACE("Terminating Window...");
 			Window::Terminate();
+			VE_LOG_TRACE("Terminating Global...");
+			GEngine::Terminate();
 		}
 	};
 
