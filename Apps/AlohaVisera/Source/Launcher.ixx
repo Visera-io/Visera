@@ -175,6 +175,9 @@ export namespace VISERA_APP_NAMESPACE
 
 		virtual void Bootstrap() override
 		{
+			auto K = Media::CreateImage(FName{"skybox"},
+				GEngine::Path.Assets.Join(FPath{"Images/HDR/autumn_field_puresky_4k.exr"}));
+
 			//VE_LOG_INFO(Bootstraping " VISERA_APP_NAME);
 			auto Model = Media::CreateModel(FName{ "model" },
 				GEngine::Path.Assets

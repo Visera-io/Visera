@@ -6,6 +6,7 @@ export module Visera.Core.Media.Image;
 #define VE_MODULE_NAME "Image"
 export import :Interface;
 export import :PNG;
+export import :EXR;
 import Visera.Core.Log;
 import Visera.Core.Type;
 import Visera.Core.Signal;

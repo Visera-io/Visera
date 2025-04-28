@@ -44,6 +44,8 @@ export namespace VE
         RGB_B8_G8_R8       = STBIR_BGR,
         RGBA_R8_G8_B8_A8   = STBIR_RGBA,
         RGBA_B8_G8_R8_A8   = STBIR_BGRA,
+        RGBA_Float         = STBIR_TYPE_FLOAT,
+        RGBA_HalfFloat     = STBIR_TYPE_HALF_FLOAT,
 
         Gray               = STBIR_1CHANNEL,
         GrayAlpha          = STBIR_2CHANNEL,
