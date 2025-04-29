@@ -66,9 +66,9 @@ Texture2D<float4> DiffuseTexture : register(space2, t0); // Texture
 [[vk::binding(0, 2)]]
 SamplerState TextureSampler      : register(space2, s0); // Sampler
 [[vk::binding(0, 3)]]
-Texture2D<float4> ShadowMap      : register(space3, t1); // Texture
+Texture2D<float> ShadowMap      : register(space3, t1); // Texture
 [[vk::binding(0, 3)]]
-SamplerState ShadowMapSampler    : register(space3, s1); // Sampler
+SamplerComparisonState ShadowMapSampler    : register(space3, s1); // Sampler
 
 float ComputeShadow(float4 _FragPosLightSpace)
 {
@@ -76,8 +76,9 @@ float ComputeShadow(float4 _FragPosLightSpace)
     float2 ProjCoords = _FragPosLightSpace.xy / _FragPosLightSpace.w;
     ProjCoords = ProjCoords * 0.5 + 0.5;
 
-    float CameraViewDepth = _FragPosLightSpace.z / _FragPosLightSpace.w;
     float Bias = 0.001f;
+    float CameraViewDepth = Bias + _FragPosLightSpace.z / _FragPosLightSpace.w; // Reversed Z
+
     float Shadow = 0.0;
     float Width, Height, Levels;
     ShadowMap.GetDimensions(0, Width, Height, Levels);
@@ -86,9 +87,12 @@ float ComputeShadow(float4 _FragPosLightSpace)
     {
         for (float dy = -1.5; dy <= 1.5; dy += 1.0)
         {
-            float2 SampleCoords  = ProjCoords + Offsets * float2(dx, dy);
-            float LightViewDepth = ShadowMap.Sample(ShadowMapSampler, SampleCoords).r;
-            Shadow += (CameraViewDepth + Bias) > LightViewDepth ? 0.0 : 1.0; // Reversed Z
+            float2 SampleCoords = ProjCoords + Offsets * float2(dx, dy);
+            
+            Shadow += ShadowMap.SampleCmpLevelZero(
+                                ShadowMapSampler,
+                                SampleCoords,
+                                CameraViewDepth);
         }
     }
     return Shadow / 16.0;
@@ -99,7 +103,7 @@ float4 FragmentMain(FragmentInput _Input) : SV_TARGET
 {
     // return float4(_Input.Normal, 1.0); // Use interpolated normal as color
     float Shadow = ComputeShadow(_Input.FragPosLightSpace);
-    float3 DiffuseColor = (1.0 - Shadow) 
+    float3 DiffuseColor = (Shadow)
                         * DiffuseTexture.Sample(TextureSampler, _Input.UVCoord.xy).xyz;
     return float4(DiffuseColor, 1.0);
     
