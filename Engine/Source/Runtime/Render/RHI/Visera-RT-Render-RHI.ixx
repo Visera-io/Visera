@@ -103,6 +103,9 @@ export namespace VE
 		{
 			friend class RHI;
 		public:
+			//[FIXME]: Read from Config
+			static inline FRenderArea RenderArea{ {0,0},{UInt32(Window::GetExtent().Width), UInt32(Window::GetExtent().Height) } };
+
 			auto GetResourceCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer>    { return CommandBuffers[Resource]; }
 			auto GetGraphicsCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer>    { return CommandBuffers[Graphics]; }
 			auto GetEditorCommandBuffer()   -> SharedPtr<FGraphicsCommandBuffer>    { return CommandBuffers[Editor];   }
@@ -141,7 +144,6 @@ export namespace VE
 			static inline SharedPtr<FSampler>             SVColorTextureSampler;
 			static inline SharedPtr<FSampler>             SVShadowMapSampler;
 		private:
-			static inline FRenderArea RenderArea{ {0,0},{UInt32(Window::GetExtent().Width), UInt32(Window::GetExtent().Height) } }; //[FIXME]: Read from Config
 
 			SharedPtr<FRenderTarget> BackgroundRTs;
 			SharedPtr<FRenderTarget> ShadowRTs;
@@ -350,9 +352,6 @@ export namespace VE
 					EImageAspect::Depth,
 					EImageUsage::DepthStencilAttachment | EImageUsage::Sampled | EImageUsage::TransferSource);
 
-				//[FIXME]: Need new APIs
-				ImmeCmds->ConvertImageLayout(Frame.SVShadowMapImage, EVulkanImageLayout::ShaderReadOnly);
-				Frame.SVShadowMapView    = Frame.SVShadowMapImage->CreateImageView();
 				ImmeCmds->ConvertImageLayout(Frame.SVShadowMapImage, EVulkanImageLayout::DepthAttachment);
 
 				auto PostprocessImage = CreateImage(
@@ -377,6 +376,7 @@ export namespace VE
 				Frame.SVColorTexture = RHI::CreateDescriptorSet(FFrameContext::SVColorTextureDSLayout);
 				Frame.SVColorTexture->WriteImage(0, Frame.SVColorView, FFrameContext::SVColorTextureSampler);
 
+				Frame.SVShadowMapView    = Frame.SVShadowMapImage->CreateImageView(RHI::EImageLayout::ShaderReadOnly);
 				Frame.SVShadowMapTexture = RHI::CreateDescriptorSet(FFrameContext::SVColorTextureDSLayout);
 				Frame.SVShadowMapTexture->WriteImage(0, Frame.SVShadowMapView, FFrameContext::SVShadowMapSampler);
 

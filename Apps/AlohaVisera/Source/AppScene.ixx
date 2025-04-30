@@ -16,6 +16,8 @@ export namespace VISERA_APP_NAMESPACE
         UniquePtr<FCamera> MainCamera;
         UniquePtr<FCamera> ShadowCamera;
 
+        UniquePtr<FLight> MainLight;
+
         FAppScene(SharedPtr<const RHI::FDescriptorSetLayout> _DSLayout)
         {
             MainCamera = CreateUniquePtr<FCamera>();
@@ -25,6 +27,8 @@ export namespace VISERA_APP_NAMESPACE
             ShadowCamera = CreateUniquePtr<FCamera>(FCamera::EMode::Orthographic);
             ShadowCamera->SetFOV(4.0);
             ShadowCamera->SetPosition({2, 7, -6});
+
+            MainLight = CreateUniquePtr<FLight>();
         }
         FAppScene() = delete;
     };
