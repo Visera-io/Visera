@@ -150,6 +150,7 @@ export namespace VE
 		friend class FVulkanGraphicsCommandBuffer;
 	public:
 		auto CreateImageView(
+			EVulkanImageLayout      _Layout  = EVulkanImageLayout::Undefined, // Auto
 			Optional<FVulkanSwizzle>_Swizzle = {},
 			Pair<UInt8, UInt8>		_MipmapLevelRange = {0,0},
 			Pair<UInt8, UInt8>		_ArrayLayerRange  = {0,0},
@@ -303,7 +304,8 @@ export namespace VE
 	}
 	
 	SharedPtr<FVulkanImageView> FVulkanImage::
-	CreateImageView(Optional<FVulkanSwizzle>_Swizzle /*= {}*/,
+	CreateImageView(EVulkanImageLayout      _Layout  /*= EVulkanImageLayout::Undefined*/,
+					Optional<FVulkanSwizzle>_Swizzle /*= {}*/,
 					Pair<UInt8, UInt8>		_MipmapLevelRange/* = {0,0}*/,
 					Pair<UInt8, UInt8>		_ArrayLayerRange /* = {0,0}*/,
 					EVulkanFormat			_Format/* = EVulkanFormat::None*/,
@@ -315,7 +317,7 @@ export namespace VE
 		VE_ASSERT(Type != EVulkanImageType::Undefined && "Cannot create the image view for an undefined image!");
 
 		auto NewImageView = CreateSharedPtr<FVulkanImageView>(shared_from_this());
-		NewImageView->LayoutView = GetLayout();
+		NewImageView->LayoutView = (_Layout == EVulkanImageLayout::Undefined)? GetLayout() : _Layout;
 		NewImageView->TypeView   = (_Type   == EVulkanImageViewType::Auto)? EVulkanImageViewType(this->Type) : _Type;
 		NewImageView->FormatView = (_Format == EVulkanFormat::None)? this->Format : _Format;
 		NewImageView->AspectView = (_Aspect == EVulkanImageAspect::Undefined)? this->Aspects : _Aspect;

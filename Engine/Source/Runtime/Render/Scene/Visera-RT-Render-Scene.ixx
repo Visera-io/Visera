@@ -2,7 +2,6 @@ module;
 #include <Visera.h>
 export module Visera.Runtime.Render.Scene;
 #define VE_MODULE_NAME "Scene"
-import Visera.Runtime.Render.Scene.Light;
 import Visera.Runtime.Render.Scene.Primitive;
 
 import Visera.Runtime.Render.RTC;

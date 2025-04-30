@@ -33,6 +33,7 @@ export namespace VISERA_APP_NAMESPACE
 
 		Matrix4x4F LookAtMatrix;
 		Vector3F Target;
+
 	public:
 		virtual void Tick() override
 		{
