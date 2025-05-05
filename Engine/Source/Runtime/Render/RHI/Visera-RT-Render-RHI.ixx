@@ -103,8 +103,7 @@ export namespace VE
 		{
 			friend class RHI;
 		public:
-			//[FIXME]: Read from Config
-			static inline FRenderArea RenderArea{ {0,0},{UInt32(Window::GetExtent().Width), UInt32(Window::GetExtent().Height) } };
+			static inline FRenderArea RenderArea{ {0,0},{0, 0} };
 
 			auto GetResourceCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer>    { return CommandBuffers[Resource]; }
 			auto GetGraphicsCommandBuffer() -> SharedPtr<FGraphicsCommandBuffer>    { return CommandBuffers[Graphics]; }
@@ -292,6 +291,9 @@ export namespace VE
 			TransientGraphicsCommandPool = FGraphicsCommandPool::Create(ECommandPoolType::Transient);
 
 			VE_LOG_TRACE("Creating Frames...");
+			FFrameContext::RenderArea.extent.width  = Window::GetExtent().Width;
+			FFrameContext::RenderArea.extent.height = Window::GetExtent().Height;
+
 			Frames.resize(GetSwapchainFrameCount());
 			auto ImmeCmds = CreateOneTimeGraphicsCommandBuffer();
 			ImmeCmds->StartRecording();

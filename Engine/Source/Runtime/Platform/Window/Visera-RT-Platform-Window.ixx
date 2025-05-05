@@ -6,6 +6,7 @@ export module Visera.Runtime.Platform.Window;
 
 import Visera.Core.Log;
 import Visera.Core.Signal;
+import Visera.Runtime.Global;
 
 export namespace VE
 {
@@ -54,7 +55,7 @@ export namespace VE
 
 	private:
 		static inline String	Title				= VISERA_APP_NAME;
-		static inline FExtent	CurrentExtent		{{.Width = 1600, .Height = 900}};
+		static inline FExtent	CurrentExtent		{{.Width = 0, .Height = 0}};
 		static inline Bool		bMaximized			= False;
 		static inline FContentScale ContentScale;
 
@@ -68,6 +69,12 @@ export namespace VE
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 			glfwWindowHint(GLFW_RESIZABLE,	GLFW_TRUE);
 
+			const auto Extent =
+				GEngine::GetConfigs()["Settings"]["Window"]["Extent"].GetArray();
+			VE_ASSERT(Extent.Size() == 2);
+			CurrentExtent.Width  = Extent[0].GetInt();
+			CurrentExtent.Height = Extent[1].GetInt();
+
 			//Create Window
 			Handle = glfwCreateWindow(
 				CurrentExtent.Width, CurrentExtent.Height,
@@ -75,10 +82,10 @@ export namespace VE
 				NULL,
 				NULL);
 			if (!Handle)
-			{ throw SRuntimeError("Failed to create GLFWwindow!"); }
+			{ VE_LOG_FATAL("Failed to create GLFWwindow!"); }
 			
 			if (!glfwVulkanSupported())
-			{ throw SRuntimeError("GLFW: Vulkan Not Supported\n"); }
+			{ VE_LOG_FATAL("GLFW: Vulkan Not Supported\n"); }
 
 			// Set Window Position
 			const GLFWvidmode* VidMode = GetVideoMode(GetPrimaryMonitor());
