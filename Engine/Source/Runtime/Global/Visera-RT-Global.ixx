@@ -8,6 +8,11 @@ import Visera.Core.OS.FileSystem;
 
 export namespace VE
 {
+	struct FPathCache
+	{
+		FPath Configs = FPath{VISERA_ENGINE_CONFIGS_DIR};
+		FPath Assets  = FPath{VISERA_ENGINE_ASSETS_DIR};
+	};
 
 	class GEngine
 	{
@@ -18,11 +23,6 @@ export namespace VE
 		static inline auto
 		GetConfigs() -> const auto& { return Configs["Engine"]; }
 
-		struct FPathCache
-		{
-			FPath Configs = FPath{VISERA_ENGINE_CONFIGS_DIR};
-			FPath Assets  = FPath{VISERA_ENGINE_ASSETS_DIR};
-		};
 		static const inline FPathCache Path;
 
 	private:

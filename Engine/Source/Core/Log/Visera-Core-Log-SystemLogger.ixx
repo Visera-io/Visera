@@ -69,9 +69,7 @@ export namespace VE
 		virtual ~FSystemLogger() noexcept
 		{
 			SystemLogger->flush();
-
-			//Do not call drop_all() in your class!
-			spdlog::drop_all();
+			//Do not call drop_all() in your class! spdlog::drop_all();
 			SystemLogger.reset();
 		}
 

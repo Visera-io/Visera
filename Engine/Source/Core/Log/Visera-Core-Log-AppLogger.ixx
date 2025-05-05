@@ -71,9 +71,7 @@ export namespace VE
 		virtual ~FAppLogger() noexcept
 		{
 			AppLogger->flush();
-
-			//Do not call drop_all() in your class!
-			spdlog::drop_all();
+			//Do not call drop_all() in your class! spdlog::drop_all();
 			AppLogger.reset();
 		}
 

@@ -4,6 +4,7 @@ export module Visera.Runtime.Render.URP.Shadow;
 #define VE_MODULE_NAME "Shadow"
 import :Parallel;
 
+import Visera.Core.Math.Basic;
 import Visera.Core.OS.FileSystem;
 import Visera.Runtime.Render.RHI;
 import Visera.Runtime.Render.Shader;

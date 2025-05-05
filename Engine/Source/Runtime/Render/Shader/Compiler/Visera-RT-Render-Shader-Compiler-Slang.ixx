@@ -3,9 +3,11 @@ module;
 #include <slang.h>
 #include <slang-com-ptr.h>
 export module Visera.Runtime.Render.Shader.Compiler:Slang;
+#define VE_MODULE_NAME "Compiler:Slang"
 
-import Visera.Runtime.Render.RHI;
+import Visera.Core.Log;
 import Visera.Core.Signal;
+import Visera.Runtime.Render.RHI;
 
 export namespace VE
 {
@@ -54,8 +56,13 @@ export namespace VE
 			.searchPaths	 = VulkanSPIRVCompiler.ShaderPaths.data(),
 			.searchPathCount = UInt32(VulkanSPIRVCompiler.ShaderPaths.size()),
 		};
-		if (Context->createSession(VulkanShaderCompilerCreateInfo, VulkanSPIRVCompiler.Session.writeRef()) != SLANG_OK)
-		{ throw SRuntimeError("Failed to create the Slang Vulkan Compiler Session!"); }
+		if (Context->createSession(VulkanShaderCompilerCreateInfo,
+			                       VulkanSPIRVCompiler.Session.writeRef()) != SLANG_OK)
+		{
+			String Info = Text("Failed to create the Compiler Session! -- throw(SRuntimeError)");
+			VE_LOG_ERROR("{}", Info);
+			throw SRuntimeError(Info);
+		}
 	}
 
 	 SharedPtr<RHI::FSPIRVShader> FSlangCompiler::
@@ -68,14 +75,24 @@ export namespace VE
 	 	// Create Shader Module
 	 	Slang::ComPtr<slang::IModule> ShaderModule{ Compiler->Session->loadModule(_FileName.data(), Diagnostics.writeRef())};
 	 	if (Diagnostics)
-		{ throw SRuntimeError(Text("Failed to create Slang Shader Module:\n{}", RawString(Diagnostics->getBufferPointer()))); }
+	 	{
+	 		String Info = Text("Failed to create the Shader Module: {}! -- throw(SRuntimeError)",
+	 			               RawString(Diagnostics->getBufferPointer()));
+	 		VE_LOG_ERROR("{}", Info);
+	 		throw SRuntimeError(Info);
+	 	}
 
 	 	// Create Shader Program
 	 	Slang::ComPtr<slang::IEntryPoint> ShaderEntryPoint;
 	 	if (ShaderModule->findEntryPointByName(
 	 		_EntryPoint.data(),
 	 		ShaderEntryPoint.writeRef()) != SLANG_OK)
-	 	{ throw SRuntimeError(Text("Failed to find the EntryPoint({}) from Shader({})!", _EntryPoint.data(), _FileName.data())); }
+	 	{
+	 		String Info = Text("Failed to find the EntryPoint({}) from Shader({})! -- throw(SRuntimeError)",
+	 			               _EntryPoint.data(), _FileName.data());
+	 		VE_LOG_ERROR("{}", Info);
+	 		throw SRuntimeError(Info);
+	 	}
 
 	 	const auto ShaderComponents = Segment<slang::IComponentType*, 2> 
 	 	{ 
@@ -89,7 +106,12 @@ export namespace VE
 	 		ShaderComponents.size(),
 	 		ShaderProgram.writeRef(),
 	 		Diagnostics.writeRef()) != SLANG_OK)
-	 	{ throw SRuntimeError(Text("Failed to create the Shader({}):\n{}", _FileName.data(), RawString(Diagnostics->getBufferPointer()))); }
+	 	{
+	 		String Info = Text("Failed to create the Shader({}): {}! -- throw(SRuntimeError)",
+	 		                   _FileName.data(), RawString(Diagnostics->getBufferPointer()));
+	 		VE_LOG_ERROR("{}", Info);
+	 		throw SRuntimeError(Info);
+	 	}
 	
 	 	Slang::ComPtr<slang::IBlob> CompiledCode;
 	 	if (ShaderProgram->getEntryPointCode(
@@ -97,13 +119,22 @@ export namespace VE
 	 		0,
 	 		CompiledCode.writeRef(),
 	 		Diagnostics.writeRef()) != SLANG_OK)
-	 	{ throw SRuntimeError(Text("Failed to obtain compiled shader code from {}! -- {}", _FileName.data(), RawString(Diagnostics->getBufferPointer()))); }
-	
+	 	{
+	 		String Info = Text("Failed to obtain compiled shader code from {}: {}! -- throw(SRuntimeError)",
+	 		                   _FileName.data(), RawString(Diagnostics->getBufferPointer()));
+	 		VE_LOG_ERROR("{}", Info);
+	 		throw SRuntimeError(Info);
+	 	}
+
 	 	// Reflect Shader
 	 	slang::ProgramLayout* ShaderLayout = ShaderProgram->getLayout(0, Diagnostics.writeRef());
 	 	if (Diagnostics)
-		{ throw SRuntimeError(Text("Failed to get reflection info from Shader({})! -- {}",
-		  _FileName.data(), RawString(Diagnostics->getBufferPointer()))); }
+		{
+	 		String Info = Text("Failed to get reflection info from Shader({}): {} -- throw(SRuntimeError)",
+							   _FileName.data(), RawString(Diagnostics->getBufferPointer()));
+	 		VE_LOG_ERROR("{}", Info);
+	 		throw SRuntimeError(Info);
+		}
 		
 	 	auto* EntryPointRef = ShaderLayout->findEntryPointByName(_EntryPoint.data());
 
@@ -112,14 +143,12 @@ export namespace VE
 	 	{
 	 	case SLANG_STAGE_VERTEX:	ShaderStage = RHI::EShaderStage::Vertex;   break;
 	 	case SLANG_STAGE_FRAGMENT:	ShaderStage = RHI::EShaderStage::Fragment; break;
-	 	default: throw SRuntimeError("Unsupported Shader PoolType!");
+	 	default: VE_LOG_FATAL("Unsupported Shader PoolType!");
 	 	}
 
 	 	auto RHIShader = RHI::CreateShader(ShaderStage,
 	 					                   CompiledCode->getBufferPointer(),
 	 					                   CompiledCode->getBufferSize());
-
-	 	ShaderProgram->release();
 
 		return RHIShader;
 	 }
