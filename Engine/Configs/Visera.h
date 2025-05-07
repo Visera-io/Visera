@@ -79,6 +79,7 @@
 
 // << STD Modules >>
 #include <cassert>
+#include <cmath>
 #include <random>
 #include <sstream>
 #include <ostream>
