@@ -21,15 +21,31 @@ export namespace VE
         static inline Array<SharedPtr<FShadowMap>>
         BatchCreate(UInt32 _Count, UInt32 _Width, UInt32 _Height);
 
+        void inline
+        ReachShadowPass(SharedPtr<RHI::FGraphicsCommandBuffer> _CommandBuffer);
+        void inline
+        LeaveShadowPass(SharedPtr<RHI::FGraphicsCommandBuffer> _CommandBuffer);
+
         FShadowMap() = default;
         FShadowMap(UInt32 _Width, UInt32 _Height);
         virtual ~FShadowMap() override = default;
-
 
     private:
         static inline Optional<FSupportedFormat> SupportedFormat;
         static inline FSupportedFormat SearchSupportedFormat();
     };
+
+    void FShadowMap::
+    ReachShadowPass(SharedPtr<RHI::FGraphicsCommandBuffer> _CommandBuffer)
+    {
+        _CommandBuffer->ConvertImageLayout(RHIImage, RHI::EImageLayout::DepthAttachment);
+    }
+
+    void FShadowMap::
+    LeaveShadowPass(SharedPtr<RHI::FGraphicsCommandBuffer> _CommandBuffer)
+    {
+        _CommandBuffer->ConvertImageLayout(RHIImage, RHI::EImageLayout::ShaderReadOnly);
+    }
 
     FShadowMap::
     FShadowMap(UInt32 _Width, UInt32 _Height) : ITexture{_Width, _Height}

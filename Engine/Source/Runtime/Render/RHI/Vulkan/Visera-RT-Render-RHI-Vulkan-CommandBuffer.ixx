@@ -139,6 +139,8 @@ export namespace VE
 		UInt32                 _LevelCount,
 		UInt32                 _LayerCount) const
 	{
+		if (_OldLayout == _NewLayout) { return; }
+
 		VkImageMemoryBarrier ImageMemoryBarrier
 		{
 			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
