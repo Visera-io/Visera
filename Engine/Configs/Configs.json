@@ -7,7 +7,7 @@
             "Window":
             {
                 "Title":  "${AppName}",
-                "Extent": [1920, 1080]
+                "Extent": [1900, 1000]
             }
         },
         "Assets":

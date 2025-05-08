@@ -63,8 +63,13 @@ link_libpng(${VISERA})
 include(install_openexr)
 link_openexr(${VISERA})
 
+if(WIN32)
+include(install_spdlog_old)
+link_spdlog(${VISERA})
+else()
 include(install_spdlog)
 link_spdlog(${VISERA})
+endif()
 
 include(install_eigen)
 link_eigen(${VISERA})
