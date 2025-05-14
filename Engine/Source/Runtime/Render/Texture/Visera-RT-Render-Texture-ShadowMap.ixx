@@ -70,7 +70,8 @@ export namespace VE
 
         RHIImageView = RHIImage->CreateImageView();
 
-        VE_LOG_INFO("Created a Shadow Map (extent:[W{}, H{}]).", _Width, _Height);
+        VE_LOG_INFO("Created a Shadow Map (extent:[W{}, H{}], format:{}).",
+            _Width, _Height, SupportedFormat.Name);
     }
 
     Array<SharedPtr<FShadowMap>> FShadowMap::
@@ -99,7 +100,8 @@ export namespace VE
         ImmeCmd->StopRecording();
         ImmeCmd->SubmitAndWait();
 
-        VE_LOG_INFO("Created {} Shadow Maps (extent:[W{}, H{}]).", _Count, _Width, _Height);
+        VE_LOG_INFO("Created {} Shadow Maps (extent:[W{}, H{}], format:{}).",
+            _Count, _Width, _Height, SupportInfo.Name);
         return ShadowMaps;
     }
 
@@ -109,18 +111,28 @@ export namespace VE
         if (SupportedFormat.has_value())
         { return SupportedFormat.value(); }
 
-        if (RHI::IsTexture2DFormatSupported(RHI::EFormat::S32_Float_Depth32))
+        do // Select Proper Format
         {
-            SupportedFormat = FSupportedFormat
+            if (RHI::IsTexture2DFormatSupported(RHI::EFormat::S32_Float_Depth32))
             {
-                .Name   = "S32_Float_Depth32",
-                .Format = RHI::EFormat::S32_Float_Depth32,
-            };
-        }
-        else
-        {
+                SupportedFormat = FSupportedFormat
+                {
+                    .Name   = "U16_Normalized_Depth16",
+                    .Format = RHI::EFormat::U16_Normalized_Depth16,
+                };
+                break;
+            }
+            if (RHI::IsTexture2DFormatSupported(RHI::EFormat::U16_Normalized_Depth16))
+            {
+                SupportedFormat = FSupportedFormat
+                {
+                    .Name   = "S32_Float_Depth32",
+                    .Format = RHI::EFormat::S32_Float_Depth32,
+                };
+                break;
+            }
             VE_LOG_FATAL("Cannot find a supported ShadowMap format!");
-        }
+        }while (True);
 
         return SupportedFormat.value();
     }

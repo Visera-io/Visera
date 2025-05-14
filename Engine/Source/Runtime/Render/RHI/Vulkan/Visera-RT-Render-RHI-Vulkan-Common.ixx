@@ -276,6 +276,7 @@ export namespace VE
 		S32_Float_R32			= VK_FORMAT_R32_SFLOAT,
 		
 		S32_Float_Depth32		= VK_FORMAT_D32_SFLOAT,
+		U16_Normalized_Depth16  = VK_FORMAT_D16_UNORM,
 
 		// 48Bits Formats
 		/*VK_FORMAT_R16G16B16_UNORM,
