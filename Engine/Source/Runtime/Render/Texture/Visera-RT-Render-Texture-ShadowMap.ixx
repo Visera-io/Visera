@@ -117,8 +117,8 @@ export namespace VE
             {
                 SupportedFormat = FSupportedFormat
                 {
-                    .Name   = "U16_Normalized_Depth16",
-                    .Format = RHI::EFormat::U16_Normalized_Depth16,
+                    .Name   = "S32_Float_Depth32",
+                    .Format = RHI::EFormat::S32_Float_Depth32,
                 };
                 break;
             }
@@ -126,8 +126,8 @@ export namespace VE
             {
                 SupportedFormat = FSupportedFormat
                 {
-                    .Name   = "S32_Float_Depth32",
-                    .Format = RHI::EFormat::S32_Float_Depth32,
+                    .Name   = "U16_Normalized_Depth16",
+                    .Format = RHI::EFormat::U16_Normalized_Depth16,
                 };
                 break;
             }
