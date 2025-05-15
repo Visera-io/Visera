@@ -115,6 +115,8 @@ export namespace VISERA_APP_NAMESPACE
 				}
 				Target= GeoAttachment->GetPrimitive()->GetBoundingBox().Center;
 				LookAtMatrix = AppScene->MainCamera->GetLookAtMatrix(Target);
+
+				CamPos = AppScene->MainCamera->GetPosition();
 				if(ImGui::InputFloat3("CamPos", CamPos.data()))
 				{
 					AppScene->MainCamera->SetPosition(CamPos);

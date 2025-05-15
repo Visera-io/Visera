@@ -47,8 +47,8 @@ export namespace VE
 
 				.ColorImageReferences = {RHI::SV_Color},
 
-				.SrcStage = RHI::EGraphicsPipelineStage::PipelineTop,
-				.SrcStageAccess = RHI::EAccess::None,
+				.SrcStage = RHI::EGraphicsPipelineStage::FragmentShader,
+				.SrcStageAccess = RHI::EAccess::R_ColorAttachment,
 				.DstStage = RHI::EGraphicsPipelineStage::ColorAttachmentOutput,
 				.DstStageAccess = RHI::EAccess::W_ColorAttachment,});
 
