@@ -3,10 +3,7 @@ module;
 export module Visera.Runtime.Render;
 export import Visera.Runtime.Render.RHI;
 export import Visera.Runtime.Render.RTC;
-export import Visera.Runtime.Render.Light;
-export import Visera.Runtime.Render.Scene;
-export import Visera.Runtime.Render.Shader;
-export import Visera.Runtime.Render.URP;
+//export import Visera.Runtime.Render.Shader;
 
 import Visera.Core.Log;
 import Visera.Core.Type;
@@ -27,6 +24,7 @@ export namespace VE
 	void Render::
 	Bootstrap()
 	{
+
 	}
 
 	void Render::

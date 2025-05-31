@@ -1,14 +1,13 @@
 module;
 #include <Visera.h>
 #include <string>
-#if (VE_IS_WINDOWS_SYSTEM)
+#if defined(VE_ON_WINDOWS_SYSTEM)
 #include <Windows.h>
 #endif
 export module Visera;
 #define VE_MODULE_NAME "Visera"
 export import Visera.Core;
 export import Visera.Runtime;
-export import Visera.Editor;
 
 export namespace VE
 {
@@ -42,31 +41,30 @@ export namespace VE
 			{
 				if (!App) { VE_LOG_FATAL("App is not created!"); }
 				Bootstrap(App);
+
+				while (!Window::ShouldClose())
 				{
-					while (!Window::ShouldClose())
+					Window::PollEvents();
+					IO::ProcessEvents();
+
+					//auto& Frame = RHI::WaitFrameReady();
+					//Editor::BeginFrame(Frame.GetEditorCommandBuffer());
+
+					try
 					{
-						Window::PollEvents();
-						IO::ProcessEvents();
-
-						auto& Frame = RHI::WaitFrameReady();
-						Editor::BeginFrame(Frame.GetEditorCommandBuffer());
-
-						try
-						{
-							App->Tick();
-						}
-						catch (const SRuntimeError& Signal)
-						{
-							VE_LOG_ERROR("ViseraApp Runtime Error:\n{}{}", Signal.What(), Signal.Where());
-							StateCode = Signal.StateCode;
-							//App->Exit();
-						}
-						World::Update();
-
-						Editor::Display();
-						Editor::EndFrame(Frame.GetEditorCommandBuffer());
-						RHI::RenderAndPresentCurrentFrame();
+						App->Tick();
 					}
+					catch (const SRuntimeError& Signal)
+					{
+						VE_LOG_ERROR("ViseraApp Runtime Error:\n{}{}", Signal.What(), Signal.Where());
+						StateCode = Signal.StateCode;
+						//App->Exit();
+					}
+					World::Update();
+
+					//Editor::Display();
+					//Editor::EndFrame(Frame.GetEditorCommandBuffer());
+					//RHI::RenderAndPresentCurrentFrame();
 				}
 
 			}
@@ -115,8 +113,8 @@ export namespace VE
 			VE_LOG_TRACE("Bootstrapping Render...");
 			Render::Bootstrap();
 
-			VE_LOG_DEBUG("Bootstrapping Edtior...");
-			Editor::Bootstrap();
+			//VE_LOG_DEBUG("Bootstrapping Edtior...");
+			//Editor::Bootstrap();
 
 			VE_LOG_DEBUG("Bootstrapping the " VISERA_APP_NAME "...");
 			_App->Bootstrap();
@@ -125,13 +123,13 @@ export namespace VE
 		static inline void
 		Terminate(ViseraApp* _App)
 		{	
-			RHI::WaitDeviceIdle();
+			//RHI::WaitDeviceIdle();
 			VE_LOG_DEBUG("Terminating App...");
 			_App->Terminate();
 			delete _App;
 
-			VE_LOG_DEBUG("Terminating Editor...");
-			Editor::Terminate();
+			//VE_LOG_DEBUG("Terminating Editor...");
+			//Editor::Terminate();
 
 			VE_LOG_DEBUG("Terminating Runtime...");
 

@@ -100,6 +100,9 @@ export namespace VE
         Bool inline
         IsLoadedFromFile()       const { return !Path.IsEmpty(); }
 
+        auto inline
+        ComputeMeanColor() const -> Vector3F;
+
         IImage() = delete;
         IImage(EImageType _Type, const FPath& _Path) : Type{_Type}, Path{_Path} {}
         virtual ~IImage() = default;
@@ -116,6 +119,20 @@ export namespace VE
 
         FPath        Path;
     };
+
+    Vector3F IImage::
+    ComputeMeanColor() const
+    {
+        Vector3F Color{0,0,0};
+        VE_ASSERT(Data.size() % Channels == 0);
+        for (UInt32 Pixel = 0; Pixel < Data.size(); Pixel += Channels)
+        {
+            Color[0] += Data[Pixel + 0];
+            Color[1] += Data[Pixel + 1];
+            Color[2] += Data[Pixel + 2];
+        }
+        return Color / (Data.size() / Channels);
+    }
 
     void IImage::
     FlipVertically()
