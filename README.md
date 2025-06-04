@@ -17,7 +17,7 @@ Ensure you have the following tools installed:
 2. **Open the Python CLI**:
    Run the CLI with:
    ```bash
-   ./Visera.sh
+   ./Visera.bat
    ```
    Or, alternatively, you can use:
    ```bash
